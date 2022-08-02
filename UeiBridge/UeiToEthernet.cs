@@ -10,6 +10,7 @@ namespace UeiBridge
     {
         ISend<byte[]> _destination;
         log4net.ILog _logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
+        object _lockObject = new object();
 
         public UeiToEthernet(ISend<byte[]> destination)
         {
@@ -23,27 +24,30 @@ namespace UeiBridge
 
         void BuildAndSend_Task(DeviceResponse dr)
         {
-            try
+            
+            lock (_lockObject)
             {
-                IConvert converter;
-                if (ProjectRegistry.Instance.ConvertersDic.TryGetValue(dr.OriginDeviceName, out converter))
+                try
                 {
-                    byte[] payload = converter.DeviceToEth(dr.Response);
+                    IConvert converter;
+                    if (ProjectRegistry.Instance.ConvertersDic.TryGetValue(dr.OriginDeviceName, out converter))
+                    {
+                        byte[] payload = converter.DeviceToEth(dr.Response);
 
-                    EthernetMessage mo = EthernetMessageFactory.CreateFromDevice(payload, dr.OriginDeviceName);
-                    byte[] bytes = mo?.ToByteArrayUp();
-                    _destination.Send(bytes);
+                        EthernetMessage mo = EthernetMessageFactory.CreateFromDevice(payload, dr.OriginDeviceName);
+                        byte[] bytes = mo?.ToByteArrayUp();
+                        _destination.Send(bytes);
+                    }
+                    else
+                    {
+                        _logger.Warn($"Can't find suitable converter for {dr.OriginDeviceName} (downward)");
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    _logger.Warn($"Can't find suitable converter for {dr.OriginDeviceName} (downward)");
+                    _logger.Error("Failed to convert device result. " + ex.Message);
                 }
             }
-            catch (Exception ex)
-            {
-                _logger.Error("Failed to convert device result. " + ex.Message);
-            }
-
         }
     }
 }

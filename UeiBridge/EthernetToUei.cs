@@ -18,7 +18,7 @@ namespace UeiBridge
         }
 
         /// <summary>
-        /// Starts internal thread
+        /// Starts internal long-live-thread
         /// </summary>
         void EthToUei_Task()
         {
@@ -31,7 +31,7 @@ namespace UeiBridge
                 {
                     // convert byte[] to messageObject
                     string errorString;
-                    EthernetMessage message = EthernetMessageFactory.MessageObjectFromByteArray(incomingMessage, out errorString);
+                    EthernetMessage message = EthernetMessageFactory.CreateFromByteArray(incomingMessage, out errorString);
                     if (null == message)
                     {
                         _logger.Warn(errorString);
@@ -42,6 +42,7 @@ namespace UeiBridge
                     string deviceName;
                     if (ProjectRegistry.Instance.DeviceKeys.TryGetValue(message.CardType, out deviceName))
                     {
+                        _logger.Debug($"Ethernet Message accepted. Device:{deviceName} Payload length:{message.PayloadBytes.Length}");
                         DeviceRequest dreq = MakeDeviceRequest(message, deviceName);
 
                         if (null != dreq)
@@ -87,7 +88,7 @@ namespace UeiBridge
             }
             else
             {
-                _logger.Warn("MakeDeviceRequest - Convert fail");
+                _logger.Warn($"MakeDeviceRequest - Convert fail. Reason: {converter.LastErrorMessage}");
                 return null;
             }
         }

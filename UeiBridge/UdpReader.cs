@@ -29,7 +29,8 @@ namespace UeiBridge
             IPAddress ip;
             if (IPAddress.TryParse(Config.Instance.ReceiverMulticastAddress, out ip))
             {
-                EstablishMulticastReceiver(ip, Config.Instance.LocalPort);
+                //EstablishMulticastReceiver(ip, Config.Instance.LocalPort);
+                EstablishMulticastReceiver(ip, Config.Instance.LocalPort, IPAddress.Parse("221.109.251.103")); // tbd. put ip in config
             }
             else
             {
@@ -83,7 +84,7 @@ namespace UeiBridge
             // Get received data
             IPEndPoint sender = new IPEndPoint(0, 0);
             Byte[] receivedBytes = _udpclient.EndReceive(ar, ref sender);
-            _logger.Debug($"Datagram received from {sender.Address}, Length={receivedBytes.Length}");
+            //_logger.Debug($"Datagram received from {sender.Address}, Length={receivedBytes.Length}");
 
             this._datagramConsumer.Enqueue(receivedBytes);
 

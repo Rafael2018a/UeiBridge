@@ -15,10 +15,6 @@ namespace UeiBridge
     {
         AnalogScaledReader _reader;
         log4net.ILog _logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
-
-        System.Threading.Timer _samplingTimer;
-        TimeSpan _samplingInterval;
-
         readonly IEnqueue<DeviceResponse> _targetConsumer;
 
         public AI201InputDeviceManager( IEnqueue<DeviceResponse> targetConsumer, TimeSpan samplingInterval, string caseUrl)
@@ -49,7 +45,6 @@ namespace UeiBridge
 
             return true;
         }
-
         public void HandleResponse_Callback(object state)
         {
             // init session, if needed.
@@ -69,7 +64,6 @@ namespace UeiBridge
                 if (OpenDevice(url1))
                 {
                     var r = _deviceSession.GetDevice().GetAIRanges();
-                    //var g = d.GetAIGains();
                     _logger.Info($"{_deviceName}(input) init success. {_numberOfChannels} channels. Range {r[0].minimum},{r[0].maximum}. {deviceIndex + _channelsString}");
                 }
                 else

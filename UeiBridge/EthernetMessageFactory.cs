@@ -3,12 +3,14 @@ using log4net;
 
 namespace UeiBridge
 {
+    /// <summary>
+    /// Create EthernetMessage object from various sources.
+    /// </summary>
     public static class EthernetMessageFactory
     {
-        public static EthernetMessage MessageObjectFromByteArray(byte[] byteMessage, out string errorString)
+        public static EthernetMessage CreateFromByteArray(byte[] byteMessage, out string errorString)
         {
             EthernetMessage msg = null;
-            //errorString = null;
             // check array  validity
             // ======================
             if (byteMessage.Length < 16)

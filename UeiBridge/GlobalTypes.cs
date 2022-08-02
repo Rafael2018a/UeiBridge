@@ -36,7 +36,7 @@ namespace UeiBridge
         {
             if (null != _deviceSession)
             {
-                _deviceSession.Stop();
+                //_deviceSession.Stop();
                 _deviceSession.Dispose();
             }
             _deviceSession = null;
@@ -51,6 +51,10 @@ namespace UeiBridge
         protected string _deviceName;// = "AO-308";
         protected int _numberOfChannels = 0;
         protected string _channelsString;
+
+        protected System.Threading.Timer _samplingTimer;
+
+        protected TimeSpan _samplingInterval;
         public virtual void CloseDevice()
         {
             if (null != _deviceSession)
@@ -66,6 +70,7 @@ namespace UeiBridge
         object EthToDevice(byte[] messagePayload);
         byte[] DeviceToEth(object dt);
         string DeviceName { get; }
+        string LastErrorMessage { get; }
     }
     public class DeviceRequest
     {

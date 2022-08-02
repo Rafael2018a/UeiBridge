@@ -12,9 +12,7 @@ namespace UeiBridge
 
         DigitalReader _reader;
         log4net.ILog _logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
-
-        System.Threading.Timer _samplingTimer;
-        TimeSpan _samplingInterval;
+        
 
         readonly IEnqueue<DeviceResponse> _targetConsumer;
 

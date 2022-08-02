@@ -23,19 +23,19 @@ namespace UeiBridge
                 Int16 ival = BitConverter.ToInt16(mo.PayloadBytes, startIndex);
                 v[chNum] = ival * factor;
             }
-
             return v;
         }
     }
-
     class AO308Convert : IConvert
     {
         public string DeviceName => "AO-308";
+        string _lastError { get; set; }
+        string IConvert.LastErrorMessage => _lastError;
+
         public byte[] DeviceToEth(object dt)
         {
             throw new NotImplementedException();
         }
-
         public object EthToDevice(byte[] messagePayload)
         {
             const int numberOfChannels = 8; // from icd
@@ -44,7 +44,7 @@ namespace UeiBridge
 
             if ((messagePayload.Length) < numberOfChannels * sizeof(UInt16))
             {
-                Debug.Assert( false , "analog-out message too short");
+                _lastError = $"analog-out message too short. {messagePayload.Length} ";
                 return null;
             }
             
@@ -62,6 +62,9 @@ namespace UeiBridge
     class DIO430Convert : IConvert
     {
         public string DeviceName => "DIO-430";
+        string _lastError { get; set; }
+        string IConvert.LastErrorMessage => _lastError;
+
         public byte[] DeviceToEth(object dt)
         {
             throw new NotImplementedException();
@@ -74,10 +77,12 @@ namespace UeiBridge
             return result;
         }
     }
-
     class DIO403Convert : IConvert
     {
-        public string DeviceName => "DIO-403"; 
+        public string DeviceName => "DIO-403";
+        string _lastError { get; set; }
+        string IConvert.LastErrorMessage => _lastError;
+
         public byte[] DeviceToEth(object dt)
         {
             UInt16[] deviceData = (UInt16[])dt;
@@ -96,7 +101,10 @@ namespace UeiBridge
             const int numberOfChannels = 3;
 
             if (messagePayload.Length < numberOfChannels)
+            {
+                _lastError = $"digital-out message too short. {messagePayload.Length} ";
                 return null;
+            }
 
             UInt16 [] result = new UInt16[2*numberOfChannels];// payload might be 48 bits long
             Array.Clear(result, 0, result.Length);
@@ -112,6 +120,8 @@ namespace UeiBridge
     class AI201Converter : IConvert
     {
         public string DeviceName => "AI-201-100";
+        string _lastError { get; set; }
+        string IConvert.LastErrorMessage => _lastError;
 
         public byte[] DeviceToEth(object dt)
         {

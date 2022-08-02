@@ -43,34 +43,36 @@ namespace UeiBridge
         {
             // init session, if needed.
             // =======================
-            if ((null == _deviceSession) || (_caseUrl != dr.CaseUrl))
+            lock (this) // tbd. this func might be called from more then one task!!
             {
-                CloseDevice();
-
-                string deviceIndex = StaticMethods.FindDeviceIndex(_deviceName);
-                if (null == deviceIndex)
+                if ((null == _deviceSession) || (_caseUrl != dr.CaseUrl))
                 {
-                    _logger.Warn($"Can't find index for device {_deviceName}");
-                    return;
-                }
+                    CloseDevice();
 
-                string url1 = dr.CaseUrl + deviceIndex + _channelsString;
+                    string deviceIndex = StaticMethods.FindDeviceIndex(_deviceName);
+                    if (null == deviceIndex)
+                    {
+                        _logger.Warn($"Can't find index for device {_deviceName}");
+                        return;
+                    }
 
-                if (OpenDevice(url1))
-                {
-                    var range = _deviceSession.GetDevice().GetAORanges();
-                    
-                    //_logger.Info($"{_deviceName} init success. {_numberOfChannels} output channels. {url1}");
-                    _logger.Info($"{_deviceName}(Output) init success. {_numberOfChannels} channels. Range {range[0].minimum},{range[0].maximum}. {deviceIndex + _channelsString}");
-                    _caseUrl = dr.CaseUrl;
-                }
-                else
-                {
-                    _logger.Warn($"Device {_deviceName} init fail");
-                    return;
+                    string url1 = dr.CaseUrl + deviceIndex + _channelsString;
+
+                    if (OpenDevice(url1))
+                    {
+                        var range = _deviceSession.GetDevice().GetAORanges();
+
+                        //_logger.Info($"{_deviceName} init success. {_numberOfChannels} output channels. {url1}");
+                        _logger.Info($"{_deviceName}(Output) init success. {_numberOfChannels} channels. Range {range[0].minimum},{range[0].maximum}. {deviceIndex + _channelsString}");
+                        _caseUrl = dr.CaseUrl;
+                    }
+                    else
+                    {
+                        _logger.Warn($"Device {_deviceName} init fail");
+                        return;
+                    }
                 }
             }
-
             // write to device
             // ===============
             double[] req = dr.RequestObject as double[];
