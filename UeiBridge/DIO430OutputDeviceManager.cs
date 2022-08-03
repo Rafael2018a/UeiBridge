@@ -14,7 +14,7 @@ namespace UeiBridge
             _deviceName = "DIO-430";
             _channelsString = "Do0";
         }
-        public override void HandleRequest(DeviceRequest dr)
+        protected override void HandleRequest(DeviceRequest dr)
         {
             // init session, if needed.
             // =======================

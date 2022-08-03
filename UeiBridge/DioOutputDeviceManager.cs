@@ -32,7 +32,7 @@ namespace UeiBridge
             return true;
         }
 
-        public override void HandleRequest(DeviceRequest dr)
+        protected override void HandleRequest(DeviceRequest dr)
         {
             // init session, if needed.
             // =======================
@@ -48,7 +48,8 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert((null != req));
             
             _writer.WriteSingleScanUInt16(req);
-            
+            _logger.Info($"scan written to device. Length: {req.Length}");
+
         }
 
         // todo: add Dispose/d-tor

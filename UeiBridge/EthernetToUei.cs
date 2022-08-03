@@ -50,7 +50,8 @@ namespace UeiBridge
                             OutputDevice deviceManager;
                             if (ProjectRegistry.Instance.DeviceManagersDic.TryGetValue(deviceName, out deviceManager))
                             {
-                                Task.Factory.StartNew( () => deviceManager.HandleRequest(dreq));
+                                deviceManager.Enqueue(dreq);
+                                //Task.Factory.StartNew( () => deviceManager.HandleRequest(dreq));
                             }
                             else
                             {

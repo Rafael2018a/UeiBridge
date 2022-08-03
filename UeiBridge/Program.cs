@@ -15,7 +15,6 @@ namespace UeiBridge
         //ILog _logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
         ILog _logger = StaticMethods.GetLogger();
 
-
         static void Main(string[] args)
         {
             Program p = new Program();
@@ -49,6 +48,10 @@ namespace UeiBridge
             
             // prepare device dictionaries
             ProjectRegistry.Instance.Establish();
+            foreach(var v in ProjectRegistry.Instance.DeviceManagersDic)
+            {
+                v.Value.Start();
+            }
 
             // init downwards objects
             EthernetToUei e2u = new EthernetToUei();
@@ -64,7 +67,7 @@ namespace UeiBridge
             AI201InputDeviceManager ai200 = new AI201InputDeviceManager(u2e, new TimeSpan(0, 0, 0, 100, 1000), Config.Instance.DeviceUrl);
             //ai200.Start();
 
-            //StartDownwardsTest();
+            StartDownwardsTest();
 
             Console.ReadKey();
             
@@ -78,19 +81,22 @@ namespace UeiBridge
                 {
                     UdpClient udpClient = new UdpClient();
                     System.Threading.Thread.Sleep(100);
+                    IPEndPoint destEp = new IPEndPoint(IPAddress.Parse(Config.Instance.ReceiverMulticastAddress), Config.Instance.LocalPort);
 
                     for (int i=0; i<3; i++)
                     {
+
                         byte[] e403 = Make_DIO403Down_Message();
-                        udpClient.Send(e403, e403.Length, new IPEndPoint(IPAddress.Parse("127.0.0.1"), Config.Instance.LocalPort)); // ("192.168.201.202"),
+                        udpClient.Send(e403, e403.Length, destEp);
 
                         byte[] e308 = Make_A308Down_message();
-                        udpClient.Send(e308, e308.Length, new IPEndPoint(IPAddress.Parse("127.0.0.1"), Config.Instance.LocalPort)); // ("192.168.201.202"),
+                        udpClient.Send(e308, e308.Length, destEp); // ("192.168.201.202"),
 
                         byte[] e430 = Make_DIO430Down_Message();
-                        udpClient.Send(e430, e430.Length, new IPEndPoint(IPAddress.Parse("127.0.0.1"), Config.Instance.LocalPort)); // ("192.168.201.202"),
+                        //udpClient.Send(e430, e430.Length, new IPEndPoint(IPAddress.Parse("127.0.0.1"), Config.Instance.LocalPort)); // ("192.168.201.202"),
 
                         System.Threading.Thread.Sleep(5000);
+                        
                     }
                 }
                 catch( Exception ex)

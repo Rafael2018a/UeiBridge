@@ -16,6 +16,7 @@ namespace UeiBridge
         readonly string _receiverMulticastAddress = "227.3.1.10";
         readonly string _destMulticastAddress = "227.2.1.10";
         readonly int _destMulticastPort = 50038;
+        readonly string _localBindNicAddress = "221.109.251.103";
         public Config()
         {
             
@@ -28,6 +29,7 @@ namespace UeiBridge
         public string ReceiverMulticastAddress => _receiverMulticastAddress;
         public string DestMulticastAddress => _destMulticastAddress;
         public int DestMulticastPort => _destMulticastPort;
+        public string LocalBindNicAddress => _localBindNicAddress;
     }
 }
 

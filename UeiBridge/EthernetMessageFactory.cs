@@ -25,8 +25,8 @@ namespace UeiBridge
                 errorString = $"Byte message wrong preamble";
                 goto exit;
             }
-            UInt16 messageLength = BitConverter.ToUInt16(byteMessage, EthernetMessage.LengthOffset);
-            if (messageLength != byteMessage.Length)
+            UInt16 nominalLengh = BitConverter.ToUInt16(byteMessage, EthernetMessage.LengthOffset);
+            if (nominalLengh != byteMessage.Length)
             {
                 errorString = $"Byte message inconsistent length";
                 goto exit;
@@ -39,8 +39,8 @@ namespace UeiBridge
             msg.HeaderBytes = new byte[EthernetMessage.PayloadOffset];
             Array.Copy(byteMessage, msg.HeaderBytes, EthernetMessage.PayloadOffset);
 
-            msg.PayloadBytes = new byte[messageLength - EthernetMessage.PayloadOffset];
-            Array.Copy(byteMessage, EthernetMessage.PayloadOffset, msg.PayloadBytes, 0, messageLength - EthernetMessage.PayloadOffset);
+            msg.PayloadBytes = new byte[nominalLengh - EthernetMessage.PayloadOffset];
+            Array.Copy(byteMessage, EthernetMessage.PayloadOffset, msg.PayloadBytes, 0, nominalLengh - EthernetMessage.PayloadOffset);
 
             msg.CardType = byteMessage[EthernetMessage.CardTypeOffset];
 

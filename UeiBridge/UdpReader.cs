@@ -30,7 +30,8 @@ namespace UeiBridge
             if (IPAddress.TryParse(Config.Instance.ReceiverMulticastAddress, out ip))
             {
                 //EstablishMulticastReceiver(ip, Config.Instance.LocalPort);
-                EstablishMulticastReceiver(ip, Config.Instance.LocalPort, IPAddress.Parse("221.109.251.103")); // tbd. put ip in config
+                EstablishMulticastReceiver(ip, Config.Instance.LocalPort, IPAddress.Parse(Config.Instance.LocalBindNicAddress)); // tbd. put ip in config
+                
             }
             else
             {

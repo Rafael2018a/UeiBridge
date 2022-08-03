@@ -22,27 +22,6 @@ namespace UeiBridge
     {
         void Send(Item i);
     }
-    public abstract class OutputDevice 
-    {
-        //protected string _deviceIndex;
-        protected string _channelsString;
-        protected Session _deviceSession;
-        protected string _caseUrl;
-        protected string _deviceName;// = "AO-308";
-        public string DeviceName => _deviceName;
-        protected int _numberOfChannels = 0;
-        //public int NumberOfChannels => _numberOfChannels;
-        public virtual void CloseDevice()
-        {
-            if (null != _deviceSession)
-            {
-                //_deviceSession.Stop();
-                _deviceSession.Dispose();
-            }
-            _deviceSession = null;
-        }
-        public abstract void HandleRequest(DeviceRequest request);
-    }
     public abstract class InputDevice 
     {
         

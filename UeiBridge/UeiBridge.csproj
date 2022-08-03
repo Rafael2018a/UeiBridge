@@ -81,6 +81,7 @@
     <Compile Include="DIO430OutputDeviceManager.cs" />
     <Compile Include="DioOutputDeviceManager.cs" />
     <Compile Include="EthernetMessageFactory.cs" />
+    <Compile Include="OutputDevice.cs" />
     <Compile Include="ProjectRegistry.cs" />
     <Compile Include="EthernetToUei.cs" />
     <Compile Include="GlobalTypes.cs" />
