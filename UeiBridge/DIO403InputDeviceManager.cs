@@ -46,32 +46,34 @@ namespace UeiBridge
         }
         public void HandleResponse_Callback(object state)
         {
-            // init session, if needed.
-            // =======================
-            if (null == _deviceSession)
+            lock (this) // tbd. use q
             {
-                CloseDevice();
+                // init session, if needed.
+                // =======================
+                if (null == _deviceSession)
+                {
+                    CloseDevice();
 
-                string deviceIndex = StaticMethods.FindDeviceIndex( _deviceName);
-                if (null == deviceIndex)
-                {
-                    _logger.Warn($"Can't find index for device {_deviceName}");
-                    return;
-                }
-                string url1 = _caseUrl + deviceIndex + _channelsString;
+                    string deviceIndex = StaticMethods.FindDeviceIndex(_deviceName);
+                    if (null == deviceIndex)
+                    {
+                        _logger.Warn($"Can't find index for device {_deviceName}");
+                        return;
+                    }
+                    string url1 = _caseUrl + deviceIndex + _channelsString;
 
-                if (OpenDevice(url1))
-                {
-                    //_logger.Info($"{_deviceName} init success. {_numberOfChannels} input channels. {url1}");
-                    _logger.Info($"{_deviceName}(Input) init success. {_numberOfChannels} channels. {deviceIndex + _channelsString}");
-                }
-                else
-                {
-                    _logger.Warn($"Device {_deviceName} init fail");
-                    return;
+                    if (OpenDevice(url1))
+                    {
+                        //_logger.Info($"{_deviceName} init success. {_numberOfChannels} input channels. {url1}");
+                        _logger.Info($"{_deviceName}(Input) init success. {_numberOfChannels} channels. {deviceIndex + _channelsString}");
+                    }
+                    else
+                    {
+                        _logger.Warn($"Device {_deviceName} init fail");
+                        return;
+                    }
                 }
             }
-
             // read from device
             // ===============
             var diData = _reader.ReadSingleScanUInt16();

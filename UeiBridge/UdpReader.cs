@@ -29,9 +29,7 @@ namespace UeiBridge
             IPAddress ip;
             if (IPAddress.TryParse(Config.Instance.ReceiverMulticastAddress, out ip))
             {
-                //EstablishMulticastReceiver(ip, Config.Instance.LocalPort);
-                EstablishMulticastReceiver(ip, Config.Instance.LocalPort, IPAddress.Parse(Config.Instance.LocalBindNicAddress)); // tbd. put ip in config
-                
+                EstablishMulticastReceiver(ip, Config.Instance.LocalPort, IPAddress.Parse(Config.Instance.LocalBindNicAddress));
             }
             else
             {
@@ -89,8 +87,8 @@ namespace UeiBridge
 
             this._datagramConsumer.Enqueue(receivedBytes);
 
-            // Restart listening for udp data packages
-            _udpclient.BeginReceive(new AsyncCallback(ReceivedCallback), null);
+            
+            _udpclient.BeginReceive(new AsyncCallback(ReceivedCallback), null);// Restart listening 
         }
 
         private void SinWave()

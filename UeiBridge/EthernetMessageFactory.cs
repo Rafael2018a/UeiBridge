@@ -28,7 +28,7 @@ namespace UeiBridge
             UInt16 nominalLengh = BitConverter.ToUInt16(byteMessage, EthernetMessage.LengthOffset);
             if (nominalLengh != byteMessage.Length)
             {
-                errorString = $"Byte message inconsistent length";
+                errorString = $"Byte message inconsistent length nominal:{nominalLengh}  actual:{byteMessage.Length}";
                 goto exit;
             }
             errorString = null;

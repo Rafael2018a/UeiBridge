@@ -7,25 +7,25 @@ using System.Diagnostics;
 
 namespace UeiBridge
 {
-    class Converters
-    {
-        public static double[] AO308Convert(EthernetMessage mo)
-        {
-            log4net.ILog logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
-            Debug.Assert(mo.PayloadBytes.Length  >= 16, "analog-out message too short");
+    //class Converters
+    //{
+    //    public static double[] AO308Convert(EthernetMessage mo)
+    //    {
+    //        log4net.ILog logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
+    //        Debug.Assert(mo.PayloadBytes.Length  >= 16, "analog-out message too short");
 
-            const int numberOfChannels = 8;
-            const double factor = 20.0 / (Int16.MaxValue - Int16.MinValue);
-            double[] v = new double[numberOfChannels];
-            for (int chNum=0; chNum<numberOfChannels; chNum++)
-            {
-                int startIndex = 2 * chNum;
-                Int16 ival = BitConverter.ToInt16(mo.PayloadBytes, startIndex);
-                v[chNum] = ival * factor;
-            }
-            return v;
-        }
-    }
+    //        const int numberOfChannels = 8;
+    //        const double factor = 20.0 / (Int16.MaxValue - Int16.MinValue);
+    //        double[] v = new double[numberOfChannels];
+    //        for (int chNum=0; chNum<numberOfChannels; chNum++)
+    //        {
+    //            int startIndex = 2 * chNum;
+    //            Int16 ival = BitConverter.ToInt16(mo.PayloadBytes, startIndex);
+    //            v[chNum] = ival * factor;
+    //        }
+    //        return v;
+    //    }
+    //}
     class AO308Convert : IConvert
     {
         public string DeviceName => "AO-308";
