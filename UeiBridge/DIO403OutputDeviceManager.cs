@@ -10,7 +10,7 @@
         {
             _deviceName = "DIO-403";
             _channelsString = "Do0:2";
-
+            _attachedConverter = StaticMethods.CreateConverterInstance( _deviceName);
         }
     }
 }

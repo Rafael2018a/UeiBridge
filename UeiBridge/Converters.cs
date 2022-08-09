@@ -72,7 +72,7 @@ namespace UeiBridge
 
         public object EthToDevice(byte[] messagePayload)
         {
-            // tbd !!!
+            throw new NotImplementedException();
             UInt32[] result = { 1 };
             return result;
         }
@@ -85,35 +85,34 @@ namespace UeiBridge
 
         public byte[] DeviceToEth(object dt)
         {
-            UInt16[] deviceData = (UInt16[])dt;
-            byte[] resultVector = new byte[2 * deviceData.Length];
+            // int16 vector goes to int8 vector
+            // ================================
+            UInt16[] deviceVector = (UInt16[])dt;
+            byte[] resultVector = new byte[deviceVector.Length];
             Array.Clear(resultVector, 0, resultVector.Length);
-            int rvIndex = 0;
-            foreach( UInt16 val in deviceData)
+            for( int ch = 0; ch< deviceVector.Length; ch++)
             {
-                Array.Copy(BitConverter.GetBytes(val), 0, resultVector, rvIndex, 2);
-                rvIndex += 2;
+                resultVector[ch] = (byte)(deviceVector[ch] & 0xFF);
             }
             return resultVector;
         }
         public object EthToDevice(byte[] messagePayload)
         {
-            const int numberOfChannels = 3;
-
+            const int numberOfChannels = 3; // tbd. this is not const
             if (messagePayload.Length < numberOfChannels)
             {
                 _lastError = $"digital-out message too short. {messagePayload.Length} ";
                 return null;
             }
-
-            UInt16 [] result = new UInt16[2*numberOfChannels];// payload might be 48 bits long
-            Array.Clear(result, 0, result.Length);
-            
-            result[0] = BitConverter.ToUInt16(messagePayload, 0);
-            result[1] = messagePayload[2];
-            
-            return result;
-
+            // int8 vector goes to int16 vector
+            // ================================
+            UInt16[] resultVector = new UInt16[messagePayload.Length];
+            Array.Clear(resultVector, 0, resultVector.Length);
+            for(int ch=0; ch<messagePayload.Length; ch++)
+            {
+                resultVector[ch] = messagePayload[ch];
+            }
+            return resultVector;
         }
     }
 

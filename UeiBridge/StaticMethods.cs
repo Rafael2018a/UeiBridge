@@ -65,5 +65,34 @@ namespace UeiBridge
             var x = log4net.LogManager.GetLogger( m.DeclaringType.Name);
             return x;
         }
+
+        /// <summary>
+        /// Find and create suitalble converter
+        /// </summary>
+        /// <returns></returns>
+        public static IConvert CreateConverterInstance(string deviceName)
+        {
+            // find and instantiate converter
+            // ================================
+            IConvert attachedConverter = null;
+            foreach (Type theType in System.Reflection.Assembly.GetExecutingAssembly().GetTypes())
+            {
+                if (theType.IsInterface || theType.IsAbstract)
+                    continue;
+
+                if (typeof(IConvert).IsAssignableFrom(theType))
+                {
+                    var at = (IConvert)Activator.CreateInstance(theType);
+                    if (at.DeviceName == deviceName)
+                    {
+                        attachedConverter = at;
+                        break;
+                    }
+                }
+            }
+            System.Diagnostics.Debug.Assert(attachedConverter != null);
+            return attachedConverter;
+        }
+
     }
 }

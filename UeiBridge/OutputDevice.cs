@@ -18,8 +18,12 @@ namespace UeiBridge
         protected string _caseUrl;
         protected string _deviceName;// = "AO-308";
         public string DeviceName => _deviceName;
+
+        public IConvert AttachedConverter => _attachedConverter;
+
         protected int _numberOfChannels = 0;
         //public int NumberOfChannels => _numberOfChannels;
+        protected IConvert _attachedConverter;
         public virtual void CloseDevice()
         {
             if (null != _deviceSession)
@@ -30,6 +34,7 @@ namespace UeiBridge
             _deviceSession = null;
         }
         protected abstract void HandleRequest(DeviceRequest request);
+
 
         public void Enqueue(DeviceRequest dr)
         {

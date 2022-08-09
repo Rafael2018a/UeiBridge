@@ -4,10 +4,10 @@ using System.Collections.Generic;
 
 namespace UeiBridge
 {
-    internal class ProjectRegistry // tbd. this is factory not registry
+    internal class ProjectRegistry 
     {
         Dictionary<int, string> _deviceMap = new Dictionary<int, string>();
-        Dictionary<string, IConvert> _convertersMap = new Dictionary<string, IConvert>();
+        //Dictionary<string, IConvert> _convertersMap = new Dictionary<string, IConvert>();
         Dictionary<string, OutputDevice> _deviceManagersMap = new Dictionary<string, OutputDevice>();
 
         static ProjectRegistry _instance = new ProjectRegistry();
@@ -19,7 +19,8 @@ namespace UeiBridge
         /// <summary>
         /// "Ai-204": <instnace>
         /// </summary>
-        public Dictionary<string, IConvert> ConvertersDic { get => _convertersMap; }
+        //public Dictionary<string, IConvert> ConvertersDic { get => _convertersMap; }
+
         /// <summary>
         /// "Ai-204": <instnace>
         /// </summary>
@@ -33,18 +34,21 @@ namespace UeiBridge
             _deviceMap.Add(6, "DIO-430");
             _deviceMap.Add(1, "AI-201-100");
 
+
+            //System.Reflection.Assembly.GetExecutingAssembly().GetTypes
+
             // fill convertes and device-managers map
-            foreach (Type theType in this.GetType().Assembly.GetTypes())
+            foreach (Type theType in System.Reflection.Assembly.GetExecutingAssembly().GetTypes())
             {
                 if (theType.IsInterface || theType.IsAbstract)
                     continue;
 
-                if (typeof(IConvert).IsAssignableFrom(theType))
-                {
-                    IConvert obj = (IConvert)Activator.CreateInstance(theType);
-                    logger.Debug($"New converter instance: {obj.ToString()} - {obj.DeviceName}");
-                    _convertersMap.Add(obj.DeviceName, obj);
-                }
+                //if (typeof(IConvert).IsAssignableFrom(theType))
+                //{
+                //    IConvert obj = (IConvert)Activator.CreateInstance(theType);
+                //    logger.Debug($"New converter instance: {obj.ToString()} - {obj.DeviceName}");
+                //    _convertersMap.Add(obj.DeviceName, obj);
+                //}
                 if (typeof(OutputDevice).IsAssignableFrom(theType))
                 {
                     OutputDevice obj = (OutputDevice)Activator.CreateInstance(theType);

@@ -16,6 +16,8 @@ namespace UeiBridge
         {
             _deviceName = "AO-308";
             _channelsString = "Ao0:7";
+            
+            _attachedConverter = StaticMethods.CreateConverterInstance(_deviceName);
         }
 
         // todo: add Dispose/d-tor

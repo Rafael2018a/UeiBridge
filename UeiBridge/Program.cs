@@ -63,9 +63,9 @@ namespace UeiBridge
             DIO403InputDeviceManager dio403 = new DIO403InputDeviceManager( u2e, new TimeSpan(0,0,0,0, 100), Config.Instance.DeviceUrl);
             dio403.Start();
             AI201InputDeviceManager ai200 = new AI201InputDeviceManager(u2e, new TimeSpan(0, 0, 0, 100, 1000), Config.Instance.DeviceUrl);
-            //ai200.Start();
+            ai200.Start();
 
-            //StartDownwardsTest();
+            StartDownwardsTest();
 
             Console.ReadKey();
             

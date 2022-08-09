@@ -15,15 +15,16 @@ namespace UeiBridge
     {
         AnalogScaledReader _reader;
         log4net.ILog _logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
-        readonly IEnqueue<DeviceResponse> _targetConsumer;
+        readonly IEnqueue<ScanResult> _targetConsumer;
 
-        public AI201InputDeviceManager( IEnqueue<DeviceResponse> targetConsumer, TimeSpan samplingInterval, string caseUrl)
+        public AI201InputDeviceManager( IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl)
         {
             _targetConsumer = targetConsumer;
             _samplingInterval = samplingInterval;
             _deviceName = "AI-201-100";
             _caseUrl = caseUrl;
             _channelsString = "Ai0,1,2,3";
+            _attachedConverter = StaticMethods.CreateConverterInstance(_deviceName);
         }
         bool OpenDevice(string deviceUrl)
         {
@@ -79,7 +80,7 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert(aiData != null);
             System.Diagnostics.Debug.Assert(aiData.Length == _numberOfChannels, "wrong number of channels");
 
-            DeviceResponse dr = new DeviceResponse(aiData, _deviceName);
+            ScanResult dr = new ScanResult(aiData, this);
             _targetConsumer.Enqueue(dr);
         }
 

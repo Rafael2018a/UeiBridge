@@ -7,16 +7,16 @@ namespace UeiBridge
     /// <summary>
     /// Convert byte[] to DeviceRequest objects and sends to to appropriate device manager.
     /// </summary>
-    public class EthernetToUei : IEnqueue<byte[]>
+    public class EthernetToUei : IEnqueue<byte[]> // tbd, rename: EthernetToDevice
     {
         BlockingCollection<byte[]> _dataItemsQueue = new BlockingCollection<byte[]>(100); // max 100 items
         log4net.ILog _logger = StaticMethods.GetLogger();
 
         public void Start()
         {
-            Task.Factory.StartNew(() => EthToUei_Task());
+            Task.Factory.StartNew(() => EthToUei_Task2());
         }
-
+#if dont
         /// <summary>
         /// Starts internal long-live-thread
         /// </summary>
@@ -40,10 +40,10 @@ namespace UeiBridge
 
                     //locate device manager and asks him to  handle DeviceRequest 
                     string deviceName;
-                    if (ProjectRegistry.Instance.DeviceKeys.TryGetValue(message.CardType, out deviceName))
+                    if (ProjectRegistry.Instance.DeviceKeys.TryGetValue(message.CardType, out deviceName)) // get deviceManager for card-type
                     {
                         _logger.Debug($"Ethernet Message accepted. Device:{deviceName} Payload length:{message.PayloadBytes.Length}");
-                        DeviceRequest dreq = MakeDeviceRequest(message, deviceName);
+                        DeviceRequest dreq = MakeDeviceRequest2(message, deviceName); 
 
                         if (null != dreq)
                         {
@@ -70,8 +70,48 @@ namespace UeiBridge
                 }
             }
         }
+#endif
+        void EthToUei_Task2()
+        {
+            while (false == _dataItemsQueue.IsCompleted)
+            {
+                // get from q
+                byte[] incomingMessage = _dataItemsQueue.Take();
 
-        private DeviceRequest MakeDeviceRequest(EthernetMessage msg, string deviceName)
+                try
+                {
+                    // convert byte[] to messageObject
+                    string errorString;
+                    EthernetMessage messageObj = EthernetMessageFactory.CreateFromByteArray(incomingMessage, out errorString);
+                    if (null == messageObj)
+                    {
+                        _logger.Warn(errorString);
+                        continue;
+                    }
+
+                    //locate device manager and asks him to  handle DeviceRequest 
+                    string deviceName;
+                    if (ProjectRegistry.Instance.DeviceKeys.TryGetValue(messageObj.CardType, out deviceName)) // get deviceManager for card-type
+                    {
+                        _logger.Debug($"Ethernet Message accepted. Device:{deviceName} Payload length:{messageObj.PayloadBytes.Length}");
+                        OutputDevice deviceManager = ProjectRegistry.Instance.DeviceManagersDic[deviceName];
+
+                        DeviceRequest dreq = MakeDeviceRequest2(messageObj, deviceManager.AttachedConverter);
+                        deviceManager.Enqueue(dreq);
+                    }
+                    else
+                    {
+                        _logger.Warn($"Can't find device key for card type {messageObj.CardType}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.Warn(ex.Message);
+                }
+            }
+        }
+#if old
+        private DeviceRequest MakeDeviceRequest_old(EthernetMessage msg, string deviceName)
         {
             // convert
             IConvert converter;
@@ -81,10 +121,27 @@ namespace UeiBridge
                 return null;
             }
 
-            var req = converter.EthToDevice(msg.PayloadBytes);
-            if (null != req)
+            var payload = converter.EthToDevice(msg.PayloadBytes);
+            if (null != payload)
             {
-                DeviceRequest dr = new DeviceRequest(req, Config.Instance.DeviceUrl , deviceName);
+                DeviceRequest dr = new DeviceRequest(payload, Config.Instance.DeviceUrl, deviceName);
+                return dr;
+            }
+            else
+            {
+                _logger.Warn($"MakeDeviceRequest - Convert fail. Reason: {converter.LastErrorMessage}");
+                return null;
+            }
+        }
+#endif
+        private DeviceRequest MakeDeviceRequest2(EthernetMessage messageObject, IConvert converter)
+        {
+            // convert
+
+            var devicePayload = converter.EthToDevice( messageObject.PayloadBytes);
+            if (null != devicePayload)
+            {
+                DeviceRequest dr = new DeviceRequest(devicePayload, Config.Instance.DeviceUrl);
                 return dr;
             }
             else

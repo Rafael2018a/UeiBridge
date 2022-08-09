@@ -30,6 +30,10 @@ namespace UeiBridge
         protected string _deviceName;// = "AO-308";
         protected int _numberOfChannels = 0;
         protected string _channelsString;
+        protected IConvert _attachedConverter;
+        public IConvert AttachedConverter => _attachedConverter;
+
+        public string DeviceName => _deviceName; 
 
         protected System.Threading.Timer _samplingTimer;
 
@@ -61,25 +65,27 @@ namespace UeiBridge
 
         public string CaseUrl => _caseUrl;
         public string DeviceName => _deviceName;
-        public DeviceRequest(object requestObject, string caseUrl, string deviceName)
+        public DeviceRequest(object requestObject, string caseUrl, string deviceName=null)
         {
             _requestObject = requestObject;
             _caseUrl = caseUrl;
             _deviceName = deviceName;
         }
     }
-    public class DeviceResponse
+    public class ScanResult
     {
-        object _response;
-        string _originDeviceName;
+        object _scan;
+        //string _originDeviceName;
+        InputDevice _originDevice;
 
-        public DeviceResponse(object response, string originDeviceName)
+        public ScanResult(object scan, InputDevice originDevice)
         {
-            _response = response;
-            _originDeviceName = originDeviceName;
+            _scan = scan;
+            _originDevice = originDevice;
         }
 
-        public object Response { get => _response; }
-        public string OriginDeviceName { get => _originDeviceName; }
+        public object Scan { get => _scan; }
+        //public string OriginDeviceName { get => _originDeviceName; }
+        public InputDevice OriginDevice { get => _originDevice; }
     }
 }

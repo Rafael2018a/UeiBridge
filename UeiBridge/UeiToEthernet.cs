@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace UeiBridge
 {
-    class UeiToEthernet : IEnqueue<DeviceResponse>
+    class UeiToEthernet : IEnqueue<ScanResult> // tbd rename DeviceToEtheret 
     {
         ISend<byte[]> _destination;
         log4net.ILog _logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
@@ -17,31 +17,31 @@ namespace UeiBridge
             _destination = destination;
         }
 
-        public void Enqueue(DeviceResponse dr)
+        public void Enqueue(ScanResult dr)
         {
             Task.Factory.StartNew(() => BuildAndSend_Task(dr));
         }
 
-        void BuildAndSend_Task(DeviceResponse dr)
+        void BuildAndSend_Task(ScanResult dr)
         {
-            
-            lock (_lockObject)
+            lock (_lockObject)  // tbd. use q
             {
                 try
                 {
-                    IConvert converter;
-                    if (ProjectRegistry.Instance.ConvertersDic.TryGetValue(dr.OriginDeviceName, out converter))
+                    //IConvert converter;
+                    //if (ProjectRegistry.Instance.ConvertersDic.TryGetValue(dr.OriginDeviceName, out converter))
                     {
-                        byte[] payload = converter.DeviceToEth(dr.Response);
+                        
+                        byte[] payload = dr.OriginDevice.AttachedConverter.DeviceToEth(dr.Scan);
 
-                        EthernetMessage mo = EthernetMessageFactory.CreateFromDevice(payload, dr.OriginDeviceName);
+                        EthernetMessage mo = EthernetMessageFactory.CreateFromDevice(payload, dr.OriginDevice.DeviceName);
                         byte[] bytes = mo?.ToByteArrayUp();
                         _destination.Send(bytes);
                     }
-                    else
-                    {
-                        _logger.Warn($"Can't find suitable converter for {dr.OriginDeviceName} (downward)");
-                    }
+                    //else
+                    //{
+                    //    _logger.Warn($"Can't find suitable converter for {dr.OriginDeviceName} (downward)");
+                    //}
                 }
                 catch (Exception ex)
                 {
