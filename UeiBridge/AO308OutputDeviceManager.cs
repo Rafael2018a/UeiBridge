@@ -10,7 +10,7 @@ namespace UeiBridge
     internal class AO308OutputDeviceManager : OutputDevice
     {
         AnalogScaledWriter _writer;
-        log4net.ILog _logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
+        log4net.ILog _logger = StaticMethods.GetLogger(); 
 
         public AO308OutputDeviceManager()
         {
@@ -79,7 +79,7 @@ namespace UeiBridge
             if (null != req)
             {
                 _writer.WriteSingleScan(req);
-                _logger.Info($"scan written to device. Length: {req.Length}");
+                _logger.Debug($"scan written to device. Length: {req.Length}");
             }
         }
     }

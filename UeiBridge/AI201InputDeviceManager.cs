@@ -14,7 +14,7 @@ namespace UeiBridge
     class AI201InputDeviceManager : InputDevice
     {
         AnalogScaledReader _reader;
-        log4net.ILog _logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
+        log4net.ILog _logger = StaticMethods.GetLogger();
         readonly IEnqueue<ScanResult> _targetConsumer;
 
         public AI201InputDeviceManager( IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl)
@@ -76,7 +76,7 @@ namespace UeiBridge
 
             // read from device
             // ===============
-            var aiData = _reader.ReadSingleScan();
+            double[] aiData = _reader.ReadSingleScan();
             System.Diagnostics.Debug.Assert(aiData != null);
             System.Diagnostics.Debug.Assert(aiData.Length == _numberOfChannels, "wrong number of channels");
 

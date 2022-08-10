@@ -54,7 +54,7 @@ namespace UeiBridge
         /// <param name="deviceString"></param>
         public static EthernetMessage CreateFromDevice(byte[] payload, string deviceString)
         {
-            ILog _logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
+            ILog _logger = StaticMethods.GetLogger();
 
             int key = ProjectRegistry.Instance.GetDeviceKeyFromDeviceString(deviceString);
             if (key < 0)
@@ -63,7 +63,6 @@ namespace UeiBridge
                 return null;
             }
 
-            
             EthernetMessage msg = new EthernetMessage();
             msg.CardType = (byte)key;
             msg.PayloadBytes = payload;

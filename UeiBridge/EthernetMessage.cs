@@ -12,8 +12,6 @@ namespace UeiBridge
         const int _cardTypeOffset = 5; // 1 byte
         const int _lengthOffset = 12; // 2 bytes
 
-        //private static int _serial = 0; // this field for debugging
-        //public bool IsValid { get; }
         public int UnitId { get; set; }
         public int CardType { get; set; }
         public int SlotNumber { get; set; }

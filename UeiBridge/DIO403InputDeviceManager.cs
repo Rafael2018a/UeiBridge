@@ -9,11 +9,8 @@ namespace UeiBridge
     /// </summary>
     class DIO403InputDeviceManager : InputDevice
     {
-
         DigitalReader _reader;
-        log4net.ILog _logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
-        
-
+        log4net.ILog _logger = StaticMethods.GetLogger(); 
         readonly IEnqueue<ScanResult> _targetConsumer;
 
         public DIO403InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl)
@@ -45,33 +42,36 @@ namespace UeiBridge
 
             return true;
         }
-        public void HandleResponse_Callback(object state)
+        public void DeviceScan_Callback(object state)
         {
-            lock (this) // tbd. use q
+            if (null == _deviceSession)
             {
-                // init session, if needed.
-                // =======================
-                if (null == _deviceSession)
+                lock (this)
                 {
-                    CloseDevice();
+                    // init session, if needed.
+                    // =======================
+                    if (null == _deviceSession)
+                    {
+                        CloseDevice();
 
-                    string deviceIndex = StaticMethods.FindDeviceIndex(_deviceName);
-                    if (null == deviceIndex)
-                    {
-                        _logger.Warn($"Can't find index for device {_deviceName}");
-                        return;
-                    }
-                    string url1 = _caseUrl + deviceIndex + _channelsString;
+                        string deviceIndex = StaticMethods.FindDeviceIndex(_deviceName);
+                        if (null == deviceIndex)
+                        {
+                            _logger.Warn($"Can't find index for device {_deviceName}");
+                            return;
+                        }
+                        string url1 = _caseUrl + deviceIndex + _channelsString;
 
-                    if (OpenDevice(url1))
-                    {
-                        //_logger.Info($"{_deviceName} init success. {_numberOfChannels} input channels. {url1}");
-                        _logger.Info($"{_deviceName}(Input) init success. {_numberOfChannels} channels. {deviceIndex + _channelsString}");
-                    }
-                    else
-                    {
-                        _logger.Warn($"Device {_deviceName} init fail");
-                        return;
+                        if (OpenDevice(url1))
+                        {
+                            //_logger.Info($"{_deviceName} init success. {_numberOfChannels} input channels. {url1}");
+                            _logger.Info($"{_deviceName}(Input) init success. {_numberOfChannels} channels. {deviceIndex + _channelsString}");
+                        }
+                        else
+                        {
+                            _logger.Warn($"Device {_deviceName} init fail");
+                            return;
+                        }
                     }
                 }
             }
@@ -87,7 +87,7 @@ namespace UeiBridge
         }
         public void Start()
         {
-            _samplingTimer = new System.Threading.Timer(HandleResponse_Callback, null, TimeSpan.Zero, _samplingInterval);
+            _samplingTimer = new System.Threading.Timer(DeviceScan_Callback, null, TimeSpan.Zero, _samplingInterval);
         }
 
     }

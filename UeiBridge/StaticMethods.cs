@@ -10,7 +10,6 @@ namespace UeiBridge
     static class StaticMethods
     {
         static string _lastErrorMessage;
-
         public static string LastErrorMessage { get => _lastErrorMessage; }
 
         public static List<Device> GetDeviceList()
@@ -49,7 +48,6 @@ namespace UeiBridge
             }
             else
                 return null;
-
         }
 
         public static log4net.ILog GetLogger()
@@ -67,13 +65,11 @@ namespace UeiBridge
         }
 
         /// <summary>
-        /// Find and create suitalble converter
+        /// Find and instantiate suitalble converter
         /// </summary>
         /// <returns></returns>
         public static IConvert CreateConverterInstance(string deviceName)
         {
-            // find and instantiate converter
-            // ================================
             IConvert attachedConverter = null;
             foreach (Type theType in System.Reflection.Assembly.GetExecutingAssembly().GetTypes())
             {
@@ -92,6 +88,12 @@ namespace UeiBridge
             }
             System.Diagnostics.Debug.Assert(attachedConverter != null);
             return attachedConverter;
+        }
+        public static void f()
+        {
+            List<Type> lt = new List<Type>(System.Reflection.Assembly.GetExecutingAssembly().GetTypes());
+            var sub = lt.Where(item => item == typeof(AO308Convert));
+            Console.WriteLine(sub);
         }
 
     }

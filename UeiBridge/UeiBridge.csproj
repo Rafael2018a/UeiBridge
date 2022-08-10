@@ -81,9 +81,10 @@
     <Compile Include="DIO430OutputDeviceManager.cs" />
     <Compile Include="DioOutputDeviceManager.cs" />
     <Compile Include="EthernetMessageFactory.cs" />
+    <Compile Include="InputDevice.cs" />
     <Compile Include="OutputDevice.cs" />
     <Compile Include="ProjectRegistry.cs" />
-    <Compile Include="EthernetToUei.cs" />
+    <Compile Include="EthernetToDevice.cs" />
     <Compile Include="GlobalTypes.cs" />
     <Compile Include="Mediator.cs" />
     <Compile Include="EthernetMessage.cs" />
@@ -92,7 +93,7 @@
     <Compile Include="StaticMethods.cs" />
     <Compile Include="UdpReader.cs" />
     <Compile Include="UdpWriter.cs" />
-    <Compile Include="UeiToEthernet.cs" />
+    <Compile Include="DeviceToEthernet.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

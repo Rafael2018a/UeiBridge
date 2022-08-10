@@ -7,14 +7,14 @@ namespace UeiBridge
     /// <summary>
     /// Convert byte[] to DeviceRequest objects and sends to to appropriate device manager.
     /// </summary>
-    public class EthernetToUei : IEnqueue<byte[]> // tbd, rename: EthernetToDevice
+    public class EthernetToDevice : IEnqueue<byte[]> 
     {
-        BlockingCollection<byte[]> _dataItemsQueue = new BlockingCollection<byte[]>(100); // max 100 items
+        BlockingCollection<byte[]> _dataItemsQueue = new BlockingCollection<byte[]>(100);
         log4net.ILog _logger = StaticMethods.GetLogger();
 
         public void Start()
         {
-            Task.Factory.StartNew(() => EthToUei_Task2());
+            Task.Factory.StartNew(() => EthToDevice_Task());
         }
 #if dont
         /// <summary>
@@ -71,7 +71,7 @@ namespace UeiBridge
             }
         }
 #endif
-        void EthToUei_Task2()
+        void EthToDevice_Task()
         {
             while (false == _dataItemsQueue.IsCompleted)
             {
@@ -96,7 +96,7 @@ namespace UeiBridge
                         _logger.Debug($"Ethernet Message accepted. Device:{deviceName} Payload length:{messageObj.PayloadBytes.Length}");
                         OutputDevice deviceManager = ProjectRegistry.Instance.DeviceManagersDic[deviceName];
 
-                        DeviceRequest dreq = MakeDeviceRequest2(messageObj, deviceManager.AttachedConverter);
+                        DeviceRequest dreq = MakeDeviceRequest(messageObj, deviceManager.AttachedConverter);
                         deviceManager.Enqueue(dreq);
                     }
                     else
@@ -134,10 +134,8 @@ namespace UeiBridge
             }
         }
 #endif
-        private DeviceRequest MakeDeviceRequest2(EthernetMessage messageObject, IConvert converter)
+        private DeviceRequest MakeDeviceRequest(EthernetMessage messageObject, IConvert converter)
         {
-            // convert
-
             var devicePayload = converter.EthToDevice( messageObject.PayloadBytes);
             if (null != devicePayload)
             {

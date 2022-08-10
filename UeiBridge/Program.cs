@@ -24,12 +24,7 @@ namespace UeiBridge
 
         private void Run()
         {
-
-            var i = StaticMethods.FindDeviceIndex("CT-601");
-
-
             // prepare & display device list
-            //List<Device> deviceList = ReadDeviceInfo();
             List<Device> deviceList = StaticMethods.GetDeviceList();
             if (null == deviceList)
             {
@@ -43,26 +38,28 @@ namespace UeiBridge
                 return;
             }
 
-            _logger.Info(" ** Device list:");
+            _logger.Info(" *** Device list:");
             deviceList.ForEach(dev => _logger.Info($"{dev.GetDeviceName()} as Dev{dev.GetIndex()}"));
-            
+            _logger.Info(" *** End device list:");
+
             // prepare device dictionaries
             ProjectRegistry.Instance.Establish();
             // create instance for each output-device-manager
             ProjectRegistry.Instance.DeviceManagersDic.ToList().ForEach((pair) => pair.Value.Start());
 
             // init downwards objects
-            EthernetToUei e2u = new EthernetToUei();
-            e2u.Start();
-            UdpReader ur = new UdpReader(e2u);
+            EthernetToDevice e2d = new EthernetToDevice();
+            e2d.Start();
+            UdpReader ur = new UdpReader(e2d);
             ur.Start();
 
             // init upwards objects
             UdpWriter uw = new UdpWriter();
-            UeiToEthernet u2e = new UeiToEthernet(uw);
-            DIO403InputDeviceManager dio403 = new DIO403InputDeviceManager( u2e, new TimeSpan(0,0,0,0, 100), Config.Instance.DeviceUrl);
+            DeviceToEthernet d2e = new DeviceToEthernet(uw);
+            d2e.Start();
+            DIO403InputDeviceManager dio403 = new DIO403InputDeviceManager( d2e, new TimeSpan(0,0,0,0, 100), Config.Instance.DeviceUrl);
             dio403.Start();
-            AI201InputDeviceManager ai200 = new AI201InputDeviceManager(u2e, new TimeSpan(0, 0, 0, 100, 1000), Config.Instance.DeviceUrl);
+            AI201InputDeviceManager ai200 = new AI201InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 100, 1000), Config.Instance.DeviceUrl);
             ai200.Start();
 
             StartDownwardsTest();

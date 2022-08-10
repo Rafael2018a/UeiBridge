@@ -48,7 +48,7 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert((null != req));
             
             _writer.WriteSingleScanUInt16(req);
-            _logger.Info($"scan written to device. Length: {req.Length}");
+            _logger.Debug($"scan written to device. Length: {req.Length}");
 
         }
 

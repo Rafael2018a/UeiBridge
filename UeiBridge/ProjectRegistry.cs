@@ -7,20 +7,13 @@ namespace UeiBridge
     internal class ProjectRegistry 
     {
         Dictionary<int, string> _deviceMap = new Dictionary<int, string>();
-        //Dictionary<string, IConvert> _convertersMap = new Dictionary<string, IConvert>();
         Dictionary<string, OutputDevice> _deviceManagersMap = new Dictionary<string, OutputDevice>();
-
         static ProjectRegistry _instance = new ProjectRegistry();
         internal static ProjectRegistry Instance { get => _instance; }
         /// <summary>
         /// 1:"AI-204"
         /// </summary>
         public Dictionary<int, string> DeviceKeys { get => _deviceMap; }
-        /// <summary>
-        /// "Ai-204": <instnace>
-        /// </summary>
-        //public Dictionary<string, IConvert> ConvertersDic { get => _convertersMap; }
-
         /// <summary>
         /// "Ai-204": <instnace>
         /// </summary>
@@ -34,21 +27,12 @@ namespace UeiBridge
             _deviceMap.Add(6, "DIO-430");
             _deviceMap.Add(1, "AI-201-100");
 
-
-            //System.Reflection.Assembly.GetExecutingAssembly().GetTypes
-
             // fill convertes and device-managers map
             foreach (Type theType in System.Reflection.Assembly.GetExecutingAssembly().GetTypes())
             {
                 if (theType.IsInterface || theType.IsAbstract)
                     continue;
 
-                //if (typeof(IConvert).IsAssignableFrom(theType))
-                //{
-                //    IConvert obj = (IConvert)Activator.CreateInstance(theType);
-                //    logger.Debug($"New converter instance: {obj.ToString()} - {obj.DeviceName}");
-                //    _convertersMap.Add(obj.DeviceName, obj);
-                //}
                 if (typeof(OutputDevice).IsAssignableFrom(theType))
                 {
                     OutputDevice obj = (OutputDevice)Activator.CreateInstance(theType);
@@ -57,32 +41,6 @@ namespace UeiBridge
                 }
             }
         }
-        /// <summary>
-        /// return -1 if key doesn't exist
-        /// </summary>
-        //public int GetDeviceKeyFromDeviceString(string deviceString)
-        //{
-        //    foreach (var pair in _deviceMap)
-        //    {
-        //        if (pair.Value == deviceString)
-        //        {
-        //            return pair.Key;
-        //        }
-        //    }
-        //    return -1;
-        //}
-        //public int GetDeviceKeyFromDeviceString(string deviceString)
-        //{
-        //    var n  = _deviceMap.ToList().Where(pair => pair.Value == deviceString);
-        //    if (n.Count() == 1)
-        //    {
-        //        return n.First().Key;
-        //    }
-        //    else
-        //    {
-        //        return -1;
-        //    }
-        //}
         public int GetDeviceKeyFromDeviceString(string deviceString)
         {
             try
