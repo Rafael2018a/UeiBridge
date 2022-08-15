@@ -5,7 +5,7 @@ namespace UeiBridge
 {
     abstract class DioOutputDeviceManager : OutputDevice
     {
-        log4net.ILog _logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
+        log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
         protected DigitalWriter _writer;
 
         protected bool OpenDevice( DeviceRequest dr)

@@ -50,17 +50,19 @@ namespace UeiBridge
                 return null;
         }
 
-        public static log4net.ILog GetLogger()
+        public static log4net.ILog GetLogger_notInUse()
         {
             //var m = System.Reflection.MethodBase.GetCurrentMethod();
             //var m1 = System.Reflection.MethodBase.GetCurrentMethod().
 
-            System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace();
+            //System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace();
             // Get calling method name
-            var m = stackTrace.GetFrame(1).GetMethod();
+            //var m = stackTrace.GetFrame(1).GetMethod();
 
 
-            var x = log4net.LogManager.GetLogger( m.DeclaringType.Name);
+            var x = log4net.LogManager.GetLogger("Root");// m.DeclaringType.Name);
+            //var x = log4net.LogManager.GetLogger("SpecialLogger");
+
             return x;
         }
 

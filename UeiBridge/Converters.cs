@@ -17,7 +17,6 @@ namespace UeiBridge
         readonly double  _peekToPeekVoltage;
         readonly double _conversionFactor;
 
-
         public AO308Convert()
         {
             _peekToPeekVoltage = Config.Instance.AnalogOutMinMaxVoltage.Item2 - Config.Instance.AnalogOutMinMaxVoltage.Item1;
@@ -35,7 +34,6 @@ namespace UeiBridge
         /// <returns></returns>
         public object EthToDevice(byte[] messagePayload)
         {
-
             if ((messagePayload.Length) < numberOfChannels * sizeof(UInt16))
             {
                 _lastError = $"analog-out message too short. {messagePayload.Length} ";
@@ -66,9 +64,10 @@ namespace UeiBridge
 
         public object EthToDevice(byte[] messagePayload)
         {
-            throw new NotImplementedException();
-            //UInt32[] result = { 1 };
-            //return result;
+		// tbd
+            //throw new NotImplementedException();
+            UInt32[] result = { 1 };
+            return result;
         }
     }
     class DIO403Convert : IConvert

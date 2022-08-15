@@ -54,7 +54,7 @@ namespace UeiBridge
         /// <param name="deviceString"></param>
         public static EthernetMessage CreateFromDevice(byte[] payload, string deviceString)
         {
-            ILog _logger = StaticMethods.GetLogger();
+            ILog _logger = log4net.LogManager.GetLogger("Root");
 
             int key = ProjectRegistry.Instance.GetDeviceKeyFromDeviceString(deviceString);
             if (key < 0)

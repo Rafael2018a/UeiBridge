@@ -13,6 +13,7 @@ namespace UeiBridge
         {
             _deviceName = "DIO-430";
             _channelsString = "Do0";
+            _attachedConverter = StaticMethods.CreateConverterInstance(_deviceName);
         }
         protected override void HandleRequest(DeviceRequest dr)
         {

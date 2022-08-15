@@ -10,15 +10,12 @@ namespace UeiBridge
     class DIO403InputDeviceManager : InputDevice
     {
         DigitalReader _reader;
-        log4net.ILog _logger = StaticMethods.GetLogger(); 
-        readonly IEnqueue<ScanResult> _targetConsumer;
+        log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
+        
 
-        public DIO403InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl)
+        public DIO403InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl): base( targetConsumer, samplingInterval, caseUrl)
         {
-            _targetConsumer = targetConsumer;
-            _samplingInterval = samplingInterval;
             _deviceName = "DIO-403";
-            _caseUrl = caseUrl;
             _channelsString = "Di3:5";
             _attachedConverter = StaticMethods.CreateConverterInstance(_deviceName);
         }

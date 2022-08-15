@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using UeiDaq;
 
 /// <summary>
@@ -17,6 +18,14 @@ namespace UeiBridge
         protected string _channelsString;
         protected IConvert _attachedConverter;
         public IConvert AttachedConverter => _attachedConverter;
+        protected readonly IEnqueue<ScanResult> _targetConsumer;
+
+        protected InputDevice(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl)
+        {
+            _targetConsumer = targetConsumer;
+            _samplingInterval = samplingInterval;
+            _caseUrl = caseUrl;
+        }
 
         public string DeviceName => _deviceName; 
 

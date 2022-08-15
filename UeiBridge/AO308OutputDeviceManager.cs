@@ -10,7 +10,7 @@ namespace UeiBridge
     internal class AO308OutputDeviceManager : OutputDevice
     {
         AnalogScaledWriter _writer;
-        log4net.ILog _logger = StaticMethods.GetLogger(); 
+        log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
 
         public AO308OutputDeviceManager()
         {

@@ -10,7 +10,7 @@ namespace UeiBridge
 {
     class UdpWriter : ISend<byte[]>
     {
-        log4net.ILog _logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
+        log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
         UdpClient _udpClient;
         public UdpWriter()
         {

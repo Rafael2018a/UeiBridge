@@ -10,7 +10,7 @@ namespace UeiBridge
     class DeviceToEthernet : IEnqueue<ScanResult>
     {
         ISend<byte[]> _destination;
-        log4net.ILog _logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
+        log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
         object _lockObject = new object();
         BlockingCollection<ScanResult> _dataItemsQueue = new BlockingCollection<ScanResult>(100); // max 100 items
 

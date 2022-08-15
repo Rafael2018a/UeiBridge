@@ -13,7 +13,7 @@ namespace UeiBridge
     class Program
     {
         //ILog _logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
-        ILog _logger = StaticMethods.GetLogger();
+        ILog _logger = log4net.LogManager.GetLogger("Root");
 
         static void Main(string[] args)
         {
@@ -24,6 +24,7 @@ namespace UeiBridge
 
         private void Run()
         {
+            _logger.Error("logger check. ERROR");
             // prepare & display device list
             List<Device> deviceList = StaticMethods.GetDeviceList();
             if (null == deviceList)
@@ -57,9 +58,9 @@ namespace UeiBridge
             UdpWriter uw = new UdpWriter();
             DeviceToEthernet d2e = new DeviceToEthernet(uw);
             d2e.Start();
-            DIO403InputDeviceManager dio403 = new DIO403InputDeviceManager( d2e, new TimeSpan(0,0,0,0, 100), Config.Instance.DeviceUrl);
+            DIO403InputDeviceManager dio403 = new DIO403InputDeviceManager( d2e, new TimeSpan(0,0,0,10, 1000), Config.Instance.DeviceUrl);
             dio403.Start();
-            AI201InputDeviceManager ai200 = new AI201InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 100, 1000), Config.Instance.DeviceUrl);
+            AI201InputDeviceManager ai200 = new AI201InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 10, 1000), Config.Instance.DeviceUrl);
             ai200.Start();
 
             StartDownwardsTest();
@@ -88,7 +89,8 @@ namespace UeiBridge
                         udpClient.Send(e308, e308.Length, destEp); // ("192.168.201.202"),
 
                         byte[] e430 = Make_DIO430Down_Message();
-                        //udpClient.Send(e430, e430.Length, new IPEndPoint(IPAddress.Parse("127.0.0.1"), Config.Instance.LocalPort)); // ("192.168.201.202"),
+                        udpClient.Send(e430, e308.Length, destEp);
+                        
 
                         System.Threading.Thread.Sleep(5000);
                         
