@@ -18,7 +18,7 @@ namespace UeiBridge
         /// "Ai-204": <instnace>
         /// </summary>
         public Dictionary<string, OutputDevice> DeviceManagersDic { get => _deviceManagersMap; }
-        internal void Establish()
+        internal void Establish() // tbd. refactor this.
         {
             log4net.ILog logger = log4net.LogManager.GetLogger("Root");
 

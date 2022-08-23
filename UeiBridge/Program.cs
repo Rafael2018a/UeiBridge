@@ -12,7 +12,6 @@ namespace UeiBridge
 {
     class Program
     {
-        //ILog _logger = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType.Name);
         ILog _logger = log4net.LogManager.GetLogger("Root");
 
         static void Main(string[] args)
@@ -24,13 +23,16 @@ namespace UeiBridge
 
         private void Run()
         {
-            _logger.Error("logger check. ERROR");
-            // prepare & display device list
+            
+            var v = System.Reflection.Assembly.GetEntryAssembly().GetName().Version.ToString();
+            _logger.Info($"UEI Bridge. Version {v}");
+
+            // prepare device list
             List<Device> deviceList = StaticMethods.GetDeviceList();
             if (null == deviceList)
             {
                 _logger.Error(StaticMethods.LastErrorMessage);
-                Console.ReadKey();
+                return;
             }
             if (0 == deviceList.Count)
             {
@@ -39,6 +41,7 @@ namespace UeiBridge
                 return;
             }
 
+            // display device list
             _logger.Info(" *** Device list:");
             deviceList.ForEach(dev => _logger.Info($"{dev.GetDeviceName()} as Dev{dev.GetIndex()}"));
             _logger.Info(" *** End device list:");
@@ -58,12 +61,12 @@ namespace UeiBridge
             UdpWriter uw = new UdpWriter();
             DeviceToEthernet d2e = new DeviceToEthernet(uw);
             d2e.Start();
-            DIO403InputDeviceManager dio403 = new DIO403InputDeviceManager( d2e, new TimeSpan(0,0,0,10, 1000), Config.Instance.DeviceUrl);
-            dio403.Start();
-            AI201InputDeviceManager ai200 = new AI201InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 10, 1000), Config.Instance.DeviceUrl);
+            DIO403InputDeviceManager dio403 = new DIO403InputDeviceManager( d2e, new TimeSpan(0,0,0,0, 100), Config.Instance.DeviceUrl);
+            //dio403.Start();
+            AI201InputDeviceManager ai200 = new AI201InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 100), Config.Instance.DeviceUrl);
             ai200.Start();
 
-            StartDownwardsTest();
+            //StartDownwardsTest();
 
             Console.ReadKey();
             
@@ -143,54 +146,6 @@ namespace UeiBridge
         {
             EthernetMessage msg = EthernetMessageFactory.CreateEmpty(6, 16);
             return msg.ToByteArrayDown();
-        }
-
-        internal List<Device> ReadDeviceInfo()
-        {
-            DeviceCollection devColl = new DeviceCollection( Config.Instance.DeviceUrl);
-            //int unknownDeviceIndex = 100;
-            List<Device> resultList = new List<Device>();
-            try
-            {
-                foreach (Device dev in devColl)
-                {
-                    
-                    if (dev != null)
-                    {
-                        resultList.Add(dev);
-                        //string name = dev.GetDeviceName();
-                        //int index = dev.GetIndex();
-                        //var res = dev.GetResourceName();
-                        ////var y = dev.GetSerialNumber();
-                        //var slot = dev.GetSlot();
-                        //var m = dev.GetStatus();
-
-
-                        //_logger.Info(string.Format($"{name} \tslot {slot} \t url:{res}"));
-                        //int icd_idx = Find_Icd_DeviceIndex(name);
-                        //if (icd_idx < 0)
-                        //{
-                        //    icd_idx = unknownDeviceIndex++;
-                        //}
-
-
-                        //{
-                        //    //IDevice idev = FindCreateDeviceObject(name);
-                        //    Type dt = GetDeviceType(name);
-                        //    //if (dt != null)
-                        //    {
-                        //        DeviceMap.Add(icd_idx, new DeviceInfo(name, index, res, dt));
-                        //    }
-                        //}
-
-                    }
-                }
-            }
-            catch(Exception ex)
-            {
-                _logger.Error(ex.Message);
-            }
-            return resultList;
         }
 
     }

@@ -26,8 +26,8 @@ namespace UeiBridge
             try
             {
                 _deviceSession = new Session();
-                var x = Config.Instance.AnalogOutMinMaxVoltage;
-                _deviceSession.CreateAOChannel(deviceUrl, x.Item1, x.Item2);
+                var minmax = Config.Instance.Analog_Out_MinMaxVoltage;
+                _deviceSession.CreateAOChannel(deviceUrl, minmax.Item1, minmax.Item2);
                 _numberOfChannels = _deviceSession.GetNumberOfChannels();
                 _deviceSession.ConfigureTimingForSimpleIO();
                 _writer = new AnalogScaledWriter(_deviceSession.GetDataStream());
@@ -79,6 +79,7 @@ namespace UeiBridge
             if (null != req)
             {
                 _writer.WriteSingleScan(req);
+                _logger.Debug($"AO voltage {req[0]}");
                 _logger.Debug($"scan written to device. Length: {req.Length}");
             }
         }

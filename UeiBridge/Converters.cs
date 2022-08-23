@@ -19,8 +19,8 @@ namespace UeiBridge
 
         public AO308Convert()
         {
-            _peekToPeekVoltage = Config.Instance.AnalogOutMinMaxVoltage.Item2 - Config.Instance.AnalogOutMinMaxVoltage.Item1;
-            _conversionFactor = _peekToPeekVoltage / (Int16.MaxValue - Int16.MinValue);
+            _peekToPeekVoltage = Config.Instance.Analog_Out_MinMaxVoltage.Item2 - Config.Instance.Analog_Out_MinMaxVoltage.Item1;
+            _conversionFactor = _peekToPeekVoltage / UInt16.MaxValue;
         }
 
         public byte[] DeviceToEth(object dt)
@@ -30,8 +30,6 @@ namespace UeiBridge
         /// <summary>
         /// Convert from UInt16 to double
         /// </summary>
-        /// <param name="messagePayload"></param>
-        /// <returns></returns>
         public object EthToDevice(byte[] messagePayload)
         {
             if ((messagePayload.Length) < numberOfChannels * sizeof(UInt16))
@@ -39,7 +37,7 @@ namespace UeiBridge
                 _lastError = $"analog-out message too short. {messagePayload.Length} ";
                 return null;
             }
-            
+
             double[] resultVector = new double[numberOfChannels];
             for (int chNum = 0; chNum < numberOfChannels; chNum++)
             {
@@ -48,7 +46,6 @@ namespace UeiBridge
             }
 
             return resultVector;
-
         }
     }
     class DIO430Convert : IConvert
@@ -65,7 +62,7 @@ namespace UeiBridge
         public object EthToDevice(byte[] messagePayload)
         {
 		// tbd
-            //throw new NotImplementedException();
+            throw new NotImplementedException();
             UInt32[] result = { 1 };
             return result;
         }
@@ -118,12 +115,14 @@ namespace UeiBridge
         string _lastError=null;
         string IConvert.LastErrorMessage => _lastError;
 
-        const double peekToPeekVoltage = 24.0;
+        const double peekVoltage = 12.0;
+        const double peekToPeekVoltage = peekVoltage * 2.0;
+        const double int16range = UInt16.MaxValue;
         readonly double _conversionFactor;
 
         public AI201Converter()
         {
-            _conversionFactor = peekToPeekVoltage / (Int16.MaxValue - Int16.MinValue);
+            _conversionFactor = int16range / peekToPeekVoltage;
         }
         public byte[] DeviceToEth(object dt)
         {
@@ -133,8 +132,10 @@ namespace UeiBridge
             int ch = 0;
             foreach (double val in inputVector)
             {
-                UInt16 r = Convert.ToUInt16( val / _conversionFactor);
-                BitConverter.GetBytes(r).CopyTo(resultVector, ch);
+                double nVal = val + peekVoltage;
+                UInt16 vShort = Convert.ToUInt16(nVal * _conversionFactor);
+                vShort -= (UInt16)Int16.MaxValue;
+                BitConverter.GetBytes(vShort).CopyTo(resultVector, ch);
                 ch += sizeof(UInt16);
             }
             return resultVector;
