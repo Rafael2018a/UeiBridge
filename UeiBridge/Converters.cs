@@ -146,6 +146,7 @@ namespace UeiBridge
             foreach (double val in inputVector)
             {
 			    // tbd: optimize this
+                // tbd. protecet from high voltage.
 			
                 double pVal = (Math.Abs(val) < 0.1) ? 0 : val;
                 double nVal = pVal + peekVoltage;
