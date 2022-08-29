@@ -61,9 +61,9 @@ namespace UeiBridge
             UdpWriter uw = new UdpWriter();
             DeviceToEthernet d2e = new DeviceToEthernet(uw);
             d2e.Start();
-            DIO403InputDeviceManager dio403 = new DIO403InputDeviceManager( d2e, new TimeSpan(0,0,0,0, 100), Config.Instance.DeviceUrl);
-            //dio403.Start();
-            AI201InputDeviceManager ai200 = new AI201InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 100), Config.Instance.DeviceUrl);
+            DIO403InputDeviceManager dio403 = new DIO403InputDeviceManager( d2e, new TimeSpan(0,0,0,0, 10), Config.Instance.DeviceUrl);
+            dio403.Start();
+            AI201InputDeviceManager ai200 = new AI201InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl);
             ai200.Start();
 
             //StartDownwardsTest();

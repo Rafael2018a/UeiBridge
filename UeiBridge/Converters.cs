@@ -130,13 +130,34 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert(null != inputVector);
             byte[] resultVector = new byte[inputVector.Length * 2];
             int ch = 0;
+            int maxval = Int16.MaxValue;
+            //foreach (double val in inputVector)
+            //{
+            //    double nVal = val + peekVoltage;
+            //    nVal = (nVal > peekToPeekVoltage) ? peekToPeekVoltage : nVal;
+            //    double normVol = nVal / peekToPeekVoltage;
+
+            //    UInt16 vShort1 = Convert.ToUInt16(normVol * int16range);
+            //    UInt16 vShort2 = (UInt16)(vShort1 - maxval);
+            //    byte[] two = BitConverter.GetBytes(vShort2);
+            //    two.CopyTo(resultVector, ch);
+            //    ch += 2;// sizeof(UInt16);
+            //}
             foreach (double val in inputVector)
             {
-                double nVal = val + peekVoltage;
-                UInt16 vShort = Convert.ToUInt16(nVal * _conversionFactor);
-                vShort -= (UInt16)Int16.MaxValue;
-                BitConverter.GetBytes(vShort).CopyTo(resultVector, ch);
-                ch += sizeof(UInt16);
+                double pVal = (Math.Abs(val) < 0.1) ? 0 : val;
+                double nVal = pVal + peekVoltage;
+                nVal = (nVal > peekToPeekVoltage) ? peekToPeekVoltage : nVal;
+                double normVol = nVal / peekToPeekVoltage;
+
+                int vShort1 = Convert.ToInt32(normVol * int16range);
+                int vShort2 = (vShort1 - maxval);
+                
+                Int16 vShort3 = Convert.ToInt16((vShort2));
+                
+                byte[] two = BitConverter.GetBytes(vShort3);
+                two.CopyTo(resultVector, ch);
+                ch += 2;// sizeof(UInt16);
             }
             return resultVector;
         }

@@ -14,6 +14,8 @@ namespace UeiBridge
         UdpClient _udpClient;
         public UdpWriter()
         {
+            IPAddress local = IPAddress.Parse("221.109.251.103");
+            IPEndPoint localep = new IPEndPoint(local, 5050);
             _udpClient = new UdpClient();
             IPAddress ip;
             if (IPAddress.TryParse( Config.Instance.DestMulticastAddress, out ip))

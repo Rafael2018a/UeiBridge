@@ -27,7 +27,7 @@ namespace UeiBridge
             try
             {
                 _deviceSession = new Session();
-                _deviceSession.CreateAIChannel(deviceUrl, -15, 15, AIChannelInputMode.SingleEnded); // -15,15 means 'no gain'
+                _deviceSession.CreateAIChannel(deviceUrl, -15.0, 15.0, AIChannelInputMode.SingleEnded); // -15,15 means 'no gain'
                 _numberOfChannels = _deviceSession.GetNumberOfChannels();
                 _deviceSession.ConfigureTimingForSimpleIO();
                 _reader = new AnalogScaledReader(_deviceSession.GetDataStream());
