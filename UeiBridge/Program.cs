@@ -68,8 +68,28 @@ namespace UeiBridge
 
             //StartDownwardsTest();
 
+            //Task.Factory.StartNew(() => PublishStatus_Task());
             Console.ReadKey();
             
+        }
+
+        void PublishStatus_Task()
+        {
+            //UdpWriter uw = new UdpWriter("239.10.10.17", 5093);
+
+            
+            //    string s = JsonConvert.SerializeObject(new UeiLibrary.JsonStatusClass("hello json"));
+            //    byte[] send_buffer = Encoding.ASCII.GetBytes(s);
+
+            ////string returnData = Encoding.ASCII.GetString(send_buffer);
+
+            ////UeiLibrary.JsonStatusClass js = JsonConvert.DeserializeObject<UeiLibrary.JsonStatusClass>(returnData);
+
+            //while (true)
+            //{
+            //    uw.Send(send_buffer);
+            //    System.Threading.Thread.Sleep(1000);
+            //}
         }
 
         private void StartDownwardsTest()

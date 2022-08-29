@@ -45,11 +45,11 @@ namespace UeiBridge
         {
             // init session, if needed.
             // =======================
-            if (null == _deviceSession)
+            if ((null == _deviceSession)||(null==_reader))
             {
                 lock (this)
                 {
-                    if (null == _deviceSession)
+                    if ((null == _deviceSession) || (null == _reader))
                     {
                         CloseDevice();
 

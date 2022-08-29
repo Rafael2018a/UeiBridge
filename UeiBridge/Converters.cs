@@ -145,6 +145,8 @@ namespace UeiBridge
             //}
             foreach (double val in inputVector)
             {
+			    // tbd: optimize this
+			
                 double pVal = (Math.Abs(val) < 0.1) ? 0 : val;
                 double nVal = pVal + peekVoltage;
                 nVal = (nVal > peekToPeekVoltage) ? peekToPeekVoltage : nVal;

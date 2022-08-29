@@ -13,6 +13,8 @@ namespace UeiBridge
         readonly string _deviceUrl = "pdna://192.168.100.2/";
         readonly Tuple<double, double> _analog_Out_MinMaxVoltage = new Tuple<double, double>( -10.0, 10.0 );
         //readonly Tuple<double, double> _analog_In_MinMaxVoltage = new Tuple<double, double>(-15.0, 15.0); // -15,15 means 'no gain'
+        readonly double _analog_Out_PeekVoltage = 10.0;
+        readonly double _analog_In_PeekVoltage = 12.0;
         readonly string _receiverMulticastAddress = "227.3.1.10";
         readonly string _destMulticastAddress = "227.2.1.10";
         readonly int _destMulticastPort = 50038;
@@ -30,6 +32,9 @@ namespace UeiBridge
         public string DestMulticastAddress => _destMulticastAddress;
         public int DestMulticastPort => _destMulticastPort;
         public string LocalBindNicAddress => _localBindNicAddress;
+        public double Analog_Out_PeekVoltage => _analog_Out_PeekVoltage; // tbd. use this
+
+        public double Analog_In_PeekVoltage => _analog_In_PeekVoltage; // tbd. use this
     }
 }
 
