@@ -10,7 +10,7 @@ namespace UeiLibrary
     {
         string _description;
 
-        public JsonStatusClass(string desc)
+        public JsonStatusClass(string desc, string formattedStatus)
         {
             _description = desc;
         }

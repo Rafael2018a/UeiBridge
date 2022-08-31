@@ -40,23 +40,10 @@ namespace StatusViewer
         long _receivedBytes = 0;
         long _receivedDatagrams = 0;
 
-        Process dbgViewProcess;
+        //Process dbgViewProcess;
 
         List<string> logDic = new List<string>();
 
-        //IPEndPoint m_localEp;
-
-        //public IPEndPoint LocalEp_notInUse
-        //{
-        //    get { return m_localEp; }
-        //    set
-        //    {
-        //        if (PropertyChanged != null)
-        //            PropertyChanged(this, new PropertyChangedEventArgs("LocalEp"));
-
-        //        m_localEp = value;
-        //    }
-        //}
         IPAddress m_multicastIp;
         public IPAddress MulticastIp
         {
@@ -176,16 +163,17 @@ namespace StatusViewer
             UdpClient udpListener = udpState.Item1;
             IPEndPoint ep = udpState.Item2;
             byte[] receiveBuffer = null;
+            UeiLibrary.JsonStatusClass js;
             try // just in case socket was closed before reaching here
             {
                 receiveBuffer = udpListener.EndReceive(asyncResult, ref ep);
                 string str = System.Text.Encoding.Default.GetString(receiveBuffer);
                 str = System.Text.Encoding.ASCII.GetString(receiveBuffer);
                 //str = System.Text.Encoding.Unicode.GetString(receiveBuffer);
-                {
-                    UeiLibrary.JsonStatusClass js = JsonConvert.DeserializeObject<UeiLibrary.JsonStatusClass>(str);
+                
+                js = JsonConvert.DeserializeObject<UeiLibrary.JsonStatusClass>(str);
 
-                }
+                
             }
             catch (ObjectDisposedException) // socket already closed
             {
@@ -195,7 +183,7 @@ namespace StatusViewer
             ReceivedBytes += receiveBuffer.Length;
             ReceivedDatagrams++;
 
-            ProjMessageModel messageModel = new ProjMessageModel(receiveBuffer);
+            ProjMessageModel messageModel = new ProjMessageModel(js);
 
             switch (messageModel.MessageType)
             {
@@ -213,11 +201,11 @@ namespace StatusViewer
                         if (baseViewModel != null) // if object already exist
                         {
                             StatusTextViewModel vm = baseViewModel as StatusTextViewModel;
-                            vm.Update(messageModel);
+                            vm.Update( messageModel);
                         }
                         else // object not exists. create new one
                         {
-                            StatusTextViewModel vm = new StatusTextViewModel(messageModel);
+                            StatusTextViewModel vm = new StatusTextViewModel( messageModel);
                             Application.Current.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.DataBind, new Action(() => EntriesList.Add(vm)));
                         }
                     }
@@ -321,6 +309,7 @@ namespace StatusViewer
             {
                 m_udpListener = new System.Net.Sockets.UdpClient();
                 IPEndPoint localEp = new IPEndPoint(SelectedLocalIp, mcPort); // this is just for the port number
+                //IPEndPoint localEp = new IPEndPoint( IPAddress.Any, mcPort); // this is just for the port number
                 m_udpListener.Client.Bind(localEp);
 
                 m_udpListener.JoinMulticastGroup(mcAddress, SelectedLocalIp);//IPAddress.Parse("192.168.1.128")); // ip of UAV-LAN

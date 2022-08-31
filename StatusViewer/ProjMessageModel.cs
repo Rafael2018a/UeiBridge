@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using UeiLibrary;
 
 namespace StatusViewer
 {
@@ -13,6 +14,8 @@ namespace StatusViewer
         double _projTimeInSec;
         double fracFactor = Math.Pow(2, 32) - 1; // tbd. not sure about -1
         private string _desc;
+        //private JsonStatusClass _jsonMessage;
+
         public int Severity { get => _severity; }
         public ProjMessageType MessageType { get => _messageType; }
         public long Int64value { get => _int64value; }
@@ -106,6 +109,14 @@ namespace StatusViewer
                 _messageType = ProjMessageType.Invalid;
                 return;
             }
+        }
+
+        public ProjMessageModel(JsonStatusClass js)
+        {
+            //this._jsonMessage = js;
+            _messageType = ProjMessageType.Text;
+            _desc = js.Description;
+            _stringValue = js.Description;
         }
     }
 }

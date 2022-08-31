@@ -12,6 +12,17 @@
             _channelsString = "Do0:2";
             _attachedConverter = StaticMethods.CreateConverterInstance( _deviceName);
         }
+        class StatusStruct
+        {
+            double[] _lastScan = new double[Config.Instance.MaxAnalogInputChannels];
+
+            public double[] LastScan { get => _lastScan; set => _lastScan = value; }
+        }
+        public override string GetFormattedStatus()
+        {
+            return "ao403";
+        }
+
     }
 }
 

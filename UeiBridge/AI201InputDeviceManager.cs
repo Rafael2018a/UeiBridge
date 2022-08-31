@@ -85,10 +85,14 @@ namespace UeiBridge
             _targetConsumer.Enqueue(dr);
         }
 
-        public void Start()
+        public override void Start()
         {
             _samplingTimer = new System.Threading.Timer(HandleResponse_Callback, null, TimeSpan.Zero, _samplingInterval);
         }
 
+        public override string GetFormattedStatus()
+        {
+            return "";
+        }
     }
 }

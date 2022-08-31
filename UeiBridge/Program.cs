@@ -13,6 +13,8 @@ namespace UeiBridge
     class Program
     {
         ILog _logger = log4net.LogManager.GetLogger("Root");
+        List<InputDevice> _inputDevices = new List<InputDevice>();
+
 
         static void Main(string[] args)
         {
@@ -61,10 +63,15 @@ namespace UeiBridge
             UdpWriter uw = new UdpWriter(Config.Instance.DestMulticastAddress, Config.Instance.DestMulticastPort, Config.Instance.LocalBindNicAddress);
             DeviceToEthernet d2e = new DeviceToEthernet(uw);
             d2e.Start();
-            DIO403InputDeviceManager dio403 = new DIO403InputDeviceManager( d2e, new TimeSpan(0,0,0,0, 10), Config.Instance.DeviceUrl);
-            dio403.Start();
-            AI201InputDeviceManager ai200 = new AI201InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl);
-            ai200.Start();
+
+            _inputDevices.Add(new DIO403InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
+            _inputDevices.Add(new AI201InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
+            _inputDevices.ForEach(dev => dev.Start());
+            //_inputDevices.ge
+            //DIO403InputDeviceManager dio403 = 
+            //dio403.Start();
+            //AI201InputDeviceManager ai200 = ;
+            //ai200.Start();
 
             //StartDownwardsTest();
 
@@ -77,17 +84,24 @@ namespace UeiBridge
         {
             UdpWriter uw = new UdpWriter("239.10.10.17", 5093, Config.Instance.LocalBindNicAddress);
 
-            
-            string s = Newtonsoft.Json.JsonConvert.SerializeObject(new UeiLibrary.JsonStatusClass("hello json"));
-            byte[] send_buffer = Encoding.ASCII.GetBytes(s);
-
-            ////string returnData = Encoding.ASCII.GetString(send_buffer);
-
-            ////UeiLibrary.JsonStatusClass js = JsonConvert.DeserializeObject<UeiLibrary.JsonStatusClass>(returnData);
-
             while (true)
             {
-                uw.Send(send_buffer);
+                foreach (var item in ProjectRegistry.Instance.DeviceManagersDic)
+                {
+                    UeiLibrary.JsonStatusClass js = new UeiLibrary.JsonStatusClass(item.Value.DeviceName + " (Output)", item.Value.GetFormattedStatus() ); 
+                    string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
+                    byte[] send_buffer = Encoding.ASCII.GetBytes(s);
+                    uw.Send(send_buffer);
+                }
+
+                foreach (var item in _inputDevices)
+                {
+                    UeiLibrary.JsonStatusClass js = new UeiLibrary.JsonStatusClass(item.DeviceName + " (Input)", item.GetFormattedStatus());
+                    string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
+                    byte[] send_buffer = Encoding.ASCII.GetBytes(s);
+                    uw.Send(send_buffer);
+                }
+
                 System.Threading.Thread.Sleep(1000);
             }
         }
