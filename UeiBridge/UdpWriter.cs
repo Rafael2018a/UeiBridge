@@ -42,26 +42,31 @@ namespace UeiBridge
     {
 
         Socket _sendSocket;
-        public UdpWriter()
+        public UdpWriter( string destAddress, int destPort, string localBindAddress = null)
         {
+
+            // tbd. Parse might fail!
 
             // Create socket
             _sendSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 
             // Multicast IP-address
-            IPAddress _mcastDestAddress = IPAddress.Parse(Config.Instance.DestMulticastAddress);
+            IPAddress _mcastDestAddress = IPAddress.Parse( destAddress); //Config.Instance.DestMulticastAddress);
 
             // Join multicast group
-            _sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(_mcastDestAddress));
+            //_sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(_mcastDestAddress));
 
             // TTL
             _sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 2);
 
             // Create an endpoint
-            IPEndPoint _mcastDestEP = new IPEndPoint(_mcastDestAddress, Config.Instance.DestMulticastPort);
+            IPEndPoint _mcastDestEP = new IPEndPoint(_mcastDestAddress, destPort);// Config.Instance.DestMulticastPort);
 
-            IPEndPoint localEP = new IPEndPoint(IPAddress.Parse( Config.Instance.LocalBindNicAddress), 11011);
-            _sendSocket.Bind(localEP);
+            if (null != localBindAddress)
+            {
+                IPEndPoint localEP = new IPEndPoint(IPAddress.Parse(localBindAddress), 0);//Config.Instance.LocalBindNicAddress
+                _sendSocket.Bind(localEP);
+            }
             // Connect to the endpoint
             _sendSocket.Connect(_mcastDestEP);
 

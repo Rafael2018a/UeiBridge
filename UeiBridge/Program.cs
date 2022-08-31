@@ -58,7 +58,7 @@ namespace UeiBridge
             ur.Start();
 
             // init upwards objects
-            UdpWriter uw = new UdpWriter();
+            UdpWriter uw = new UdpWriter(Config.Instance.DestMulticastAddress, Config.Instance.DestMulticastPort, Config.Instance.LocalBindNicAddress);
             DeviceToEthernet d2e = new DeviceToEthernet(uw);
             d2e.Start();
             DIO403InputDeviceManager dio403 = new DIO403InputDeviceManager( d2e, new TimeSpan(0,0,0,0, 10), Config.Instance.DeviceUrl);
@@ -68,28 +68,28 @@ namespace UeiBridge
 
             //StartDownwardsTest();
 
-            //Task.Factory.StartNew(() => PublishStatus_Task());
+            Task.Factory.StartNew(() => PublishStatus_Task());
             Console.ReadKey();
             
         }
 
         void PublishStatus_Task()
         {
-            //UdpWriter uw = new UdpWriter("239.10.10.17", 5093);
+            UdpWriter uw = new UdpWriter("239.10.10.17", 5093, Config.Instance.LocalBindNicAddress);
 
             
-            //    string s = JsonConvert.SerializeObject(new UeiLibrary.JsonStatusClass("hello json"));
-            //    byte[] send_buffer = Encoding.ASCII.GetBytes(s);
+            string s = Newtonsoft.Json.JsonConvert.SerializeObject(new UeiLibrary.JsonStatusClass("hello json"));
+            byte[] send_buffer = Encoding.ASCII.GetBytes(s);
 
             ////string returnData = Encoding.ASCII.GetString(send_buffer);
 
             ////UeiLibrary.JsonStatusClass js = JsonConvert.DeserializeObject<UeiLibrary.JsonStatusClass>(returnData);
 
-            //while (true)
-            //{
-            //    uw.Send(send_buffer);
-            //    System.Threading.Thread.Sleep(1000);
-            //}
+            while (true)
+            {
+                uw.Send(send_buffer);
+                System.Threading.Thread.Sleep(1000);
+            }
         }
 
         private void StartDownwardsTest()

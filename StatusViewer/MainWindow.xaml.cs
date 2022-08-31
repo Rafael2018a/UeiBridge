@@ -164,251 +164,251 @@ namespace StatusViewer
 
 
 
-        CommandBinding clearAllCommand = new CommandBinding(MediaCommands.ChannelDown);  // Hmmm ChannelDown is the best choise
+            CommandBinding clearAllCommand = new CommandBinding(MediaCommands.ChannelDown);  // Hmmm ChannelDown is the best choise
             this.CommandBindings.Add(clearAllCommand);
             clearAllCommand.Executed += ClearAllCommand_Executed;
             clearAllCommand.CanExecute += ClearAllCommand_CanExecute;
         }
 
-    void UdpReceiveCallback(IAsyncResult asyncResult)
-    {
-        Tuple<UdpClient, IPEndPoint> udpState = (Tuple<UdpClient, IPEndPoint>)asyncResult.AsyncState;
-        UdpClient udpListener = udpState.Item1;
-        IPEndPoint ep = udpState.Item2;
-        byte[] receiveBuffer = null;
-        try // just in case socket was closed before reaching here
+        void UdpReceiveCallback(IAsyncResult asyncResult)
         {
-            receiveBuffer = udpListener.EndReceive(asyncResult, ref ep);
-            string str = System.Text.Encoding.Default.GetString(receiveBuffer);
-            str = System.Text.Encoding.ASCII.GetString(receiveBuffer);
-            //str = System.Text.Encoding.Unicode.GetString(receiveBuffer);
+            Tuple<UdpClient, IPEndPoint> udpState = (Tuple<UdpClient, IPEndPoint>)asyncResult.AsyncState;
+            UdpClient udpListener = udpState.Item1;
+            IPEndPoint ep = udpState.Item2;
+            byte[] receiveBuffer = null;
+            try // just in case socket was closed before reaching here
             {
-                Rootobject ro = JsonConvert.DeserializeObject<Rootobject>(str);
+                receiveBuffer = udpListener.EndReceive(asyncResult, ref ep);
+                string str = System.Text.Encoding.Default.GetString(receiveBuffer);
+                str = System.Text.Encoding.ASCII.GetString(receiveBuffer);
+                //str = System.Text.Encoding.Unicode.GetString(receiveBuffer);
+                {
+                    UeiLibrary.JsonStatusClass js = JsonConvert.DeserializeObject<UeiLibrary.JsonStatusClass>(str);
+
+                }
+            }
+            catch (ObjectDisposedException) // socket already closed
+            {
+                return;
+            }
+
+            ReceivedBytes += receiveBuffer.Length;
+            ReceivedDatagrams++;
+
+            ProjMessageModel messageModel = new ProjMessageModel(receiveBuffer);
+
+            switch (messageModel.MessageType)
+            {
+                case ProjMessageType.Invalid:
+                    {
+                        AppServices.WriteToTrace(" **** Invalid message ****");
+                    }
+                    break;
+
+                case ProjMessageType.Text:
+                    {
+                        // create or update counter entry
+                        // ==============================
+                        StatusBaseViewModel baseViewModel = TryGetValue(m_entriesList, messageModel.Desc);
+                        if (baseViewModel != null) // if object already exist
+                        {
+                            StatusTextViewModel vm = baseViewModel as StatusTextViewModel;
+                            vm.Update(messageModel);
+                        }
+                        else // object not exists. create new one
+                        {
+                            StatusTextViewModel vm = new StatusTextViewModel(messageModel);
+                            Application.Current.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.DataBind, new Action(() => EntriesList.Add(vm)));
+                        }
+                    }
+                    break;
+
+                case ProjMessageType.Counter:
+                    {
+                        // create or update counter entry
+                        // ==============================
+                        StatusBaseViewModel baseViewModel = TryGetValue(m_entriesList, messageModel.Desc);
+                        if (baseViewModel != null) // if object already exist
+                        {
+                            StatusCounterViewModel vm = baseViewModel as StatusCounterViewModel;
+                            vm.Update(messageModel);
+                        }
+                        else // object not exists. create new one
+                        {
+                            StatusCounterViewModel vm = new StatusCounterViewModel(messageModel);
+                            Application.Current.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.DataBind, new Action(() => EntriesList.Add(vm)));
+                        }
+                    }
+                    break;
+                case ProjMessageType.SimpleLog: //entry to emit to DebugView
+                    {
+                        long timeInTicks = Convert.ToInt64(messageModel.ProjTimeInSec * 10000000.0);
+                        TimeSpan ts = new TimeSpan(timeInTicks);
+
+                        if (false == messageModel.StringValue.StartsWith("=["))
+                        {
+                            string formattedString = string.Format("=#= [{0}; {1}] {2} ", logDic[messageModel.Severity], ts.ToString(@"hh\:mm\:ss"), messageModel.StringValue);
+                            Trace.Write(formattedString);
+                        }
+                        else
+                        {
+                            Trace.Write(messageModel.StringValue);
+                        }
+                    }
+                    break;
 
             }
-        }
-        catch (ObjectDisposedException) // socket already closed
-        {
-            return;
-        }
 
-        ReceivedBytes += receiveBuffer.Length;
-        ReceivedDatagrams++;
+            // ********* tbd. change to socket and use ReceiveAsync   !!!!!!!!!!!!!!!!!!
 
-        ProjMessageModel messageModel = new ProjMessageModel(receiveBuffer);
-
-        switch (messageModel.MessageType)
-        {
-            case ProjMessageType.Invalid:
-                {
-                    AppServices.WriteToTrace(" **** Invalid message ****");
-                }
-                break;
-
-            case ProjMessageType.Text:
-                {
-                    // create or update counter entry
-                    // ==============================
-                    StatusBaseViewModel baseViewModel = TryGetValue(m_entriesList, messageModel.Desc);
-                    if (baseViewModel != null) // if object already exist
-                    {
-                        StatusTextViewModel vm = baseViewModel as StatusTextViewModel;
-                        vm.Update(messageModel);
-                    }
-                    else // object not exists. create new one
-                    {
-                        StatusTextViewModel vm = new StatusTextViewModel(messageModel);
-                        Application.Current.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.DataBind, new Action(() => EntriesList.Add(vm)));
-                    }
-                }
-                break;
-
-            case ProjMessageType.Counter:
-                {
-                    // create or update counter entry
-                    // ==============================
-                    StatusBaseViewModel baseViewModel = TryGetValue(m_entriesList, messageModel.Desc);
-                    if (baseViewModel != null) // if object already exist
-                    {
-                        StatusCounterViewModel vm = baseViewModel as StatusCounterViewModel;
-                        vm.Update(messageModel);
-                    }
-                    else // object not exists. create new one
-                    {
-                        StatusCounterViewModel vm = new StatusCounterViewModel(messageModel);
-                        Application.Current.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.DataBind, new Action(() => EntriesList.Add(vm)));
-                    }
-                }
-                break;
-            case ProjMessageType.SimpleLog: //entry to emit to DebugView
-                {
-                    long timeInTicks = Convert.ToInt64(messageModel.ProjTimeInSec * 10000000.0);
-                    TimeSpan ts = new TimeSpan(timeInTicks);
-
-                    if (false == messageModel.StringValue.StartsWith("=["))
-                    {
-                        string formattedString = string.Format("=#= [{0}; {1}] {2} ", logDic[messageModel.Severity], ts.ToString(@"hh\:mm\:ss"), messageModel.StringValue);
-                        Trace.Write(formattedString);
-                    }
-                    else
-                    {
-                        Trace.Write(messageModel.StringValue);
-                    }
-                }
-                break;
+            udpListener.BeginReceive(new AsyncCallback(UdpReceiveCallback), udpState);
 
         }
 
-        // ********* tbd. change to socket and use ReceiveAsync   !!!!!!!!!!!!!!!!!!
 
-        udpListener.BeginReceive(new AsyncCallback(UdpReceiveCallback), udpState);
-
-    }
-
-
-    private void StopCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-    {
-        e.CanExecute = ((MachineState == MachineStateEnum.Running) || (MachineState == MachineStateEnum.Freeze)) ? true : false; // 
-    }
-
-    private void StopCommand_Executed(object sender, ExecutedRoutedEventArgs e)
-    {
-        MachineState = MachineStateEnum.Initial;
-        togglebuttonFreezeDispaly.IsChecked = false;
-
-        //uClient.DropMulticastGroup(;//_mcAddress);
-        m_udpListener.Close();
-
-
-    }
-
-    private void ClearAllCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-    {
-        e.CanExecute = true;
-    }
-
-    private void ClearAllCommand_Executed(object sender, ExecutedRoutedEventArgs e)
-    {
-        EntriesList.Clear();
-    }
-
-
-    private void StartCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-    {
-        e.CanExecute = (MachineState == MachineStateEnum.Initial) ? true : false;
-    }
-
-    private void StartCommand_Executed(object sender, ExecutedRoutedEventArgs e)
-    {
-        StartMulticast();
-        MachineState = MachineStateEnum.Running;
-        StatusCounterViewModel.EnableBindingUpdate = true; // just in case we came here after freeze
-    }
-
-    private void StartMulticast()
-    {
-        IPAddress mcAddress = null;
-        //int mcPort = -1;
-
-        string mcIp = ConfigurationSettings.AppSettings["multicastIp"];
-        mcAddress = (mcIp != null) ? IPAddress.Parse(mcIp) : IPAddress.Parse("239.10.10.17"); // get from config or use default
-        string mcPort1 = ConfigurationSettings.AppSettings["multicastPort"];
-        mcPort = (mcPort != null) ? Int32.Parse(mcPort1) : 5093; // get from config or use default
-        AppServices.WriteToTrace(string.Format("Multicast EP: {0}:{1}", mcAddress, mcPort));
-
-        // define listener
-        try
+        private void StopCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            m_udpListener = new System.Net.Sockets.UdpClient();
-            IPEndPoint localEp = new IPEndPoint(SelectedLocalIp, mcPort); // this is just for the port number
-            m_udpListener.Client.Bind(localEp);
-
-            m_udpListener.JoinMulticastGroup(mcAddress, SelectedLocalIp);//IPAddress.Parse("192.168.1.128")); // ip of UAV-LAN
-            m_multicastIp = mcAddress;
-            Tuple<UdpClient, IPEndPoint> udpState = new Tuple<UdpClient, IPEndPoint>(m_udpListener, localEp);
-            m_udpListener.BeginReceive(new AsyncCallback(UdpReceiveCallback), udpState);
+            e.CanExecute = ((MachineState == MachineStateEnum.Running) || (MachineState == MachineStateEnum.Freeze)) ? true : false; // 
         }
-        catch (Exception ex)
+
+        private void StopCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
-            MessageBox.Show("Failed to create socket. " + ex.Message, "StatusViewer", MessageBoxButton.OK);
+            MachineState = MachineStateEnum.Initial;
+            togglebuttonFreezeDispaly.IsChecked = false;
+
+            //uClient.DropMulticastGroup(;//_mcAddress);
+            m_udpListener.Close();
+
+
         }
-    }
 
-
-    private void FreezeCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
-    {
-        e.CanExecute = ((MachineState == MachineStateEnum.Running) || (MachineState == MachineStateEnum.Freeze)) ? true : false;
-    }
-
-    void freezeCommandExecuted(object sender, ExecutedRoutedEventArgs e)
-    {
-        System.Windows.Controls.Primitives.ToggleButton tb = e.Source as System.Windows.Controls.Primitives.ToggleButton;
-        if (tb.IsChecked.Value)
+        private void ClearAllCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            MachineState = MachineStateEnum.Freeze;
-            StatusCounterViewModel.EnableBindingUpdate = false;
+            e.CanExecute = true;
         }
-        else
+
+        private void ClearAllCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
+            EntriesList.Clear();
+        }
+
+
+        private void StartCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = (MachineState == MachineStateEnum.Initial) ? true : false;
+        }
+
+        private void StartCommand_Executed(object sender, ExecutedRoutedEventArgs e)
+        {
+            StartMulticast();
             MachineState = MachineStateEnum.Running;
-            StatusCounterViewModel.EnableBindingUpdate = true;
-        }
-    }
-
-    public event PropertyChangedEventHandler PropertyChanged;
-
-    public bool AtInitialState
-    {
-        get { return _machineState == MachineStateEnum.Initial; }
-    }
-    public MachineStateEnum MachineState
-    {
-        get
-        {
-            return _machineState;
+            StatusCounterViewModel.EnableBindingUpdate = true; // just in case we came here after freeze
         }
 
-        set
+        private void StartMulticast()
         {
-            _machineState = value;
-            if (PropertyChanged != null)
+            IPAddress mcAddress = null;
+            //int mcPort = -1;
+
+            string mcIp = ConfigurationSettings.AppSettings["multicastIp"];
+            mcAddress = (mcIp != null) ? IPAddress.Parse(mcIp) : IPAddress.Parse("239.10.10.17"); // get from config or use default
+            string mcPort1 = ConfigurationSettings.AppSettings["multicastPort"];
+            mcPort = (mcPort != null) ? Int32.Parse(mcPort1) : 5093; // get from config or use default
+            AppServices.WriteToTrace(string.Format("Multicast EP: {0}:{1}", mcAddress, mcPort));
+
+            // define listener
+            try
             {
-                PropertyChanged(this, new PropertyChangedEventArgs("MachineState"));
-                PropertyChanged(this, new PropertyChangedEventArgs("AtInitialState"));
+                m_udpListener = new System.Net.Sockets.UdpClient();
+                IPEndPoint localEp = new IPEndPoint(SelectedLocalIp, mcPort); // this is just for the port number
+                m_udpListener.Client.Bind(localEp);
+
+                m_udpListener.JoinMulticastGroup(mcAddress, SelectedLocalIp);//IPAddress.Parse("192.168.1.128")); // ip of UAV-LAN
+                m_multicastIp = mcAddress;
+                Tuple<UdpClient, IPEndPoint> udpState = new Tuple<UdpClient, IPEndPoint>(m_udpListener, localEp);
+                m_udpListener.BeginReceive(new AsyncCallback(UdpReceiveCallback), udpState);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Failed to create socket. " + ex.Message, "StatusViewer", MessageBoxButton.OK);
             }
         }
+
+
+        private void FreezeCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
+        {
+            e.CanExecute = ((MachineState == MachineStateEnum.Running) || (MachineState == MachineStateEnum.Freeze)) ? true : false;
+        }
+
+        void freezeCommandExecuted(object sender, ExecutedRoutedEventArgs e)
+        {
+            System.Windows.Controls.Primitives.ToggleButton tb = e.Source as System.Windows.Controls.Primitives.ToggleButton;
+            if (tb.IsChecked.Value)
+            {
+                MachineState = MachineStateEnum.Freeze;
+                StatusCounterViewModel.EnableBindingUpdate = false;
+            }
+            else
+            {
+                MachineState = MachineStateEnum.Running;
+                StatusCounterViewModel.EnableBindingUpdate = true;
+            }
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public bool AtInitialState
+        {
+            get { return _machineState == MachineStateEnum.Initial; }
+        }
+        public MachineStateEnum MachineState
+        {
+            get
+            {
+                return _machineState;
+            }
+
+            set
+            {
+                _machineState = value;
+                if (PropertyChanged != null)
+                {
+                    PropertyChanged(this, new PropertyChangedEventArgs("MachineState"));
+                    PropertyChanged(this, new PropertyChangedEventArgs("AtInitialState"));
+                }
+            }
+        }
+
+        public long ReceivedBytes
+        {
+            get
+            {
+                return _receivedBytes;
+            }
+
+            set
+            {
+                _receivedBytes = value;
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs("ReceivedBytes"));
+            }
+        }
+
+
+        public long ReceivedDatagrams
+        {
+            get
+            {
+                return _receivedDatagrams;
+            }
+
+            set
+            {
+                _receivedDatagrams = value;
+                if (PropertyChanged != null)
+                    PropertyChanged(this, new PropertyChangedEventArgs("ReceivedDatagrams"));
+            }
+        }
+
     }
-
-    public long ReceivedBytes
-    {
-        get
-        {
-            return _receivedBytes;
-        }
-
-        set
-        {
-            _receivedBytes = value;
-            if (PropertyChanged != null)
-                PropertyChanged(this, new PropertyChangedEventArgs("ReceivedBytes"));
-        }
-    }
-
-
-    public long ReceivedDatagrams
-    {
-        get
-        {
-            return _receivedDatagrams;
-        }
-
-        set
-        {
-            _receivedDatagrams = value;
-            if (PropertyChanged != null)
-                PropertyChanged(this, new PropertyChangedEventArgs("ReceivedDatagrams"));
-        }
-    }
-
-}
 }
