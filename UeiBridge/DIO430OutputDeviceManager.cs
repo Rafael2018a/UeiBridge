@@ -34,12 +34,6 @@ namespace UeiBridge
             _writer.WriteSingleScanUInt32(  req );
 
         }
-        class StatusStruct
-        {
-            //double[] _lastScan = new double[Config.Instance.MaxAnalogInputChannels];
-
-            //public double[] LastScan { get => _lastScan; set => _lastScan = value; }
-        }
         public override string GetFormattedStatus()
         {
             return "(not ready yet)";

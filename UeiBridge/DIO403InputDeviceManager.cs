@@ -74,11 +74,11 @@ namespace UeiBridge
             }
             // read from device
             // ===============
-            var diData = _reader.ReadSingleScanUInt16();
-            System.Diagnostics.Debug.Assert(diData != null);
-            System.Diagnostics.Debug.Assert(diData.Length == _numberOfChannels, "wrong number of channels");
+            _lastScan = _reader.ReadSingleScanUInt16();
+            System.Diagnostics.Debug.Assert(_lastScan != null);
+            System.Diagnostics.Debug.Assert(_lastScan.Length == _numberOfChannels, "wrong number of channels");
             //diData[0] = 0x07;
-            ScanResult dr = new ScanResult(diData, this);
+            ScanResult dr = new ScanResult(_lastScan, this);
             _targetConsumer.Enqueue(dr);
 
         }
@@ -86,9 +86,19 @@ namespace UeiBridge
         {
             _samplingTimer = new System.Threading.Timer(DeviceScan_Callback, null, TimeSpan.Zero, _samplingInterval);
         }
+        UInt16 [] _lastScan;
         public override string GetFormattedStatus()
         {
-            return "";
+            System.Text.StringBuilder sb = new System.Text.StringBuilder("Input bits: ");
+            if (null != _lastScan)
+            {
+                foreach (UInt16 val in _lastScan)
+                {
+                    sb.Append(Convert.ToString(val, 2).PadLeft(8, '0'));
+                    sb.Append("  ");
+                }
+            }
+            return sb.ToString();
         }
 
     }

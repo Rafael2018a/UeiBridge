@@ -76,30 +76,28 @@ namespace UeiBridge
 
             // write to device
             // ===============
-            double[] req = dr.RequestObject as double[];
-            if (null != req)
+            _lastScan = dr.RequestObject as double[];
+            if (null != _lastScan)
             {
-                _writer.WriteSingleScan(req);
-                _status.LastScan = req;
-                _logger.Debug($"AO voltage {req[0]}");
-                _logger.Debug($"scan written to device. Length: {req.Length}");
+                _writer.WriteSingleScan(_lastScan);
+                _logger.Debug($"AO voltage {_lastScan[0]}");
+                _logger.Debug($"scan written to device. Length: {_lastScan.Length}");
             }
         }
 
-        class StatusStruct
-        {
-            double[] _lastScan = new double[Config.Instance.MaxAnalogOutputChannels];
+        //StatusStruct _status = new StatusStruct();
+        double[] _lastScan;
 
-            public double[] LastScan { get => _lastScan; set => _lastScan = value; }
-        }
-        StatusStruct _status = new StatusStruct();
         public override string GetFormattedStatus()
         {
             System.Text.StringBuilder sb = new System.Text.StringBuilder("Output voltage: ");
-            foreach(double d in _status.LastScan)
+            if (null != _lastScan)
             {
-                sb.Append("  ");
-                sb.Append( d.ToString("0.0"));
+                foreach (double d in _lastScan)
+                {
+                    sb.Append("  ");
+                    sb.Append(d.ToString("0.0"));
+                }
             }
             return sb.ToString();
         }

@@ -77,11 +77,11 @@ namespace UeiBridge
 
             // read from device
             // ===============
-            double[] aiData = _reader.ReadSingleScan();
-            System.Diagnostics.Debug.Assert(aiData != null);
-            System.Diagnostics.Debug.Assert(aiData.Length == _numberOfChannels, "wrong number of channels");
+            _lastScan = _reader.ReadSingleScan();
+            System.Diagnostics.Debug.Assert(_lastScan != null);
+            System.Diagnostics.Debug.Assert(_lastScan.Length == _numberOfChannels, "wrong number of channels");
 
-            ScanResult dr = new ScanResult(aiData, this);
+            ScanResult dr = new ScanResult(_lastScan, this);
             _targetConsumer.Enqueue(dr);
         }
 
@@ -90,9 +90,20 @@ namespace UeiBridge
             _samplingTimer = new System.Threading.Timer(HandleResponse_Callback, null, TimeSpan.Zero, _samplingInterval);
         }
 
+        double[] _lastScan;
         public override string GetFormattedStatus()
         {
-            return "";
+            System.Text.StringBuilder sb = new System.Text.StringBuilder("Input voltage: ");
+            if (null != _lastScan)
+            {
+                foreach (double d in _lastScan)
+                {
+                    sb.Append("  ");
+                    sb.Append(d.ToString("0.0"));
+                }
+            }
+            return sb.ToString();
         }
     }
 }
+
