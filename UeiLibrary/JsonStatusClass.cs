@@ -8,13 +8,16 @@ namespace UeiLibrary
 {
     public class JsonStatusClass
     {
-        string _description;
+        string _fieldTitle;
+        string _formattedStatus;
 
         public JsonStatusClass(string desc, string formattedStatus)
         {
-            _description = desc;
+            _fieldTitle = desc;
+            this._formattedStatus = formattedStatus;
         }
 
-        public string Description { get => _description; set => _description = value; }
+        public string FieldTitle { get => _fieldTitle; set => _fieldTitle = value; }
+        public string FormattedStatus { get => _formattedStatus; set => _formattedStatus = value; }
     }
 }

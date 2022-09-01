@@ -11,7 +11,7 @@ namespace UeiBridge
     {
         AnalogScaledWriter _writer;
         log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
-        StatusStruct _status = new StatusStruct();
+       
 
         public AO308OutputDeviceManager()
         {
@@ -88,13 +88,20 @@ namespace UeiBridge
 
         class StatusStruct
         {
-            double[] _lastScan = new double[Config.Instance.MaxAnalogInputChannels];
+            double[] _lastScan = new double[Config.Instance.MaxAnalogOutputChannels];
 
             public double[] LastScan { get => _lastScan; set => _lastScan = value; }
         }
+        StatusStruct _status = new StatusStruct();
         public override string GetFormattedStatus()
         {
-            return "ao308";
+            System.Text.StringBuilder sb = new System.Text.StringBuilder("Output voltage: ");
+            foreach(double d in _status.LastScan)
+            {
+                sb.Append("  ");
+                sb.Append( d.ToString("0.0"));
+            }
+            return sb.ToString();
         }
     }
 }

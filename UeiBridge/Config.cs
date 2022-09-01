@@ -19,7 +19,8 @@ namespace UeiBridge
         readonly string _destMulticastAddress = "227.2.1.10";
         readonly int _destMulticastPort = 50038;
         readonly string _localBindNicAddress = "221.109.251.103";
-        readonly int _maxAnalogInputChannels = 8;
+        readonly int _maxAnalogOutputChannels = 8;
+        readonly int _maxDigital403OutputChannels = 3; // each channel contains 8 bits
         public Config()
         {
             
@@ -35,7 +36,8 @@ namespace UeiBridge
         public string LocalBindNicAddress => _localBindNicAddress;
         public double Analog_Out_PeekVoltage => _analog_Out_PeekVoltage; // tbd. use this
         public double Analog_In_PeekVoltage => _analog_In_PeekVoltage; // tbd. use this
-        public int MaxAnalogInputChannels => _maxAnalogInputChannels;
+        public int MaxAnalogOutputChannels => _maxAnalogOutputChannels;
+        public int MaxDigital403OutputChannels => _maxDigital403OutputChannels;
     }
 }
 

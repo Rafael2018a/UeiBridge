@@ -21,7 +21,7 @@ namespace UeiBridge
         {
             _peekToPeekVoltage = Config.Instance.Analog_Out_MinMaxVoltage.Item2 - Config.Instance.Analog_Out_MinMaxVoltage.Item1;
             _conversionFactor = _peekToPeekVoltage / UInt16.MaxValue;
-            _numberOfChannels = Config.Instance.MaxAnalogInputChannels;
+            _numberOfChannels = Config.Instance.MaxAnalogOutputChannels;
         }
 
         public byte[] DeviceToEth(object dt)
@@ -72,6 +72,13 @@ namespace UeiBridge
     {
         public string DeviceName => "DIO-403";
         string _lastError=null;
+        readonly int _numberOfOutChannels;
+
+        public DIO403Convert()
+        {
+            _numberOfOutChannels = Config.Instance.MaxDigital403OutputChannels;
+        }
+
         string IConvert.LastErrorMessage => _lastError;
 
         public byte[] DeviceToEth(object dt)
@@ -89,8 +96,7 @@ namespace UeiBridge
         }
         public object EthToDevice(byte[] messagePayload)
         {
-            const int numberOfChannels = 3; 
-            if (messagePayload.Length < numberOfChannels)
+            if (messagePayload.Length < _numberOfOutChannels)
             {
                 _lastError = $"digital-out message too short. {messagePayload.Length} ";
                 return null;

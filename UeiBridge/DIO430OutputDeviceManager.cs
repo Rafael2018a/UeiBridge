@@ -7,8 +7,10 @@ using UeiDaq;
 
 namespace UeiBridge
 {
+    
     class DIO430OutputDeviceManager: DioOutputDeviceManager
     {
+        
         public DIO430OutputDeviceManager()
         {
             _deviceName = "DIO-430";
@@ -34,13 +36,13 @@ namespace UeiBridge
         }
         class StatusStruct
         {
-            double[] _lastScan = new double[Config.Instance.MaxAnalogInputChannels];
+            //double[] _lastScan = new double[Config.Instance.MaxAnalogInputChannels];
 
-            public double[] LastScan { get => _lastScan; set => _lastScan = value; }
+            //public double[] LastScan { get => _lastScan; set => _lastScan = value; }
         }
         public override string GetFormattedStatus()
         {
-            return "ao308";
+            return "(not ready yet)";
         }
 
     }

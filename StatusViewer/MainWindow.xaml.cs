@@ -168,7 +168,7 @@ namespace StatusViewer
             {
                 receiveBuffer = udpListener.EndReceive(asyncResult, ref ep);
                 string str = System.Text.Encoding.Default.GetString(receiveBuffer);
-                str = System.Text.Encoding.ASCII.GetString(receiveBuffer);
+                //str = System.Text.Encoding.ASCII.GetString(receiveBuffer);
                 //str = System.Text.Encoding.Unicode.GetString(receiveBuffer);
                 
                 js = JsonConvert.DeserializeObject<UeiLibrary.JsonStatusClass>(str);

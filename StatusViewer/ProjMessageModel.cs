@@ -115,8 +115,8 @@ namespace StatusViewer
         {
             //this._jsonMessage = js;
             _messageType = ProjMessageType.Text;
-            _desc = js.Description;
-            _stringValue = js.Description;
+            _desc = js.FieldTitle;
+            _stringValue = js.FormattedStatus;
         }
     }
 }
