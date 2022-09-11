@@ -34,7 +34,7 @@ namespace UeiBridge
             _deviceSession = null;
         }
         protected abstract void HandleRequest(DeviceRequest request);
-
+        public abstract string GetFormattedStatus();
 
         public void Enqueue(DeviceRequest dr)
         {

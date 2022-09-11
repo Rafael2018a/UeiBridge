@@ -20,17 +20,16 @@ namespace UeiBridge
         public IConvert AttachedConverter => _attachedConverter;
         protected readonly IEnqueue<ScanResult> _targetConsumer;
 
+        public abstract void Start();
+        public abstract string GetFormattedStatus();
         protected InputDevice(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl)
         {
             _targetConsumer = targetConsumer;
             _samplingInterval = samplingInterval;
             _caseUrl = caseUrl;
         }
-
         public string DeviceName => _deviceName; 
-
         protected System.Threading.Timer _samplingTimer;
-
         protected TimeSpan _samplingInterval;
         public virtual void CloseDevice()
         {

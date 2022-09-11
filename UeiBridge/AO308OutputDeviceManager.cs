@@ -11,6 +11,7 @@ namespace UeiBridge
     {
         AnalogScaledWriter _writer;
         log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
+       
 
         public AO308OutputDeviceManager()
         {
@@ -75,13 +76,30 @@ namespace UeiBridge
 
             // write to device
             // ===============
-            double[] req = dr.RequestObject as double[];
-            if (null != req)
+            _lastScan = dr.RequestObject as double[];
+            if (null != _lastScan)
             {
-                _writer.WriteSingleScan(req);
-                _logger.Debug($"AO voltage {req[0]}");
-                _logger.Debug($"scan written to device. Length: {req.Length}");
+                _writer.WriteSingleScan(_lastScan);
+                _logger.Debug($"AO voltage {_lastScan[0]}");
+                _logger.Debug($"scan written to device. Length: {_lastScan.Length}");
             }
+        }
+
+        //StatusStruct _status = new StatusStruct();
+        double[] _lastScan;
+
+        public override string GetFormattedStatus()
+        {
+            System.Text.StringBuilder sb = new System.Text.StringBuilder("Output voltage: ");
+            if (null != _lastScan)
+            {
+                foreach (double d in _lastScan)
+                {
+                    sb.Append("  ");
+                    sb.Append(d.ToString("0.0"));
+                }
+            }
+            return sb.ToString();
         }
     }
 }

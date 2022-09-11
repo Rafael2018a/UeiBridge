@@ -48,6 +48,7 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert((null != req));
             
             _writer.WriteSingleScanUInt16(req);
+            _lastScan = req;
             _logger.Debug($"scan written to device. Length: {req.Length}");
 
         }
@@ -72,6 +73,33 @@ namespace UeiBridge
             }
             return true;
         }
+
+        UInt16[] _lastScan;
+        //class StatusStruct // tbd. might be generic
+        //{
+        //    UInt16[] _lastScan = new UInt16[Config.Instance.MaxDigital403OutputChannels];
+        //    public UInt16[] LastScan { get => _lastScan; set => _lastScan = value; }
+        //}
+        //StatusStruct _status = new StatusStruct();
+        public override string GetFormattedStatus()
+        {
+            System.Text.StringBuilder sb = new System.Text.StringBuilder("Output bits: ");
+            if (null != _lastScan)
+            {
+                foreach (UInt16 val in _lastScan)
+                {
+                    sb.Append(Convert.ToString(val, 2).PadLeft(8, '0'));
+                    sb.Append("  ");
+                }
+            }
+            return sb.ToString();
+        }
+        void f()
+        {
+            int i = 0;
+            string s = Convert.ToString(i, 2);
+        }
+
     }
 }
 

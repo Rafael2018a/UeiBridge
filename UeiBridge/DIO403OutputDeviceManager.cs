@@ -12,6 +12,7 @@
             _channelsString = "Do0:2";
             _attachedConverter = StaticMethods.CreateConverterInstance( _deviceName);
         }
+
     }
 }
 

@@ -7,8 +7,10 @@ using UeiDaq;
 
 namespace UeiBridge
 {
+    
     class DIO430OutputDeviceManager: DioOutputDeviceManager
     {
+        
         public DIO430OutputDeviceManager()
         {
             _deviceName = "DIO-430";
@@ -27,11 +29,14 @@ namespace UeiBridge
 
             // write to device
             // ===============
-
             UInt32[] req = dr.RequestObject as UInt32[];
             System.Diagnostics.Debug.Assert(req != null);// dr.RequestObject.GetType() == typeof(UInt32));
             _writer.WriteSingleScanUInt32(  req );
 
+        }
+        public override string GetFormattedStatus()
+        {
+            return "(not ready yet)";
         }
 
     }

@@ -13,7 +13,7 @@ namespace UeiBridge
         string _lastError { get; set; }
         string IConvert.LastErrorMessage => _lastError;
 
-        const int numberOfChannels = 8; // from icd
+        readonly int _numberOfChannels;
         readonly double  _peekToPeekVoltage;
         readonly double _conversionFactor;
 
@@ -21,6 +21,7 @@ namespace UeiBridge
         {
             _peekToPeekVoltage = Config.Instance.Analog_Out_MinMaxVoltage.Item2 - Config.Instance.Analog_Out_MinMaxVoltage.Item1;
             _conversionFactor = _peekToPeekVoltage / UInt16.MaxValue;
+            _numberOfChannels = Config.Instance.MaxAnalogOutputChannels;
         }
 
         public byte[] DeviceToEth(object dt)
@@ -32,14 +33,14 @@ namespace UeiBridge
         /// </summary>
         public object EthToDevice(byte[] messagePayload)
         {
-            if ((messagePayload.Length) < numberOfChannels * sizeof(UInt16))
+            if ((messagePayload.Length) < _numberOfChannels * sizeof(UInt16))
             {
                 _lastError = $"analog-out message too short. {messagePayload.Length} ";
                 return null;
             }
 
-            double[] resultVector = new double[numberOfChannels];
-            for (int chNum = 0; chNum < numberOfChannels; chNum++)
+            double[] resultVector = new double[_numberOfChannels];
+            for (int chNum = 0; chNum < _numberOfChannels; chNum++)
             {
                 Int16 ival = BitConverter.ToInt16(messagePayload, 2 * chNum);
                 resultVector[chNum] = ival * _conversionFactor;
@@ -71,6 +72,13 @@ namespace UeiBridge
     {
         public string DeviceName => "DIO-403";
         string _lastError=null;
+        readonly int _numberOfOutChannels;
+
+        public DIO403Convert()
+        {
+            _numberOfOutChannels = Config.Instance.MaxDigital403OutputChannels;
+        }
+
         string IConvert.LastErrorMessage => _lastError;
 
         public byte[] DeviceToEth(object dt)
@@ -88,8 +96,7 @@ namespace UeiBridge
         }
         public object EthToDevice(byte[] messagePayload)
         {
-            const int numberOfChannels = 3; 
-            if (messagePayload.Length < numberOfChannels)
+            if (messagePayload.Length < _numberOfOutChannels)
             {
                 _lastError = $"digital-out message too short. {messagePayload.Length} ";
                 return null;
@@ -118,11 +125,11 @@ namespace UeiBridge
         const double peekVoltage = 12.0;
         const double peekToPeekVoltage = peekVoltage * 2.0;
         const double int16range = UInt16.MaxValue;
-        readonly double _conversionFactor;
+        //readonly double _conversionFactor;
 
         public AI201Converter()
         {
-            _conversionFactor = int16range / peekToPeekVoltage;
+            //_conversionFactor = int16range / peekToPeekVoltage;
         }
         public byte[] DeviceToEth(object dt)
         {
@@ -145,6 +152,9 @@ namespace UeiBridge
             //}
             foreach (double val in inputVector)
             {
+			    // tbd: optimize this
+                // tbd. protecet from high voltage.
+			
                 double pVal = (Math.Abs(val) < 0.1) ? 0 : val;
                 double nVal = pVal + peekVoltage;
                 nVal = (nVal > peekToPeekVoltage) ? peekToPeekVoltage : nVal;

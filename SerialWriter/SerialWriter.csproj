@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{086A67BB-D92F-4FC5-A91E-39913ABC6328}</ProjectGuid>
+    <ProjectGuid>{B96AEFFD-9E86-464B-AC15-0721BDAA4924}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>UeiBridge</RootNamespace>
-    <AssemblyName>UeiBridge</AssemblyName>
+    <RootNamespace>SerialWriter</RootNamespace>
+    <AssemblyName>SerialWriter</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -34,7 +34,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\bin64\Debug\</OutputPath>
+    <OutputPath>bin\x64\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <DebugType>full</DebugType>
     <PlatformTarget>x64</PlatformTarget>
@@ -43,7 +43,7 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <OutputPath>..\bin64\Release\</OutputPath>
+    <OutputPath>bin\x64\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <Optimize>true</Optimize>
     <DebugType>pdbonly</DebugType>
@@ -53,20 +53,8 @@
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="log4net, Version=2.0.14.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
-      <HintPath>..\packages\log4net.2.0.14\lib\net45\log4net.dll</HintPath>
-    </Reference>
-    <Reference Include="log4net.Ext.Json, Version=2.0.10.1, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\log4net.Ext.Json.2.0.10.1\lib\net452\log4net.Ext.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.13.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Web" />
-    <Reference Include="System.Web.Extensions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -79,41 +67,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AI201InputDeviceManager.cs" />
-    <Compile Include="AO308OutputDeviceManager.cs" />
-    <Compile Include="Config.cs" />
-    <Compile Include="Converters.cs" />
-    <Compile Include="DIO403InputDeviceManager.cs" />
-    <Compile Include="DIO403OutputDeviceManager.cs" />
-    <Compile Include="DIO430OutputDeviceManager.cs" />
-    <Compile Include="DioOutputDeviceManager.cs" />
-    <Compile Include="EthernetMessageFactory.cs" />
-    <Compile Include="InputDevice.cs" />
-    <Compile Include="OutputDevice.cs" />
-    <Compile Include="ProjectRegistry.cs" />
-    <Compile Include="EthernetToDevice.cs" />
-    <Compile Include="GlobalTypes.cs" />
-    <Compile Include="Mediator.cs" />
-    <Compile Include="EthernetMessage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StaticMethods.cs" />
-    <Compile Include="UdpReader.cs" />
-    <Compile Include="UdpWriter.cs" />
-    <Compile Include="DeviceToEthernet.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="log4net.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\UeiLibrary\UeiLibrary.csproj">
-      <Project>{73ac748f-67f0-4adc-a6cb-0e497f51e6ab}</Project>
-      <Name>UeiLibrary</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
