@@ -31,17 +31,17 @@ namespace UeiBridge
     {
         readonly object _requestObject;
         readonly string _caseUrl;
-        readonly string _deviceName;
+        //readonly string _deviceName;
 
         public object RequestObject => _requestObject;
 
         public string CaseUrl => _caseUrl;
-        public string DeviceName => _deviceName;
+        //public string DeviceName => _deviceName;
         public DeviceRequest(object requestObject, string caseUrl, string deviceName=null)
         {
             _requestObject = requestObject;
             _caseUrl = caseUrl;
-            _deviceName = deviceName;
+            //_deviceName = deviceName;
         }
     }
     public class ScanResult

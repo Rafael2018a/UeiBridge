@@ -15,13 +15,15 @@ namespace UeiBridge
     {
         AnalogScaledReader _reader;
         log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
+        public override string DeviceName => "AI-201-100";
 
         public AI201InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
         {
-            _deviceName = "AI-201-100";
             _channelsString = "Ai0,1,2,3";
-            _attachedConverter = StaticMethods.CreateConverterInstance(_deviceName);
+            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
         }
+
+
         bool OpenDevice(string deviceUrl)
         {
             try
@@ -53,10 +55,10 @@ namespace UeiBridge
                     {
                         CloseDevice();
 
-                        string deviceIndex = StaticMethods.FindDeviceIndex(_deviceName);
+                        string deviceIndex = StaticMethods.FindDeviceIndex(DeviceName);
                         if (null == deviceIndex)
                         {
-                            _logger.Warn($"Can't find index for device {_deviceName}");
+                            _logger.Warn($"Can't find index for device {DeviceName}");
                             return;
                         }
                         string url1 = _caseUrl + deviceIndex + _channelsString;
@@ -64,11 +66,11 @@ namespace UeiBridge
                         if (OpenDevice(url1))
                         {
                             var r = _deviceSession.GetDevice().GetAIRanges();
-                            _logger.Info($"{_deviceName}(input) init success. {_numberOfChannels} channels. Range {r[0].minimum},{r[0].maximum}. {deviceIndex + _channelsString}");
+                            _logger.Info($"{DeviceName}(input) init success. {_numberOfChannels} channels. Range {r[0].minimum},{r[0].maximum}. {deviceIndex + _channelsString}");
                         }
                         else
                         {
-                            _logger.Warn($"Device {_deviceName} init fail");
+                            _logger.Warn($"Device {DeviceName} init fail");
                             return;
                         }
                     }
@@ -91,6 +93,9 @@ namespace UeiBridge
         }
 
         double[] _lastScan;
+
+        
+
         public override string GetFormattedStatus()
         {
             System.Text.StringBuilder sb = new System.Text.StringBuilder("Input voltage: ");

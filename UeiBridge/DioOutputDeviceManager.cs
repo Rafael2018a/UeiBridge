@@ -8,8 +8,9 @@ namespace UeiBridge
         log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
         protected DigitalWriter _writer;
 
-        protected bool OpenDevice( DeviceRequest dr)
+        protected bool OpenDevice( DeviceRequest dr, string _deviceName)
         {
+            
             string deviceIndex = StaticMethods.FindDeviceIndex(_deviceName);
             if (null == deviceIndex)
             {
@@ -39,7 +40,7 @@ namespace UeiBridge
             if ((null == _deviceSession) || (_caseUrl != dr.CaseUrl))
             {
                 CloseDevice(); // if needed
-                OpenDevice(dr);
+                OpenDevice(dr, DeviceName);
             }
 
             // write to device
@@ -75,7 +76,7 @@ namespace UeiBridge
         }
 
         UInt16[] _lastScan;
-        //class StatusStruct // tbd. might be generic
+        //class StatusStruct // might be generic
         //{
         //    UInt16[] _lastScan = new UInt16[Config.Instance.MaxDigital403OutputChannels];
         //    public UInt16[] LastScan { get => _lastScan; set => _lastScan = value; }

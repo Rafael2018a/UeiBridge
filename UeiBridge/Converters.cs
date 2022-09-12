@@ -62,7 +62,7 @@ namespace UeiBridge
 
         public object EthToDevice(byte[] messagePayload)
         {
-		// tbd
+		
             throw new NotImplementedException();
             UInt32[] result = { 1 };
             return result;
@@ -152,8 +152,7 @@ namespace UeiBridge
             //}
             foreach (double val in inputVector)
             {
-			    // tbd: optimize this
-                // tbd. protecet from high voltage.
+			    // tbd: a) optimize this. b) protecet from high voltage.
 			
                 double pVal = (Math.Abs(val) < 0.1) ? 0 : val;
                 double nVal = pVal + peekVoltage;
@@ -176,4 +175,22 @@ namespace UeiBridge
             throw new NotImplementedException();
         }
     }
+
+    class SL598Convert : IConvert
+    {
+        public string DeviceName => "SL-508-892";
+
+        public string LastErrorMessage => throw new NotImplementedException();
+
+        public byte[] DeviceToEth(object dt)
+        {
+            throw new NotImplementedException();
+        }
+
+        public object EthToDevice(byte[] messagePayload)
+        {
+            return messagePayload;
+        }
+    }
+    //
 }

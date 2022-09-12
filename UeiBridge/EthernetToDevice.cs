@@ -136,6 +136,12 @@ namespace UeiBridge
 #endif
         private DeviceRequest MakeDeviceRequest(EthernetMessage messageObject, IConvert converter)
         {
+            if (null==converter)
+            {
+                _logger.Warn($"MakeDeviceRequest - Convert fail. Reason: null converter");
+                return null;
+            }
+
             var devicePayload = converter.EthToDevice( messageObject.PayloadBytes);
             if (null != devicePayload)
             {

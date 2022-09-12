@@ -6,13 +6,16 @@
     /// </summary>
     class DIO403OutputDeviceManager : DioOutputDeviceManager
     {
+        public override IConvert AttachedConverter => _attachedConverter;
+        readonly IConvert _attachedConverter;
+
         public DIO403OutputDeviceManager()
         {
-            _deviceName = "DIO-403";
             _channelsString = "Do0:2";
-            _attachedConverter = StaticMethods.CreateConverterInstance( _deviceName);
+            _attachedConverter = StaticMethods.CreateConverterInstance( DeviceName);
         }
 
+        public override string DeviceName => "DIO-403";
     }
 }
 

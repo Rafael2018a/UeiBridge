@@ -66,14 +66,11 @@ namespace UeiBridge
 
             _inputDevices.Add(new DIO403InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
             _inputDevices.Add(new AI201InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
+            ProjectRegistry.Instance.SerialDeviceManager = new SL508DeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl);
+            _inputDevices.Add( ProjectRegistry.Instance.SerialDeviceManager);
             _inputDevices.ForEach(dev => dev.Start());
-            //_inputDevices.ge
-            //DIO403InputDeviceManager dio403 = 
-            //dio403.Start();
-            //AI201InputDeviceManager ai200 = ;
-            //ai200.Start();
 
-            //StartDownwardsTest();
+            StartDownwardsTest();
 
             Task.Factory.StartNew(() => PublishStatus_Task());
             Console.ReadKey();
@@ -126,8 +123,10 @@ namespace UeiBridge
                         udpClient.Send(e308, e308.Length, destEp); // ("192.168.201.202"),
 
                         byte[] e430 = Make_DIO430Down_Message();
-                        udpClient.Send(e430, e308.Length, destEp);
-                        
+                        //udpClient.Send(e430, e308.Length, destEp);
+
+                        byte[] e508 = Make_SL508Down_Message();
+                        udpClient.Send(e508, e508.Length, destEp);
 
                         System.Threading.Thread.Sleep(5000);
                         
@@ -181,6 +180,19 @@ namespace UeiBridge
             EthernetMessage msg = EthernetMessageFactory.CreateEmpty(6, 16);
             return msg.ToByteArrayDown();
         }
+        private byte[] Make_SL508Down_Message()
+        {
+            string m = "hello SL508";
+
+            // string to ascii
+            // ascii to string System.Text.Encoding.ASCII.GetString(recvBytes)
+            EthernetMessage msg = EthernetMessageFactory.CreateEmpty(5, 16);
+            msg.PayloadBytes = System.Text.Encoding.ASCII.GetBytes(m);
+
+            return msg.ToByteArrayDown();
+        }
+
+        
 
     }
 }

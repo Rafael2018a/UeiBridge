@@ -11,13 +11,12 @@ namespace UeiBridge
     {
         DigitalReader _reader;
         log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
-        
+        public override string DeviceName => "DIO-403";
 
         public DIO403InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl): base( targetConsumer, samplingInterval, caseUrl)
         {
-            _deviceName = "DIO-403";
             _channelsString = "Di3:5";
-            _attachedConverter = StaticMethods.CreateConverterInstance(_deviceName);
+            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
         }
         // todo: add Dispose/d-tor
         bool OpenDevice(string deviceUrl)
@@ -51,10 +50,10 @@ namespace UeiBridge
                     {
                         CloseDevice();
 
-                        string deviceIndex = StaticMethods.FindDeviceIndex(_deviceName);
+                        string deviceIndex = StaticMethods.FindDeviceIndex(DeviceName);
                         if (null == deviceIndex)
                         {
-                            _logger.Warn($"Can't find index for device {_deviceName}");
+                            _logger.Warn($"Can't find index for device {DeviceName}");
                             return;
                         }
                         string url1 = _caseUrl + deviceIndex + _channelsString;
@@ -62,11 +61,11 @@ namespace UeiBridge
                         if (OpenDevice(url1))
                         {
                             //_logger.Info($"{_deviceName} init success. {_numberOfChannels} input channels. {url1}");
-                            _logger.Info($"{_deviceName}(Input) init success. {_numberOfChannels} channels. {deviceIndex + _channelsString}");
+                            _logger.Info($"{DeviceName}(Input) init success. {_numberOfChannels} channels. {deviceIndex + _channelsString}");
                         }
                         else
                         {
-                            _logger.Warn($"Device {_deviceName} init fail");
+                            _logger.Warn($"Device {DeviceName} init fail");
                             return;
                         }
                     }

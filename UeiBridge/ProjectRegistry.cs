@@ -10,6 +10,7 @@ namespace UeiBridge
         Dictionary<string, OutputDevice> _deviceManagersMap = new Dictionary<string, OutputDevice>();
         static ProjectRegistry _instance = new ProjectRegistry();
         internal static ProjectRegistry Instance { get => _instance; }
+        public SL508DeviceManager SerialDeviceManager { get; set; }
         /// <summary>
         /// 1:"AI-204"
         /// </summary>
@@ -26,6 +27,7 @@ namespace UeiBridge
             _deviceMap.Add(4, "DIO-403");
             _deviceMap.Add(6, "DIO-430");
             _deviceMap.Add(1, "AI-201-100");
+            _deviceMap.Add(5, "SL-508-892");
 
             // fill convertes and device-managers map
             foreach (Type theType in System.Reflection.Assembly.GetExecutingAssembly().GetTypes())

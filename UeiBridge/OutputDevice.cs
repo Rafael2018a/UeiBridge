@@ -13,17 +13,17 @@ namespace UeiBridge
     {
         BlockingCollection<DeviceRequest> _dataItemsQueue = new BlockingCollection<DeviceRequest>(100); // max 100 items
         //protected string _deviceIndex;
-        protected string _channelsString;
+        protected string _channelsString; // tbd. make abstract
         protected Session _deviceSession;
         protected string _caseUrl;
-        protected string _deviceName;// = "AO-308";
-        public string DeviceName => _deviceName;
-
-        public IConvert AttachedConverter => _attachedConverter;
+        //protected string _deviceName;// = "AO-308";
+        //public string DeviceName => _deviceName;
+        public abstract string DeviceName { get; }
+        public abstract IConvert AttachedConverter { get; }
 
         protected int _numberOfChannels = 0;
         //public int NumberOfChannels => _numberOfChannels;
-        protected IConvert _attachedConverter;
+        //protected IConvert _attachedConverter;
         public virtual void CloseDevice()
         {
             if (null != _deviceSession)

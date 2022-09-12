@@ -11,14 +11,17 @@ namespace UeiBridge
     {
         AnalogScaledWriter _writer;
         log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
-       
 
+        public override string DeviceName => "AO-308";
+
+        public override IConvert AttachedConverter => _attachedConverter;
+
+        readonly IConvert _attachedConverter;
         public AO308OutputDeviceManager()
         {
-            _deviceName = "AO-308";
             _channelsString = "Ao0:7";
             
-            _attachedConverter = StaticMethods.CreateConverterInstance(_deviceName);
+            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
         }
 
         // todo: add Dispose/d-tor
@@ -50,10 +53,10 @@ namespace UeiBridge
             {
                 CloseDevice();
 
-                string deviceIndex = StaticMethods.FindDeviceIndex(_deviceName);
+                string deviceIndex = StaticMethods.FindDeviceIndex(DeviceName);
                 if (null == deviceIndex)
                 {
-                    _logger.Warn($"Can't find index for device {_deviceName}");
+                    _logger.Warn($"Can't find index for device {DeviceName}");
                     return;
                 }
 
@@ -64,12 +67,12 @@ namespace UeiBridge
                     var range = _deviceSession.GetDevice().GetAORanges();
 
                     //_logger.Info($"{_deviceName} init success. {_numberOfChannels} output channels. {url1}");
-                    _logger.Info($"{_deviceName}(Output) init success. {_numberOfChannels} channels. Range {range[0].minimum},{range[0].maximum}. {deviceIndex + _channelsString}");
+                    _logger.Info($"{DeviceName}(Output) init success. {_numberOfChannels} channels. Range {range[0].minimum},{range[0].maximum}. {deviceIndex + _channelsString}");
                     _caseUrl = dr.CaseUrl;
                 }
                 else
                 {
-                    _logger.Warn($"Device {_deviceName} init fail");
+                    _logger.Warn($"Device {DeviceName} init fail");
                     return;
                 }
             }
