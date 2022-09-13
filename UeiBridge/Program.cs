@@ -48,6 +48,35 @@ namespace UeiBridge
             deviceList.ForEach(dev => _logger.Info($"{dev.GetDeviceName()} as Dev{dev.GetIndex()}"));
             _logger.Info(" *** End device list:");
 
+
+            
+
+#if dont
+            var q = Config.Instance;
+
+            System.Xml.Serialization.XmlSerializer t1 = new System.Xml.Serialization.XmlSerializer(Config.Instance.GetType());
+            t1.Serialize(Console.Out, Config.Instance);
+
+
+            // config
+            string s;
+            {
+                Config1 c1 = new Config1();
+                System.Xml.Serialization.XmlSerializer t = new System.Xml.Serialization.XmlSerializer(c1.GetType());
+                System.IO.StringWriter sr = new System.IO.StringWriter();
+                t.Serialize(sr, c1);
+                s = sr.ToString();
+                Console.WriteLine(sr.ToString());
+               
+            }
+
+            {
+                System.Xml.Serialization.XmlSerializer t = new System.Xml.Serialization.XmlSerializer(typeof(Config1));
+                System.IO.StringReader sr = new System.IO.StringReader(s);
+                var c1 = (Config1) t.Deserialize(sr);
+            }
+#endif
+
             // prepare device dictionaries
             ProjectRegistry.Instance.Establish();
             // create instance for each output-device-manager

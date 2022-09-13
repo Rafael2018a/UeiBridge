@@ -19,7 +19,7 @@ namespace UeiBridge
 
         public AO308Convert()
         {
-            _peekToPeekVoltage = Config.Instance.Analog_Out_MinMaxVoltage.Item2 - Config.Instance.Analog_Out_MinMaxVoltage.Item1;
+            _peekToPeekVoltage = Config.Instance.Analog_Out_PeekVoltage * 2;
             _conversionFactor = _peekToPeekVoltage / UInt16.MaxValue;
             _numberOfChannels = Config.Instance.MaxAnalogOutputChannels;
         }
@@ -122,13 +122,14 @@ namespace UeiBridge
         string _lastError=null;
         string IConvert.LastErrorMessage => _lastError;
 
-        const double peekVoltage = 12.0;
-        const double peekToPeekVoltage = peekVoltage * 2.0;
+        //readonly double peekVoltage = Config.Instance.Analog_In_PeekVoltage;
+        //const double peekToPeekVoltage = peekVoltage * 2.0;
         const double int16range = UInt16.MaxValue;
         //readonly double _conversionFactor;
 
         public AI201Converter()
         {
+            //peekVoltage = Config.Instance.Analog_In_PeekVoltage;
             //_conversionFactor = int16range / peekToPeekVoltage;
         }
         public byte[] DeviceToEth(object dt)
@@ -152,12 +153,15 @@ namespace UeiBridge
             //}
             foreach (double val in inputVector)
             {
-			    // tbd: a) optimize this. b) protecet from high voltage.
-			
+                // tbd: a) optimize this. b) protecet from high voltage.
+
+                double peekVoltage = Config.Instance.Analog_In_PeekVoltage;
+                double p2p = peekVoltage * 2.0;
+
                 double pVal = (Math.Abs(val) < 0.1) ? 0 : val;
                 double nVal = pVal + peekVoltage;
-                nVal = (nVal > peekToPeekVoltage) ? peekToPeekVoltage : nVal;
-                double normVol = nVal / peekToPeekVoltage;
+                nVal = (nVal > p2p) ? p2p : nVal;
+                double normVol = nVal / p2p;
 
                 int vShort1 = Convert.ToInt32(normVol * int16range);
                 int vShort2 = (vShort1 - maxval);

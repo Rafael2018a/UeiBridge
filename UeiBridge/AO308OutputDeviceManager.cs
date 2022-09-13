@@ -30,8 +30,8 @@ namespace UeiBridge
             try
             {
                 _deviceSession = new Session();
-                var minmax = Config.Instance.Analog_Out_MinMaxVoltage;
-                _deviceSession.CreateAOChannel(deviceUrl, minmax.Item1, minmax.Item2);
+				//var minmax = Config.Instance.Analog_Out_MinMaxVoltage;
+                _deviceSession.CreateAOChannel(deviceUrl, -Config.Instance.Analog_Out_PeekVoltage, Config.Instance.Analog_Out_PeekVoltage);
                 _numberOfChannels = _deviceSession.GetNumberOfChannels();
                 _deviceSession.ConfigureTimingForSimpleIO();
                 _writer = new AnalogScaledWriter(_deviceSession.GetDataStream());
