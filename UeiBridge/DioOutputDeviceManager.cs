@@ -7,6 +7,7 @@ namespace UeiBridge
     {
         log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
         protected DigitalWriter _writer;
+        
 
         protected bool OpenDevice( DeviceRequest dr, string _deviceName)
         {
@@ -18,11 +19,11 @@ namespace UeiBridge
                 return false;
             }
 
-            string deviceUrl = dr.CaseUrl + deviceIndex + _channelsString;
+            string deviceUrl = dr.CaseUrl + deviceIndex + ChannelsString;
 
             if (CreateDigitalSession(deviceUrl))
             {
-                _logger.Info($"{_deviceName}(Output) init success. {_numberOfChannels} channels. {deviceIndex + _channelsString}");
+                _logger.Info($"{_deviceName}(Output) init success. {_numberOfChannels} channels. {deviceIndex + ChannelsString}");
                 _caseUrl = dr.CaseUrl;
             }
             else

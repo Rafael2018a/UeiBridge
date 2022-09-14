@@ -11,7 +11,11 @@ namespace UeiBridge
     class DIO430OutputDeviceManager: DioOutputDeviceManager
     {
         public override string DeviceName =>  "DIO-430";
+        string _channelsString;
         public override IConvert AttachedConverter => _attachedConverter;
+
+        protected override string ChannelsString => _channelsString;
+
         readonly IConvert _attachedConverter;
         public DIO430OutputDeviceManager()
         {

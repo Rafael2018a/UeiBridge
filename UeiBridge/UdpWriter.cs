@@ -18,9 +18,9 @@ namespace UeiBridge
             IPEndPoint localep = new IPEndPoint(local, 5050);
             _udpClient = new UdpClient();
             IPAddress ip;
-            if (IPAddress.TryParse( Config.Instance.DestMulticastAddress, out ip))
+            if (IPAddress.TryParse( Config.Instance.SenderMulticastAddress, out ip))
             {
-                int p = Config.Instance.DestMulticastPort;
+                int p = Config.Instance.SenderMulticastPort;
                 _udpClient.Connect( ip, p);
                 _logger.Info($"Multicast sender esablished. Target end point {ip}:{p}");
             }

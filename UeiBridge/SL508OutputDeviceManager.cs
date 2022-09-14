@@ -15,6 +15,8 @@ namespace UeiBridge
 
         public override IConvert AttachedConverter => _attachedConverter;
 
+        protected override string ChannelsString => throw new System.NotImplementedException();
+
         public override string GetFormattedStatus()
         {
             return "SL-508-892 output: not ready yet";

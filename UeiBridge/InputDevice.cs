@@ -16,8 +16,8 @@ namespace UeiBridge
         //protected string _deviceName;// = "AO-308";
         protected int _numberOfChannels = 0;
         protected string _channelsString;
-        protected IConvert _attachedConverter;
-        public IConvert AttachedConverter => _attachedConverter; // tbd. make this abstract
+        //protected IConvert _attachedConverter;
+        public abstract IConvert AttachedConverter { get; }
         protected readonly IEnqueue<ScanResult> _targetConsumer;
 
         public abstract void Start();

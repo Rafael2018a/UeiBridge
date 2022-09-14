@@ -13,8 +13,10 @@ namespace UeiBridge
         log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
 
         public override string DeviceName => "AO-308";
-
+        string _channelsString;
         public override IConvert AttachedConverter => _attachedConverter;
+
+        protected override string ChannelsString => throw new NotImplementedException();
 
         readonly IConvert _attachedConverter;
         public AO308OutputDeviceManager()

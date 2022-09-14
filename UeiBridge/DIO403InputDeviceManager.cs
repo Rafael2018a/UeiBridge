@@ -12,6 +12,8 @@ namespace UeiBridge
         DigitalReader _reader;
         log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
         public override string DeviceName => "DIO-403";
+        IConvert _attachedConverter;
+        public override IConvert AttachedConverter => _attachedConverter;
 
         public DIO403InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl): base( targetConsumer, samplingInterval, caseUrl)
         {

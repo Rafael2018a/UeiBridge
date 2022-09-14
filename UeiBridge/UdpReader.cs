@@ -26,10 +26,10 @@ namespace UeiBridge
 
         internal void Start()
         {
-            IPAddress ip;
-            if (IPAddress.TryParse(Config.Instance.ReceiverMulticastAddress, out ip))
+            IPAddress mcastAddress;
+            if (IPAddress.TryParse(Config.Instance.ReceiverMulticastAddress, out mcastAddress))
             {
-                EstablishMulticastReceiver(ip, Config.Instance.LocalPort, IPAddress.Parse(Config.Instance.LocalBindNicAddress));
+                EstablishMulticastReceiver(mcastAddress, Config.Instance.ReceiverMulticastPort, IPAddress.Parse(Config.Instance.LocalBindNicAddress));
             }
             else
             {
@@ -37,23 +37,18 @@ namespace UeiBridge
             }
         }
         
-        public void EstablishMulticastReceiver(IPAddress multicastIPaddress, int port, IPAddress localIPaddress = null)
+        public void EstablishMulticastReceiver(IPAddress multicastAddress, int multicastPort, IPAddress localIPaddress = null)
         {
-            IPAddress localIP;
-            int _port;
-            IPAddress _multicastIPaddress;
-            IPEndPoint _localEndPoint;
-            IPEndPoint _remoteEndPoint;
+            //int _port;
+            //IPAddress _multicastIPaddress;
 
             // Store params
-            _multicastIPaddress = multicastIPaddress;
-            _port = port;
-            localIP = localIPaddress;
-            if (localIPaddress == null)
-                localIP = IPAddress.Any;
+            //_multicastIPaddress = multicastAddress;
+            //_port = port;
+            IPAddress localIP = (localIPaddress == null) ? IPAddress.Any : localIPaddress;
 
             // Create endpoints
-            _remoteEndPoint = new IPEndPoint(_multicastIPaddress, port);
+            IPEndPoint _remoteEndPoint = new IPEndPoint(multicastAddress, multicastPort);
             
             // Create and configure UdpClient
             _udpclient = new UdpClient();
@@ -63,12 +58,12 @@ namespace UeiBridge
             _udpclient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             _udpclient.ExclusiveAddressUse = false;
 
-            // Bind, Join
-            _localEndPoint = new IPEndPoint(localIP, port);
+            // Bind
+            IPEndPoint _localEndPoint = new IPEndPoint(localIP, multicastPort);
             _udpclient.Client.Bind(_localEndPoint);
 
             // join
-            _udpclient.JoinMulticastGroup(_multicastIPaddress, localIP);
+            _udpclient.JoinMulticastGroup(multicastAddress, localIP);
 
             _logger.Info($"Multicast receiver esablished. Listening on {_remoteEndPoint}");
             // Start listening for incoming data

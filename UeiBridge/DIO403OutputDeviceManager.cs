@@ -8,7 +8,7 @@
     {
         public override IConvert AttachedConverter => _attachedConverter;
         readonly IConvert _attachedConverter;
-
+        string _channelsString;
         public DIO403OutputDeviceManager()
         {
             _channelsString = "Do0:2";
@@ -16,6 +16,8 @@
         }
 
         public override string DeviceName => "DIO-403";
+
+        protected override string ChannelsString => _channelsString;
     }
 }
 

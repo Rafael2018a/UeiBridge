@@ -13,7 +13,7 @@ namespace UeiBridge
     {
         BlockingCollection<DeviceRequest> _dataItemsQueue = new BlockingCollection<DeviceRequest>(100); // max 100 items
         //protected string _deviceIndex;
-        protected string _channelsString; // tbd. make abstract
+        protected abstract string ChannelsString { get; }
         protected Session _deviceSession;
         protected string _caseUrl;
         //protected string _deviceName;// = "AO-308";

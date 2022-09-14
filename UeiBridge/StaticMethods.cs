@@ -98,5 +98,37 @@ namespace UeiBridge
             Console.WriteLine(sub);
         }
 
+
+        public static byte[] Make_A308Down_message()
+        {
+            EthernetMessage msg = EthernetMessageFactory.CreateEmpty(0, 16);
+            return msg.ToByteArrayDown();
+        }
+        public static byte[] Make_DIO403Down_Message()
+        {
+            EthernetMessage msg = EthernetMessageFactory.CreateEmpty(4, 3);
+            msg.PayloadBytes[0] = 0x12;
+            msg.PayloadBytes[1] = 0x34;
+            msg.PayloadBytes[2] = 0x56;
+
+            return msg.ToByteArrayDown();
+        }
+        public static byte[] Make_DIO430Down_Message()
+        {
+            EthernetMessage msg = EthernetMessageFactory.CreateEmpty(6, 16);
+            return msg.ToByteArrayDown();
+        }
+        public static byte[] Make_SL508Down_Message()
+        {
+            string m = "hello SL508";
+
+            // string to ascii
+            // ascii to string System.Text.Encoding.ASCII.GetString(recvBytes)
+            EthernetMessage msg = EthernetMessageFactory.CreateEmpty(5, 16);
+            msg.PayloadBytes = System.Text.Encoding.ASCII.GetBytes(m);
+
+            return msg.ToByteArrayDown();
+        }
+
     }
 }

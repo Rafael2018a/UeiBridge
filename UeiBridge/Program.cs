@@ -49,34 +49,6 @@ namespace UeiBridge
             _logger.Info(" *** End device list:");
 
 
-            
-
-#if dont
-            var q = Config.Instance;
-
-            System.Xml.Serialization.XmlSerializer t1 = new System.Xml.Serialization.XmlSerializer(Config.Instance.GetType());
-            t1.Serialize(Console.Out, Config.Instance);
-
-
-            // config
-            string s;
-            {
-                Config1 c1 = new Config1();
-                System.Xml.Serialization.XmlSerializer t = new System.Xml.Serialization.XmlSerializer(c1.GetType());
-                System.IO.StringWriter sr = new System.IO.StringWriter();
-                t.Serialize(sr, c1);
-                s = sr.ToString();
-                Console.WriteLine(sr.ToString());
-               
-            }
-
-            {
-                System.Xml.Serialization.XmlSerializer t = new System.Xml.Serialization.XmlSerializer(typeof(Config1));
-                System.IO.StringReader sr = new System.IO.StringReader(s);
-                var c1 = (Config1) t.Deserialize(sr);
-            }
-#endif
-
             // prepare device dictionaries
             ProjectRegistry.Instance.Establish();
             // create instance for each output-device-manager
@@ -89,21 +61,22 @@ namespace UeiBridge
             ur.Start();
 
             // init upwards objects
-            UdpWriter uw = new UdpWriter(Config.Instance.DestMulticastAddress, Config.Instance.DestMulticastPort, Config.Instance.LocalBindNicAddress);
+            UdpWriter uw = new UdpWriter(Config.Instance.SenderMulticastAddress, Config.Instance.SenderMulticastPort, Config.Instance.LocalBindNicAddress);
             DeviceToEthernet d2e = new DeviceToEthernet(uw);
             d2e.Start();
-
             _inputDevices.Add(new DIO403InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
             _inputDevices.Add(new AI201InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
             ProjectRegistry.Instance.SerialDeviceManager = new SL508DeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl);
             _inputDevices.Add( ProjectRegistry.Instance.SerialDeviceManager);
             _inputDevices.ForEach(dev => dev.Start());
 
+            // self tests
             StartDownwardsTest();
 
+            // publish status to StatusViewer
             Task.Factory.StartNew(() => PublishStatus_Task());
+
             Console.ReadKey();
-            
         }
 
         void PublishStatus_Task()
@@ -140,21 +113,21 @@ namespace UeiBridge
                 {
                     UdpClient udpClient = new UdpClient();
                     System.Threading.Thread.Sleep(100);
-                    IPEndPoint destEp = new IPEndPoint(IPAddress.Parse(Config.Instance.ReceiverMulticastAddress), Config.Instance.LocalPort);
+                    IPEndPoint destEp = new IPEndPoint(IPAddress.Parse(Config.Instance.ReceiverMulticastAddress), Config.Instance.ReceiverMulticastPort);
 
                     for (int i=0; i<3; i++)
                     {
 
-                        byte[] e403 = Make_DIO403Down_Message();
+                        byte[] e403 = StaticMethods.Make_DIO403Down_Message();
                         udpClient.Send(e403, e403.Length, destEp);
 
-                        byte[] e308 = Make_A308Down_message();
+                        byte[] e308 = StaticMethods.Make_A308Down_message();
                         udpClient.Send(e308, e308.Length, destEp); // ("192.168.201.202"),
 
-                        byte[] e430 = Make_DIO430Down_Message();
+                        byte[] e430 = StaticMethods.Make_DIO430Down_Message();
                         //udpClient.Send(e430, e308.Length, destEp);
 
-                        byte[] e508 = Make_SL508Down_Message();
+                        byte[] e508 = StaticMethods.Make_SL508Down_Message();
                         udpClient.Send(e508, e508.Length, destEp);
 
                         System.Threading.Thread.Sleep(5000);
@@ -188,37 +161,6 @@ namespace UeiBridge
             bytes1.CopyTo(eth, 12);
 
             return eth;
-        }
-
-        byte [] Make_A308Down_message()
-        {
-            EthernetMessage msg = EthernetMessageFactory.CreateEmpty(0, 16);
-            return msg.ToByteArrayDown();
-        }
-        private byte[] Make_DIO403Down_Message()
-        {
-            EthernetMessage msg = EthernetMessageFactory.CreateEmpty(4, 3);
-            msg.PayloadBytes[0] = 0x12;
-            msg.PayloadBytes[1] = 0x34;
-            msg.PayloadBytes[2] = 0x56;
-
-           return msg.ToByteArrayDown();
-        }
-        private byte[] Make_DIO430Down_Message()
-        {
-            EthernetMessage msg = EthernetMessageFactory.CreateEmpty(6, 16);
-            return msg.ToByteArrayDown();
-        }
-        private byte[] Make_SL508Down_Message()
-        {
-            string m = "hello SL508";
-
-            // string to ascii
-            // ascii to string System.Text.Encoding.ASCII.GetString(recvBytes)
-            EthernetMessage msg = EthernetMessageFactory.CreateEmpty(5, 16);
-            msg.PayloadBytes = System.Text.Encoding.ASCII.GetBytes(m);
-
-            return msg.ToByteArrayDown();
         }
 
         

@@ -16,6 +16,8 @@ namespace UeiBridge
         AnalogScaledReader _reader;
         log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
         public override string DeviceName => "AI-201-100";
+        IConvert _attachedConverter;
+        public override IConvert AttachedConverter => _attachedConverter;
 
         public AI201InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
         {

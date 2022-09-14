@@ -15,6 +15,9 @@ namespace UeiBridge
         //SL508Input _serialInput;
         //SL508OutputDeviceManager _serialOutput;
         public override string DeviceName => "SL-508-892";
+
+        public override IConvert AttachedConverter => throw new NotImplementedException();
+
         public SL508DeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
         {
         }
