@@ -10,7 +10,7 @@ namespace UeiBridge
         Dictionary<string, OutputDevice> _deviceManagersMap = new Dictionary<string, OutputDevice>();
         static ProjectRegistry _instance = new ProjectRegistry();
         internal static ProjectRegistry Instance { get => _instance; }
-        public SL508DeviceManager SerialDeviceManager { get; set; }
+        public SL508InputDeviceManager SerialDeviceManager { get; set; }
         /// <summary>
         /// 1:"AI-204"
         /// </summary>

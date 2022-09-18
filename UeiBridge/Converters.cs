@@ -64,8 +64,8 @@ namespace UeiBridge
         {
 		
             throw new NotImplementedException();
-            UInt32[] result = { 1 };
-            return result;
+            //UInt32[] result = { 1 };
+            //return result;
         }
     }
     class DIO403Convert : IConvert

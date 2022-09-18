@@ -18,6 +18,11 @@
         public override string DeviceName => "DIO-403";
 
         protected override string ChannelsString => _channelsString;
+
+        public override void Dispose()
+        {
+            CloseDevice();
+        }
     }
 }
 

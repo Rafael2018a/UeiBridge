@@ -44,5 +44,12 @@ namespace UeiBridge
             return "(not ready yet)";
         }
 
+        public override void Dispose()
+        {
+            // tbd
+            //_deviceSession.Stop();
+            //_deviceSession.Dispose();
+            //_deviceSession = null;
+        }
     }
 }

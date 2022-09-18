@@ -79,14 +79,21 @@ namespace UeiBridge
                 }
             }
 
-            // read from device
-            // ===============
-            _lastScan = _reader.ReadSingleScan();
-            System.Diagnostics.Debug.Assert(_lastScan != null);
-            System.Diagnostics.Debug.Assert(_lastScan.Length == _numberOfChannels, "wrong number of channels");
+            try
+            {
+                // read from device
+                // ===============
+                _lastScan = _reader.ReadSingleScan(); // tbd. access violation
+                System.Diagnostics.Debug.Assert(_lastScan != null);
+                System.Diagnostics.Debug.Assert(_lastScan.Length == _numberOfChannels, "wrong number of channels");
 
-            ScanResult dr = new ScanResult(_lastScan, this);
-            _targetConsumer.Enqueue(dr);
+                ScanResult dr = new ScanResult(_lastScan, this);
+                _targetConsumer.Enqueue(dr);
+            }
+            catch(Exception ex)
+            {
+                _logger.Error(ex.Message);
+            }
         }
 
         public override void Start()
@@ -95,8 +102,6 @@ namespace UeiBridge
         }
 
         double[] _lastScan;
-
-        
 
         public override string GetFormattedStatus()
         {
@@ -110,6 +115,11 @@ namespace UeiBridge
                 }
             }
             return sb.ToString();
+        }
+
+        public override void Dispose()
+        {
+            CloseDevice();
         }
     }
 }

@@ -42,7 +42,7 @@ namespace UeiBridge
         }
         public void DeviceScan_Callback(object state)
         {
-            if (null == _deviceSession)
+            if (null == _deviceSession) // tbd. move this block to start() method
             {
                 lock (this)
                 {
@@ -102,5 +102,9 @@ namespace UeiBridge
             return sb.ToString();
         }
 
+        public override void Dispose()
+        {
+            CloseDevice();
+        }
     }
 }

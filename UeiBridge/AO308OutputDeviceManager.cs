@@ -22,7 +22,6 @@ namespace UeiBridge
         public AO308OutputDeviceManager()
         {
             _channelsString = "Ao0:7";
-            
             _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
         }
 
@@ -34,7 +33,7 @@ namespace UeiBridge
                 _deviceSession = new Session();
 				//var minmax = Config.Instance.Analog_Out_MinMaxVoltage;
                 _deviceSession.CreateAOChannel(deviceUrl, -Config.Instance.Analog_Out_PeekVoltage, Config.Instance.Analog_Out_PeekVoltage);
-                _numberOfChannels = _deviceSession.GetNumberOfChannels();
+                //_numberOfChannels = _deviceSession.GetNumberOfChannels();
                 _deviceSession.ConfigureTimingForSimpleIO();
                 _writer = new AnalogScaledWriter(_deviceSession.GetDataStream());
             }
@@ -69,7 +68,7 @@ namespace UeiBridge
                     var range = _deviceSession.GetDevice().GetAORanges();
 
                     //_logger.Info($"{_deviceName} init success. {_numberOfChannels} output channels. {url1}");
-                    _logger.Info($"{DeviceName}(Output) init success. {_numberOfChannels} channels. Range {range[0].minimum},{range[0].maximum}. {deviceIndex + _channelsString}");
+                    _logger.Info($"{DeviceName}(Output) init success. { _deviceSession.GetNumberOfChannels()} channels. Range {range[0].minimum},{range[0].maximum}. {deviceIndex + _channelsString}");
                     _caseUrl = dr.CaseUrl;
                 }
                 else
@@ -105,6 +104,11 @@ namespace UeiBridge
                 }
             }
             return sb.ToString();
+        }
+
+        public override void Dispose()
+        {
+            CloseDevice();
         }
     }
 }

@@ -23,7 +23,7 @@ namespace UeiBridge
 
             if (CreateDigitalSession(deviceUrl))
             {
-                _logger.Info($"{_deviceName}(Output) init success. {_numberOfChannels} channels. {deviceIndex + ChannelsString}");
+                _logger.Info($"{_deviceName}(Output) init success. {_deviceSession.GetNumberOfChannels()} channels. {deviceIndex + ChannelsString}");
                 _caseUrl = dr.CaseUrl;
             }
             else
@@ -63,7 +63,7 @@ namespace UeiBridge
             {
                 _deviceSession = new Session();
                 _deviceSession.CreateDOChannel(deviceUrl);
-                _numberOfChannels = _deviceSession.GetNumberOfChannels();
+                //_numberOfChannels = _deviceSession.GetNumberOfChannels();
                 _deviceSession.ConfigureTimingForSimpleIO();
                 _writer = new DigitalWriter(_deviceSession.GetDataStream());
             }

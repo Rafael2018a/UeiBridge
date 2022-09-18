@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System;
+using System.Text;
+using UeiDaq;
 
 namespace UeiBridge
 {
@@ -6,8 +8,12 @@ namespace UeiBridge
     {
         log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
         IConvert _attachedConverter;
+        //const string _termString = "\r\n";
+        
+        //int _numberOfChannels = 1;
         public SL508OutputDeviceManager()
         {
+            
             _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
         }
 
@@ -17,6 +23,11 @@ namespace UeiBridge
 
         protected override string ChannelsString => throw new System.NotImplementedException();
 
+        public override void Dispose()
+        {
+            CloseDevice();
+        }
+
         public override string GetFormattedStatus()
         {
             return "SL-508-892 output: not ready yet";
@@ -25,18 +36,10 @@ namespace UeiBridge
         protected override void HandleRequest(DeviceRequest request)
         {
 
-            // init session, if needed.
-            // =======================
-            if ((null == _deviceSession) || (_caseUrl != request.CaseUrl))
-            {
-                CloseDevice(); // if needed
-                //OpenDevice(dr, DeviceName);
-            }
-
-
+            System.Diagnostics.Debug.Assert(_deviceSession != null);
             byte[] m = request.RequestObject as byte[];
-        
-            _logger.Info($"Should send to RS: {Encoding.ASCII.GetString(m)}");
+            _logger.Warn($"Should send to RS: {Encoding.ASCII.GetString(m)} ... TBD");
         }
+
     }
 }

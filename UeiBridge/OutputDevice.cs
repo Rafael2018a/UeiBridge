@@ -9,7 +9,7 @@ using UeiDaq;
 /// </summary>
 namespace UeiBridge
 {
-    public abstract class OutputDevice : IEnqueue<DeviceRequest>
+    public abstract class OutputDevice : IEnqueue<DeviceRequest>, IDisposable
     {
         BlockingCollection<DeviceRequest> _dataItemsQueue = new BlockingCollection<DeviceRequest>(100); // max 100 items
         //protected string _deviceIndex;
@@ -21,7 +21,7 @@ namespace UeiBridge
         public abstract string DeviceName { get; }
         public abstract IConvert AttachedConverter { get; }
 
-        protected int _numberOfChannels = 0;
+        //protected int _numberOfChannels = 0;
         //public int NumberOfChannels => _numberOfChannels;
         //protected IConvert _attachedConverter;
         public virtual void CloseDevice()
@@ -54,5 +54,7 @@ namespace UeiBridge
                 HandleRequest(incomingRequest);
             }
         }
+
+        public abstract void Dispose();
     }
 }

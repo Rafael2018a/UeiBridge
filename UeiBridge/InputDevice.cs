@@ -8,7 +8,7 @@ using UeiDaq;
 /// </summary>
 namespace UeiBridge
 {
-    public abstract class InputDevice
+    public abstract class InputDevice : IDisposable
     {
 
         protected Session _deviceSession;
@@ -40,6 +40,8 @@ namespace UeiBridge
             }
             _deviceSession = null;
         }
+
+        public abstract void Dispose();
 
         //public abstract int getme {get;}
     }

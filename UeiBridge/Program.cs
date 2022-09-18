@@ -65,8 +65,8 @@ namespace UeiBridge
             DeviceToEthernet d2e = new DeviceToEthernet(uw);
             d2e.Start();
             _inputDevices.Add(new DIO403InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
-            _inputDevices.Add(new AI201InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
-            ProjectRegistry.Instance.SerialDeviceManager = new SL508DeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl);
+            //_inputDevices.Add(new AI201InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
+            ProjectRegistry.Instance.SerialDeviceManager = new SL508InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl);
             _inputDevices.Add( ProjectRegistry.Instance.SerialDeviceManager);
             _inputDevices.ForEach(dev => dev.Start());
 
@@ -76,7 +76,9 @@ namespace UeiBridge
             // publish status to StatusViewer
             Task.Factory.StartNew(() => PublishStatus_Task());
 
-            Console.ReadKey();
+            _inputDevices.ForEach(dev => dev.Dispose());
+            //ProjectRegistry.Instance.DeviceManagersDic.ToList().ForEach( dev => dev.Value.Dispose());
+            
         }
 
         void PublishStatus_Task()
@@ -128,7 +130,7 @@ namespace UeiBridge
                         //udpClient.Send(e430, e308.Length, destEp);
 
                         byte[] e508 = StaticMethods.Make_SL508Down_Message();
-                        udpClient.Send(e508, e508.Length, destEp);
+                        //udpClient.Send(e508, e508.Length, destEp);
 
                         System.Threading.Thread.Sleep(5000);
                         
