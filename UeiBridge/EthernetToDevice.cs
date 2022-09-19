@@ -94,7 +94,7 @@ namespace UeiBridge
                     if (ProjectRegistry.Instance.DeviceKeys.TryGetValue(messageObj.CardType, out deviceName)) // get deviceManager for card-type
                     {
                         //_logger.Debug($"Ethernet Message accepted. Device:{deviceName} Payload length:{messageObj.PayloadBytes.Length}");
-                        OutputDevice deviceManager = ProjectRegistry.Instance.DeviceManagersDic[deviceName];
+                        OutputDevice deviceManager = ProjectRegistry.Instance.OutputDevicesMap[deviceName];
 
                         DeviceRequest dreq = MakeDeviceRequest(messageObj, deviceManager.AttachedConverter);
                         deviceManager.Enqueue(dreq);

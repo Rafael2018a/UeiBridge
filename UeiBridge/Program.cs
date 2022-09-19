@@ -15,12 +15,10 @@ namespace UeiBridge
         ILog _logger = log4net.LogManager.GetLogger("Root");
         List<InputDevice> _inputDevices = new List<InputDevice>();
 
-
         static void Main(string[] args)
         {
             Program p = new Program();
             p.Run();
-            
         }
 
         private void Run()
@@ -51,8 +49,6 @@ namespace UeiBridge
 
             // prepare device dictionaries
             ProjectRegistry.Instance.Establish();
-            // create instance for each output-device-manager
-            ProjectRegistry.Instance.DeviceManagersDic.ToList().ForEach((pair) => pair.Value.Start());
 
             // init downwards objects
             EthernetToDevice e2d = new EthernetToDevice();
@@ -64,11 +60,16 @@ namespace UeiBridge
             UdpWriter uw = new UdpWriter(Config.Instance.SenderMulticastAddress, Config.Instance.SenderMulticastPort, Config.Instance.LocalBindNicAddress);
             DeviceToEthernet d2e = new DeviceToEthernet(uw);
             d2e.Start();
+
+            // start input device managers
             _inputDevices.Add(new DIO403InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
             _inputDevices.Add(new AI201InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
-            ProjectRegistry.Instance.SerialDeviceManager = new SL508InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl);
-            _inputDevices.Add( ProjectRegistry.Instance.SerialDeviceManager);
+            ProjectRegistry.Instance.SerialInputDeviceManager = new SL508InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl);
+            _inputDevices.Add( ProjectRegistry.Instance.SerialInputDeviceManager);
             _inputDevices.ForEach(dev => dev.Start());
+
+            // start output-device managers
+            ProjectRegistry.Instance.OutputDevicesMap.ToList().ForEach((pair) => pair.Value.Start());
 
             // self tests
             StartDownwardsTest();
@@ -76,10 +77,11 @@ namespace UeiBridge
             // publish status to StatusViewer
             Task.Factory.StartNew(() => PublishStatus_Task());
 
-
             Console.ReadKey();
+
+            // Dispose
             _inputDevices.ForEach(dev => dev.Dispose());
-            ProjectRegistry.Instance.DeviceManagersDic.ToList().ForEach( dev => dev.Value.Dispose());
+            ProjectRegistry.Instance.OutputDevicesMap.ToList().ForEach( dev => dev.Value.Dispose());
             
         }
 
@@ -89,7 +91,7 @@ namespace UeiBridge
 
             while (true)
             {
-                foreach (var item in ProjectRegistry.Instance.DeviceManagersDic)
+                foreach (var item in ProjectRegistry.Instance.OutputDevicesMap)
                 {
                     UeiLibrary.JsonStatusClass js = new UeiLibrary.JsonStatusClass(item.Value.DeviceName + " (Output)", item.Value.GetFormattedStatus() ); 
                     string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
@@ -126,13 +128,13 @@ namespace UeiBridge
                         udpClient.Send(e403, e403.Length, destEp);
 
                         byte[] e308 = StaticMethods.Make_A308Down_message();
-                        udpClient.Send(e308, e308.Length, destEp); // ("192.168.201.202"),
+                        udpClient.Send(e308, e308.Length, destEp); 
 
                         byte[] e430 = StaticMethods.Make_DIO430Down_Message();
                         //udpClient.Send(e430, e308.Length, destEp);
 
                         byte[] e508 = StaticMethods.Make_SL508Down_Message();
-                        //udpClient.Send(e508, e508.Length, destEp);
+                        udpClient.Send(e508, e508.Length, destEp);
 
                         System.Threading.Thread.Sleep(5000);
                         

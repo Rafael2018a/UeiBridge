@@ -7,10 +7,10 @@ namespace UeiBridge
     internal class ProjectRegistry 
     {
         Dictionary<int, string> _deviceMap = new Dictionary<int, string>();
-        Dictionary<string, OutputDevice> _deviceManagersMap = new Dictionary<string, OutputDevice>();
+        Dictionary<string, OutputDevice> _outputDeviceMap = new Dictionary<string, OutputDevice>();
         static ProjectRegistry _instance = new ProjectRegistry();
         internal static ProjectRegistry Instance { get => _instance; }
-        public SL508InputDeviceManager SerialDeviceManager { get; set; }
+        public SL508InputDeviceManager SerialInputDeviceManager { get; set; }
         /// <summary>
         /// 1:"AI-204"
         /// </summary>
@@ -18,7 +18,7 @@ namespace UeiBridge
         /// <summary>
         /// "Ai-204": <instnace>
         /// </summary>
-        public Dictionary<string, OutputDevice> DeviceManagersDic { get => _deviceManagersMap; } // output devices. (tbd: rename)
+        public Dictionary<string, OutputDevice> OutputDevicesMap { get => _outputDeviceMap; } 
         internal void Establish() // tbd. refactor this.
         {
             log4net.ILog logger = log4net.LogManager.GetLogger("Root");
@@ -39,7 +39,7 @@ namespace UeiBridge
                 {
                     OutputDevice obj = (OutputDevice)Activator.CreateInstance(theType);
                     logger.Debug($"New output device instance: {obj.ToString()} - {obj.DeviceName}");
-                    _deviceManagersMap.Add(obj.DeviceName, obj);
+                    _outputDeviceMap.Add(obj.DeviceName, obj);
                 }
             }
         }
@@ -59,7 +59,7 @@ namespace UeiBridge
         {
             try
             {
-                var p = _deviceManagersMap.ToList().Single( pair => pair.Key == deviceString);
+                var p = _outputDeviceMap.ToList().Single( pair => pair.Key == deviceString);
                 return p.Value;
             }
             catch (System.InvalidOperationException)

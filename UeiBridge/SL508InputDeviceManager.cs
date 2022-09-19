@@ -24,6 +24,8 @@ namespace UeiBridge
 
         public override IConvert AttachedConverter => throw new NotImplementedException();
 
+        public SerialWriter SerialWriter => _serialWriter;
+
         public SL508InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
         {
             _channelsString = "Com0,1";
@@ -52,11 +54,12 @@ namespace UeiBridge
                                            "\n");
 
             _deviceSession.ConfigureTimingForMessagingIO(100, 100.0);
-            _deviceSession.GetTiming().SetTimeout(500);
+            //_deviceSession.GetTiming().SetTimeout(500); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
 
             _deviceSession.Start();
 
             _serialReader = new SerialReader(_deviceSession.GetDataStream(), _deviceSession.GetChannel(0).GetIndex());
+            _serialWriter = new SerialWriter(_deviceSession.GetDataStream(), _deviceSession.GetChannel(0).GetIndex());
 
             readerAsyncCallback = new AsyncCallback(ReaderCallback);
             readerIAsyncResult = _serialReader.BeginRead(200, readerAsyncCallback, null);
@@ -69,12 +72,15 @@ namespace UeiBridge
         {
             try
             {
-                byte[] recvBytes = _serialReader.EndRead(ar);
+                byte[] receiveBuffer = _serialReader.EndRead(ar);
 
                 // We can't directly access the UI from an asynchronous method
                 // need to invoke a delegate that will take care of updating
                 // the UI from the proper thread
-
+                string str = System.Text.Encoding.ASCII.GetString(receiveBuffer);
+                byte[] reply = System.Text.Encoding.ASCII.GetBytes("Reply> " + str);
+                _serialWriter.Write(reply);
+                _logger.Debug(str);
                 if (_serialReader != null && _deviceSession.IsRunning())
                 {
                     readerIAsyncResult = _serialReader.BeginRead(200, ReaderCallback, null);
@@ -93,7 +99,7 @@ namespace UeiBridge
                             // clicked on fast enough!
                             // Just reinitiate a new asynchronous read.
                             readerIAsyncResult = _serialReader.BeginRead(200, readerAsyncCallback, null);
-                            //Console.WriteLine("Timeout");
+                            _logger.Debug("Timeout");
                         }
                         else
                         {

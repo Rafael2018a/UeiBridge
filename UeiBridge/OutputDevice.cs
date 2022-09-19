@@ -41,7 +41,7 @@ namespace UeiBridge
         {
             _dataItemsQueue.Add(dr);
         }
-        public void Start()
+        public virtual void Start()
         {
             Task.Factory.StartNew(() => OutputDeviceHandler_Task());
         }

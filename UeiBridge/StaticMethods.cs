@@ -120,7 +120,7 @@ namespace UeiBridge
         }
         public static byte[] Make_SL508Down_Message()
         {
-            string m = "hello SL508";
+            string m = "hello SL508\n";
 
             // string to ascii
             // ascii to string System.Text.Encoding.ASCII.GetString(recvBytes)
