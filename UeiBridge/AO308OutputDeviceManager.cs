@@ -84,8 +84,8 @@ namespace UeiBridge
             if (null != _lastScan)
             {
                 _writer.WriteSingleScan(_lastScan);
-                _logger.Debug($"AO voltage {_lastScan[0]}");
-                _logger.Debug($"scan written to device. Length: {_lastScan.Length}");
+                //_logger.Debug($"AO voltage {_lastScan[0]}");
+                //_logger.Debug($"scan written to device. Length: {_lastScan.Length}");
             }
         }
 
@@ -108,6 +108,12 @@ namespace UeiBridge
 
         public override void Dispose()
         {
+            //t1.Dispose();
+            //t1 = null;
+            OutputDevice deviceManager = ProjectRegistry.Instance.DeviceManagersDic[DeviceName];
+            DeviceRequest dr = new DeviceRequest( OutputDevice.CancelTaskRequest, "");
+            deviceManager.Enqueue(dr);
+            System.Threading.Thread.Sleep(100);
             CloseDevice();
         }
     }

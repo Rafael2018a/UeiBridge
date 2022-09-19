@@ -51,7 +51,7 @@ namespace UeiBridge
             
             _writer.WriteSingleScanUInt16(req);
             _lastScan = req;
-            _logger.Debug($"scan written to device. Length: {req.Length}");
+            //_logger.Debug($"scan written to device. Length: {req.Length}");
 
         }
 

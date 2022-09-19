@@ -21,6 +21,10 @@
 
         public override void Dispose()
         {
+            OutputDevice deviceManager = ProjectRegistry.Instance.DeviceManagersDic[DeviceName];
+            DeviceRequest dr = new DeviceRequest(OutputDevice.CancelTaskRequest, "");
+            deviceManager.Enqueue(dr);
+            System.Threading.Thread.Sleep(100);
             CloseDevice();
         }
     }

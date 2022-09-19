@@ -20,6 +20,8 @@ namespace UeiBridge
         private SerialReader _serialReader;
         private SerialWriter _serialWriter;
 
+        //Session _deviceSession;
+
         public override IConvert AttachedConverter => throw new NotImplementedException();
 
         public SL508InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
@@ -110,35 +112,25 @@ namespace UeiBridge
 
             // init session upon need
             // =======================
-            if (null == _deviceSession)
+
+            string deviceIndex = StaticMethods.FindDeviceIndex(DeviceName);
+            if (null == deviceIndex)
             {
-                lock (this)
-                {
-                    if (null == _deviceSession)
-                    {
-                        CloseDevice();
+                _logger.Warn($"Can't find index for device {DeviceName}");
+                return;
+            }
 
-                        string deviceIndex = StaticMethods.FindDeviceIndex(DeviceName);
-                        if (null == deviceIndex)
-                        {
-                            _logger.Warn($"Can't find index for device {DeviceName}");
-                            return;
-                        }
+            string url1 = _caseUrl + deviceIndex + _channelsString;
 
-                        string url1 = _caseUrl + deviceIndex + _channelsString;
+            if (OpenDevice(url1, DeviceName))
+            {
+                _logger.Info($"{DeviceName}(Input/Output) init success. {_deviceSession.GetNumberOfChannels()} channels.  {deviceIndex + _channelsString}");
 
-                        if (OpenDevice(url1, DeviceName))
-                        {
-                            _logger.Info($"{DeviceName}(Input/Output) init success. {_deviceSession.GetNumberOfChannels()} channels.  {deviceIndex + _channelsString}");
-
-                        }
-                        else
-                        {
-                            _logger.Warn($"Device {DeviceName} init fail");
-                            return;
-                        }
-                    }
-                }
+            }
+            else
+            {
+                _logger.Warn($"Device {DeviceName} init fail");
+                return;
             }
 #if dont
             System.Threading.Tasks.Task.Factory.StartNew(() =>

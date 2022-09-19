@@ -25,14 +25,13 @@ namespace UeiBridge
             _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
         }
 
-
         bool OpenDevice(string deviceUrl)
         {
             try
             {
                 _deviceSession = new Session();
                 _deviceSession.CreateAIChannel(deviceUrl, -15.0, 15.0, AIChannelInputMode.SingleEnded); // -15,15 means 'no gain'
-                _numberOfChannels = _deviceSession.GetNumberOfChannels();
+                //_numberOfChannels = _deviceSession.GetNumberOfChannels();
                 _deviceSession.ConfigureTimingForSimpleIO();
                 _reader = new AnalogScaledReader(_deviceSession.GetDataStream());
             }
@@ -47,50 +46,19 @@ namespace UeiBridge
         }
         public void HandleResponse_Callback(object state)
         {
-            // init session, if needed.
-            // =======================
-            if ((null == _deviceSession)||(null==_reader))
-            {
-                lock (this)
-                {
-                    if ((null == _deviceSession) || (null == _reader))
-                    {
-                        CloseDevice();
-
-                        string deviceIndex = StaticMethods.FindDeviceIndex(DeviceName);
-                        if (null == deviceIndex)
-                        {
-                            _logger.Warn($"Can't find index for device {DeviceName}");
-                            return;
-                        }
-                        string url1 = _caseUrl + deviceIndex + _channelsString;
-
-                        if (OpenDevice(url1))
-                        {
-                            var r = _deviceSession.GetDevice().GetAIRanges();
-                            _logger.Info($"{DeviceName}(input) init success. {_numberOfChannels} channels. Range {r[0].minimum},{r[0].maximum}. {deviceIndex + _channelsString}");
-                        }
-                        else
-                        {
-                            _logger.Warn($"Device {DeviceName} init fail");
-                            return;
-                        }
-                    }
-                }
-            }
-
             try
             {
                 // read from device
                 // ===============
                 _lastScan = _reader.ReadSingleScan(); // tbd. access violation
                 System.Diagnostics.Debug.Assert(_lastScan != null);
-                System.Diagnostics.Debug.Assert(_lastScan.Length == _numberOfChannels, "wrong number of channels");
+                
+                System.Diagnostics.Debug.Assert(_lastScan.Length == _deviceSession.GetNumberOfChannels(), "wrong number of channels");
 
                 ScanResult dr = new ScanResult(_lastScan, this);
                 _targetConsumer.Enqueue(dr);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.Error(ex.Message);
             }
@@ -98,7 +66,44 @@ namespace UeiBridge
 
         public override void Start()
         {
-            _samplingTimer = new System.Threading.Timer(HandleResponse_Callback, null, TimeSpan.Zero, _samplingInterval);
+            if ((_deviceSession!=null) && _deviceSession.IsRunning())
+            {
+                _logger.Warn("Can't start since device already running");
+                return;
+            }
+            try
+            {
+                string deviceIndex = StaticMethods.FindDeviceIndex(DeviceName);
+                if (null == deviceIndex)
+                {
+                    _logger.Warn($"Can't find index for device {DeviceName}");
+                    return;
+                }
+                string url1 = _caseUrl + deviceIndex + _channelsString;
+
+                if (OpenDevice(url1))
+                {
+                    var r = _deviceSession.GetDevice().GetAIRanges();
+                    _logger.Info($"{DeviceName}(input) init success. {_deviceSession.GetNumberOfChannels()} channels. Range {r[0].minimum},{r[0].maximum}. {deviceIndex + _channelsString}");
+                }
+                else
+                {
+                    _logger.Warn($"Device {DeviceName} init fail");
+                    return;
+                }
+                _samplingTimer = new System.Threading.Timer(HandleResponse_Callback, null, TimeSpan.Zero, _samplingInterval);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex.Message);
+            }        
+        }
+        public override void Dispose()
+        {
+            _samplingTimer.Dispose();
+            System.Threading.Thread.Sleep(200);
+            CloseDevice();
         }
 
         double[] _lastScan;
@@ -117,10 +122,6 @@ namespace UeiBridge
             return sb.ToString();
         }
 
-        public override void Dispose()
-        {
-            CloseDevice();
-        }
     }
 }
 

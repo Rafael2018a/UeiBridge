@@ -15,7 +15,7 @@ namespace UeiBridge
         IConvert _attachedConverter;
         public override IConvert AttachedConverter => _attachedConverter;
 
-        public DIO403InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl): base( targetConsumer, samplingInterval, caseUrl)
+        public DIO403InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
         {
             _channelsString = "Di3:5";
             _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
@@ -27,7 +27,7 @@ namespace UeiBridge
             {
                 _deviceSession = new Session();
                 _deviceSession.CreateDIChannel(deviceUrl);
-                _numberOfChannels = _deviceSession.GetNumberOfChannels();
+                //_numberOfChannels = _deviceSession.GetNumberOfChannels();
                 _deviceSession.ConfigureTimingForSimpleIO();
                 _reader = new DigitalReader(_deviceSession.GetDataStream());
             }
@@ -42,52 +42,60 @@ namespace UeiBridge
         }
         public void DeviceScan_Callback(object state)
         {
-            if (null == _deviceSession) // tbd. move this block to start() method
-            {
-                lock (this)
-                {
-                    // init session, if needed.
-                    // =======================
-                    if (null == _deviceSession)
-                    {
-                        CloseDevice();
-
-                        string deviceIndex = StaticMethods.FindDeviceIndex(DeviceName);
-                        if (null == deviceIndex)
-                        {
-                            _logger.Warn($"Can't find index for device {DeviceName}");
-                            return;
-                        }
-                        string url1 = _caseUrl + deviceIndex + _channelsString;
-
-                        if (OpenDevice(url1))
-                        {
-                            //_logger.Info($"{_deviceName} init success. {_numberOfChannels} input channels. {url1}");
-                            _logger.Info($"{DeviceName}(Input) init success. {_numberOfChannels} channels. {deviceIndex + _channelsString}");
-                        }
-                        else
-                        {
-                            _logger.Warn($"Device {DeviceName} init fail");
-                            return;
-                        }
-                    }
-                }
-            }
             // read from device
             // ===============
-            _lastScan = _reader.ReadSingleScanUInt16();
-            System.Diagnostics.Debug.Assert(_lastScan != null);
-            System.Diagnostics.Debug.Assert(_lastScan.Length == _numberOfChannels, "wrong number of channels");
-            //diData[0] = 0x07;
-            ScanResult dr = new ScanResult(_lastScan, this);
-            _targetConsumer.Enqueue(dr);
-
+            try
+            {
+                _lastScan = _reader.ReadSingleScanUInt16();
+                System.Diagnostics.Debug.Assert(_lastScan != null);
+                System.Diagnostics.Debug.Assert(_lastScan.Length == _deviceSession.GetNumberOfChannels(), "wrong number of channels");
+                //diData[0] = 0x07;
+                ScanResult dr = new ScanResult(_lastScan, this);
+                _targetConsumer.Enqueue(dr);
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex.Message);
+            }
         }
         public override void Start()
         {
+            if ((_deviceSession != null) && _deviceSession.IsRunning())
+            {
+                _logger.Warn("Can't start since device already running");
+                return;
+            }
+
+            // init session, if needed.
+            // =======================
+            string deviceIndex = StaticMethods.FindDeviceIndex(DeviceName);
+            if (null == deviceIndex)
+            {
+                _logger.Warn($"Can't find index for device {DeviceName}");
+                return;
+            }
+            string deviceUrl = _caseUrl + deviceIndex + _channelsString;
+
+            if (OpenDevice(deviceUrl))
+            {
+                _logger.Info($"{DeviceName}(Input) init success. {_deviceSession.GetNumberOfChannels()} channels. {deviceIndex + _channelsString}");
+            }
+            else
+            {
+                _logger.Warn($"Device {DeviceName} init fail");
+                return;
+            }
+
             _samplingTimer = new System.Threading.Timer(DeviceScan_Callback, null, TimeSpan.Zero, _samplingInterval);
         }
-        UInt16 [] _lastScan;
+        public override void Dispose()
+        {
+            _samplingTimer.Dispose();
+            System.Threading.Thread.Sleep(200); // wait for callback to finish
+            CloseDevice();
+        }
+
+        UInt16[] _lastScan;
         public override string GetFormattedStatus()
         {
             System.Text.StringBuilder sb = new System.Text.StringBuilder("Input bits: ");
@@ -102,9 +110,5 @@ namespace UeiBridge
             return sb.ToString();
         }
 
-        public override void Dispose()
-        {
-            CloseDevice();
-        }
     }
 }

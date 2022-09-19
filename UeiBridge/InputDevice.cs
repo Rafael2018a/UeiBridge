@@ -14,7 +14,6 @@ namespace UeiBridge
         protected Session _deviceSession;
         protected string _caseUrl;
         //protected string _deviceName;// = "AO-308";
-        protected int _numberOfChannels = 0;
         protected string _channelsString;
         //protected IConvert _attachedConverter;
         public abstract IConvert AttachedConverter { get; }

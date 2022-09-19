@@ -20,6 +20,7 @@ namespace UeiBridge
         //public string DeviceName => _deviceName;
         public abstract string DeviceName { get; }
         public abstract IConvert AttachedConverter { get; }
+        public static string CancelTaskRequest => "canceltoken";
 
         //protected int _numberOfChannels = 0;
         //public int NumberOfChannels => _numberOfChannels;
@@ -51,6 +52,10 @@ namespace UeiBridge
             {
                 // get from q
                 DeviceRequest incomingRequest = _dataItemsQueue.Take();
+                if (incomingRequest.RequestObject.ToString() == OutputDevice.CancelTaskRequest)
+                {
+                    break;
+                }
                 HandleRequest(incomingRequest);
             }
         }

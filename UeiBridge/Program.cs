@@ -20,7 +20,7 @@ namespace UeiBridge
         {
             Program p = new Program();
             p.Run();
-            Console.ReadKey();
+            
         }
 
         private void Run()
@@ -65,7 +65,7 @@ namespace UeiBridge
             DeviceToEthernet d2e = new DeviceToEthernet(uw);
             d2e.Start();
             _inputDevices.Add(new DIO403InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
-            //_inputDevices.Add(new AI201InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
+            _inputDevices.Add(new AI201InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
             ProjectRegistry.Instance.SerialDeviceManager = new SL508InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl);
             _inputDevices.Add( ProjectRegistry.Instance.SerialDeviceManager);
             _inputDevices.ForEach(dev => dev.Start());
@@ -76,8 +76,10 @@ namespace UeiBridge
             // publish status to StatusViewer
             Task.Factory.StartNew(() => PublishStatus_Task());
 
+
+            Console.ReadKey();
             _inputDevices.ForEach(dev => dev.Dispose());
-            //ProjectRegistry.Instance.DeviceManagersDic.ToList().ForEach( dev => dev.Value.Dispose());
+            ProjectRegistry.Instance.DeviceManagersDic.ToList().ForEach( dev => dev.Value.Dispose());
             
         }
 

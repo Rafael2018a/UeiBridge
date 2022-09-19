@@ -34,7 +34,8 @@ namespace UeiBridge
             }
             _udpClient.Send(message, message.Length);
 
-            _logger.Debug($"Message Sent through udp....len={message.Length}");
+            //_logger.Debug($"Message Sent through udp....len={message.Length}");
+            
         }
     }
 
