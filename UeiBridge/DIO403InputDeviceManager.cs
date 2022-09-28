@@ -10,7 +10,7 @@ namespace UeiBridge
     class DIO403InputDeviceManager : InputDevice
     {
         DigitalReader _reader;
-        log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
+        log4net.ILog _logger = StaticMethods.GetLogger();
         public override string DeviceName => "DIO-403";
         IConvert _attachedConverter;
         public override IConvert AttachedConverter => _attachedConverter;

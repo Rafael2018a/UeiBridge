@@ -5,12 +5,14 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Xml.Serialization;
+using UeiDaq;
 
 namespace UeiBridge
 {
     public class SerialChannel
     {
         public string portname = "port1";
+        public SerialPortMode portmode = SerialPortMode.RS485FullDuplex;
     }
     public class Config
     {

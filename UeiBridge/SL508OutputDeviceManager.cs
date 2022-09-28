@@ -6,7 +6,7 @@ namespace UeiBridge
 {
     class SL508OutputDeviceManager : OutputDevice
     {
-        log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
+        log4net.ILog _logger = StaticMethods.GetLogger();
         IConvert _attachedConverter;
         //const string _termString = "\r\n";
         SL508InputDeviceManager _serialInputManger=null;
@@ -25,7 +25,7 @@ namespace UeiBridge
 
         public override void Dispose()
         {
-            CloseDevice();
+            // do nothing. this manager relays on 508InputManger
         }
         public override void Start()
         {
@@ -43,15 +43,25 @@ namespace UeiBridge
         }
         public override string GetFormattedStatus()
         {
-            return "SL-508-892 output: not ready yet";
+            return "SL-508-892 output: not ready yet"; // tbd
         }
 
         protected override void HandleRequest(DeviceRequest request)
         {
             byte[] m = request.RequestObject as byte[];
             System.Diagnostics.Debug.Assert(m != null);
-            System.Diagnostics.Debug.Assert(_serialInputManger?.SerialWriter != null);
-            _serialInputManger.SerialWriter.Write(m);
+            System.Diagnostics.Debug.Assert(request.SerialChannel >= 0);
+            if (_serialInputManger?.SerialWriterList != null)
+            {
+                if (_serialInputManger.SerialWriterList.Count > request.SerialChannel)
+                {
+                    _serialInputManger.SerialWriterList[request.SerialChannel].Write(m);
+                }
+                else
+                {
+                    _logger.Warn($"No serial writer for channel {request.SerialChannel}");
+                }
+            }
             //System.Diagnostics.Debug.Assert(_deviceSession != null);
             //byte[] m = request.RequestObject as byte[];
             //_logger.Warn($"Should send to RS: {Encoding.ASCII.GetString(m)} ... TBD");

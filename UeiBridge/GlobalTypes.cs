@@ -27,21 +27,28 @@ namespace UeiBridge
         string DeviceName { get; }
         string LastErrorMessage { get; }
     }
+    /// <summary>
+    /// (Immutable)
+    /// </summary>
     public class DeviceRequest
     {
         readonly object _requestObject;
         readonly string _caseUrl;
+        readonly int _serialChannel;
         //readonly string _deviceName;
 
         public object RequestObject => _requestObject;
 
         public string CaseUrl => _caseUrl;
+
+        public int SerialChannel => _serialChannel;
+
         //public string DeviceName => _deviceName;
-        public DeviceRequest(object requestObject, string caseUrl, string deviceName=null)
+        public DeviceRequest(object requestObject, string caseUrl, int serialChannel = -1)//, string deviceName=null)
         {
             _requestObject = requestObject;
             _caseUrl = caseUrl;
-            //_deviceName = deviceName;
+            _serialChannel = serialChannel;
         }
     }
     public class ScanResult

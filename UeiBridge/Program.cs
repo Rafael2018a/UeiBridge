@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,18 +13,20 @@ namespace UeiBridge
 {
     class Program
     {
-        ILog _logger = log4net.LogManager.GetLogger("Root");
+        ILog _logger = StaticMethods.GetLogger();
         List<InputDevice> _inputDevices = new List<InputDevice>();
 
         static void Main(string[] args)
         {
             Program p = new Program();
             p.Run();
+            System.Threading.Thread.Sleep(2000);
         }
 
         private void Run()
         {
             
+            // print current version
             var v = System.Reflection.Assembly.GetEntryAssembly().GetName().Version.ToString();
             _logger.Info($"UEI Bridge. Version {v}");
 
@@ -43,9 +46,19 @@ namespace UeiBridge
 
             // display device list
             _logger.Info(" *** Device list:");
-            deviceList.ForEach(dev => _logger.Info($"{dev.GetDeviceName()} as Dev{dev.GetIndex()}"));
+            //deviceList.ForEach(dev => _logger.Info($"{dev.GetDeviceName()} as Dev{dev.GetIndex()}"));
+            foreach(var dev in deviceList)
+            {
+                _logger.Info($"{dev.GetDeviceName()} as Dev{dev.GetIndex()}");
+            }
             _logger.Info(" *** End device list:");
 
+            // display serial devices 
+            var v1 = Enum.GetValues(typeof(SerialPortMode)) as SerialPortMode[];
+            List<SerialPortMode> s = new List<SerialPortMode>(v1);
+            StringBuilder sb = new StringBuilder();
+            v1.ToList<SerialPortMode>().ForEach(item => { sb.Append(item); sb.Append(" "); });
+            _logger.Debug("Serial modes: " + sb.ToString());
 
             // prepare device dictionaries
             ProjectRegistry.Instance.Establish();
@@ -70,6 +83,16 @@ namespace UeiBridge
 
             // start output-device managers
             ProjectRegistry.Instance.OutputDevicesMap.ToList().ForEach((pair) => pair.Value.Start());
+
+            // verify attached convertes
+            if (false == ProjectRegistry.Instance.OutputDevicesMap.All(item => item.Value.AttachedConverter != null))
+            {
+                _logger.Warn("One of output device managers does not have attached converter");
+            }
+            if (false == _inputDevices.All(item => item.AttachedConverter != null))
+            {
+                _logger.Warn("One of input device managers does not have attached converter");
+            }
 
             // self tests
             StartDownwardsTest();
@@ -121,20 +144,24 @@ namespace UeiBridge
                     System.Threading.Thread.Sleep(100);
                     IPEndPoint destEp = new IPEndPoint(IPAddress.Parse(Config.Instance.ReceiverMulticastAddress), Config.Instance.ReceiverMulticastPort);
 
-                    for (int i=0; i<3; i++)
+                    for (int i=0; i<10; i++)
                     {
 
                         byte[] e403 = StaticMethods.Make_DIO403Down_Message();
                         udpClient.Send(e403, e403.Length, destEp);
 
                         byte[] e308 = StaticMethods.Make_A308Down_message();
-                        udpClient.Send(e308, e308.Length, destEp); 
-
+                        udpClient.Send(e308, e308.Length, destEp);
+#if notready
                         byte[] e430 = StaticMethods.Make_DIO430Down_Message();
-                        //udpClient.Send(e430, e308.Length, destEp);
-
-                        byte[] e508 = StaticMethods.Make_SL508Down_Message();
-                        udpClient.Send(e508, e508.Length, destEp);
+                        udpClient.Send(e430, e308.Length, destEp);
+#endif
+                        List<byte[]> e508 = StaticMethods.Make_SL508Down_Messages();
+                        foreach (byte [] msg in e508)
+                        {
+                            udpClient.Send(msg, msg.Length, destEp);
+                            System.Threading.Thread.Sleep(200);
+                        }
 
                         System.Threading.Thread.Sleep(5000);
                         

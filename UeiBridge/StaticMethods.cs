@@ -50,17 +50,17 @@ namespace UeiBridge
                 return null;
         }
 
-        public static log4net.ILog GetLogger_notInUse()
+        public static log4net.ILog GetLogger()
         {
             //var m = System.Reflection.MethodBase.GetCurrentMethod();
             //var m1 = System.Reflection.MethodBase.GetCurrentMethod().
 
-            //System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace();
+            System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace();
             // Get calling method name
-            //var m = stackTrace.GetFrame(1).GetMethod();
+            var m = stackTrace.GetFrame(1).GetMethod();
 
 
-            var x = log4net.LogManager.GetLogger("Root");// m.DeclaringType.Name);
+            var x = log4net.LogManager.GetLogger(m.DeclaringType.Name);
             //var x = log4net.LogManager.GetLogger("SpecialLogger");
 
             return x;
@@ -118,17 +118,25 @@ namespace UeiBridge
             EthernetMessage msg = EthernetMessageFactory.CreateEmpty(6, 16);
             return msg.ToByteArrayDown();
         }
-        public static byte[] Make_SL508Down_Message()
+        public static List<byte[]> Make_SL508Down_Messages()
         {
-            string m = "hello SL508\n";
+            List<byte[]> msgs = new List<byte[]>();
 
-            // string to ascii
-            // ascii to string System.Text.Encoding.ASCII.GetString(recvBytes)
-            EthernetMessage msg = EthernetMessageFactory.CreateEmpty(5, 16);
-            msg.PayloadBytes = System.Text.Encoding.ASCII.GetBytes(m);
+            for (int ch = 0; ch < 8; ch++)
+            {
+                string m = $"hello from ch {ch}\n";
 
-            return msg.ToByteArrayDown();
+                // string to ascii
+                // ascii to string System.Text.Encoding.ASCII.GetString(recvBytes)
+                EthernetMessage msg = EthernetMessageFactory.CreateEmpty(5, 16);
+                msg.PayloadBytes = System.Text.Encoding.ASCII.GetBytes(m);
+                msg.SlotChannelNumber = ch;
+                msgs.Add(msg.ToByteArrayDown());
+
+            }
+
+            return msgs;
+
         }
-
     }
 }

@@ -14,7 +14,7 @@ namespace UeiBridge
     class AI201InputDeviceManager : InputDevice
     {
         AnalogScaledReader _reader;
-        log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
+        log4net.ILog _logger = StaticMethods.GetLogger();
         public override string DeviceName => "AI-201-100";
         IConvert _attachedConverter;
         public override IConvert AttachedConverter => _attachedConverter;

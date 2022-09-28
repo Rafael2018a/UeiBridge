@@ -16,7 +16,7 @@ namespace UeiBridge
     internal class UdpReader
     {
         private IEnqueue<byte[]> _datagramConsumer;
-        log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
+        log4net.ILog _logger = StaticMethods.GetLogger();
         UdpClient _udpclient;
 
         public UdpReader(IEnqueue<byte[]> consumer)

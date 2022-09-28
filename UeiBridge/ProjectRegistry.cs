@@ -21,7 +21,7 @@ namespace UeiBridge
         public Dictionary<string, OutputDevice> OutputDevicesMap { get => _outputDeviceMap; } 
         internal void Establish() // tbd. refactor this.
         {
-            log4net.ILog logger = log4net.LogManager.GetLogger("Root");
+            log4net.ILog logger = StaticMethods.GetLogger();
 
             _deviceMap.Add(0, "AO-308");
             _deviceMap.Add(4, "DIO-403");

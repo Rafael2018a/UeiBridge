@@ -11,7 +11,7 @@ namespace UeiBridge
         public static EthernetMessage CreateFromByteArray(byte[] byteMessage, out string errorString)
         {
             EthernetMessage msg = null;
-            // check array  validity
+            // check array validity
             // ======================
             if (byteMessage.Length < 16)
             {
@@ -43,7 +43,7 @@ namespace UeiBridge
             Array.Copy(byteMessage, EthernetMessage.PayloadOffset, msg.PayloadBytes, 0, nominalLengh - EthernetMessage.PayloadOffset);
 
             msg.CardType = byteMessage[EthernetMessage.CardTypeOffset];
-
+            msg.SlotChannelNumber = byteMessage[EthernetMessage.SlotChannelNumberOffset];
             exit: return msg;
         }
         /// <summary>
