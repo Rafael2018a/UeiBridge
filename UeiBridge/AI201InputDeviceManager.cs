@@ -84,7 +84,7 @@ namespace UeiBridge
                 if (OpenDevice(url1))
                 {
                     var r = _deviceSession.GetDevice().GetAIRanges();
-                    _logger.Info($"{DeviceName}(input) init success. {_deviceSession.GetNumberOfChannels()} channels. Range {r[0].minimum},{r[0].maximum}. {deviceIndex + _channelsString}");
+                    _logger.Info($"{DeviceName}(input) init success. {_deviceSession.GetNumberOfChannels()}ch. Range {r[0].minimum},{r[0].maximum}. {deviceIndex + _channelsString}");
                 }
                 else
                 {

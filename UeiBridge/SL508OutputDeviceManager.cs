@@ -55,7 +55,17 @@ namespace UeiBridge
             {
                 if (_serialInputManger.SerialWriterList.Count > request.SerialChannel)
                 {
-                    _serialInputManger.SerialWriterList[request.SerialChannel].Write(m);
+                    if (null != _serialInputManger.SerialWriterList[request.SerialChannel])
+                    {
+                        _serialInputManger.SerialWriterList[request.SerialChannel].Write(m);
+                    }
+                    else
+                    {
+                        if (false == _serialInputManger.InDisposeState)
+                        {
+                            _logger.Warn("Failed to send serial message. SerialWriter==null)");
+                        }
+                    }
                 }
                 else
                 {

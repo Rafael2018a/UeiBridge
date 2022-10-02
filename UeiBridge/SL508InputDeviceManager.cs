@@ -22,6 +22,7 @@ namespace UeiBridge
         IConvert _attachedConverter;
         //private SerialReader _serialReader;
         //private SerialWriter _serialWriter;
+        bool _InDisposeState = false;
 
         //readonly List<Session> _deviceSessionList;
         string _channelBaseString;
@@ -29,6 +30,8 @@ namespace UeiBridge
         public override IConvert AttachedConverter => _attachedConverter;
 
         public List<SerialWriter> SerialWriterList => _serialWriterList;
+
+        public bool InDisposeState => _InDisposeState;
 
         public SL508InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
         {
@@ -78,63 +81,38 @@ namespace UeiBridge
 
                 _logger.Info($"serial port {ch}: {c111.GetResourceName()}");
                 //var r = c111.GetResourceName();
-               
+
 
                 SerialReader sr = new SerialReader(_deviceSession.GetDataStream(), _deviceSession.GetChannel(ch).GetIndex());
                 readerIAsyncResult = sr.BeginRead(200, readerAsyncCallback, ch);
-                _serialReaderList.Add( sr);
+                _serialReaderList.Add(sr);
                 SerialWriter sw = new SerialWriter(_deviceSession.GetDataStream(), _deviceSession.GetChannel(ch).GetIndex());
                 _serialWriterList.Add(sw);
             }
 
 
-                return true;
+            return true;
             ////////////////////////////////////////////////////////////////////////////
 
-#if dont
-
-
-            _deviceSession = new UeiDaq.Session();
-            SerialPort sp =
-            _deviceSession.CreateSerialPort(url,
-                                           SerialPortMode.RS232,
-                                           SerialPortSpeed.BitsPerSecond9600,
-                                           SerialPortDataBits.DataBits8,
-                                           SerialPortParity.None,
-                                           SerialPortStopBits.StopBits1,
-                                           "\n");
-
-            _deviceSession.ConfigureTimingForMessagingIO(100, 100.0);
-            //_deviceSession.GetTiming().SetTimeout(500); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
-
-            _deviceSession.Start();
-
-            _serialReader = new SerialReader(_deviceSession.GetDataStream(), _deviceSession.GetChannel(0).GetIndex());
-            _serialWriter = new SerialWriter(_deviceSession.GetDataStream(), _deviceSession.GetChannel(0).GetIndex());
-
-            readerAsyncCallback = new AsyncCallback(ReaderCallback);
-            readerIAsyncResult = _serialReader.BeginRead(200, readerAsyncCallback, null);
-
-            return true;
-#endif
         }
 
         public void ReaderCallback(IAsyncResult ar)
         {
             int channel = (int)ar.AsyncState;
+            if (null == _serialReaderList[channel]) // if during dispose
+            {
+                return;
+            }
             try
             {
-                
+
                 byte[] receiveBuffer = _serialReaderList[channel].EndRead(ar);
 
-                // We can't directly access the UI from an asynchronous method
-                // need to invoke a delegate that will take care of updating
-                // the UI from the proper thread
                 string str = System.Text.Encoding.ASCII.GetString(receiveBuffer);
                 byte[] reply = System.Text.Encoding.ASCII.GetBytes("Reply> " + str);
                 _serialWriterList[channel].Write(reply);
                 _logger.Debug(str);
-                if (_serialReaderList[channel] != null && base._deviceSession.IsRunning())
+                if (_serialReaderList[channel] != null && base._deviceSession.IsRunning() && _InDisposeState == false)
                 {
                     readerIAsyncResult = _serialReaderList[channel].BeginRead(200, this.ReaderCallback, channel);
                 }
@@ -150,19 +128,24 @@ namespace UeiBridge
                         {
                             // Ignore timeout error, they will occur if the send button is not
                             // clicked on fast enough!
-                            // Just reinitiate a new asynchronous read.
-                            readerIAsyncResult = _serialReaderList[channel].BeginRead(200, readerAsyncCallback, channel);
-                            //_logger.Debug("Timeout");
+                            if (false == _InDisposeState)
+                            {
+                                readerIAsyncResult = _serialReaderList[channel].BeginRead(200, readerAsyncCallback, channel);
+                            }
                         }
                         else
                         {
-                            base._deviceSession.Dispose();
-                            base._deviceSession = null;
+                            //base._deviceSession.Dispose();
+                            //base._deviceSession = null;
                             Console.WriteLine(ex.Message);
                         }
                     }
                 }
             }
+            //catch (NullReferenceException ex)
+            //{
+            //    _logger.Warn( ex.Message);
+            //}
 
 
         }
@@ -216,6 +199,8 @@ namespace UeiBridge
 
         public override void Dispose()
         {
+            _InDisposeState = true;
+            System.Threading.Thread.Sleep(500);
             CloseDevices();
         }
 
@@ -235,7 +220,7 @@ namespace UeiBridge
             _deviceSession.Stop();
             _deviceSession.Dispose();
             _deviceSession = null;
-            
+
         }
     }
 }
