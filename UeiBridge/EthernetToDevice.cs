@@ -10,7 +10,7 @@ namespace UeiBridge
     public class EthernetToDevice : IEnqueue<byte[]> 
     {
         BlockingCollection<byte[]> _dataItemsQueue = new BlockingCollection<byte[]>(100);
-        log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
+        log4net.ILog _logger = StaticMethods.GetLogger();
 
         public void Start()
         {

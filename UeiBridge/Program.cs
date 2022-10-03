@@ -75,6 +75,7 @@ namespace UeiBridge
             d2e.Start();
 
             // start input device managers
+            // ============================
             _inputDevices.Add(new DIO403InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
             _inputDevices.Add(new AI201InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
             ProjectRegistry.Instance.SerialInputDeviceManager = new SL508InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl);
@@ -95,7 +96,7 @@ namespace UeiBridge
             }
 
             // self tests
-            StartDownwardsTest();
+            //StartDownwardsTest();
 
             // publish status to StatusViewer
             Task.Factory.StartNew(() => PublishStatus_Task());

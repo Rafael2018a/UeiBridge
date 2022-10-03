@@ -52,6 +52,7 @@ namespace UeiBridge
             {
                 // get from q
                 DeviceRequest incomingRequest = _dataItemsQueue.Take();
+                System.Diagnostics.Debug.Assert(null != incomingRequest);
                 if (incomingRequest.RequestObject.ToString() == OutputDevice.CancelTaskRequest)
                 {
                     break;

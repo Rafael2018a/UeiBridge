@@ -79,9 +79,7 @@ namespace UeiBridge
             {
                 var c111 = _deviceSession.GetChannel(ch);
 
-                _logger.Info($"serial port {ch}: {c111.GetResourceName()}");
-                //var r = c111.GetResourceName();
-
+                _logger.Info($"{DeviceName} Serial CH{ch} init success (input/output): 9600bps ");////{c111.GetResourceName()}");
 
                 SerialReader sr = new SerialReader(_deviceSession.GetDataStream(), _deviceSession.GetChannel(ch).GetIndex());
                 readerIAsyncResult = sr.BeginRead(200, readerAsyncCallback, ch);
@@ -90,9 +88,7 @@ namespace UeiBridge
                 _serialWriterList.Add(sw);
             }
 
-
             return true;
-            ////////////////////////////////////////////////////////////////////////////
 
         }
 

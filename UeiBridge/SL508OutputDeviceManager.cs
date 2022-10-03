@@ -9,12 +9,21 @@ namespace UeiBridge
         log4net.ILog _logger = StaticMethods.GetLogger();
         IConvert _attachedConverter;
         //const string _termString = "\r\n";
-        SL508InputDeviceManager _serialInputManger=null;
+        //SL508InputDeviceManager _serialInputManger=null;
 
         //int _numberOfChannels = 1;
         public SL508OutputDeviceManager()
         {
-            
+            //if (null != ProjectRegistry.Instance.SerialInputDeviceManager)
+            {
+                //_serialInputManger = ProjectRegistry.Instance.SerialInputDeviceManager;
+                _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
+            }
+            //else
+            //{
+            //    _logger.Warn("Can't start SL508OutputDeviceManager since SerialInputDeviceManager=null");
+            //}
+
         }
 
         public override string DeviceName => "SL-508-892";
@@ -29,17 +38,8 @@ namespace UeiBridge
         }
         public override void Start()
         {
-            if (null != ProjectRegistry.Instance.SerialInputDeviceManager)
-            {
-                _serialInputManger = ProjectRegistry.Instance.SerialInputDeviceManager;
-                _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
-            }
-            else
-            {
-                _logger.Warn("Can't start SL508OutputDeviceManager since SerialInputDeviceManager=null");
-            }
-
             base.Start();
+            //_isDeviceReady = true;
         }
         public override string GetFormattedStatus()
         {
@@ -48,6 +48,17 @@ namespace UeiBridge
 
         protected override void HandleRequest(DeviceRequest request)
         {
+            SL508InputDeviceManager _serialInputManger = ProjectRegistry.Instance.SerialInputDeviceManager;
+            if (null==_serialInputManger)
+            {
+                _logger.Warn("Can't hanlde request since serialInputManager==null");
+                return;
+            }
+            //if (_isDeviceReady==false)
+            //{
+            //    return;
+            //}
+
             byte[] m = request.RequestObject as byte[];
             System.Diagnostics.Debug.Assert(m != null);
             System.Diagnostics.Debug.Assert(request.SerialChannel >= 0);
