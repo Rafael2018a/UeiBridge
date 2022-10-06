@@ -20,7 +20,7 @@ namespace UeiBridge
         {
             Program p = new Program();
             p.Run();
-            System.Threading.Thread.Sleep(2000);
+            System.Threading.Thread.Sleep(1000);
         }
 
         private void Run()

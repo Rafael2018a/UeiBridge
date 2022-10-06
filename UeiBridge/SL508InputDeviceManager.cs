@@ -23,15 +23,15 @@ namespace UeiBridge
         //private SerialReader _serialReader;
         //private SerialWriter _serialWriter;
         bool _InDisposeState = false;
+        byte[] _lastMessage;
 
         //readonly List<Session> _deviceSessionList;
         string _channelBaseString;
 
         public override IConvert AttachedConverter => _attachedConverter;
-
         public List<SerialWriter> SerialWriterList => _serialWriterList;
-
         public bool InDisposeState => _InDisposeState;
+        //IEnqueue<ScanResult> _targetConsumer;
 
         public SL508InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
         {
@@ -47,7 +47,14 @@ namespace UeiBridge
 
         public override string GetFormattedStatus()
         {
-            return "SL-508-892 input handler not ready yet";
+            string formattedString = "";
+            if (null != _lastMessage)
+            {
+                int l = (_lastMessage.Length > 20) ? 20 : _lastMessage.Length;
+                System.Diagnostics.Debug.Assert(l > 0);
+                formattedString = "First bytes: " + BitConverter.ToString(_lastMessage).Substring(0, l*3-1);
+            }
+            return formattedString;
         }
 
         AsyncCallback readerAsyncCallback;
@@ -101,13 +108,21 @@ namespace UeiBridge
             }
             try
             {
-
                 byte[] receiveBuffer = _serialReaderList[channel].EndRead(ar);
+                //byte[] receiveBuffer = { 1, 2, 3 };
 
+                _lastMessage = receiveBuffer;
+                // send reply (debug only)
                 string str = System.Text.Encoding.ASCII.GetString(receiveBuffer);
                 byte[] reply = System.Text.Encoding.ASCII.GetBytes("Reply> " + str);
                 _serialWriterList[channel].Write(reply);
-                _logger.Debug(str);
+                //_logger.Debug(str);
+
+                // forward to consumer (send by udp)
+                ScanResult sr = new ScanResult(receiveBuffer, this);
+                _targetConsumer.Enqueue(sr);
+
+                // restart reader
                 if (_serialReaderList[channel] != null && base._deviceSession.IsRunning() && _InDisposeState == false)
                 {
                     readerIAsyncResult = _serialReaderList[channel].BeginRead(200, this.ReaderCallback, channel);

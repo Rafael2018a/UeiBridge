@@ -8,6 +8,7 @@ namespace UeiBridge
     {
         log4net.ILog _logger = StaticMethods.GetLogger();
         IConvert _attachedConverter;
+        byte[] _lastMessage;
         //const string _termString = "\r\n";
         //SL508InputDeviceManager _serialInputManger=null;
 
@@ -43,7 +44,14 @@ namespace UeiBridge
         }
         public override string GetFormattedStatus()
         {
-            return "SL-508-892 output: not ready yet"; // tbd
+            string formattedString="";
+            if (null != _lastMessage)
+            {
+                int l = (_lastMessage.Length > 20) ? 20 : _lastMessage.Length;
+                System.Diagnostics.Debug.Assert(l > 0);
+                formattedString = "First bytes: "+BitConverter.ToString(_lastMessage).Substring(0, l*3-1);
+            }
+            return formattedString;
         }
 
         protected override void HandleRequest(DeviceRequest request)
@@ -59,8 +67,8 @@ namespace UeiBridge
             //    return;
             //}
 
-            byte[] m = request.RequestObject as byte[];
-            System.Diagnostics.Debug.Assert(m != null);
+            _lastMessage = request.RequestObject as byte[];
+            System.Diagnostics.Debug.Assert(_lastMessage != null);
             System.Diagnostics.Debug.Assert(request.SerialChannel >= 0);
             if (_serialInputManger?.SerialWriterList != null)
             {
@@ -68,7 +76,7 @@ namespace UeiBridge
                 {
                     if (null != _serialInputManger.SerialWriterList[request.SerialChannel])
                     {
-                        _serialInputManger.SerialWriterList[request.SerialChannel].Write(m);
+                        _serialInputManger.SerialWriterList[request.SerialChannel].Write(_lastMessage);
                     }
                     else
                     {

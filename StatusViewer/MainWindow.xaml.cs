@@ -301,7 +301,7 @@ namespace StatusViewer
             string mcIp = ConfigurationSettings.AppSettings["multicastIp"];
             mcAddress = (mcIp != null) ? IPAddress.Parse(mcIp) : IPAddress.Parse("239.10.10.17"); // get from config or use default
             string mcPort1 = ConfigurationSettings.AppSettings["multicastPort"];
-            mcPort = (mcPort != null) ? Int32.Parse(mcPort1) : 5093; // get from config or use default
+            mcPort = (mcPort1 != null) ? Int32.Parse(mcPort1) : 5093; // get from config or use default
             AppServices.WriteToTrace(string.Format("Multicast EP: {0}:{1}", mcAddress, mcPort));
 
             // define listener

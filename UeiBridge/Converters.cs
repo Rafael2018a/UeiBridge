@@ -163,7 +163,7 @@ namespace UeiBridge
         }
     }
 
-    class SL598Convert : IConvert
+    class SL508Convert : IConvert
     {
         public string DeviceName => "SL-508-892";
 
@@ -171,7 +171,9 @@ namespace UeiBridge
 
         public byte[] DeviceToEth(object dt)
         {
-            throw new NotImplementedException();
+            System.Diagnostics.Debug.Assert(dt.GetType() == typeof(byte[]));
+            byte[] result = dt as byte[];
+            return result;
         }
 
         public object EthToDevice(byte[] messagePayload)
