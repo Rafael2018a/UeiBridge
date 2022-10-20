@@ -96,7 +96,7 @@ namespace UeiBridge
             }
 
             // self tests
-            //StartDownwardsTest();
+            StartDownwardsTest();
 
             // publish status to StatusViewer
             Task.Factory.StartNew(() => PublishStatus_Task());
@@ -139,6 +139,8 @@ namespace UeiBridge
         {
             Task.Factory.StartNew(() =>
             {
+                _logger.Info("Downward message simultion active.");
+
                 try
                 {
                     UdpClient udpClient = new UdpClient();

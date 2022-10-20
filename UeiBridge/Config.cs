@@ -11,8 +11,17 @@ namespace UeiBridge
 {
     public class SerialChannel
     {
-        public string portname = "port1";
-        public SerialPortMode portmode = SerialPortMode.RS485FullDuplex;
+        public string portname = "ComX";
+        public SerialPortMode mode = SerialPortMode.RS485FullDuplex;
+        public SerialPortSpeed baudrate = SerialPortSpeed.BitsPerSecond9600;
+
+        public SerialChannel(string portname)
+        {
+            this.portname = portname;
+        }
+        public SerialChannel()
+        {
+        }
     }
     public class Config
     {
@@ -31,12 +40,25 @@ namespace UeiBridge
         readonly double _analog_In_PeekVoltage = 12.0;
 
         public SerialChannel[] SerialChannels = new SerialChannel[8];
+        public string ValidSerialModes;
+        public string ValidBaudRates;
+
         private static volatile Config _instance;
         private static object syncRoot = new object();
         private Config()
         {
             for (int i = 0; i < SerialChannels.Length; i++)
-                SerialChannels[i] = new SerialChannel();
+                SerialChannels[i] = new SerialChannel("Com"+i.ToString());
+
+            var v1 = Enum.GetValues(typeof(SerialPortMode)) as SerialPortMode[];
+            StringBuilder sb = new StringBuilder("\n");
+            v1.ToList<SerialPortMode>().ForEach(item => { sb.Append(item); sb.Append("\n"); });
+            ValidSerialModes = sb.ToString();
+
+            var v2 = Enum.GetValues(typeof(SerialPortSpeed)) as SerialPortSpeed[];
+            sb = new StringBuilder("\n");
+            v2.ToList<SerialPortSpeed>().ForEach(item => { sb.Append(item); sb.Append("\n"); });
+            ValidBaudRates = sb.ToString();
         }
 
         public static Config Instance
@@ -69,6 +91,7 @@ namespace UeiBridge
                         resultConfig = serializer.Deserialize(sr) as Config;
                     }
                 }
+
                 catch (Exception ex)
                 {
                     Console.WriteLine($"Failed to read settings file {filename}. {ex.Message}");

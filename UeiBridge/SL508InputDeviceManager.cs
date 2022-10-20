@@ -17,6 +17,7 @@ namespace UeiBridge
         //SL508OutputDeviceManager _serialOutput;
         public override string DeviceName => "SL-508-892";
         //readonly new string _channelsString;
+        readonly List<SerialPort> _serialPorts;
         readonly List<SerialReader> _serialReaderList;
         readonly List<SerialWriter> _serialWriterList;
         IConvert _attachedConverter;
@@ -36,8 +37,10 @@ namespace UeiBridge
         public SL508InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
         {
             _channelBaseString = "Com";
+            _serialPorts = new List<SerialPort>();
             _serialReaderList = new List<SerialReader>();
             _serialWriterList = new List<SerialWriter>();
+
             //_deviceSessionList = new List<Session>();
             _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
         }
@@ -63,6 +66,22 @@ namespace UeiBridge
         {
             _deviceSession = new Session();
 
+            var n = _deviceSession.GetNumberOfChannels();
+
+            foreach(var channel in Config.Instance.SerialChannels)
+            {
+                string finalUrl = baseUrl + channel.portname.ToString();
+                var port = _deviceSession.CreateSerialPort(finalUrl,
+                                    channel.mode,
+                                    channel.baudrate,
+                                    SerialPortDataBits.DataBits8,
+                                    SerialPortParity.None,
+                                    SerialPortStopBits.StopBits1,
+                                    "\n");
+                _serialPorts.Add(port);
+            }
+
+#if old
             for (int ch = 0; ch < 8; ch++)
             {
                 string finalUrl = baseUrl + _channelBaseString + ch.ToString();
@@ -75,16 +94,38 @@ namespace UeiBridge
                                     SerialPortStopBits.StopBits1,
                                     "\n");
             }
-
+#endif
             _deviceSession.ConfigureTimingForMessagingIO(100, 100.0);
             _deviceSession.GetTiming().SetTimeout(500); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
             _deviceSession.Start();
 
             readerAsyncCallback = new AsyncCallback(ReaderCallback);
 
+            bool firstIteration = true;
+            foreach(SerialPort port in _serialPorts)
+            {
+                int channleIndex = port.GetIndex();
+                if (firstIteration)
+                {
+                    firstIteration = false;
+                    _logger.Info($"*** {DeviceName} init:");
+                        //port.GetResourceName());
+                }
+               
+                _logger.Info($"Serial CH{channleIndex} init success. {port.GetMode()}  {port.GetSpeed()}.");////{c111.GetResourceName()}");
+
+                SerialReader sr = new SerialReader(_deviceSession.GetDataStream(), channleIndex);
+                readerIAsyncResult = sr.BeginRead(200, readerAsyncCallback, channleIndex);
+                _serialReaderList.Add(sr);
+                SerialWriter sw = new SerialWriter(_deviceSession.GetDataStream(), channleIndex);
+                _serialWriterList.Add(sw);
+
+            }
+
+#if old
             for (int ch = 0; ch < 8; ch++)
             {
-                var c111 = _deviceSession.GetChannel(ch);
+                //var c111 = _deviceSession.GetChannel(ch);
 
                 _logger.Info($"{DeviceName} Serial CH{ch} init success (input/output): 9600bps ");////{c111.GetResourceName()}");
 
@@ -94,7 +135,7 @@ namespace UeiBridge
                 SerialWriter sw = new SerialWriter(_deviceSession.GetDataStream(), _deviceSession.GetChannel(ch).GetIndex());
                 _serialWriterList.Add(sw);
             }
-
+#endif
             return true;
 
         }

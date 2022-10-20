@@ -76,7 +76,14 @@ namespace UeiBridge
                 {
                     if (null != _serialInputManger.SerialWriterList[request.SerialChannel])
                     {
-                        _serialInputManger.SerialWriterList[request.SerialChannel].Write(_lastMessage);
+                        try
+                        {
+                            _serialInputManger.SerialWriterList[request.SerialChannel].Write(_lastMessage);
+                        }
+                        catch(Exception ex)
+                        {
+                            _logger.Warn(ex.Message + ". " + ex.GetType().ToString());
+                        }
                     }
                     else
                     {
