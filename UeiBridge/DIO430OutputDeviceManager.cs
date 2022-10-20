@@ -10,12 +10,17 @@ namespace UeiBridge
     
     class DIO430OutputDeviceManager: DioOutputDeviceManager
     {
-        
+        public override string DeviceName =>  "DIO-430";
+        string _channelsString;
+        public override IConvert AttachedConverter => _attachedConverter;
+
+        protected override string ChannelsString => _channelsString;
+
+        readonly IConvert _attachedConverter;
         public DIO430OutputDeviceManager()
         {
-            _deviceName = "DIO-430";
             _channelsString = "Do0";
-            _attachedConverter = StaticMethods.CreateConverterInstance(_deviceName);
+            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
         }
         protected override void HandleRequest(DeviceRequest dr)
         {
@@ -24,7 +29,7 @@ namespace UeiBridge
             if ((null == _deviceSession) || (_caseUrl != dr.CaseUrl))
             {
                 CloseDevice(); // if needed
-                OpenDevice(dr);
+                OpenDevice(dr, DeviceName);
             }
 
             // write to device
@@ -39,5 +44,12 @@ namespace UeiBridge
             return "(not ready yet)";
         }
 
+        public override void Dispose()
+        {
+            // tbd
+            //_deviceSession.Stop();
+            //_deviceSession.Dispose();
+            //_deviceSession = null;
+        }
     }
 }

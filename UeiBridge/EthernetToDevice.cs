@@ -10,7 +10,7 @@ namespace UeiBridge
     public class EthernetToDevice : IEnqueue<byte[]> 
     {
         BlockingCollection<byte[]> _dataItemsQueue = new BlockingCollection<byte[]>(100);
-        log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
+        log4net.ILog _logger = StaticMethods.GetLogger();
 
         public void Start()
         {
@@ -93,8 +93,8 @@ namespace UeiBridge
                     string deviceName;
                     if (ProjectRegistry.Instance.DeviceKeys.TryGetValue(messageObj.CardType, out deviceName)) // get deviceManager for card-type
                     {
-                        _logger.Debug($"Ethernet Message accepted. Device:{deviceName} Payload length:{messageObj.PayloadBytes.Length}");
-                        OutputDevice deviceManager = ProjectRegistry.Instance.DeviceManagersDic[deviceName];
+                        //_logger.Debug($"Ethernet Message accepted. Device:{deviceName} Payload length:{messageObj.PayloadBytes.Length}");
+                        OutputDevice deviceManager = ProjectRegistry.Instance.OutputDevicesMap[deviceName];
 
                         DeviceRequest dreq = MakeDeviceRequest(messageObj, deviceManager.AttachedConverter);
                         deviceManager.Enqueue(dreq);
@@ -136,10 +136,16 @@ namespace UeiBridge
 #endif
         private DeviceRequest MakeDeviceRequest(EthernetMessage messageObject, IConvert converter)
         {
+            if (null==converter)
+            {
+                _logger.Warn($"MakeDeviceRequest - Convert fail. Reason: null converter");
+                return null;
+            }
+
             var devicePayload = converter.EthToDevice( messageObject.PayloadBytes);
             if (null != devicePayload)
             {
-                DeviceRequest dr = new DeviceRequest(devicePayload, Config.Instance.DeviceUrl);
+                DeviceRequest dr = new DeviceRequest(devicePayload, Config.Instance.DeviceUrl, messageObject.SlotChannelNumber);
                 return dr;
             }
             else

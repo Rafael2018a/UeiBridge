@@ -50,17 +50,17 @@ namespace UeiBridge
                 return null;
         }
 
-        public static log4net.ILog GetLogger_notInUse()
+        public static log4net.ILog GetLogger()
         {
             //var m = System.Reflection.MethodBase.GetCurrentMethod();
             //var m1 = System.Reflection.MethodBase.GetCurrentMethod().
 
-            //System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace();
+            System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace();
             // Get calling method name
-            //var m = stackTrace.GetFrame(1).GetMethod();
+            var m = stackTrace.GetFrame(1).GetMethod();
 
 
-            var x = log4net.LogManager.GetLogger("Root");// m.DeclaringType.Name);
+            var x = log4net.LogManager.GetLogger(m.DeclaringType.Name);
             //var x = log4net.LogManager.GetLogger("SpecialLogger");
 
             return x;
@@ -98,5 +98,45 @@ namespace UeiBridge
             Console.WriteLine(sub);
         }
 
+
+        public static byte[] Make_A308Down_message()
+        {
+            EthernetMessage msg = EthernetMessageFactory.CreateEmpty(0, 16);
+            return msg.ToByteArrayDown();
+        }
+        public static byte[] Make_DIO403Down_Message()
+        {
+            EthernetMessage msg = EthernetMessageFactory.CreateEmpty(4, 3);
+            msg.PayloadBytes[0] = 0x12;
+            msg.PayloadBytes[1] = 0x34;
+            msg.PayloadBytes[2] = 0x56;
+
+            return msg.ToByteArrayDown();
+        }
+        public static byte[] Make_DIO430Down_Message()
+        {
+            EthernetMessage msg = EthernetMessageFactory.CreateEmpty(6, 16);
+            return msg.ToByteArrayDown();
+        }
+        public static List<byte[]> Make_SL508Down_Messages()
+        {
+            List<byte[]> msgs = new List<byte[]>();
+
+            for (int ch = 0; ch < 8; ch++)
+            {
+                string m = $"hello from ch {ch}\n";
+
+                // string to ascii
+                // ascii to string System.Text.Encoding.ASCII.GetString(recvBytes)
+                EthernetMessage msg = EthernetMessageFactory.CreateEmpty(5, 16);
+                msg.PayloadBytes = System.Text.Encoding.ASCII.GetBytes(m);
+                msg.SlotChannelNumber = ch;
+                msgs.Add(msg.ToByteArrayDown());
+
+            }
+
+            return msgs;
+
+        }
     }
 }

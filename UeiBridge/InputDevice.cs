@@ -8,16 +8,15 @@ using UeiDaq;
 /// </summary>
 namespace UeiBridge
 {
-    public abstract class InputDevice 
+    public abstract class InputDevice : IDisposable
     {
-        
+
         protected Session _deviceSession;
         protected string _caseUrl;
-        protected string _deviceName;// = "AO-308";
-        protected int _numberOfChannels = 0;
+        //protected string _deviceName;// = "AO-308";
         protected string _channelsString;
-        protected IConvert _attachedConverter;
-        public IConvert AttachedConverter => _attachedConverter;
+        //protected IConvert _attachedConverter;
+        public abstract IConvert AttachedConverter { get; }
         protected readonly IEnqueue<ScanResult> _targetConsumer;
 
         public abstract void Start();
@@ -28,7 +27,7 @@ namespace UeiBridge
             _samplingInterval = samplingInterval;
             _caseUrl = caseUrl;
         }
-        public string DeviceName => _deviceName; 
+        public abstract string DeviceName { get; }
         protected System.Threading.Timer _samplingTimer;
         protected TimeSpan _samplingInterval;
         public virtual void CloseDevice()
@@ -40,5 +39,9 @@ namespace UeiBridge
             }
             _deviceSession = null;
         }
+
+        public abstract void Dispose();
+
+        //public abstract int getme {get;}
     }
 }

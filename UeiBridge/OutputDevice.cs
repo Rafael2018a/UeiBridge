@@ -9,21 +9,22 @@ using UeiDaq;
 /// </summary>
 namespace UeiBridge
 {
-    public abstract class OutputDevice : IEnqueue<DeviceRequest>
+    public abstract class OutputDevice : IEnqueue<DeviceRequest>, IDisposable
     {
         BlockingCollection<DeviceRequest> _dataItemsQueue = new BlockingCollection<DeviceRequest>(100); // max 100 items
         //protected string _deviceIndex;
-        protected string _channelsString;
+        protected abstract string ChannelsString { get; }
         protected Session _deviceSession;
         protected string _caseUrl;
-        protected string _deviceName;// = "AO-308";
-        public string DeviceName => _deviceName;
+        //protected string _deviceName;// = "AO-308";
+        //public string DeviceName => _deviceName;
+        public abstract string DeviceName { get; }
+        public abstract IConvert AttachedConverter { get; }
+        public static string CancelTaskRequest => "canceltoken";
 
-        public IConvert AttachedConverter => _attachedConverter;
-
-        protected int _numberOfChannels = 0;
+        //protected int _numberOfChannels = 0;
         //public int NumberOfChannels => _numberOfChannels;
-        protected IConvert _attachedConverter;
+        //protected IConvert _attachedConverter;
         public virtual void CloseDevice()
         {
             if (null != _deviceSession)
@@ -40,7 +41,7 @@ namespace UeiBridge
         {
             _dataItemsQueue.Add(dr);
         }
-        public void Start()
+        public virtual void Start()
         {
             Task.Factory.StartNew(() => OutputDeviceHandler_Task());
         }
@@ -51,8 +52,15 @@ namespace UeiBridge
             {
                 // get from q
                 DeviceRequest incomingRequest = _dataItemsQueue.Take();
+                System.Diagnostics.Debug.Assert(null != incomingRequest);
+                if (incomingRequest.RequestObject.ToString() == OutputDevice.CancelTaskRequest)
+                {
+                    break;
+                }
                 HandleRequest(incomingRequest);
             }
         }
+
+        public abstract void Dispose();
     }
 }

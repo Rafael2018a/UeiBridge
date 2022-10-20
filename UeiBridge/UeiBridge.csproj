@@ -97,6 +97,8 @@
     <Compile Include="EthernetMessage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SL508InputDeviceManager.cs" />
+    <Compile Include="SL508OutputDeviceManager.cs" />
     <Compile Include="StaticMethods.cs" />
     <Compile Include="UdpReader.cs" />
     <Compile Include="UdpWriter.cs" />
@@ -116,4 +118,11 @@
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>rem copy $(ProjectDir)UeiSettings.config $(TargetDir)</PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+  </PropertyGroup>
 </Project>

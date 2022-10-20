@@ -5,11 +5,13 @@ namespace UeiBridge
 {
     abstract class DioOutputDeviceManager : OutputDevice
     {
-        log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
+        log4net.ILog _logger = StaticMethods.GetLogger();
         protected DigitalWriter _writer;
+        
 
-        protected bool OpenDevice( DeviceRequest dr)
+        protected bool OpenDevice( DeviceRequest dr, string _deviceName)
         {
+            
             string deviceIndex = StaticMethods.FindDeviceIndex(_deviceName);
             if (null == deviceIndex)
             {
@@ -17,11 +19,11 @@ namespace UeiBridge
                 return false;
             }
 
-            string deviceUrl = dr.CaseUrl + deviceIndex + _channelsString;
+            string deviceUrl = dr.CaseUrl + deviceIndex + ChannelsString;
 
             if (CreateDigitalSession(deviceUrl))
             {
-                _logger.Info($"{_deviceName}(Output) init success. {_numberOfChannels} channels. {deviceIndex + _channelsString}");
+                _logger.Info($"{_deviceName}(Output) init success. {_deviceSession.GetNumberOfChannels()} channels. {deviceIndex + ChannelsString}");
                 _caseUrl = dr.CaseUrl;
             }
             else
@@ -39,7 +41,7 @@ namespace UeiBridge
             if ((null == _deviceSession) || (_caseUrl != dr.CaseUrl))
             {
                 CloseDevice(); // if needed
-                OpenDevice(dr);
+                OpenDevice(dr, DeviceName);
             }
 
             // write to device
@@ -49,7 +51,7 @@ namespace UeiBridge
             
             _writer.WriteSingleScanUInt16(req);
             _lastScan = req;
-            _logger.Debug($"scan written to device. Length: {req.Length}");
+            //_logger.Debug($"scan written to device. Length: {req.Length}");
 
         }
 
@@ -61,7 +63,7 @@ namespace UeiBridge
             {
                 _deviceSession = new Session();
                 _deviceSession.CreateDOChannel(deviceUrl);
-                _numberOfChannels = _deviceSession.GetNumberOfChannels();
+                //_numberOfChannels = _deviceSession.GetNumberOfChannels();
                 _deviceSession.ConfigureTimingForSimpleIO();
                 _writer = new DigitalWriter(_deviceSession.GetDataStream());
             }
@@ -75,7 +77,7 @@ namespace UeiBridge
         }
 
         UInt16[] _lastScan;
-        //class StatusStruct // tbd. might be generic
+        //class StatusStruct // might be generic
         //{
         //    UInt16[] _lastScan = new UInt16[Config.Instance.MaxDigital403OutputChannels];
         //    public UInt16[] LastScan { get => _lastScan; set => _lastScan = value; }

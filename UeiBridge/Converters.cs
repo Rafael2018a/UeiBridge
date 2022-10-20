@@ -19,7 +19,7 @@ namespace UeiBridge
 
         public AO308Convert()
         {
-            _peekToPeekVoltage = Config.Instance.Analog_Out_MinMaxVoltage.Item2 - Config.Instance.Analog_Out_MinMaxVoltage.Item1;
+            _peekToPeekVoltage = Config.Instance.Analog_Out_PeekVoltage * 2;
             _conversionFactor = _peekToPeekVoltage / UInt16.MaxValue;
             _numberOfChannels = Config.Instance.MaxAnalogOutputChannels;
         }
@@ -62,10 +62,10 @@ namespace UeiBridge
 
         public object EthToDevice(byte[] messagePayload)
         {
-		// tbd
+		
             throw new NotImplementedException();
-            UInt32[] result = { 1 };
-            return result;
+            //UInt32[] result = { 1 };
+            //return result;
         }
     }
     class DIO403Convert : IConvert
@@ -122,13 +122,14 @@ namespace UeiBridge
         string _lastError=null;
         string IConvert.LastErrorMessage => _lastError;
 
-        const double peekVoltage = 12.0;
-        const double peekToPeekVoltage = peekVoltage * 2.0;
-        const double int16range = UInt16.MaxValue;
+        //readonly double peekVoltage = Config.Instance.Analog_In_PeekVoltage;
+        //const double peekToPeekVoltage = peekVoltage * 2.0;
+        //const double uInt16range = UInt16.MaxValue;
         //readonly double _conversionFactor;
 
         public AI201Converter()
         {
+            //peekVoltage = Config.Instance.Analog_In_PeekVoltage;
             //_conversionFactor = int16range / peekToPeekVoltage;
         }
         public byte[] DeviceToEth(object dt)
@@ -137,36 +138,21 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert(null != inputVector);
             byte[] resultVector = new byte[inputVector.Length * 2];
             int ch = 0;
-            int maxval = Int16.MaxValue;
-            //foreach (double val in inputVector)
-            //{
-            //    double nVal = val + peekVoltage;
-            //    nVal = (nVal > peekToPeekVoltage) ? peekToPeekVoltage : nVal;
-            //    double normVol = nVal / peekToPeekVoltage;
-
-            //    UInt16 vShort1 = Convert.ToUInt16(normVol * int16range);
-            //    UInt16 vShort2 = (UInt16)(vShort1 - maxval);
-            //    byte[] two = BitConverter.GetBytes(vShort2);
-            //    two.CopyTo(resultVector, ch);
-            //    ch += 2;// sizeof(UInt16);
-            //}
             foreach (double val in inputVector)
             {
-			    // tbd: optimize this
-                // tbd. protecet from high voltage.
-			
-                double pVal = (Math.Abs(val) < 0.1) ? 0 : val;
-                double nVal = pVal + peekVoltage;
-                nVal = (nVal > peekToPeekVoltage) ? peekToPeekVoltage : nVal;
-                double normVol = nVal / peekToPeekVoltage;
+                double peekVoltage = Config.Instance.Analog_In_PeekVoltage;
+                double p2p = peekVoltage * 2.0;
 
-                int vShort1 = Convert.ToInt32(normVol * int16range);
-                int vShort2 = (vShort1 - maxval);
+                //double pVal = (Math.Abs(val) < 0.1) ? 0 : val;
+                double zVal = val + peekVoltage; // make zero based
+                zVal = (zVal >= p2p) ? p2p : zVal; // protect from high voltage
+                double normVal = zVal / p2p; // 0 < normVal < 1
+
+                int vInt = Convert.ToInt32(normVal * (double)UInt16.MaxValue) - (Int32)Int16.MaxValue;
+                Int16 vShort = Convert.ToInt16((vInt));
                 
-                Int16 vShort3 = Convert.ToInt16((vShort2));
-                
-                byte[] two = BitConverter.GetBytes(vShort3);
-                two.CopyTo(resultVector, ch);
+                byte[] twoBytes = BitConverter.GetBytes(vShort);
+                twoBytes.CopyTo(resultVector, ch);
                 ch += 2;// sizeof(UInt16);
             }
             return resultVector;
@@ -176,4 +162,24 @@ namespace UeiBridge
             throw new NotImplementedException();
         }
     }
+
+    class SL508Convert : IConvert
+    {
+        public string DeviceName => "SL-508-892";
+
+        public string LastErrorMessage => throw new NotImplementedException();
+
+        public byte[] DeviceToEth(object dt)
+        {
+            System.Diagnostics.Debug.Assert(dt.GetType() == typeof(byte[]));
+            byte[] result = dt as byte[];
+            return result;
+        }
+
+        public object EthToDevice(byte[] messagePayload)
+        {
+            return messagePayload;
+        }
+    }
+    //
 }

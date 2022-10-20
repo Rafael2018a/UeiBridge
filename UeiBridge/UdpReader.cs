@@ -16,7 +16,7 @@ namespace UeiBridge
     internal class UdpReader
     {
         private IEnqueue<byte[]> _datagramConsumer;
-        log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
+        log4net.ILog _logger = StaticMethods.GetLogger();
         UdpClient _udpclient;
 
         public UdpReader(IEnqueue<byte[]> consumer)
@@ -26,10 +26,10 @@ namespace UeiBridge
 
         internal void Start()
         {
-            IPAddress ip;
-            if (IPAddress.TryParse(Config.Instance.ReceiverMulticastAddress, out ip))
+            IPAddress mcastAddress;
+            if (IPAddress.TryParse(Config.Instance.ReceiverMulticastAddress, out mcastAddress))
             {
-                EstablishMulticastReceiver(ip, Config.Instance.LocalPort, IPAddress.Parse(Config.Instance.LocalBindNicAddress));
+                EstablishMulticastReceiver(mcastAddress, Config.Instance.ReceiverMulticastPort, IPAddress.Parse(Config.Instance.LocalBindNicAddress));
             }
             else
             {
@@ -37,42 +37,46 @@ namespace UeiBridge
             }
         }
         
-        public void EstablishMulticastReceiver(IPAddress multicastIPaddress, int port, IPAddress localIPaddress = null)
+        public void EstablishMulticastReceiver(IPAddress multicastAddress, int multicastPort, IPAddress localIPaddress = null)
         {
-            IPAddress localIP;
-            int _port;
-            IPAddress _multicastIPaddress;
-            IPEndPoint _localEndPoint;
-            IPEndPoint _remoteEndPoint;
+            //int _port;
+            //IPAddress _multicastIPaddress;
 
             // Store params
-            _multicastIPaddress = multicastIPaddress;
-            _port = port;
-            localIP = localIPaddress;
-            if (localIPaddress == null)
-                localIP = IPAddress.Any;
+            //_multicastIPaddress = multicastAddress;
+            //_port = port;
 
-            // Create endpoints
-            _remoteEndPoint = new IPEndPoint(_multicastIPaddress, port);
-            
-            // Create and configure UdpClient
-            _udpclient = new UdpClient();
+            try
+            {
 
-            // The following three lines allow multiple clients on the same PC
-            _udpclient.ExclusiveAddressUse = false;
-            _udpclient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            _udpclient.ExclusiveAddressUse = false;
+                IPAddress localIP = (localIPaddress == null) ? IPAddress.Any : localIPaddress;
 
-            // Bind, Join
-            _localEndPoint = new IPEndPoint(localIP, port);
-            _udpclient.Client.Bind(_localEndPoint);
+                // Create endpoints
+                IPEndPoint _remoteEndPoint = new IPEndPoint(multicastAddress, multicastPort);
 
-            // join
-            _udpclient.JoinMulticastGroup(_multicastIPaddress, localIP);
+                // Create and configure UdpClient
+                _udpclient = new UdpClient();
 
-            _logger.Info($"Multicast receiver esablished. Listening on {_remoteEndPoint}");
-            // Start listening for incoming data
-            _udpclient.BeginReceive(new AsyncCallback(ReceivedCallback), null);
+                // The following three lines allow multiple clients on the same PC
+                _udpclient.ExclusiveAddressUse = false;
+                _udpclient.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                _udpclient.ExclusiveAddressUse = false;
+
+                // Bind
+                IPEndPoint _localEndPoint = new IPEndPoint(localIP, multicastPort);
+                _udpclient.Client.Bind(_localEndPoint);
+
+                // join
+                _udpclient.JoinMulticastGroup(multicastAddress, localIP);
+
+                _logger.Info($"Multicast receiver esablished. Listening on {_remoteEndPoint}");
+                // Start listening for incoming data
+                _udpclient.BeginReceive(new AsyncCallback(ReceivedCallback), null);
+            }
+            catch (SocketException ex)
+            {
+                _logger.Warn( $"Faild to establish multicast receiver from group {multicastAddress}. {ex.Message}");
+            }
         }
 
         /// <summary>
