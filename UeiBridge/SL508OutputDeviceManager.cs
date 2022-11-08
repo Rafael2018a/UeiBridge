@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Collections.Generic;
 using UeiDaq;
 
 namespace UeiBridge
@@ -8,7 +9,7 @@ namespace UeiBridge
     {
         log4net.ILog _logger = StaticMethods.GetLogger();
         IConvert _attachedConverter;
-        byte[] _lastMessage;
+        List<byte[]> _lastMessagesList;
         //const string _termString = "\r\n";
         //SL508InputDeviceManager _serialInputManger=null;
 
@@ -24,7 +25,11 @@ namespace UeiBridge
             //{
             //    _logger.Warn("Can't start SL508OutputDeviceManager since SerialInputDeviceManager=null");
             //}
-
+            _lastMessagesList = new List<byte[]>();
+            for (int i = 0; i < 8; i++)
+            {
+                _lastMessagesList.Add(null);
+            }
         }
 
         public override string DeviceName => "SL-508-892";
@@ -44,20 +49,36 @@ namespace UeiBridge
         }
         public override string GetFormattedStatus()
         {
-            string formattedString="";
-            if (null != _lastMessage)
+            StringBuilder formattedString = new StringBuilder();
+            for(int ch=0; ch<8; ch++)
             {
-                int l = (_lastMessage.Length > 20) ? 20 : _lastMessage.Length;
-                System.Diagnostics.Debug.Assert(l > 0);
-                formattedString = "First bytes: "+BitConverter.ToString(_lastMessage).Substring(0, l*3-1);
+                byte[] last = _lastMessagesList[ch];
+                if (null!=last)
+                {
+                    int len = (last.Length > 20) ? 20 : last.Length;
+                    string s = $"Payload ch{ch}: {BitConverter.ToString(last).Substring(0, len * 3 - 1)}\n";
+                    formattedString.Append(s);
+                }
             }
-            return formattedString;
+            return formattedString.ToString();
+
+            //if (null != _lastMessage)
+            //{
+            //    int l = (_lastMessage.Length > 20) ? 20 : _lastMessage.Length;
+            //    System.Diagnostics.Debug.Assert(l > 0);
+            //    formattedString = "First bytes: " + BitConverter.ToString(_lastMessage).Substring(0, l * 3 - 1) + "\n line2";
+            //}
+            //return formattedString;
         }
+
+        int _sentBytesAcc = 0;
+        int _numberOfSentMessages = 0;
 
         protected override void HandleRequest(DeviceRequest request)
         {
-            SL508InputDeviceManager _serialInputManger = ProjectRegistry.Instance.SerialInputDeviceManager;
-            if (null==_serialInputManger)
+            
+            SL508InputDeviceManager _serialInputManager = ProjectRegistry.Instance.SerialInputDeviceManager;
+            if (null == _serialInputManager)
             {
                 _logger.Warn("Can't hanlde request since serialInputManager==null");
                 return;
@@ -67,27 +88,36 @@ namespace UeiBridge
             //    return;
             //}
 
-            _lastMessage = request.RequestObject as byte[];
-            System.Diagnostics.Debug.Assert(_lastMessage != null);
+            byte []  incomingMessage = request.RequestObject as byte[];
+            System.Diagnostics.Debug.Assert(incomingMessage != null);
             System.Diagnostics.Debug.Assert(request.SerialChannel >= 0);
-            if (_serialInputManger?.SerialWriterList != null)
+            if (_serialInputManager?.SerialWriterList != null)
             {
-                if (_serialInputManger.SerialWriterList.Count > request.SerialChannel)
+                if (_serialInputManager.SerialWriterList.Count > request.SerialChannel)
                 {
-                    if (null != _serialInputManger.SerialWriterList[request.SerialChannel])
+                    if (null != _serialInputManager.SerialWriterList[request.SerialChannel])
                     {
+                        int sentBytes = 0;
                         try
                         {
-                            _serialInputManger.SerialWriterList[request.SerialChannel].Write(_lastMessage);
+                            sentBytes = _serialInputManager.SerialWriterList[request.SerialChannel].Write(incomingMessage);
+                            System.Diagnostics.Debug.Assert(sentBytes == incomingMessage.Length);
+                            _sentBytesAcc += sentBytes;
+                            _numberOfSentMessages++;
+                            _lastMessagesList[request.SerialChannel] = incomingMessage;
+                        }
+                        catch (UeiDaqException ex)
+                        {
+                            _logger.Warn($"{ex.Message}. Total {_sentBytesAcc} bytes in {_numberOfSentMessages} messages.");
                         }
                         catch(Exception ex)
                         {
-                            _logger.Warn(ex.Message + ". " + ex.GetType().ToString());
+                            _logger.Warn($"{ex.Message}. Total {_sentBytesAcc} bytes in {_numberOfSentMessages} messages.");
                         }
                     }
                     else
                     {
-                        if (false == _serialInputManger.InDisposeState)
+                        if (false == _serialInputManager.InDisposeState)
                         {
                             _logger.Warn("Failed to send serial message. SerialWriter==null)");
                         }

@@ -43,9 +43,11 @@ namespace UeiBridge
     {
         log4net.ILog _logger = StaticMethods.GetLogger();
         Socket _sendSocket;
-        public UdpWriter( string destAddress, int destPort, string localBindAddress = null)
+        string _instanceName;
+        public UdpWriter( string destAddress, int destPort, string name, string localBindAddress)
         {
 
+            this._instanceName = name;
             // tbd. Parse might fail!
 
             try
@@ -73,7 +75,7 @@ namespace UeiBridge
                 // Connect to the endpoint
                 _sendSocket.Connect(_mcastDestEP);
 
-                _logger.Info($"Multicast sender esablished. Dest EP: {_mcastDestEP.ToString()}. Local NIC: {localBindAddress}");
+                _logger.Info($"Multicast sender - {this._instanceName} - esablished. Dest EP: {_mcastDestEP.ToString()}. Local NIC: {localBindAddress}");
             }
             catch (SocketException ex)
             {

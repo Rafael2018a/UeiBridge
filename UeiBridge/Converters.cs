@@ -148,7 +148,7 @@ namespace UeiBridge
                 zVal = (zVal >= p2p) ? p2p : zVal; // protect from high voltage
                 double normVal = zVal / p2p; // 0 < normVal < 1
 
-                int vInt = Convert.ToInt32(normVal * (double)UInt16.MaxValue) - (Int32)Int16.MaxValue;
+                int vInt = Convert.ToInt32(normVal * (double)UInt16.MaxValue) - (Int32)Int16.MaxValue -1;
                 Int16 vShort = Convert.ToInt16((vInt));
                 
                 byte[] twoBytes = BitConverter.GetBytes(vShort);
@@ -178,7 +178,11 @@ namespace UeiBridge
 
         public object EthToDevice(byte[] messagePayload)
         {
-            return messagePayload;
+            byte[] newpayload = new byte[messagePayload.Length + 2];
+            Array.Copy(messagePayload, newpayload, messagePayload.Length);
+            newpayload[newpayload.Length - 1] = 10; // lf
+            newpayload[newpayload.Length - 2] = 13; // cr
+            return newpayload;
         }
     }
     //

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using UeiDaq;
 
@@ -24,8 +25,8 @@ namespace UeiBridge
         //private SerialReader _serialReader;
         //private SerialWriter _serialWriter;
         bool _InDisposeState = false;
-        byte[] _lastMessage;
-
+        //byte[] _lastMessage;
+        List<byte[]> _lastMessagesList;
         //readonly List<Session> _deviceSessionList;
         string _channelBaseString;
 
@@ -43,21 +44,44 @@ namespace UeiBridge
 
             //_deviceSessionList = new List<Session>();
             _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
+
+            _lastMessagesList = new List<byte[]>();
+            for (int i = 0; i < 8; i++)
+            {
+                _lastMessagesList.Add(null);
+            }
+
         }
 
         //internal SL508Input SerialInput { get => _serialInput; set => _serialInput = value; }
         //internal SL508OutputDeviceManager SerialOutput { get => _serialOutput; set => _serialOutput = value; }
 
+        //public override string GetFormattedStatus()
+        //{
+        //    string formattedString = "";
+        //    if (null != _lastMessage)
+        //    {
+        //        int l = (_lastMessage.Length > 20) ? 20 : _lastMessage.Length;
+        //        System.Diagnostics.Debug.Assert(l > 0);
+        //        formattedString = "First bytes: " + BitConverter.ToString(_lastMessage).Substring(0, l*3-1);
+        //    }
+        //    return formattedString;
+        //}
+
         public override string GetFormattedStatus()
         {
-            string formattedString = "";
-            if (null != _lastMessage)
+            StringBuilder formattedString = new StringBuilder();
+            for (int ch = 0; ch < 8; ch++)
             {
-                int l = (_lastMessage.Length > 20) ? 20 : _lastMessage.Length;
-                System.Diagnostics.Debug.Assert(l > 0);
-                formattedString = "First bytes: " + BitConverter.ToString(_lastMessage).Substring(0, l*3-1);
+                byte[] last = _lastMessagesList[ch];
+                if (null != last)
+                {
+                    int len = (last.Length > 20) ? 20 : last.Length;
+                    string s = $"Payload (in) ch{ch}: {BitConverter.ToString(last).Substring(0, len * 3 - 1)}\n";
+                    formattedString.Append(s);
+                }
             }
-            return formattedString;
+            return formattedString.ToString();
         }
 
         AsyncCallback readerAsyncCallback;
@@ -96,7 +120,7 @@ namespace UeiBridge
             }
 #endif
             _deviceSession.ConfigureTimingForMessagingIO(100, 100.0);
-            _deviceSession.GetTiming().SetTimeout(500); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
+            _deviceSession.GetTiming().SetTimeout(10000); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
             _deviceSession.Start();
 
             readerAsyncCallback = new AsyncCallback(ReaderCallback);
@@ -152,11 +176,11 @@ namespace UeiBridge
                 byte[] receiveBuffer = _serialReaderList[channel].EndRead(ar);
                 //byte[] receiveBuffer = { 1, 2, 3 };
 
-                _lastMessage = receiveBuffer;
+                _lastMessagesList[channel] = receiveBuffer;
                 // send reply (debug only)
-                string str = System.Text.Encoding.ASCII.GetString(receiveBuffer);
-                byte[] reply = System.Text.Encoding.ASCII.GetBytes("Reply> " + str);
-                _serialWriterList[channel].Write(reply);
+                //string str = System.Text.Encoding.ASCII.GetString(receiveBuffer);
+                //byte[] reply = System.Text.Encoding.ASCII.GetBytes("Reply> " + str);
+                //_serialWriterList[channel].Write(reply);
                 //_logger.Debug(str);
 
                 // forward to consumer (send by udp)

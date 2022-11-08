@@ -15,6 +15,9 @@ namespace UeiBridge
         public SerialPortMode mode = SerialPortMode.RS485FullDuplex;
         public SerialPortSpeed baudrate = SerialPortSpeed.BitsPerSecond9600;
 
+        public SerialPortParity parity = SerialPortParity.None;
+        public SerialPortStopBits stopbits = SerialPortStopBits.StopBits1;
+
         public SerialChannel(string portname)
         {
             this.portname = portname;
@@ -42,23 +45,33 @@ namespace UeiBridge
         public SerialChannel[] SerialChannels = new SerialChannel[8];
         public string ValidSerialModes;
         public string ValidBaudRates;
+        public string ValidStopBitsValues;
+        public string ValidParityValues;
 
         private static volatile Config _instance;
         private static object syncRoot = new object();
         private Config()
         {
             for (int i = 0; i < SerialChannels.Length; i++)
-                SerialChannels[i] = new SerialChannel("Com"+i.ToString());
+                SerialChannels[i] = new SerialChannel("Com" + i.ToString());
 
-            var v1 = Enum.GetValues(typeof(SerialPortMode)) as SerialPortMode[];
+            ValidSerialModes = GetEnumValues<SerialPortMode>();
+            ValidBaudRates = GetEnumValues<SerialPortSpeed>();
+            ValidStopBitsValues = GetEnumValues<SerialPortStopBits>();
+            ValidParityValues = GetEnumValues<SerialPortParity>();
+        }
+
+        private string GetEnumValues<T>() 
+        {
+            T[] v1 = Enum.GetValues(typeof(T)) as T[];
             StringBuilder sb = new StringBuilder("\n");
-            v1.ToList<SerialPortMode>().ForEach(item => { sb.Append(item); sb.Append("\n"); });
-            ValidSerialModes = sb.ToString();
-
-            var v2 = Enum.GetValues(typeof(SerialPortSpeed)) as SerialPortSpeed[];
-            sb = new StringBuilder("\n");
-            v2.ToList<SerialPortSpeed>().ForEach(item => { sb.Append(item); sb.Append("\n"); });
-            ValidBaudRates = sb.ToString();
+            foreach(var item in v1)
+            {
+                sb.Append(item);
+                sb.Append("\n");
+            }
+            //v1.ToList<SerialPortMode>().ForEach(item => { sb.Append(item); sb.Append("\n"); });
+            return sb.ToString();
         }
 
         public static Config Instance

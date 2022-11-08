@@ -18,10 +18,12 @@ namespace UeiBridge
         private IEnqueue<byte[]> _datagramConsumer;
         log4net.ILog _logger = StaticMethods.GetLogger();
         UdpClient _udpclient;
+        string _instanceName;
 
-        public UdpReader(IEnqueue<byte[]> consumer)
+        public UdpReader(IEnqueue<byte[]> consumer, string name)
         {
             this._datagramConsumer = consumer;
+            this._instanceName = name;
         }
 
         internal void Start()
@@ -69,7 +71,7 @@ namespace UeiBridge
                 // join
                 _udpclient.JoinMulticastGroup(multicastAddress, localIP);
 
-                _logger.Info($"Multicast receiver esablished. Listening on {_remoteEndPoint}");
+                _logger.Info($"Multicast receiver - {this._instanceName} - esablished. Listening on {_remoteEndPoint}");
                 // Start listening for incoming data
                 _udpclient.BeginReceive(new AsyncCallback(ReceivedCallback), null);
             }

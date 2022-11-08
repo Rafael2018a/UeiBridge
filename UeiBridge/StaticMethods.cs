@@ -118,15 +118,16 @@ namespace UeiBridge
             EthernetMessage msg = EthernetMessageFactory.CreateEmpty(6, 16);
             return msg.ToByteArrayDown();
         }
-        public static List<byte[]> Make_SL508Down_Messages()
+        public static List<byte[]> Make_SL508Down_Messages( int seed)
         {
             List<byte[]> msgs = new List<byte[]>();
 
             for (int ch = 0; ch < 8; ch++)
             {
-                string m = $"hello from ch {ch}\n";
+                string m = $"hello ch{ch} seed {seed}";
 
                 // string to ascii
+
                 // ascii to string System.Text.Encoding.ASCII.GetString(recvBytes)
                 EthernetMessage msg = EthernetMessageFactory.CreateEmpty(5, 16);
                 msg.PayloadBytes = System.Text.Encoding.ASCII.GetBytes(m);

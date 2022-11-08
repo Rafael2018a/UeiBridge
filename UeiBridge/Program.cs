@@ -28,7 +28,7 @@ namespace UeiBridge
             
             // print current version
             var v = System.Reflection.Assembly.GetEntryAssembly().GetName().Version.ToString();
-            _logger.Info($"UEI Bridge. Version {v}");
+            _logger.Info($"UEI Bridge. Version {v} Device URL: {Config.Instance.DeviceUrl}");
 
             // prepare device list
             List<Device> deviceList = StaticMethods.GetDeviceList();
@@ -66,11 +66,11 @@ namespace UeiBridge
             // init downwards objects
             EthernetToDevice e2d = new EthernetToDevice();
             e2d.Start();
-            UdpReader ur = new UdpReader(e2d);
+            UdpReader ur = new UdpReader(e2d, "from eth");
             ur.Start();
 
             // init upwards objects
-            UdpWriter uw = new UdpWriter(Config.Instance.SenderMulticastAddress, Config.Instance.SenderMulticastPort, Config.Instance.LocalBindNicAddress);
+            UdpWriter uw = new UdpWriter(Config.Instance.SenderMulticastAddress, Config.Instance.SenderMulticastPort, "to eth", Config.Instance.LocalBindNicAddress);
             DeviceToEthernet d2e = new DeviceToEthernet(uw);
             d2e.Start();
 
@@ -96,12 +96,13 @@ namespace UeiBridge
             }
 
             // self tests
-            StartDownwardsTest();
+            //StartDownwardsTest();
 
             // publish status to StatusViewer
             Task.Factory.StartNew(() => PublishStatus_Task());
 
             Console.ReadKey();
+            _logger.Info("Disposing....");
 
             // Dispose
             _inputDevices.ForEach(dev => dev.Dispose());
@@ -111,7 +112,7 @@ namespace UeiBridge
 
         void PublishStatus_Task()
         {
-            UdpWriter uw = new UdpWriter("239.10.10.17", 5093, Config.Instance.LocalBindNicAddress);
+            UdpWriter uw = new UdpWriter("239.10.10.17", 5093, "to statusViewer", Config.Instance.LocalBindNicAddress);
 
             while (true)
             {
@@ -147,28 +148,32 @@ namespace UeiBridge
                     System.Threading.Thread.Sleep(100);
                     IPEndPoint destEp = new IPEndPoint(IPAddress.Parse(Config.Instance.ReceiverMulticastAddress), Config.Instance.ReceiverMulticastPort);
 
-                    for (int i=0; i<10; i++)
+                    for (int i=0; i<10000; i++)
                     {
 
+                        // digital out
                         byte[] e403 = StaticMethods.Make_DIO403Down_Message();
                         udpClient.Send(e403, e403.Length, destEp);
 
+                        // analog out
                         byte[] e308 = StaticMethods.Make_A308Down_message();
                         udpClient.Send(e308, e308.Length, destEp);
 #if notready
                         byte[] e430 = StaticMethods.Make_DIO430Down_Message();
                         udpClient.Send(e430, e308.Length, destEp);
 #endif
-                        List<byte[]> e508 = StaticMethods.Make_SL508Down_Messages();
+                        // serial out
+                        List<byte[]> e508 = StaticMethods.Make_SL508Down_Messages( i);
                         foreach (byte [] msg in e508)
                         {
                             udpClient.Send(msg, msg.Length, destEp);
                             System.Threading.Thread.Sleep(200);
                         }
 
-                        System.Threading.Thread.Sleep(5000);
-                        
+                        System.Threading.Thread.Sleep(10);
                     }
+                    _logger.Info("Downward message simultion end.");
+
                 }
                 catch( Exception ex)
                 {
