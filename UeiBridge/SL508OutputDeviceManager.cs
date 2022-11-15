@@ -16,15 +16,7 @@ namespace UeiBridge
         //int _numberOfChannels = 1;
         public SL508OutputDeviceManager()
         {
-            //if (null != ProjectRegistry.Instance.SerialInputDeviceManager)
-            {
-                //_serialInputManger = ProjectRegistry.Instance.SerialInputDeviceManager;
-                _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
-            }
-            //else
-            //{
-            //    _logger.Warn("Can't start SL508OutputDeviceManager since SerialInputDeviceManager=null");
-            //}
+             _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
             _lastMessagesList = new List<byte[]>();
             for (int i = 0; i < 8; i++)
             {
@@ -50,25 +42,29 @@ namespace UeiBridge
         public override string GetFormattedStatus()
         {
             StringBuilder formattedString = new StringBuilder();
-            for(int ch=0; ch<8; ch++)
+            foreach(byte [] msg in _lastMessagesList)
             {
-                byte[] last = _lastMessagesList[ch];
-                if (null!=last)
+                int ch = 0;
+                if (null != msg)
                 {
-                    int len = (last.Length > 20) ? 20 : last.Length;
-                    string s = $"Payload ch{ch}: {BitConverter.ToString(last).Substring(0, len * 3 - 1)}\n";
+                    int len = (msg.Length > 20) ? 20 : msg.Length;
+                    string full = BitConverter.ToString(msg);
+                    string s = $"Payload ch{ch++}: {full.Substring(0, len * 3 - 1)}\n";
                     formattedString.Append(s);
                 }
             }
+            //for (int ch=0; ch<8; ch++)
+            //{
+            //    byte[] last = _lastMessagesList[ch];
+            //    if (null!=last)
+            //    {
+            //        int len = (last.Length > 20) ? 20 : last.Length;
+            //        string s = $"Payload ch{ch}: {BitConverter.ToString(last).Substring(0, len * 3 - 1)}\n";
+            //        formattedString.Append(s);
+            //    }
+            //}
             return formattedString.ToString();
 
-            //if (null != _lastMessage)
-            //{
-            //    int l = (_lastMessage.Length > 20) ? 20 : _lastMessage.Length;
-            //    System.Diagnostics.Debug.Assert(l > 0);
-            //    formattedString = "First bytes: " + BitConverter.ToString(_lastMessage).Substring(0, l * 3 - 1) + "\n line2";
-            //}
-            //return formattedString;
         }
 
         int _sentBytesAcc = 0;

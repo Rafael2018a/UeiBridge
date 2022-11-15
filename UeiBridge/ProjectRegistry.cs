@@ -38,7 +38,7 @@ namespace UeiBridge
                 if (typeof(OutputDevice).IsAssignableFrom(theType))
                 {
                     OutputDevice obj = (OutputDevice)Activator.CreateInstance(theType);
-                    logger.Debug($"New output device instance: {obj.ToString()} - {obj.DeviceName}");
+                    //logger.Debug($"New output device instance: {obj.ToString()} - {obj.DeviceName}");
                     _outputDeviceMap.Add(obj.DeviceName, obj);
                 }
             }

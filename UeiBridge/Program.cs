@@ -53,13 +53,6 @@ namespace UeiBridge
             }
             _logger.Info(" *** End device list:");
 
-            // display serial devices 
-            var v1 = Enum.GetValues(typeof(SerialPortMode)) as SerialPortMode[];
-            List<SerialPortMode> s = new List<SerialPortMode>(v1);
-            StringBuilder sb = new StringBuilder();
-            v1.ToList<SerialPortMode>().ForEach(item => { sb.Append(item); sb.Append(" "); });
-            _logger.Debug("Serial modes: " + sb.ToString());
-
             // prepare device dictionaries
             ProjectRegistry.Instance.Establish();
 
@@ -96,7 +89,7 @@ namespace UeiBridge
             }
 
             // self tests
-            //StartDownwardsTest();
+            StartDownwardsTest();
 
             // publish status to StatusViewer
             Task.Factory.StartNew(() => PublishStatus_Task());
@@ -172,7 +165,7 @@ namespace UeiBridge
 
                         System.Threading.Thread.Sleep(10);
                     }
-                    _logger.Info("Downward message simultion end.");
+                    _logger.Info("Downward message simulation end.");
 
                 }
                 catch( Exception ex)
