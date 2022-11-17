@@ -122,8 +122,8 @@ namespace UeiBridge
         {
             List<byte[]> msgs = new List<byte[]>();
 
-            //for (int ch = 0; ch < 8; ch++)
-            int ch = 1;
+            for (int ch = 0; ch < 2; ch++)
+            //int ch = 1;
             {
                 string m = $"hello ch{ch} seed {seed} jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj";
 

@@ -148,7 +148,7 @@ namespace UeiBridge
             }
 
             _deviceSession.ConfigureTimingForMessagingIO(100, 100.0);
-            _deviceSession.GetTiming().SetTimeout(500); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
+            _deviceSession.GetTiming().SetTimeout(5000); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
 
 
             for (int ch = 0; ch < 2; ch++)
@@ -195,15 +195,14 @@ namespace UeiBridge
         public void ReaderCallback(IAsyncResult ar)
         {
             int channel = (int)ar.AsyncState;
-            //if (null == _serialReaderList[channel]) // if during dispose
-            //{
-            //    return;
-            //}
+            if (null == _serialReaderList[channel]) // if during dispose
+            {
+                return;
+            }
             try
             {
                 byte[] receiveBuffer = _serialReaderList[channel].EndRead(ar);
                 //byte[] receiveBuffer = { 1, 2, 3 };
-
                 
                 _lastMessagesList[channel] = receiveBuffer;
                 // send reply (debug only)
@@ -349,6 +348,8 @@ namespace UeiBridge
 
         private void CloseDevices()
         {
+            _deviceSession.Stop();
+
             for (int i = 0; i < _serialReaderList.Count; i++)
             {
                 _serialReaderList[i].Dispose();
