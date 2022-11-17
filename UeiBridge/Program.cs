@@ -141,7 +141,7 @@ namespace UeiBridge
                     System.Threading.Thread.Sleep(100);
                     IPEndPoint destEp = new IPEndPoint(IPAddress.Parse(Config.Instance.ReceiverMulticastAddress), Config.Instance.ReceiverMulticastPort);
 
-                    for (int i=0; i<10000; i++)
+                    for (int i=0; i<10; i++)
                     {
 
                         // digital out
@@ -157,10 +157,12 @@ namespace UeiBridge
 #endif
                         // serial out
                         List<byte[]> e508 = StaticMethods.Make_SL508Down_Messages( i);
+                        System.Threading.Thread.Sleep(500);
                         foreach (byte [] msg in e508)
                         {
+                            
                             udpClient.Send(msg, msg.Length, destEp);
-                            System.Threading.Thread.Sleep(200);
+                            System.Threading.Thread.Sleep(500);
                         }
 
                         System.Threading.Thread.Sleep(10);
