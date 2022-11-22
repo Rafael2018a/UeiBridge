@@ -89,7 +89,7 @@ namespace UeiBridge
             }
 
             // self tests
-            StartDownwardsTest();
+            //StartDownwardsTest();
 
             // publish status to StatusViewer
             Task.Factory.StartNew(() => PublishStatus_Task());
@@ -133,7 +133,7 @@ namespace UeiBridge
         {
             Task.Factory.StartNew(() =>
             {
-                _logger.Info("Downward message simultion active.");
+                _logger.Info("Downward message simulation active.");
 
                 try
                 {
@@ -141,7 +141,7 @@ namespace UeiBridge
                     System.Threading.Thread.Sleep(100);
                     IPEndPoint destEp = new IPEndPoint(IPAddress.Parse(Config.Instance.ReceiverMulticastAddress), Config.Instance.ReceiverMulticastPort);
 
-                    for (int i=0; i<10; i++)
+                    for (int i=0; i<100000; i++)
                     {
 
                         // digital out
@@ -157,17 +157,15 @@ namespace UeiBridge
 #endif
                         // serial out
                         List<byte[]> e508 = StaticMethods.Make_SL508Down_Messages( i);
-                        System.Threading.Thread.Sleep(500);
                         foreach (byte [] msg in e508)
                         {
-                            
                             udpClient.Send(msg, msg.Length, destEp);
-                            System.Threading.Thread.Sleep(500);
+                            System.Threading.Thread.Sleep(50);
                         }
 
-                        System.Threading.Thread.Sleep(10);
+                        
                     }
-                    _logger.Info("Downward message simulation end.");
+                    _logger.Info("Downward message simulation end");
 
                 }
                 catch( Exception ex)

@@ -122,10 +122,11 @@ namespace UeiBridge
         {
             List<byte[]> msgs = new List<byte[]>();
 
-            for (int ch = 0; ch < 2; ch++)
+            // build 8 messages, one per channel
+            for (int ch = 0; ch < 8; ch++)
             //int ch = 1;
             {
-                string m = $"hello ch{ch} seed {seed} jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj";
+                string m = $"hello ch{ch} seed {seed} ksd klskd kljasldkjf laksjdfkl klsjd fkasdfjlk askldjfklasjdf asdfklj ksdajf ";
 
                 // string to ascii
 
