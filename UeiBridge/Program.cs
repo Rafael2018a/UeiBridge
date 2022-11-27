@@ -60,7 +60,7 @@ namespace UeiBridge
             EthernetToDevice e2d = new EthernetToDevice();
             e2d.Start();
             UdpReader ur = new UdpReader(e2d, "from eth");
-            ur.Start();
+            
 
             // init upwards objects
             UdpWriter uw = new UdpWriter(Config.Instance.SenderMulticastAddress, Config.Instance.SenderMulticastPort, "to eth", Config.Instance.LocalBindNicAddress);
@@ -73,7 +73,6 @@ namespace UeiBridge
             _inputDevices.Add(new AI201InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
             ProjectRegistry.Instance.SerialInputDeviceManager = new SL508InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl);
             _inputDevices.Add( ProjectRegistry.Instance.SerialInputDeviceManager);
-            _inputDevices.ForEach(dev => dev.Start());
 
             // start output-device managers
             ProjectRegistry.Instance.OutputDevicesMap.ToList().ForEach((pair) => pair.Value.Start());
@@ -94,6 +93,13 @@ namespace UeiBridge
             // publish status to StatusViewer
             Task.Factory.StartNew(() => PublishStatus_Task());
 
+            System.Threading.Thread.Sleep(1000);
+            for (int i = 0; i < _inputDevices.Count; i++)
+            {
+                _inputDevices[i].Start();
+            }
+
+            ur.Start();
             _logger.Info("Press any key to stop...");
             Console.ReadKey();
             _logger.Info("Disposing....");

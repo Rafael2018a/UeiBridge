@@ -54,7 +54,7 @@
                 </StackPanel>
                 <StackPanel>
                     <TextBlock Text="Block size (bytes)" />
-                    <TextBox Text="{Binding Path=BlockLength}" />
+                    <TextBox Text="{Binding Path=BlockLength}" IsEnabled="False"/>
                     <TextBlock Text="Wait state (ms)" Width="auto"/>
                     <TextBox Text="{Binding Path=WaitStatesMS}" />
                 </StackPanel>
@@ -64,8 +64,9 @@
             <StackPanel Orientation="Horizontal" Margin="5">
                 <Button Content="Start" Width="94" Height="30" Margin="5" Command="{Binding StartPlayCommand}" />
                 <Button Content="Stop" Width="94" Height="30" Margin="5" Command="{Binding StopPlayCommand}"/>
-                <TextBlock Text="Actual rate:" Width="auto"/>
-                <TextBlock Text="{Binding Path=PlayRate, StringFormat={}{0:F} mbit/sec}" Width="auto"/>
+                <!--<TextBlock Text="Actual rate:" Width="auto"/>-->
+                <!--<TextBlock Text="{Binding Path=PlayRate, StringFormat={}{0:F} mbit/sec}" Width="auto"/>-->
+                <TextBlock Text="{Binding Path=PlayedBytesCount}" Width="auto"/>
                 <!--<TextBlock Text="Desired: " Width="auto"/>-->
                 <!--<TextBlock Text="{Binding Path=DesiredRate, StringFormat={}{0:F} mbit/sec}" Width="auto"/>-->
             </StackPanel>
@@ -76,7 +77,7 @@
             </GroupBox.Header>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                 <!--<TextBlock Text="0%" Width="auto"/>-->
-                <Slider  TickPlacement="BottomRight" Minimum="0" Maximum="100" TickFrequency="1" Value="{Binding Path=RatePercent}" Width="420" />
+                <Slider  TickPlacement="BottomRight" Minimum="0" Maximum="100" TickFrequency="1" Value="{Binding Path=RatePercent}" Width="420" IsEnabled="False"/>
                 <!--<TextBlock Text="100%" Width="auto"/>-->
                 <ContentControl Width="10"/>
                 <!--<TextBlock Text="{Binding Path=PlayRate}" Width="auto"/>-->

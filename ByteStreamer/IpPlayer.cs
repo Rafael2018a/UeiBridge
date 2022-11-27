@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using ByteStreamer.Utilities;
+using System.Windows;
 
 namespace ByteStreamer
 {
@@ -58,6 +59,45 @@ namespace ByteStreamer
                         break;
                     }
                 }
+            }
+                );
+
+            return task1;
+        }
+        public Task StartPlayAsync3(List<byte[]> bytesBlockList, TimeSpan waitState)
+        {
+            Task task1 = Task.Run(() =>
+            {
+                try
+                {
+
+                    UdpClient client = new UdpClient();
+                    client.Connect(_remoteEndpoint);
+
+                    while (true)
+                    {
+                        foreach (byte[] bytesBlock in bytesBlockList)
+                        {
+                            int sentBytes = client.Send(bytesBlock, bytesBlock.Length);
+                            System.Threading.Thread.Sleep(waitState);
+
+                            lock (CountLock)
+                            {
+                                _playedBytesCount += sentBytes;
+                            }
+                        }
+                        if (_abortPlayRequest)
+                        {
+                            _abortPlayRequest = false;
+                            break;
+                        }
+                    }
+                }
+                catch(Exception ex)
+                {
+                    MessageBox.Show(ex.Message, "Playback failed", MessageBoxButton.OK);
+                }
+
             }
                 );
 

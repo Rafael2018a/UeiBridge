@@ -127,7 +127,7 @@ namespace UeiBridge
                     }
                     else
                     {
-                        if (false == _serialInputManager.InDisposeState)
+                        //if (false == _serialInputManager.InDisposeState)
                         {
                             _logger.Warn("Failed to send serial message. SerialWriter==null)");
                         }

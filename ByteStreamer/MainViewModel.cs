@@ -113,6 +113,21 @@ namespace ByteStreamer
                 }
             }
         }
+        public long PlayedBytesCount
+        {
+            get
+            {
+                if (player == null)
+                {
+                    return 0;
+                }
+                else
+                {
+                    return player.PlayedBytesCount;
+                }
+            }
+        }
+
         double _playRateMbps;
         public double PlayRate // mbit/sec
         {
@@ -176,6 +191,29 @@ namespace ByteStreamer
             StartPlayCommand = new ByteStreamer.Utilities.RelayCommand(StartPlay, CanStartPlay);
             StopPlayCommand = new Utilities.RelayCommand(StopPlay, CanStopPlay);
         }
+        public static List<byte[]> Make_SL508Down_Messages(int seed)
+        {
+            List<byte[]> msgs = new List<byte[]>();
+
+            // build 8 messages, one per channel
+            for (int ch = 0; ch < 8; ch++)
+            //int ch = 1;
+            {
+                string m = $"hello ch{ch} seed {seed} ksd klskd kljasldkjf laksjdfkl klsjd fkasdfjlk askldjfklasjdf asdfklj ksdajf ";
+
+                // string to ascii
+
+                // ascii to string System.Text.Encoding.ASCII.GetString(recvBytes)
+                UeiBridge.EthernetMessage msg = UeiBridge.EthernetMessageFactory.CreateEmpty(5, 16);
+                msg.PayloadBytes = System.Text.Encoding.ASCII.GetBytes(m);
+                msg.SlotChannelNumber = ch;
+                msgs.Add(msg.ToByteArrayDown());
+
+            }
+
+            return msgs;
+
+        }
 
         void StartPlay(object obj)
         {
@@ -198,8 +236,10 @@ namespace ByteStreamer
             _delayVectorUpdateTimer = new System.Threading.Timer(new System.Threading.TimerCallback(OnDelayVectorUpdateTick), null, 1000, 1000);
 
             player = new IpPlayer(destEp);
-            byte[] block = new byte[BlockLength];
-            player.StartPlayAsync2(block, TimeSpan.FromMilliseconds(_settings.waitStatesMS), _dv).ContinueWith((t) => { IsPlaying = false; });
+            //byte[] block = new byte[BlockLength];
+            //player.StartPlayAsync2(block, TimeSpan.FromMilliseconds(_settings.waitStatesMS), _dv).ContinueWith((t) => { IsPlaying = false; });
+            List<byte[]> blockList = Make_SL508Down_Messages(10);
+            player.StartPlayAsync3(blockList, TimeSpan.FromMilliseconds(_settings.waitStatesMS)).ContinueWith((t) => { IsPlaying = false; });
 
             StartPlayCommand.OnCanExecuteChanged();
 

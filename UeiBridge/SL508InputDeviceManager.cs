@@ -127,16 +127,18 @@ namespace UeiBridge
 
             for (int ch = 0; ch < numberOfChannels; ch++)
             {
+                System.Threading.Thread.Sleep(10);
                 SerialReader sr = new SerialReader(_deviceSession.GetDataStream(), _deviceSession.GetChannel(ch).GetIndex());
                 _serialReaderList.Add(sr);
                 SerialWriter sw = new SerialWriter(_deviceSession.GetDataStream(), _deviceSession.GetChannel(ch).GetIndex());
                 _serialWriterList.Add(sw);
-                
+               
             }
             _deviceSession.Start();
 
             for (int ch = 0; ch < numberOfChannels; ch++)
             {
+                System.Threading.Thread.Sleep(10);
                 readerAsyncCallback = new AsyncCallback(ReaderCallback);
                 readerIAsyncResult = _serialReaderList[ch].BeginRead(minLen, readerAsyncCallback, ch);
             }
@@ -144,17 +146,16 @@ namespace UeiBridge
             bool firstIteration = true;
             foreach (SerialPort port in _serialPorts)
             {
-                int channleIndex = port.GetIndex();
                 if (firstIteration)
                 {
                     firstIteration = false;
                     _logger.Info($"*** {DeviceName} init:");
-                    //port.GetResourceName());
                 }
-
+                int channleIndex = port.GetIndex();
                 _logger.Info($"Serial CH{channleIndex} init success. {port.GetMode()}  {port.GetSpeed()}.");////{c111.GetResourceName()}");
             }
 
+            System.Threading.Thread.Sleep(500);
             return true;
         }
 
