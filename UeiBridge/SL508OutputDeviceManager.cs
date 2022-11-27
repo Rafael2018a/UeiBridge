@@ -67,7 +67,11 @@ namespace UeiBridge
                     int len = (last.Length > 20) ? 20 : last.Length;
                     string s = $"Payload ch{ch} ({last.Length}): {BitConverter.ToString(last).Substring(0, len * 3 - 1)}\n";
                     formattedString.Append(s);
-                    _lastMessagesList[ch] = null;
+                    //_lastMessagesList[ch] = null;
+                }
+                else
+                {
+                    formattedString.Append("null\n");
                 }
             }
             formattedString.Append($"Total messages {_numberOfSentMessages} bytes {_sentBytesAcc}");

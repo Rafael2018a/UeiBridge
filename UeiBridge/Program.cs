@@ -94,6 +94,7 @@ namespace UeiBridge
             // publish status to StatusViewer
             Task.Factory.StartNew(() => PublishStatus_Task());
 
+            _logger.Info("Press any key to stop...");
             Console.ReadKey();
             _logger.Info("Disposing....");
 
