@@ -13,6 +13,8 @@ namespace UeiBridge
     {
         BlockingCollection<DeviceRequest> _dataItemsQueue = new BlockingCollection<DeviceRequest>(100); // max 100 items
         //protected string _deviceIndex;
+        log4net.ILog _logger = StaticMethods.GetLogger();
+
         protected abstract string ChannelsString { get; }
         protected Session _deviceSession;
         protected string _caseUrl;
@@ -48,6 +50,7 @@ namespace UeiBridge
 
         protected void OutputDeviceHandler_Task()
         {
+            // message loop
             while (false == _dataItemsQueue.IsCompleted)
             {
                 // get from q
@@ -59,6 +62,8 @@ namespace UeiBridge
                 }
                 HandleRequest(incomingRequest);
             }
+
+            _logger.Debug($"OutputDeviceHandler_Task end {this.GetType().ToString()}");
         }
 
         public abstract void Dispose();

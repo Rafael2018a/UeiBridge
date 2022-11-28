@@ -41,28 +41,40 @@ namespace UeiBridge
         }
         public override string GetFormattedStatus()
         {
+            //return null;
             StringBuilder formattedString = new StringBuilder();
-            foreach(byte [] msg in _lastMessagesList)
-            {
-                int ch = 0;
-                if (null != msg)
-                {
-                    int len = (msg.Length > 20) ? 20 : msg.Length;
-                    string full = BitConverter.ToString(msg);
-                    string s = $"Payload ch{ch++}: {full.Substring(0, len * 3 - 1)}\n";
-                    formattedString.Append(s);
-                }
-            }
-            //for (int ch=0; ch<8; ch++)
+            //lock (_lastMessagesList)
             //{
-            //    byte[] last = _lastMessagesList[ch];
-            //    if (null!=last)
+
+            //    foreach (byte[] msg in _lastMessagesList)
             //    {
-            //        int len = (last.Length > 20) ? 20 : last.Length;
-            //        string s = $"Payload ch{ch}: {BitConverter.ToString(last).Substring(0, len * 3 - 1)}\n";
-            //        formattedString.Append(s);
+            //        int ch = 0;
+            //        if (null != msg)
+            //        {
+            //            int len = (msg.Length > 20) ? 20 : msg.Length;
+            //            string full = BitConverter.ToString(msg);
+            //            string s = $"Payload ch{ch++} ({msg.Length}): {full.Substring(0, len * 3 - 1)}\n";
+            //            formattedString.Append(s);
+            //        }
             //    }
             //}
+
+            for (int ch = 0; ch < _lastMessagesList.Count; ch++) // do NOT use foreach since collection might be updated in other thread
+            {
+                byte[] last = _lastMessagesList[ch];
+                if (null != last)
+                {
+                    int len = (last.Length > 20) ? 20 : last.Length;
+                    string s = $"Payload ch{ch} ({last.Length}): {BitConverter.ToString(last).Substring(0, len * 3 - 1)}\n";
+                    formattedString.Append(s);
+                    //_lastMessagesList[ch] = null;
+                }
+                else
+                {
+                    formattedString.Append("null\n");
+                }
+            }
+            formattedString.Append($"Total messages {_numberOfSentMessages} bytes {_sentBytesAcc}");
             return formattedString.ToString();
 
         }
@@ -74,16 +86,16 @@ namespace UeiBridge
         {
             
             SL508InputDeviceManager _serialInputManager = ProjectRegistry.Instance.SerialInputDeviceManager;
-            if (null == _serialInputManager)
+
+            if (null == _serialInputManager || _serialInputManager.IsReady==false)
             {
-                _logger.Warn("Can't hanlde request since serialInputManager==null");
+                _logger.Warn("Can't hanlde request since serialInputManager null or not ready");
                 return;
             }
             //if (_isDeviceReady==false)
             //{
             //    return;
             //}
-
             byte []  incomingMessage = request.RequestObject as byte[];
             System.Diagnostics.Debug.Assert(incomingMessage != null);
             System.Diagnostics.Debug.Assert(request.SerialChannel >= 0);
@@ -98,6 +110,8 @@ namespace UeiBridge
                         {
                             sentBytes = _serialInputManager.SerialWriterList[request.SerialChannel].Write(incomingMessage);
                             System.Diagnostics.Debug.Assert(sentBytes == incomingMessage.Length);
+                            //System.Threading.Thread.Sleep(10);
+                            //_logger.Debug($"Sent ch{request.SerialChannel} {BitConverter.ToString(incomingMessage)}");
                             _sentBytesAcc += sentBytes;
                             _numberOfSentMessages++;
                             _lastMessagesList[request.SerialChannel] = incomingMessage;
@@ -113,7 +127,7 @@ namespace UeiBridge
                     }
                     else
                     {
-                        if (false == _serialInputManager.InDisposeState)
+                        //if (false == _serialInputManager.InDisposeState)
                         {
                             _logger.Warn("Failed to send serial message. SerialWriter==null)");
                         }

@@ -14,59 +14,32 @@ namespace UeiBridge
     class SL508InputDeviceManager : InputDevice
     {
         log4net.ILog _logger = StaticMethods.GetLogger();
-        //SL508Input _serialInput;
-        //SL508OutputDeviceManager _serialOutput;
         public override string DeviceName => "SL-508-892";
-        //readonly new string _channelsString;
         readonly List<SerialPort> _serialPorts;
         readonly List<SerialReader> _serialReaderList;
         readonly List<SerialWriter> _serialWriterList;
         IConvert _attachedConverter;
-        //private SerialReader _serialReader;
-        //private SerialWriter _serialWriter;
         bool _InDisposeState = false;
-        //byte[] _lastMessage;
         List<byte[]> _lastMessagesList;
-        //readonly List<Session> _deviceSessionList;
-        string _channelBaseString;
+        bool _isReady = false;
+        public bool IsReady => _isReady;
 
         public override IConvert AttachedConverter => _attachedConverter;
         public List<SerialWriter> SerialWriterList => _serialWriterList;
         public bool InDisposeState => _InDisposeState;
-        //IEnqueue<ScanResult> _targetConsumer;
 
         public SL508InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
         {
-            _channelBaseString = "Com";
             _serialPorts = new List<SerialPort>();
             _serialReaderList = new List<SerialReader>();
             _serialWriterList = new List<SerialWriter>();
-
-            //_deviceSessionList = new List<Session>();
             _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
-
             _lastMessagesList = new List<byte[]>();
             for (int i = 0; i < 8; i++)
             {
                 _lastMessagesList.Add(null);
             }
-
         }
-
-        //internal SL508Input SerialInput { get => _serialInput; set => _serialInput = value; }
-        //internal SL508OutputDeviceManager SerialOutput { get => _serialOutput; set => _serialOutput = value; }
-
-        //public override string GetFormattedStatus()
-        //{
-        //    string formattedString = "";
-        //    if (null != _lastMessage)
-        //    {
-        //        int l = (_lastMessage.Length > 20) ? 20 : _lastMessage.Length;
-        //        System.Diagnostics.Debug.Assert(l > 0);
-        //        formattedString = "First bytes: " + BitConverter.ToString(_lastMessage).Substring(0, l*3-1);
-        //    }
-        //    return formattedString;
-        //}
 
         public override string GetFormattedStatus()
         {
@@ -77,7 +50,7 @@ namespace UeiBridge
                 if (null != last)
                 {
                     int len = (last.Length > 20) ? 20 : last.Length;
-                    string s = $"Payload (in) ch{ch}: {BitConverter.ToString(last).Substring(0, len * 3 - 1)}\n";
+                    string s = $"Payload ch{ch} ({last.Length}): {BitConverter.ToString(last).Substring(0, len * 3 - 1)}\n";
                     formattedString.Append(s);
                 }
             }
@@ -126,55 +99,64 @@ namespace UeiBridge
 #endif
         AsyncCallback readerAsyncCallback;
         private IAsyncResult readerIAsyncResult;
-
+        int minLen = 200;
         private bool OpenDevices(string baseUrl, string deviceName)
         {
             _deviceSession = new Session();
 
-            var n = _deviceSession.GetNumberOfChannels();
-
             foreach(var channel in Config.Instance.SerialChannels)
             {
                 string finalUrl = baseUrl + channel.portname.ToString();
+                //string finalUrl = baseUrl + "Com0,1";
                 var port = _deviceSession.CreateSerialPort(finalUrl,
-                                    channel.mode,
-                                    channel.baudrate,
+                                    SerialPortMode.RS232,
+                                    SerialPortSpeed.BitsPerSecond9600,
                                     SerialPortDataBits.DataBits8,
                                     SerialPortParity.None,
                                     SerialPortStopBits.StopBits1,
-                                    "\n");
+                                    "");
                 _serialPorts.Add(port);
             }
 
-            _deviceSession.ConfigureTimingForMessagingIO(100, 100.0);
-            _deviceSession.GetTiming().SetTimeout(10000); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
+            int numberOfChannels = _deviceSession.GetNumberOfChannels();
+            System.Diagnostics.Debug.Assert(numberOfChannels == Config.Instance.SerialChannels.Length);
+
+            _deviceSession.ConfigureTimingForMessagingIO(1000, 100.0);
+            _deviceSession.GetTiming().SetTimeout(5000); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
+            //_deviceSession.ConfigureTimingForSimpleIO();
+
+            for (int ch = 0; ch < numberOfChannels; ch++)
+            {
+                System.Threading.Thread.Sleep(10);
+                SerialReader sr = new SerialReader(_deviceSession.GetDataStream(), _deviceSession.GetChannel(ch).GetIndex());
+                _serialReaderList.Add(sr);
+                SerialWriter sw = new SerialWriter(_deviceSession.GetDataStream(), _deviceSession.GetChannel(ch).GetIndex());
+                _serialWriterList.Add(sw);
+               
+            }
             _deviceSession.Start();
 
-            readerAsyncCallback = new AsyncCallback(ReaderCallback);
+            for (int ch = 0; ch < numberOfChannels; ch++)
+            {
+                System.Threading.Thread.Sleep(10);
+                readerAsyncCallback = new AsyncCallback(ReaderCallback);
+                readerIAsyncResult = _serialReaderList[ch].BeginRead(minLen, readerAsyncCallback, ch);
+            }
 
             bool firstIteration = true;
-            foreach(SerialPort port in _serialPorts)
+            foreach (SerialPort port in _serialPorts)
             {
-                int channleIndex = port.GetIndex();
                 if (firstIteration)
                 {
                     firstIteration = false;
                     _logger.Info($"*** {DeviceName} init:");
-                        //port.GetResourceName());
                 }
-               
+                int channleIndex = port.GetIndex();
                 _logger.Info($"Serial CH{channleIndex} init success. {port.GetMode()}  {port.GetSpeed()}.");////{c111.GetResourceName()}");
-
-                SerialReader sr = new SerialReader(_deviceSession.GetDataStream(), channleIndex);
-                readerIAsyncResult = sr.BeginRead(200, readerAsyncCallback, channleIndex);
-                _serialReaderList.Add(sr);
-                SerialWriter sw = new SerialWriter(_deviceSession.GetDataStream(), channleIndex);
-                _serialWriterList.Add(sw);
-
             }
 
+            System.Threading.Thread.Sleep(500);
             return true;
-
         }
 
         public void ReaderCallback(IAsyncResult ar)
@@ -187,9 +169,7 @@ namespace UeiBridge
             try
             {
                 byte[] receiveBuffer = _serialReaderList[channel].EndRead(ar);
-                //byte[] receiveBuffer = { 1, 2, 3 };
 
-                
                 _lastMessagesList[channel] = receiveBuffer;
                 // send reply (debug only)
                 //string str = System.Text.Encoding.ASCII.GetString(receiveBuffer);
@@ -204,7 +184,7 @@ namespace UeiBridge
                 // restart reader
                 if (_serialReaderList[channel] != null && base._deviceSession.IsRunning() && _InDisposeState == false)
                 {
-                    readerIAsyncResult = _serialReaderList[channel].BeginRead(200, this.ReaderCallback, channel);
+                    readerIAsyncResult = _serialReaderList[channel].BeginRead(minLen, this.ReaderCallback, channel);
                 }
             }
             catch (UeiDaqException ex)
@@ -214,29 +194,24 @@ namespace UeiBridge
                 {
                     if (base._deviceSession.IsRunning())
                     {
+                        _lastMessagesList[channel] = null;
+
                         if (Error.Timeout == ex.Error)
                         {
                             // Ignore timeout error, they will occur if the send button is not
                             // clicked on fast enough!
                             if (false == _InDisposeState)
                             {
-                                readerIAsyncResult = _serialReaderList[channel].BeginRead(200, readerAsyncCallback, channel);
+                                readerIAsyncResult = _serialReaderList[channel].BeginRead(minLen, readerAsyncCallback, channel);
                             }
                         }
                         else
                         {
-                            //base._deviceSession.Dispose();
-                            //base._deviceSession = null;
                             Console.WriteLine(ex.Message);
                         }
                     }
                 }
             }
-            //catch (NullReferenceException ex)
-            //{
-            //    _logger.Warn( ex.Message);
-            //}
-
 
         }
         public override void Start()
@@ -252,12 +227,9 @@ namespace UeiBridge
 
             string url1 = _caseUrl + deviceIndex + _channelsString;
 
-            
-
             if (OpenDevices(url1, DeviceName))
             {
-                //_logger.Info($"{DeviceName}(Input/Output) init success. {_deviceSessionList[0].GetNumberOfChannels()} channels.  {deviceIndex + _channelsString}");
-
+                _isReady = true;
             }
             else
             {
@@ -334,6 +306,8 @@ namespace UeiBridge
 
         private void CloseDevices()
         {
+            _deviceSession.Stop();
+
             for (int i = 0; i < _serialReaderList.Count; i++)
             {
                 _serialReaderList[i].Dispose();
@@ -341,8 +315,11 @@ namespace UeiBridge
             }
             for (int i = 0; i < _serialWriterList.Count; i++)
             {
-                _serialWriterList[i].Dispose();
-                _serialWriterList[i] = null;
+                if (null != _serialWriterList[i])
+                {
+                    _serialWriterList[i].Dispose();
+                    _serialWriterList[i] = null;
+                }
             }
 
             _deviceSession.Dispose();
