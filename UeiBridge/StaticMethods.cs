@@ -137,9 +137,20 @@ namespace UeiBridge
                 msgs.Add(msg.ToByteArrayDown());
 
             }
-
             return msgs;
-
         }
+        public static string GetEnumValues<T>()
+        {
+            T[] v1 = Enum.GetValues(typeof(T)) as T[];
+            StringBuilder sb = new StringBuilder("\n");
+            foreach (var item in v1)
+            {
+                sb.Append(item);
+                sb.Append("\n");
+            }
+            //v1.ToList<SerialPortMode>().ForEach(item => { sb.Append(item); sb.Append("\n"); });
+            return sb.ToString();
+        }
+
     }
 }

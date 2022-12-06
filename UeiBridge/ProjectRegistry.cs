@@ -4,7 +4,13 @@ using System.Collections.Generic;
 
 namespace UeiBridge
 {
-    internal class ProjectRegistry 
+    public enum CardFeature { Analog, Digital, Ralay, Serial};
+    public enum CardType { AO308, DIO403, DIO470, AI201100, SL508892 }
+    public enum Direction { input, output, in_out}
+
+
+
+    internal class ProjectRegistry
     {
         Dictionary<int, string> _deviceMap = new Dictionary<int, string>();
         Dictionary<string, OutputDevice> _outputDeviceMap = new Dictionary<string, OutputDevice>();

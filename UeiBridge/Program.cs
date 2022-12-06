@@ -56,6 +56,8 @@ namespace UeiBridge
             // prepare device dictionaries
             ProjectRegistry.Instance.Establish();
 
+            var x = Config2.Instance;
+
             // init downwards objects
             EthernetToDevice e2d = new EthernetToDevice();
             e2d.Start();
@@ -63,7 +65,7 @@ namespace UeiBridge
             
 
             // init upwards objects
-            UdpWriter uw = new UdpWriter(Config.Instance.SenderMulticastAddress, Config.Instance.SenderMulticastPort, "to eth", Config.Instance.LocalBindNicAddress);
+            UdpWriter uw = new UdpWriter(Config.Instance.SenderMulticastAddress, Config.Instance.SenderMulticastPort, "to-aess", Config.Instance.SelectedNicForMcastSend);
             DeviceToEthernet d2e = new DeviceToEthernet(uw);
             d2e.Start();
 
@@ -112,7 +114,7 @@ namespace UeiBridge
 
         void PublishStatus_Task()
         {
-            UdpWriter uw = new UdpWriter("239.10.10.17", 5093, "to statusViewer", Config.Instance.LocalBindNicAddress);
+            UdpWriter uw = new UdpWriter("239.10.10.17", 5093, "to-statusViewer", Config.Instance.SelectedNicForMcastSend);
 
             while (true)
             {

@@ -110,7 +110,7 @@ namespace UeiBridge
                 //string finalUrl = baseUrl + "Com0,1";
                 var port = _deviceSession.CreateSerialPort(finalUrl,
                                     SerialPortMode.RS232,
-                                    SerialPortSpeed.BitsPerSecond9600,
+                                    SerialPortSpeed.BitsPerSecond250000,
                                     SerialPortDataBits.DataBits8,
                                     SerialPortParity.None,
                                     SerialPortStopBits.StopBits1,

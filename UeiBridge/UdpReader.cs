@@ -31,7 +31,7 @@ namespace UeiBridge
             IPAddress mcastAddress;
             if (IPAddress.TryParse(Config.Instance.ReceiverMulticastAddress, out mcastAddress))
             {
-                EstablishMulticastReceiver(mcastAddress, Config.Instance.ReceiverMulticastPort, IPAddress.Parse(Config.Instance.LocalBindNicAddress));
+                EstablishMulticastReceiver(mcastAddress, Config.Instance.ReceiverMulticastPort);
             }
             else
             {
@@ -39,7 +39,7 @@ namespace UeiBridge
             }
         }
         
-        public void EstablishMulticastReceiver(IPAddress multicastAddress, int multicastPort, IPAddress localIPaddress = null)
+        public void EstablishMulticastReceiver(IPAddress multicastAddress, int multicastPort)//, IPAddress localIPaddress = null)
         {
             //int _port;
             //IPAddress _multicastIPaddress;
@@ -51,7 +51,8 @@ namespace UeiBridge
             try
             {
 
-                IPAddress localIP = (localIPaddress == null) ? IPAddress.Any : localIPaddress;
+                //IPAddress localIP = (localIPaddress == null) ? IPAddress.Any : localIPaddress;
+                IPAddress localIP = IPAddress.Any;
 
                 // Create endpoints
                 IPEndPoint _remoteEndPoint = new IPEndPoint(multicastAddress, multicastPort);
