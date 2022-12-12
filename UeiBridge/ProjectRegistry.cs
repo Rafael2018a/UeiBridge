@@ -24,7 +24,22 @@ namespace UeiBridge
         /// <summary>
         /// "Ai-204": <instnace>
         /// </summary>
-        public Dictionary<string, OutputDevice> OutputDevicesMap { get => _outputDeviceMap; } 
+        public Dictionary<string, OutputDevice> OutputDevicesMap { get => _outputDeviceMap; }
+        public OutputDevice[] OutputDeviceList { get => _outputDeviceList; }
+        public InputDevice[] InputDeviceList { get => _inputDeviceList; set => _inputDeviceList = value; }
+        private OutputDevice[] _outputDeviceList = new OutputDevice[16]; // device by slot
+        private InputDevice[] _inputDeviceList = new InputDevice[16];
+        internal void BuildDeviceList()
+        {
+            // for each slot in config
+            // - verify that slot-device identical to real device
+            // - find device manager
+            // - if it is an output device
+            // -- create UdpReader for it
+            // -- create and instance and add it to outputDeviceList
+            // - if it is input device (might be both)
+            // -- 
+        }
         internal void Establish() // tbd. refactor this.
         {
             log4net.ILog logger = StaticMethods.GetLogger();
@@ -35,19 +50,20 @@ namespace UeiBridge
             _deviceMap.Add(1, "AI-201-100");
             _deviceMap.Add(5, "SL-508-892");
 
-            // fill convertes and device-managers map
-            foreach (Type theType in System.Reflection.Assembly.GetExecutingAssembly().GetTypes())
-            {
-                if (theType.IsInterface || theType.IsAbstract)
-                    continue;
+            // fill output device map
+            //foreach (Type theType in System.Reflection.Assembly.GetExecutingAssembly().GetTypes())
+            //{
+            //    if (theType.IsInterface || theType.IsAbstract)
+            //        continue;
 
-                if (typeof(OutputDevice).IsAssignableFrom(theType))
-                {
-                    OutputDevice obj = (OutputDevice)Activator.CreateInstance(theType);
-                    //logger.Debug($"New output device instance: {obj.ToString()} - {obj.DeviceName}");
-                    _outputDeviceMap.Add(obj.DeviceName, obj);
-                }
-            }
+            //    // if theType is an OutputDevice class
+            //    if (typeof(OutputDevice).IsAssignableFrom(theType))
+            //    {
+            //        // add device to device map
+            //        OutputDevice obj = (OutputDevice)Activator.CreateInstance(theType);
+            //        _outputDeviceMap.Add(obj.DeviceName, obj);
+            //    }
+            //}
         }
         public int GetDeviceKeyFromDeviceString(string deviceString)
         {

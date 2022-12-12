@@ -33,6 +33,27 @@ namespace UeiBridge
             }
             return resultList;
         }
+        public static List<Device> GetDeviceList( string deviceUrl)
+        {
+            DeviceCollection devColl = new DeviceCollection(deviceUrl);
+            List<Device> resultList = new List<Device>();
+            try
+            {
+                foreach (Device dev in devColl)
+                {
+                    if (dev != null)
+                    {
+                        resultList.Add(dev);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _lastErrorMessage = ex.Message;
+                return null;
+            }
+            return resultList;
+        }
         /// <summary>
         /// Example: input "DO-403", output "Dev0"
         /// return null if device not found
@@ -91,6 +112,25 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert(attachedConverter != null);
             return attachedConverter;
         }
+
+        public static OutputDevice CreateOutputDeviceManager(DeviceSetup deviceSetup)
+        {
+            //Config2.Instance.UeiCubes[0].SlotList
+            foreach (Type theType in System.Reflection.Assembly.GetExecutingAssembly().GetTypes())
+            {
+                if (theType.IsInterface || theType.IsAbstract)
+                    continue;
+
+                // if theType is an OutputDevice class
+                if (typeof(OutputDevice).IsAssignableFrom(theType))
+                {
+                    OutputDevice oIinstnace = (OutputDevice)Activator.CreateInstance(theType, deviceSetup);
+                    if (oIinstnace.DeviceName == deviceSetup.DeviceName)
+                        return oIinstnace;
+                }
+            }
+            return null;
+        }
         public static void f()
         {
             List<Type> lt = new List<Type>(System.Reflection.Assembly.GetExecutingAssembly().GetTypes());
@@ -101,12 +141,16 @@ namespace UeiBridge
 
         public static byte[] Make_A308Down_message()
         {
-            EthernetMessage msg = EthernetMessageFactory.CreateEmpty(0, 16);
+            EthernetMessage msg = EthernetMessage.CreateEmpty(0, 16);
+            for(int i=0; i<16; i+=2)
+            {
+                msg.PayloadBytes[i] = (byte)(i * 10);
+            }
             return msg.ToByteArrayDown();
         }
         public static byte[] Make_DIO403Down_Message()
         {
-            EthernetMessage msg = EthernetMessageFactory.CreateEmpty(4, 3);
+            EthernetMessage msg = EthernetMessage.CreateEmpty(4, 3);
             msg.PayloadBytes[0] = 0x12;
             msg.PayloadBytes[1] = 0x34;
             msg.PayloadBytes[2] = 0x56;
@@ -115,7 +159,7 @@ namespace UeiBridge
         }
         public static byte[] Make_DIO430Down_Message()
         {
-            EthernetMessage msg = EthernetMessageFactory.CreateEmpty(6, 16);
+            EthernetMessage msg = EthernetMessage.CreateEmpty(6, 16);
             return msg.ToByteArrayDown();
         }
         public static List<byte[]> Make_SL508Down_Messages( int seed)
@@ -131,7 +175,7 @@ namespace UeiBridge
                 // string to ascii
 
                 // ascii to string System.Text.Encoding.ASCII.GetString(recvBytes)
-                EthernetMessage msg = EthernetMessageFactory.CreateEmpty(5, 16);
+                EthernetMessage msg = EthernetMessage.CreateEmpty(5, 16);
                 msg.PayloadBytes = System.Text.Encoding.ASCII.GetBytes(m);
                 msg.SlotChannelNumber = ch;
                 msgs.Add(msg.ToByteArrayDown());

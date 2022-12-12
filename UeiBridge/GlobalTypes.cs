@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Text;
+using System.Net;
 using System.Threading.Tasks;
 
 /// <summary>
@@ -51,6 +51,10 @@ namespace UeiBridge
             _serialChannel = serialChannel;
         }
     }
+
+    /// <summary>
+    /// Contains: Object to write to device, serial channel id (in case of serial)
+    /// </summary>
     public class ScanResult
     {
         object _scan;
@@ -63,4 +67,50 @@ namespace UeiBridge
         public object Scan { get => _scan; }
         public InputDevice OriginDevice { get => _originDevice; }
     }
+
+    class DeviceObjects
+    {
+        public InputDevice _inputDevice;
+        public OutputDevice _outputDevice;
+        public UdpReader _udpReader;
+        public UdpWriter _udpWriter;
+
+        public DeviceObjects(InputDevice inputDevice, UdpWriter udpWriter) 
+        {
+            _inputDevice = inputDevice;
+            _udpWriter = udpWriter;
+        }
+
+        public DeviceObjects(OutputDevice outputDevice, UdpReader udpReader)
+        {
+            _outputDevice = outputDevice;
+            _udpReader = udpReader;
+        }
+    }
+    public class EndPoint
+    {
+        public string Address;
+        public int Port;
+        public EndPoint()
+        {
+        }
+        public EndPoint(string addressString, int port)
+        {
+            Address = addressString;
+            Port = port;
+        }
+        public IPEndPoint ToIpEp() // tbd. make cast operator
+        {
+            try
+            {
+                IPEndPoint ipep = new IPEndPoint(IPAddress.Parse(Address), Port);
+                return ipep;
+            }
+            catch (Exception ex)
+            {
+                return null;
+            }
+        }
+    }
+
 }

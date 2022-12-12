@@ -40,7 +40,7 @@ namespace UeiBridge
             // =======================
             if ((null == _deviceSession) || (_caseUrl != dr.CaseUrl))
             {
-                CloseDevice(); // if needed
+                CloseSession(); // if needed
                 OpenDevice(dr, DeviceName);
             }
 
@@ -77,6 +77,11 @@ namespace UeiBridge
         }
 
         UInt16[] _lastScan;
+
+        protected DioOutputDeviceManager(DeviceSetup deviceSetup) : base(deviceSetup)
+        {
+        }
+
         //class StatusStruct // might be generic
         //{
         //    UInt16[] _lastScan = new UInt16[Config.Instance.MaxDigital403OutputChannels];

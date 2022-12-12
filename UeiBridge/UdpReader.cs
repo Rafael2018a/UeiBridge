@@ -13,14 +13,14 @@ namespace UeiBridge
     /// <summary>
     /// Reads datagrams from udp channel and sends them to 'consumer'.
     /// </summary>
-    internal class UdpReader
+    public class UdpReader
     {
         private IEnqueue<byte[]> _datagramConsumer;
         log4net.ILog _logger = StaticMethods.GetLogger();
         UdpClient _udpclient;
         string _instanceName;
 
-        public UdpReader(IEnqueue<byte[]> consumer, string name)
+        public UdpReader( IPEndPoint ep, IEnqueue<byte[]> consumer, string name)
         {
             this._datagramConsumer = consumer;
             this._instanceName = name;

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using UeiDaq;
 
 namespace UeiBridge
@@ -19,23 +20,35 @@ namespace UeiBridge
         protected override string ChannelsString => throw new NotImplementedException();
 
         readonly IConvert _attachedConverter;
-        public AO308OutputDeviceManager()
+        public AO308OutputDeviceManager( DeviceSetup deviceSetup): base( deviceSetup)
         {
             _channelsString = "Ao0:7";
             _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
         }
 
-        // todo: add Dispose/d-tor
-        bool OpenDevice(string deviceUrl)
+
+        public override bool  OpenDevice()
         {
+
             try
             {
+                string cubeUrl = $"{_deviceSetup.CubeUrl}Dev{_deviceSetup.SlotNumber}/{_channelsString}";
+
                 _deviceSession = new Session();
 				//var minmax = Config.Instance.Analog_Out_MinMaxVoltage;
-                _deviceSession.CreateAOChannel(deviceUrl, -Config.Instance.Analog_Out_PeekVoltage, Config.Instance.Analog_Out_PeekVoltage);
+                var c = _deviceSession.CreateAOChannel(cubeUrl, -Config.Instance.Analog_Out_PeekVoltage, Config.Instance.Analog_Out_PeekVoltage);
+                System.Diagnostics.Debug.Assert(c.GetMaximum() == Config.Instance.Analog_Out_PeekVoltage);
                 //_numberOfChannels = _deviceSession.GetNumberOfChannels();
                 _deviceSession.ConfigureTimingForSimpleIO();
                 _writer = new AnalogScaledWriter(_deviceSession.GetDataStream());
+
+                var range = _deviceSession.GetDevice().GetAORanges();
+
+                Task.Factory.StartNew(() => OutputDeviceHandler_Task());
+
+                _logger.Info($"{DeviceName}(Output) init success. { _deviceSession.GetNumberOfChannels()} channels. Range {range[0].minimum},{range[0].maximum}.");
+
+                _isDeviceReady = true;
             }
             catch (Exception ex)
             {
@@ -46,46 +59,55 @@ namespace UeiBridge
             return true;
         }
 
-        protected override void HandleRequest(DeviceRequest dr)
+        protected override void HandleRequest(DeviceRequest request)
         {
+            throw new NotImplementedException();
+        }
+        protected override void HandleRequest( EthernetMessage em)
+        {
+            //DeviceRequest dr;
             // init session, if needed.
             // =======================
-            if ((null == _deviceSession) || (_caseUrl != dr.CaseUrl))
-            {
-                CloseDevice();
+            //if ((null == _deviceSession) || (_caseUrl != dr.CaseUrl))
+            //{
+            //    CloseDevice();
 
-                string deviceIndex = StaticMethods.FindDeviceIndex(DeviceName);
-                if (null == deviceIndex)
-                {
-                    _logger.Warn($"Can't find index for device {DeviceName}");
-                    return;
-                }
+            //    string deviceIndex = StaticMethods.FindDeviceIndex(DeviceName);
+            //    if (null == deviceIndex)
+            //    {
+            //        _logger.Warn($"Can't find index for device {DeviceName}");
+            //        return;
+            //    }
 
-                string url1 = dr.CaseUrl + deviceIndex + _channelsString;
+            //    string url1 = dr.CaseUrl + deviceIndex + _channelsString;
 
-                if (OpenDevice(url1))
-                {
-                    var range = _deviceSession.GetDevice().GetAORanges();
+            //    if (OpenDevice(url1))
+            //    {
+            //        var range = _deviceSession.GetDevice().GetAORanges();
 
-                    //_logger.Info($"{_deviceName} init success. {_numberOfChannels} output channels. {url1}");
-                    _logger.Info($"{DeviceName}(Output) init success. { _deviceSession.GetNumberOfChannels()} channels. Range {range[0].minimum},{range[0].maximum}. {deviceIndex + _channelsString}");
-                    _caseUrl = dr.CaseUrl;
-                }
-                else
-                {
-                    _logger.Warn($"Device {DeviceName} init fail");
-                    return;
-                }
-            }
+            //        //_logger.Info($"{_deviceName} init success. {_numberOfChannels} output channels. {url1}");
+            //        _logger.Info($"{DeviceName}(Output) init success. { _deviceSession.GetNumberOfChannels()} channels. Range {range[0].minimum},{range[0].maximum}. {deviceIndex + _channelsString}");
+            //        _caseUrl = dr.CaseUrl;
+            //    }
+            //    else
+            //    {
+            //        _logger.Warn($"Device {DeviceName} init fail");
+            //        return;
+            //    }
+            //}
 
             // write to device
             // ===============
-            _lastScan = dr.RequestObject as double[];
-            if (null != _lastScan)
+            var p = _attachedConverter.EthToDevice(em.PayloadBytes);
+            if (_isDeviceReady)
             {
-                _writer.WriteSingleScan(_lastScan);
-                //_logger.Debug($"AO voltage {_lastScan[0]}");
-                //_logger.Debug($"scan written to device. Length: {_lastScan.Length}");
+                _lastScan = p as double[];
+                if (null != _lastScan)
+                {
+                    _writer.WriteSingleScan(_lastScan);
+                    //_logger.Debug($"AO voltage {_lastScan[0]}");
+                    //_logger.Debug($"scan written to device. Length: {_lastScan.Length}");
+                }
             }
         }
 
@@ -114,7 +136,8 @@ namespace UeiBridge
             DeviceRequest dr = new DeviceRequest( OutputDevice.CancelTaskRequest, "");
             deviceManager.Enqueue(dr);
             System.Threading.Thread.Sleep(100);
-            CloseDevice();
+            CloseSession();
         }
+
     }
 }

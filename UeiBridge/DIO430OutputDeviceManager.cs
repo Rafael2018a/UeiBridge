@@ -17,18 +17,20 @@ namespace UeiBridge
         protected override string ChannelsString => _channelsString;
 
         readonly IConvert _attachedConverter;
-        public DIO430OutputDeviceManager()
+        public DIO430OutputDeviceManager( DeviceSetup setup): base(setup)
         {
             _channelsString = "Do0";
             _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
         }
+
+
         protected override void HandleRequest(DeviceRequest dr)
         {
             // init session, if needed.
             // =======================
             if ((null == _deviceSession) || (_caseUrl != dr.CaseUrl))
             {
-                CloseDevice(); // if needed
+                CloseSession(); // if needed
                 OpenDevice(dr, DeviceName);
             }
 
@@ -50,6 +52,11 @@ namespace UeiBridge
             //_deviceSession.Stop();
             //_deviceSession.Dispose();
             //_deviceSession = null;
+        }
+
+        public override bool OpenDevice()
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -9,25 +9,26 @@ using UeiDaq;
 /// </summary>
 namespace UeiBridge
 {
-    public abstract class OutputDevice : IEnqueue<DeviceRequest>, IDisposable
+    public abstract class OutputDevice : IEnqueue<DeviceRequest>, IDisposable, IEnqueue<byte[]>
     {
         BlockingCollection<DeviceRequest> _dataItemsQueue = new BlockingCollection<DeviceRequest>(100); // max 100 items
-        //protected string _deviceIndex;
+        private BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
         log4net.ILog _logger = StaticMethods.GetLogger();
-
         protected abstract string ChannelsString { get; }
         protected Session _deviceSession;
-        protected string _caseUrl;
-        //protected string _deviceName;// = "AO-308";
-        //public string DeviceName => _deviceName;
+        protected string _caseUrl; // remove?
         public abstract string DeviceName { get; }
         public abstract IConvert AttachedConverter { get; }
-        public static string CancelTaskRequest => "canceltoken";
+        public static string CancelTaskRequest => "canceltoken"; // tbd. use standard CanceltationToken
+        public abstract bool OpenDevice();
+        protected DeviceSetup _deviceSetup;
+        protected bool _isDeviceReady=false;
+        protected OutputDevice(DeviceSetup deviceSetup)
+        {
+            _deviceSetup = deviceSetup;
+        }
 
-        //protected int _numberOfChannels = 0;
-        //public int NumberOfChannels => _numberOfChannels;
-        //protected IConvert _attachedConverter;
-        public virtual void CloseDevice()
+        public virtual void CloseSession()
         {
             if (null != _deviceSession)
             {
@@ -37,12 +38,26 @@ namespace UeiBridge
             _deviceSession = null;
         }
         protected abstract void HandleRequest(DeviceRequest request);
+        protected virtual void HandleRequest(EthernetMessage request) { }
         public abstract string GetFormattedStatus();
-
         public void Enqueue(DeviceRequest dr)
         {
             _dataItemsQueue.Add(dr);
         }
+        public void Enqueue(byte[] m)
+        {
+            string errorString;
+            EthernetMessage em = EthernetMessage.CreateFromByteArray(m, out errorString);
+            if (em != null)
+            {
+                _dataItemsQueue2.Add(em);
+            }
+            else
+            {
+                _logger.Warn($"Incoming byte message error. {errorString}. message dropped.");
+            }
+        }
+
         public virtual void Start()
         {
             Task.Factory.StartNew(() => OutputDeviceHandler_Task());
@@ -50,17 +65,18 @@ namespace UeiBridge
 
         protected void OutputDeviceHandler_Task()
         {
+            _logger.Debug("OutputDeviceHandler_Task()");
             // message loop
-            while (false == _dataItemsQueue.IsCompleted)
+            while (false == _dataItemsQueue2.IsCompleted)
             {
                 // get from q
-                DeviceRequest incomingRequest = _dataItemsQueue.Take();
-                System.Diagnostics.Debug.Assert(null != incomingRequest);
-                if (incomingRequest.RequestObject.ToString() == OutputDevice.CancelTaskRequest)
-                {
-                    break;
-                }
-                HandleRequest(incomingRequest);
+                EthernetMessage incomingMessage = _dataItemsQueue2.Take();
+                System.Diagnostics.Debug.Assert(null != incomingMessage);
+                //if (incomingMessage.RequestObject.ToString() == OutputDevice.CancelTaskRequest) // tbd. fix this
+                //{
+                //    break;
+                //}
+                HandleRequest(incomingMessage);
             }
 
             _logger.Debug($"OutputDeviceHandler_Task end {this.GetType().ToString()}");

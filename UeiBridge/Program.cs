@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
@@ -56,41 +57,44 @@ namespace UeiBridge
             // prepare device dictionaries
             ProjectRegistry.Instance.Establish();
 
+
+            BuildProgramObjects();
+
             var x = Config2.Instance;
 
             // init downwards objects
-            EthernetToDevice e2d = new EthernetToDevice();
-            e2d.Start();
-            UdpReader ur = new UdpReader(e2d, "from eth");
+            //EthernetToDevice e2d = new EthernetToDevice();
+            //e2d.Start();
+            //UdpReader ur = new UdpReader(e2d, "from eth");
             
 
             // init upwards objects
-            UdpWriter uw = new UdpWriter(Config.Instance.SenderMulticastAddress, Config.Instance.SenderMulticastPort, "to-aess", Config.Instance.SelectedNicForMcastSend);
-            DeviceToEthernet d2e = new DeviceToEthernet(uw);
-            d2e.Start();
+            //UdpWriter uw = new UdpWriter(Config.Instance.SenderMulticastAddress, Config.Instance.SenderMulticastPort, "to-aess", Config.Instance.SelectedNicForMcastSend);
+            //DeviceToEthernet d2e = new DeviceToEthernet(uw);
+            //d2e.Start();
 
             // start input device managers
             // ============================
-            _inputDevices.Add(new DIO403InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
-            _inputDevices.Add(new AI201InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
-            ProjectRegistry.Instance.SerialInputDeviceManager = new SL508InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl);
-            _inputDevices.Add( ProjectRegistry.Instance.SerialInputDeviceManager);
+            //_inputDevices.Add(new DIO403InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
+            //_inputDevices.Add(new AI201InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
+            //ProjectRegistry.Instance.SerialInputDeviceManager = new SL508InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl);
+            //_inputDevices.Add( ProjectRegistry.Instance.SerialInputDeviceManager);
 
-            // start output-device managers
-            ProjectRegistry.Instance.OutputDevicesMap.ToList().ForEach((pair) => pair.Value.Start());
+            //// start output-device managers
+            //ProjectRegistry.Instance.OutputDevicesMap.ToList().ForEach((pair) => pair.Value.Start());
 
-            // verify attached convertes
-            if (false == ProjectRegistry.Instance.OutputDevicesMap.All(item => item.Value.AttachedConverter != null))
-            {
-                _logger.Warn("One of output device managers does not have attached converter");
-            }
-            if (false == _inputDevices.All(item => item.AttachedConverter != null))
-            {
-                _logger.Warn("One of input device managers does not have attached converter");
-            }
+            //// verify attached convertes
+            //if (false == ProjectRegistry.Instance.OutputDevicesMap.All(item => item.Value.AttachedConverter != null))
+            //{
+            //    _logger.Warn("One of output device managers does not have attached converter");
+            //}
+            //if (false == _inputDevices.All(item => item.AttachedConverter != null))
+            //{
+            //    _logger.Warn("One of input device managers does not have attached converter");
+            //}
 
             // self tests
-            //StartDownwardsTest();
+            StartDownwardsTest();
 
             // publish status to StatusViewer
             Task.Factory.StartNew(() => PublishStatus_Task());
@@ -101,7 +105,7 @@ namespace UeiBridge
                 _inputDevices[i].Start();
             }
 
-            ur.Start();
+            //ur.Start();
             _logger.Info("Press any key to stop...");
             Console.ReadKey();
             _logger.Info("Disposing....");
@@ -111,6 +115,67 @@ namespace UeiBridge
             ProjectRegistry.Instance.OutputDevicesMap.ToList().ForEach( dev => dev.Value.Dispose());
             
         }
+
+        //List<List<OutputDevice>> _outputDeviceList;
+        List<List<DeviceObjects>> _DeviceObjectsTable;
+        /// <summary>
+        /// 
+        /// </summary>
+        private void BuildProgramObjects()
+        {
+            // prepare lists
+            int noOfCubes = Config2.Instance.CubeUrlList.Length;
+            _DeviceObjectsTable = new List<List<DeviceObjects>>(new List<DeviceObjects>[noOfCubes]);
+
+            // output device managers
+            for (int cubeIndex = 0; cubeIndex < _DeviceObjectsTable.Count; cubeIndex++)
+            {
+                BuildOutputDeviceManagersForCube(Config2.Instance.UeiCubes[cubeIndex]);
+            }
+
+            // activate output device managers
+            foreach ( List<DeviceObjects> sList in _DeviceObjectsTable)
+            {
+                foreach (DeviceObjects deviceObjects in sList)
+                {
+                    //if (deviceObjects!=null)
+                    {
+                        Thread.Sleep(100);
+                        deviceObjects?._outputDevice.OpenDevice();
+                        Thread.Sleep(100);
+                        deviceObjects?._udpReader.Start();
+                    }
+                }
+            }
+
+            // open output device managers
+            
+        }
+
+        private void BuildOutputDeviceManagersForCube(CubeSetup cubeSetup)
+        {
+            List<UeiDaq.Device> realDeviceList = StaticMethods.GetDeviceList(cubeSetup.CubeUrl);
+            // init outputDeviceList
+            _DeviceObjectsTable[cubeSetup.CubeNumber] = new List<DeviceObjects>(new DeviceObjects[realDeviceList.Count]);
+            // populate outputDeviceList
+            foreach( UeiDaq.Device realDevice in realDeviceList)
+            {
+                int realSlot = realDevice.GetIndex();
+                DeviceSetup deviceSetup = Config2.Instance.UeiCubes[cubeSetup.CubeNumber].SlotList[realSlot]; // tbd: first 'DeviceSetup' in config is not neccesseraly in slot 0
+                deviceSetup.CubeUrl = cubeSetup.CubeUrl;
+                System.Diagnostics.Debug.Assert(realSlot == deviceSetup.SlotNumber);
+                System.Diagnostics.Debug.Assert(realDevice.GetDeviceName() == deviceSetup.DeviceName);
+
+                OutputDevice od = StaticMethods.CreateOutputDeviceManager( deviceSetup);
+
+                UdpReader ur = new UdpReader(deviceSetup.LocalEndPoint.ToIpEp(), od, od.DeviceName);
+
+                _DeviceObjectsTable[cubeSetup.CubeNumber][realSlot] = new DeviceObjects(od, ur);
+
+                if (realSlot == 0) break;
+            }
+        }
+
 
         void PublishStatus_Task()
         {
@@ -150,27 +215,30 @@ namespace UeiBridge
                     System.Threading.Thread.Sleep(100);
                     IPEndPoint destEp = new IPEndPoint(IPAddress.Parse(Config.Instance.ReceiverMulticastAddress), Config.Instance.ReceiverMulticastPort);
 
-                    for (int i=0; i<100000; i++)
+                    for (int i=0; i<1; i++)
                     {
 
                         // digital out
-                        byte[] e403 = StaticMethods.Make_DIO403Down_Message();
-                        udpClient.Send(e403, e403.Length, destEp);
+                        //byte[] e403 = StaticMethods.Make_DIO403Down_Message();
+                        //udpClient.Send(e403, e403.Length, destEp);
 
                         // analog out
-                        byte[] e308 = StaticMethods.Make_A308Down_message();
-                        udpClient.Send(e308, e308.Length, destEp);
+                        {
+                            destEp = Config2.Instance.UeiCubes[0].SlotList[0].LocalEndPoint.ToIpEp();
+                            byte[] e308 = StaticMethods.Make_A308Down_message();
+                            udpClient.Send(e308, e308.Length, destEp);
+                        }
 #if notready
                         byte[] e430 = StaticMethods.Make_DIO430Down_Message();
                         udpClient.Send(e430, e308.Length, destEp);
 #endif
                         // serial out
-                        List<byte[]> e508 = StaticMethods.Make_SL508Down_Messages( i);
-                        foreach (byte [] msg in e508)
-                        {
-                            udpClient.Send(msg, msg.Length, destEp);
-                            System.Threading.Thread.Sleep(50);
-                        }
+                        //List<byte[]> e508 = StaticMethods.Make_SL508Down_Messages( i);
+                        //foreach (byte [] msg in e508)
+                        //{
+                        //    udpClient.Send(msg, msg.Length, destEp);
+                        //    System.Threading.Thread.Sleep(50);
+                        //}
 
                         
                     }

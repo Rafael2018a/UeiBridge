@@ -14,7 +14,7 @@ namespace UeiBridge
         //SL508InputDeviceManager _serialInputManger=null;
 
         //int _numberOfChannels = 1;
-        public SL508OutputDeviceManager()
+        public SL508OutputDeviceManager( DeviceSetup setup): base( setup)
         {
              _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
             _lastMessagesList = new List<byte[]>();
@@ -143,5 +143,9 @@ namespace UeiBridge
             //_logger.Warn($"Should send to RS: {Encoding.ASCII.GetString(m)} ... TBD");
         }
 
+        public override bool OpenDevice()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

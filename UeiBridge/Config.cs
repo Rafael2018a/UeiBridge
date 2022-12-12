@@ -29,21 +29,6 @@ namespace UeiBridge
     }
         
 
-    public class EndPoint
-    {
-        public string Address;
-        public int Port;
-
-        public EndPoint()
-        {
-        }
-
-        public EndPoint(string addressString, int port)
-        {
-            Address = addressString;
-            Port = port;
-        }
-    }
     public class SlotSetup
     {
         public string CubeIp;

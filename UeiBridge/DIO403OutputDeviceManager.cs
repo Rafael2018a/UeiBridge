@@ -9,7 +9,7 @@
         public override IConvert AttachedConverter => _attachedConverter;
         readonly IConvert _attachedConverter;
         string _channelsString;
-        public DIO403OutputDeviceManager()
+        public DIO403OutputDeviceManager( DeviceSetup setup): base( setup)
         {
             _channelsString = "Do0:2";
             _attachedConverter = StaticMethods.CreateConverterInstance( DeviceName);
@@ -25,7 +25,12 @@
             DeviceRequest dr = new DeviceRequest(OutputDevice.CancelTaskRequest, "");
             deviceManager.Enqueue(dr);
             System.Threading.Thread.Sleep(100);
-            CloseDevice();
+            CloseSession();
+        }
+
+        public override bool OpenDevice()
+        {
+            throw new System.NotImplementedException();
         }
     }
 }

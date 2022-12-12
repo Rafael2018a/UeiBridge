@@ -82,7 +82,7 @@ namespace UeiBridge
                 {
                     // convert byte[] to messageObject
                     string errorString;
-                    EthernetMessage messageObj = EthernetMessageFactory.CreateFromByteArray(incomingMessage, out errorString);
+                    EthernetMessage messageObj = EthernetMessage.CreateFromByteArray(incomingMessage, out errorString);
                     if (null == messageObj)
                     {
                         _logger.Warn(errorString);

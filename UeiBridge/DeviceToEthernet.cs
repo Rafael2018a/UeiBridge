@@ -39,7 +39,7 @@ namespace UeiBridge
 
                     byte[] payload = dr.OriginDevice.AttachedConverter.DeviceToEth(dr.Scan);
 
-                    EthernetMessage mo = EthernetMessageFactory.CreateFromDevice(payload, dr.OriginDevice.DeviceName);
+                    EthernetMessage mo = EthernetMessage.CreateFromDevice(payload, dr.OriginDevice.DeviceName);
                     byte[] bytes = mo?.ToByteArrayUp();
                     _destination.Send(bytes);
                 }
