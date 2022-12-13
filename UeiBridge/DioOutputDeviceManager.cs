@@ -3,6 +3,7 @@ using UeiDaq;
 
 namespace UeiBridge
 {
+    [Obsolete("not needed anymore")]
     abstract class DioOutputDeviceManager : OutputDevice
     {
         log4net.ILog _logger = StaticMethods.GetLogger();
@@ -34,7 +35,7 @@ namespace UeiBridge
             return true;
         }
 
-        protected override void HandleRequest(DeviceRequest dr)
+        protected void HandleRequest(DeviceRequest dr)
         {
             // init session, if needed.
             // =======================
@@ -66,6 +67,8 @@ namespace UeiBridge
                 //_numberOfChannels = _deviceSession.GetNumberOfChannels();
                 _deviceSession.ConfigureTimingForSimpleIO();
                 _writer = new DigitalWriter(_deviceSession.GetDataStream());
+
+                var c = _deviceSession.GetChannels();
             }
             catch (Exception ex)
             {

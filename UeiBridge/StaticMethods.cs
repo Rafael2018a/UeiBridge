@@ -109,7 +109,7 @@ namespace UeiBridge
                     }
                 }
             }
-            System.Diagnostics.Debug.Assert(attachedConverter != null);
+            
             return attachedConverter;
         }
 

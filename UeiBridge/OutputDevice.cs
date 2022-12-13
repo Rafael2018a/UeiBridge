@@ -9,25 +9,36 @@ using UeiDaq;
 /// </summary>
 namespace UeiBridge
 {
-    public abstract class OutputDevice : IEnqueue<DeviceRequest>, IDisposable, IEnqueue<byte[]>
+    public abstract class OutputDevice :  IDisposable, IEnqueue<byte[]> // IEnqueue<DeviceRequest>,
     {
-        BlockingCollection<DeviceRequest> _dataItemsQueue = new BlockingCollection<DeviceRequest>(100); // max 100 items
+        // abstracts properties
+        // -------------------
+        protected abstract string ChannelsString { get; }
+        public abstract string DeviceName { get; }
+        public abstract string InstanceName { get; }
+        protected abstract IConvert AttachedConverter { get; }
+
+        // abstract methods
+        // ----------------
+        public abstract bool OpenDevice();
+        protected abstract void HandleRequest(EthernetMessage request);
+        public abstract string GetFormattedStatus();
+        public abstract void Dispose();
+
+        // fields
+        // --------
         private BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
         log4net.ILog _logger = StaticMethods.GetLogger();
-        protected abstract string ChannelsString { get; }
         protected Session _deviceSession;
         protected string _caseUrl; // remove?
-        public abstract string DeviceName { get; }
-        public abstract IConvert AttachedConverter { get; }
         public static string CancelTaskRequest => "canceltoken"; // tbd. use standard CanceltationToken
-        public abstract bool OpenDevice();
-        protected DeviceSetup _deviceSetup;
+        protected DeviceSetup _deviceSetup; // from config
         protected bool _isDeviceReady=false;
+
         protected OutputDevice(DeviceSetup deviceSetup)
         {
             _deviceSetup = deviceSetup;
         }
-
         public virtual void CloseSession()
         {
             if (null != _deviceSession)
@@ -36,13 +47,6 @@ namespace UeiBridge
                 _deviceSession.Dispose();
             }
             _deviceSession = null;
-        }
-        protected abstract void HandleRequest(DeviceRequest request);
-        protected virtual void HandleRequest(EthernetMessage request) { }
-        public abstract string GetFormattedStatus();
-        public void Enqueue(DeviceRequest dr)
-        {
-            _dataItemsQueue.Add(dr);
         }
         public void Enqueue(byte[] m)
         {
@@ -58,14 +62,14 @@ namespace UeiBridge
             }
         }
 
-        public virtual void Start()
-        {
-            Task.Factory.StartNew(() => OutputDeviceHandler_Task());
-        }
+        //public virtual void Start1()
+        //{
+        //    Task.Factory.StartNew(() => OutputDeviceHandler_Task());
+        //}
 
         protected void OutputDeviceHandler_Task()
         {
-            _logger.Debug("OutputDeviceHandler_Task()");
+            _logger.Debug($"OutputDeviceHandler_Task {DeviceName}");
             // message loop
             while (false == _dataItemsQueue2.IsCompleted)
             {
@@ -76,12 +80,18 @@ namespace UeiBridge
                 //{
                 //    break;
                 //}
-                HandleRequest(incomingMessage);
+                if (_isDeviceReady)
+                {
+                    HandleRequest(incomingMessage);
+                }
+                else
+                {
+                    _logger.Warn($"Device {DeviceName} not ready. message dropped.");
+                }
             }
 
             _logger.Debug($"OutputDeviceHandler_Task end {this.GetType().ToString()}");
         }
-
-        public abstract void Dispose();
+                
     }
 }

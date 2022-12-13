@@ -1,0 +1,151 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="FullSignature">
+  <Class Name="UeiBridge.OutputDevice" Collapsed="true">
+    <Position X="11.25" Y="0.5" Width="1.5" />
+    <AssociationLine Name="_deviceSession" Type="UeiDaq.Session" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="12.688" Y="1.062" />
+        <Point X="12.688" Y="1.781" />
+        <Point X="14.25" Y="1.781" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AABAAAAAECAAAAJEACIGAIgAIAAQAgAgAAAIAAAAgAA=</HashCode>
+      <FileName>OutputDevice.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_deviceSession" />
+      <Field Name="_deviceSetup" />
+      <Property Name="AttachedConverter" />
+    </ShowAsAssociation>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="UeiBridge.AO308OutputDeviceManager" Collapsed="true">
+    <Position X="9" Y="5.75" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAEAAECAAAEZAAAAEAIAAIAAQAAAAAAAIAAAAgIA=</HashCode>
+      <FileName>AO308OutputDeviceManager.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_writer" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="UeiBridge.DIO403OutputDeviceManager" Collapsed="true">
+    <Position X="13" Y="5.75" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAEAAECAAAEZAAAAEAIAAIAAQAAAAAAAIAAAAgIA=</HashCode>
+      <FileName>DIO403OutputDeviceManager.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_writer" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="UeiBridge.SL508OutputDeviceManager" Collapsed="true">
+    <Position X="15.75" Y="5.75" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAABAAAAECAAAAZAAAAEAIQAJAAQAAAAAAAIAAAAgAA=</HashCode>
+      <FileName>SL508OutputDeviceManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="UeiDaq.AnalogScaledWriter" Collapsed="true">
+    <Position X="9" Y="7.25" Width="1.75" />
+    <TypeIdentifier />
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="UeiBridge.DeviceSetup" Collapsed="true">
+    <Position X="14.25" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAIQQAAAAQAAAAEIAAAAAAA=</HashCode>
+      <FileName>Config2.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="UeiDaq.Session" Collapsed="true">
+    <Position X="14.25" Y="1.5" Width="1.5" />
+    <TypeIdentifier />
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="UeiDaq.DigitalWriter" Collapsed="true">
+    <Position X="13" Y="7.25" Width="1.5" />
+    <TypeIdentifier />
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="UeiBridge.Config2" Collapsed="true">
+    <Position X="21" Y="1.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAEAAAAAAAAAAAQAAAQAACAAAAAAAAAQAAIAAAAAAA=</HashCode>
+      <FileName>Config2.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="UeiCubes" />
+      <Field Name="_instance" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="UeiBridge.CubeSetup" Collapsed="true">
+    <Position X="17" Y="1.25" Width="3" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAABAAAAAAAAAQAAAAAAEAAAAAAAAAEAAAAAAAA=</HashCode>
+      <FileName>Config2.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Field Name="DeviceSetupList" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="UeiBridge.Program" Collapsed="true">
+    <Position X="0.75" Y="1" Width="2.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAAgAAABACAAAAAEAAAAAAIAAAgAAAEAAABBAAAAI=</HashCode>
+      <FileName>Program.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="UeiBridge.PerDeviceObjects" Collapsed="true">
+    <Position X="5.25" Y="1" Width="2.5" />
+    <AssociationLine Name="_udpWriter" Type="UeiBridge.UdpWriter" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="5.75" Y="1.562" />
+        <Point X="5.75" Y="1.937" />
+        <Point X="5.812" Y="1.937" />
+        <Point X="5.812" Y="4" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="_outputDeviceManager" Type="UeiBridge.OutputDevice" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="7.75" Y="1.372" />
+        <Point X="8.125" Y="1.372" />
+        <Point X="8.125" Y="0.688" />
+        <Point X="11.25" Y="0.688" />
+      </Path>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAABgIAAAAAAAAAAAAAAAEAAAAAAAAAAAA=</HashCode>
+      <FileName>GlobalTypes.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Field Name="_udpReader" />
+      <Field Name="_udpWriter" />
+      <Field Name="_outputDeviceManager" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="UeiBridge.UdpReader" Collapsed="true">
+    <Position X="6.75" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AgAAACAAACgAAEQAAAAAAAAAIAAAAAAAACAAAAAAAQA=</HashCode>
+      <FileName>UdpReader.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="UeiBridge.UdpWriter" Collapsed="true">
+    <Position X="5" Y="4" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAACAAAAQAAEAAAAACIAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>UdpWriter.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Interface Name="UeiBridge.IConvert" Collapsed="true">
+    <Position X="14.25" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAEAAAIEAAAAAA=</HashCode>
+      <FileName>GlobalTypes.cs</FileName>
+    </TypeIdentifier>
+  </Interface>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

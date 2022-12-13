@@ -10,11 +10,13 @@ namespace UeiBridge
     
     class DIO430OutputDeviceManager: DioOutputDeviceManager
     {
-        public override string DeviceName =>  "DIO-430";
+        public override string DeviceName =>  "DIO-430 not yet ready";
         string _channelsString;
-        public override IConvert AttachedConverter => _attachedConverter;
+        protected override IConvert AttachedConverter => _attachedConverter;
 
         protected override string ChannelsString => _channelsString;
+
+        public override string InstanceName => throw new NotImplementedException();
 
         readonly IConvert _attachedConverter;
         public DIO430OutputDeviceManager( DeviceSetup setup): base(setup)
@@ -23,8 +25,12 @@ namespace UeiBridge
             _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
         }
 
+        protected override void HandleRequest(EthernetMessage request)
+        {
+            throw new NotImplementedException();
+        }
 
-        protected override void HandleRequest(DeviceRequest dr)
+        protected void HandleRequest(DeviceRequest dr)
         {
             // init session, if needed.
             // =======================
@@ -58,5 +64,6 @@ namespace UeiBridge
         {
             throw new NotImplementedException();
         }
+
     }
 }

@@ -106,7 +106,7 @@ namespace UeiBridge
             }
 
             //ur.Start();
-            _logger.Info("Press any key to stop...");
+            _logger.Info("Any key to exit...");
             Console.ReadKey();
             _logger.Info("Disposing....");
 
@@ -117,7 +117,7 @@ namespace UeiBridge
         }
 
         //List<List<OutputDevice>> _outputDeviceList;
-        List<List<DeviceObjects>> _DeviceObjectsTable;
+        List<List<PerDeviceObjects>> _DeviceObjectsTable;
         /// <summary>
         /// 
         /// </summary>
@@ -125,7 +125,7 @@ namespace UeiBridge
         {
             // prepare lists
             int noOfCubes = Config2.Instance.CubeUrlList.Length;
-            _DeviceObjectsTable = new List<List<DeviceObjects>>(new List<DeviceObjects>[noOfCubes]);
+            _DeviceObjectsTable = new List<List<PerDeviceObjects>>(new List<PerDeviceObjects>[noOfCubes]);
 
             // output device managers
             for (int cubeIndex = 0; cubeIndex < _DeviceObjectsTable.Count; cubeIndex++)
@@ -134,14 +134,14 @@ namespace UeiBridge
             }
 
             // activate output device managers
-            foreach ( List<DeviceObjects> sList in _DeviceObjectsTable)
+            foreach ( List<PerDeviceObjects> sList in _DeviceObjectsTable)
             {
-                foreach (DeviceObjects deviceObjects in sList)
+                foreach (PerDeviceObjects deviceObjects in sList)
                 {
                     //if (deviceObjects!=null)
                     {
                         Thread.Sleep(100);
-                        deviceObjects?._outputDevice.OpenDevice();
+                        deviceObjects?._outputDeviceManager.OpenDevice();
                         Thread.Sleep(100);
                         deviceObjects?._udpReader.Start();
                     }
@@ -156,23 +156,28 @@ namespace UeiBridge
         {
             List<UeiDaq.Device> realDeviceList = StaticMethods.GetDeviceList(cubeSetup.CubeUrl);
             // init outputDeviceList
-            _DeviceObjectsTable[cubeSetup.CubeNumber] = new List<DeviceObjects>(new DeviceObjects[realDeviceList.Count]);
+            _DeviceObjectsTable[cubeSetup.CubeNumber] = new List<PerDeviceObjects>(new PerDeviceObjects[realDeviceList.Count]);
             // populate outputDeviceList
             foreach( UeiDaq.Device realDevice in realDeviceList)
             {
                 int realSlot = realDevice.GetIndex();
-                DeviceSetup deviceSetup = Config2.Instance.UeiCubes[cubeSetup.CubeNumber].SlotList[realSlot]; // tbd: first 'DeviceSetup' in config is not neccesseraly in slot 0
+                DeviceSetup deviceSetup = Config2.Instance.UeiCubes[cubeSetup.CubeNumber].DeviceSetupList[realSlot]; // tbd: first 'DeviceSetup' in config is not neccesseraly in slot 0
                 deviceSetup.CubeUrl = cubeSetup.CubeUrl;
                 System.Diagnostics.Debug.Assert(realSlot == deviceSetup.SlotNumber);
                 System.Diagnostics.Debug.Assert(realDevice.GetDeviceName() == deviceSetup.DeviceName);
-
+                
                 OutputDevice od = StaticMethods.CreateOutputDeviceManager( deviceSetup);
-
-                UdpReader ur = new UdpReader(deviceSetup.LocalEndPoint.ToIpEp(), od, od.DeviceName);
-
-                _DeviceObjectsTable[cubeSetup.CubeNumber][realSlot] = new DeviceObjects(od, ur);
-
-                if (realSlot == 0) break;
+                if (null != od)
+                {
+                    System.Diagnostics.Debug.Assert(null != deviceSetup.LocalEndPoint);
+                    UdpReader ur = new UdpReader(deviceSetup.LocalEndPoint.ToIpEp(), od, od.InstanceName);
+                    _DeviceObjectsTable[cubeSetup.CubeNumber][realSlot] = new PerDeviceObjects(od, ur);
+                }
+                else
+                {
+                    _DeviceObjectsTable[cubeSetup.CubeNumber][realSlot] = null;
+                }
+                //if (realSlot == 2) break;
             }
         }
 
@@ -183,9 +188,9 @@ namespace UeiBridge
 
             while (true)
             {
-                foreach (var item in ProjectRegistry.Instance.OutputDevicesMap)
+                foreach (var item in _DeviceObjectsTable[0]) //ProjectRegistry.Instance.OutputDevicesMap)
                 {
-                    UeiLibrary.JsonStatusClass js = new UeiLibrary.JsonStatusClass(item.Value.DeviceName + " (Output)", item.Value.GetFormattedStatus() ); 
+                    UeiLibrary.JsonStatusClass js = new UeiLibrary.JsonStatusClass(item?._outputDeviceManager.DeviceName + " (Output)", item?._outputDeviceManager.GetFormattedStatus() ); 
                     string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
                     byte[] send_buffer = Encoding.ASCII.GetBytes(s);
                     uw.Send(send_buffer);
@@ -219,12 +224,13 @@ namespace UeiBridge
                     {
 
                         // digital out
-                        //byte[] e403 = StaticMethods.Make_DIO403Down_Message();
-                        //udpClient.Send(e403, e403.Length, destEp);
+                        destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[5].LocalEndPoint.ToIpEp();
+                        byte[] e403 = StaticMethods.Make_DIO403Down_Message();
+                        udpClient.Send(e403, e403.Length, destEp);
 
                         // analog out
                         {
-                            destEp = Config2.Instance.UeiCubes[0].SlotList[0].LocalEndPoint.ToIpEp();
+                            destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[0].LocalEndPoint.ToIpEp();
                             byte[] e308 = StaticMethods.Make_A308Down_message();
                             udpClient.Send(e308, e308.Length, destEp);
                         }

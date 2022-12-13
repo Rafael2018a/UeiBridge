@@ -12,18 +12,20 @@ namespace UeiBridge
     {
         AnalogScaledWriter _writer;
         log4net.ILog _logger = StaticMethods.GetLogger();
-
+        private string _instanceName;
         public override string DeviceName => "AO-308";
         string _channelsString;
-        public override IConvert AttachedConverter => _attachedConverter;
+        protected override IConvert AttachedConverter => _attachedConverter;
 
         protected override string ChannelsString => throw new NotImplementedException();
 
-        readonly IConvert _attachedConverter;
+        public override string InstanceName =>  _instanceName;
+
+        private IConvert _attachedConverter;
         public AO308OutputDeviceManager( DeviceSetup deviceSetup): base( deviceSetup)
         {
             _channelsString = "Ao0:7";
-            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
+            _instanceName = $"{DeviceName}/Slot{deviceSetup.SlotNumber}";
         }
 
 
@@ -32,21 +34,20 @@ namespace UeiBridge
 
             try
             {
+                _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
+
                 string cubeUrl = $"{_deviceSetup.CubeUrl}Dev{_deviceSetup.SlotNumber}/{_channelsString}";
 
                 _deviceSession = new Session();
-				//var minmax = Config.Instance.Analog_Out_MinMaxVoltage;
                 var c = _deviceSession.CreateAOChannel(cubeUrl, -Config.Instance.Analog_Out_PeekVoltage, Config.Instance.Analog_Out_PeekVoltage);
                 System.Diagnostics.Debug.Assert(c.GetMaximum() == Config.Instance.Analog_Out_PeekVoltage);
-                //_numberOfChannels = _deviceSession.GetNumberOfChannels();
                 _deviceSession.ConfigureTimingForSimpleIO();
                 _writer = new AnalogScaledWriter(_deviceSession.GetDataStream());
 
-                var range = _deviceSession.GetDevice().GetAORanges();
-
                 Task.Factory.StartNew(() => OutputDeviceHandler_Task());
 
-                _logger.Info($"{DeviceName}(Output) init success. { _deviceSession.GetNumberOfChannels()} channels. Range {range[0].minimum},{range[0].maximum}.");
+                var range = _deviceSession.GetDevice().GetAORanges();
+                _logger.Info($"{InstanceName} init success. { _deviceSession.GetNumberOfChannels()} output channels. Range {range[0].minimum},{range[0].maximum}V.");
 
                 _isDeviceReady = true;
             }
@@ -59,10 +60,6 @@ namespace UeiBridge
             return true;
         }
 
-        protected override void HandleRequest(DeviceRequest request)
-        {
-            throw new NotImplementedException();
-        }
         protected override void HandleRequest( EthernetMessage em)
         {
             //DeviceRequest dr;
@@ -133,8 +130,8 @@ namespace UeiBridge
             //t1.Dispose();
             //t1 = null;
             OutputDevice deviceManager = ProjectRegistry.Instance.OutputDevicesMap[DeviceName];
-            DeviceRequest dr = new DeviceRequest( OutputDevice.CancelTaskRequest, "");
-            deviceManager.Enqueue(dr);
+            //DeviceRequest dr = new DeviceRequest( OutputDevice.CancelTaskRequest, ""); // tbd. use regular CancelTaskRequest
+            //deviceManager.Enqueue(dr);
             System.Threading.Thread.Sleep(100);
             CloseSession();
         }

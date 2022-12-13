@@ -30,6 +30,7 @@ namespace UeiBridge
     /// <summary>
     /// (Immutable)
     /// </summary>
+    [Obsolete]
     public class DeviceRequest
     {
         readonly object _requestObject;
@@ -68,22 +69,22 @@ namespace UeiBridge
         public InputDevice OriginDevice { get => _originDevice; }
     }
 
-    class DeviceObjects
+    class PerDeviceObjects
     {
-        public InputDevice _inputDevice;
-        public OutputDevice _outputDevice;
+        public InputDevice _inputDeviceManager;
+        public OutputDevice _outputDeviceManager;
         public UdpReader _udpReader;
         public UdpWriter _udpWriter;
 
-        public DeviceObjects(InputDevice inputDevice, UdpWriter udpWriter) 
+        public PerDeviceObjects(InputDevice inputDevice, UdpWriter udpWriter) 
         {
-            _inputDevice = inputDevice;
+            _inputDeviceManager = inputDevice;
             _udpWriter = udpWriter;
         }
 
-        public DeviceObjects(OutputDevice outputDevice, UdpReader udpReader)
+        public PerDeviceObjects(OutputDevice outputDevice, UdpReader udpReader)
         {
-            _outputDevice = outputDevice;
+            _outputDeviceManager = outputDevice;
             _udpReader = udpReader;
         }
     }

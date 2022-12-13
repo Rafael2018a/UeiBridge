@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Text;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using UeiDaq;
 
 namespace UeiBridge
@@ -12,6 +13,7 @@ namespace UeiBridge
         List<byte[]> _lastMessagesList;
         //const string _termString = "\r\n";
         //SL508InputDeviceManager _serialInputManger=null;
+        private string _instanceName;
 
         //int _numberOfChannels = 1;
         public SL508OutputDeviceManager( DeviceSetup setup): base( setup)
@@ -26,17 +28,20 @@ namespace UeiBridge
 
         public override string DeviceName => "SL-508-892";
 
-        public override IConvert AttachedConverter => _attachedConverter;
+        protected override IConvert AttachedConverter => _attachedConverter;
 
         protected override string ChannelsString => throw new System.NotImplementedException();
+
+        public override string InstanceName => _instanceName;
 
         public override void Dispose()
         {
             // do nothing. this manager relays on 508InputManger
         }
-        public override void Start()
+        public void Start()
         {
-            base.Start();
+            Task.Factory.StartNew(() => OutputDeviceHandler_Task());
+            
             //_isDeviceReady = true;
         }
         public override string GetFormattedStatus()
@@ -81,8 +86,12 @@ namespace UeiBridge
 
         int _sentBytesAcc = 0;
         int _numberOfSentMessages = 0;
+        protected override void HandleRequest(EthernetMessage request)
+        {
+            throw new NotImplementedException();
+        }
 
-        protected override void HandleRequest(DeviceRequest request)
+        protected void HandleRequest(DeviceRequest request)
         {
             
             SL508InputDeviceManager _serialInputManager = ProjectRegistry.Instance.SerialInputDeviceManager;
@@ -145,7 +154,9 @@ namespace UeiBridge
 
         public override bool OpenDevice()
         {
-            throw new NotImplementedException();
+            _logger.Debug($"{this.DeviceName} OpenDevice()");
+            return false;
         }
+
     }
 }

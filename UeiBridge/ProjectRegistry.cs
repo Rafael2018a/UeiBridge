@@ -24,7 +24,7 @@ namespace UeiBridge
         /// <summary>
         /// "Ai-204": <instnace>
         /// </summary>
-        public Dictionary<string, OutputDevice> OutputDevicesMap { get => _outputDeviceMap; }
+        public Dictionary<string, OutputDevice> OutputDevicesMap { get => _outputDeviceMap; } // tbd: remove this
         public OutputDevice[] OutputDeviceList { get => _outputDeviceList; }
         public InputDevice[] InputDeviceList { get => _inputDeviceList; set => _inputDeviceList = value; }
         private OutputDevice[] _outputDeviceList = new OutputDevice[16]; // device by slot

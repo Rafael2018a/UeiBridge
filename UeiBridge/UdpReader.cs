@@ -19,11 +19,13 @@ namespace UeiBridge
         log4net.ILog _logger = StaticMethods.GetLogger();
         UdpClient _udpclient;
         string _instanceName;
+        IPEndPoint _msListeningiEp;
 
-        public UdpReader( IPEndPoint ep, IEnqueue<byte[]> consumer, string name)
+        public UdpReader( IPEndPoint listeninigEp, IEnqueue<byte[]> consumer, string instanceName)
         {
             this._datagramConsumer = consumer;
-            this._instanceName = name;
+            this._instanceName = instanceName;
+            this._msListeningiEp = listeninigEp;
         }
 
         internal void Start()
@@ -31,7 +33,7 @@ namespace UeiBridge
             IPAddress mcastAddress;
             if (IPAddress.TryParse(Config.Instance.ReceiverMulticastAddress, out mcastAddress))
             {
-                EstablishMulticastReceiver(mcastAddress, Config.Instance.ReceiverMulticastPort);
+                EstablishMulticastReceiver();
             }
             else
             {
@@ -39,7 +41,7 @@ namespace UeiBridge
             }
         }
         
-        public void EstablishMulticastReceiver(IPAddress multicastAddress, int multicastPort)//, IPAddress localIPaddress = null)
+        public void EstablishMulticastReceiver()
         {
             //int _port;
             //IPAddress _multicastIPaddress;
@@ -55,7 +57,7 @@ namespace UeiBridge
                 IPAddress localIP = IPAddress.Any;
 
                 // Create endpoints
-                IPEndPoint _remoteEndPoint = new IPEndPoint(multicastAddress, multicastPort);
+                //IPEndPoint _remoteEndPoint = new IPEndPoint(multicastAddress, multicastPort);
 
                 // Create and configure UdpClient
                 _udpclient = new UdpClient();
@@ -66,19 +68,19 @@ namespace UeiBridge
                 _udpclient.ExclusiveAddressUse = false;
 
                 // Bind
-                IPEndPoint _localEndPoint = new IPEndPoint(localIP, multicastPort);
+                IPEndPoint _localEndPoint = new IPEndPoint(localIP, _msListeningiEp.Port);
                 _udpclient.Client.Bind(_localEndPoint);
 
                 // join
-                _udpclient.JoinMulticastGroup(multicastAddress, localIP);
+                _udpclient.JoinMulticastGroup(_msListeningiEp.Address);
 
-                _logger.Info($"Multicast receiver - {this._instanceName} - esablished. Listening on {_remoteEndPoint}");
+                _logger.Info($"Multicast receiver - {this._instanceName} - esablished. Listening on {_msListeningiEp}");
                 // Start listening for incoming data
                 _udpclient.BeginReceive(new AsyncCallback(ReceivedCallback), null);
             }
             catch (SocketException ex)
             {
-                _logger.Warn( $"Faild to establish multicast receiver from group {multicastAddress}. {ex.Message}");
+                _logger.Warn( $"Faild to establish multicast receiver from group {_msListeningiEp}. {ex.Message}");
             }
         }
 

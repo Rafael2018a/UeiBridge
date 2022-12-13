@@ -96,8 +96,8 @@ namespace UeiBridge
                         //_logger.Debug($"Ethernet Message accepted. Device:{deviceName} Payload length:{messageObj.PayloadBytes.Length}");
                         OutputDevice deviceManager = ProjectRegistry.Instance.OutputDevicesMap[deviceName];
 
-                        DeviceRequest dreq = MakeDeviceRequest(messageObj, deviceManager.AttachedConverter);
-                        deviceManager.Enqueue(dreq);
+                        //DeviceRequest dreq = MakeDeviceRequest(messageObj, deviceManager.AttachedConverter);
+                        //deviceManager.Enqueue(dreq);
                     }
                     else
                     {

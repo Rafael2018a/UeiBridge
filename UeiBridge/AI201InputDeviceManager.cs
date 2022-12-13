@@ -34,6 +34,11 @@ namespace UeiBridge
                 //_numberOfChannels = _deviceSession.GetNumberOfChannels();
                 _deviceSession.ConfigureTimingForSimpleIO();
                 _reader = new AnalogScaledReader(_deviceSession.GetDataStream());
+
+//                _logger.Info($"{DeviceName}(Output) init success. { _deviceSession.GetNumberOfChannels()} channels. Range {range[0].minimum},{range[0].maximum}.");
+
+//                _isDeviceReady = true;
+
             }
             catch (Exception ex)
             {

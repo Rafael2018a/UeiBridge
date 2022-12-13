@@ -11,6 +11,7 @@ namespace UeiBridge
 {
     public class DeviceSetup
     {
+        [XmlAttribute("Slot")]
         public int SlotNumber;
         public string DeviceName;
         public EndPoint LocalEndPoint;
@@ -40,16 +41,21 @@ namespace UeiBridge
     }
     public class AI201100Setup : DeviceSetup
     {
-
+        public AI201100Setup( EndPoint destEndPoint, Device device) : base( null, destEndPoint, device)
+        {
+        }
+        protected AI201100Setup()
+        {
+        }
     }
-    public class DIO430Setup : DeviceSetup
+    public class DIO403Setup : DeviceSetup
     {
         //public Direction[] BitOctets;
-        public DIO430Setup()
+        public DIO403Setup()
         {
         }
 
-        public DIO430Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDaq.Device device) : base(localEndPoint, destEndPoint, device)
+        public DIO403Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDaq.Device device) : base(localEndPoint, destEndPoint, device)
         {
             //BitOctets = new Direction[4];
             //BitOctets[0] = Direction.input;
@@ -87,17 +93,17 @@ namespace UeiBridge
                 case "AO-308":
                     result = new AO308Setup( new EndPoint("227.3.1.10", 50035), ueiDevice);
                     break;
-                case "DIO-430":
-                    result = new DIO430Setup(new EndPoint("227.3.1.10", 50036), new EndPoint("227.2.1.10", 51036), ueiDevice); 
+                case "DIO-403":
+                    result = new DIO403Setup(new EndPoint("227.3.1.10", 50036), new EndPoint("227.2.1.10", 51037), ueiDevice); 
                     break;
-                case "AI-210-100":
-                    result = new AI201100Setup();
+                case "AI-201-100":
+                    result = new AI201100Setup(new EndPoint("227.2.1.10", 51038), ueiDevice);
                     break;
                 case "SL-508-892":
-                    result = new SL508892Setup(new EndPoint("227.3.1.10", 50036), new EndPoint("227.2.1.10", 51036), ueiDevice);
+                    result = new SL508892Setup(new EndPoint("227.3.1.10", 50039), new EndPoint("227.2.1.10", 51040), ueiDevice);
                     break;
                 default:
-                    Console.WriteLine($"Missing setup-class for device {ueiDevice.GetDeviceName()}");
+                    Console.WriteLine($"Config: Missing setup-class for device {ueiDevice.GetDeviceName()}");
                     result = new DeviceSetup(null, null, ueiDevice);
                     break;
             }
@@ -109,11 +115,12 @@ namespace UeiBridge
     public class CubeSetup
     {
         //const int tbd = 7;
-        public string CubeUrl;
+        [XmlAttribute("Url")]
+        public string CubeUrl { get; set; }
         public int CubeNumber;
-        public DeviceSetup[] SlotList;
+        public DeviceSetup[] DeviceSetupList;
 
-        List<Device> _deviceList;
+        private List<Device> _ueiDeviceList;
 
         public CubeSetup()
         {
@@ -122,16 +129,16 @@ namespace UeiBridge
         {
             CubeUrl = cubeUrl;
             CubeNumber = cubeNumber;
-            _deviceList = StaticMethods.GetDeviceList();
-            SlotList = new DeviceSetup[_deviceList.Count];
-            foreach (Device dev in _deviceList)
+            _ueiDeviceList = StaticMethods.GetDeviceList();
+            DeviceSetupList = new DeviceSetup[_ueiDeviceList.Count];
+            foreach (Device dev in _ueiDeviceList)
             {
-                SlotList[dev.GetIndex()] = ConfigFactory.CreateConfigInstance(dev);
+                DeviceSetupList[dev.GetIndex()] = ConfigFactory.CreateConfigInstance(dev);
             }
         }
     }
     [XmlInclude(typeof(AO308Setup))]
-    [XmlInclude(typeof(DIO430Setup))]
+    [XmlInclude(typeof(DIO403Setup))]
     [XmlInclude(typeof(AI201100Setup))]
     [XmlInclude(typeof(SL508892Setup))]
     public class Config2
@@ -145,7 +152,7 @@ namespace UeiBridge
         private Config2()
         {
             CubeUrlList[0] = "pdna://192.168.100.2/";
-            for(int i=0; i< UeiCubes.Length; i++)
+            for (int i = 0; i < UeiCubes.Length; i++)
             {
                 UeiCubes[i] = new CubeSetup("pdna://192.168.100.2/", i);
             }

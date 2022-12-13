@@ -12,9 +12,12 @@ namespace UeiBridge
 {
     public class SerialChannel
     {
+        [XmlAttribute("Port")]
         public string portname = "ComX";
+        
         public SerialPortMode mode = SerialPortMode.RS232;
-        public SerialPortSpeed baudrate = SerialPortSpeed.BitsPerSecond250000;
+        [XmlElement("Baud")]
+        public SerialPortSpeed Baudrate { get; set; }
 
         public SerialPortParity parity = SerialPortParity.None;
         public SerialPortStopBits stopbits = SerialPortStopBits.StopBits1;
@@ -22,6 +25,7 @@ namespace UeiBridge
         public SerialChannel(string portname)
         {
             this.portname = portname;
+            Baudrate = SerialPortSpeed.BitsPerSecond250000;
         }
         public SerialChannel()
         {
