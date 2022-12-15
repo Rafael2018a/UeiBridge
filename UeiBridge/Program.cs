@@ -60,7 +60,7 @@ namespace UeiBridge
 
             BuildProgramObjects();
 
-            var x = Config2.Instance;
+            //var x = Config2.Instance;
 
             // init downwards objects
             //EthernetToDevice e2d = new EthernetToDevice();
@@ -110,10 +110,26 @@ namespace UeiBridge
             Console.ReadKey();
             _logger.Info("Disposing....");
 
+            // dispose output devices
+            for (int cubeIndex = 0; cubeIndex < _DeviceObjectsTable.Count; cubeIndex++)
+            {
+                var dl = _DeviceObjectsTable[cubeIndex];
+                for (int slot = 0; slot<dl.Count; slot++)
+                {
+                    if (null != dl[slot])
+                    {
+                        dl[slot]._outputDeviceManager.Dispose();
+                    }
+                }
+            }
+
+
             // Dispose
             _inputDevices.ForEach(dev => dev.Dispose());
-            ProjectRegistry.Instance.OutputDevicesMap.ToList().ForEach( dev => dev.Value.Dispose());
-            
+            //ProjectRegistry.Instance.OutputDevicesMap.ToList().ForEach( dev => dev.Value.Dispose());
+
+            _logger.Info("Any key to exit...");
+            Console.ReadKey();
         }
 
         //List<List<OutputDevice>> _outputDeviceList;
@@ -234,7 +250,7 @@ namespace UeiBridge
                             byte[] e308 = StaticMethods.Make_A308Down_message();
                             udpClient.Send(e308, e308.Length, destEp);
                         }
-#if notready
+#if dontremove
                         byte[] e430 = StaticMethods.Make_DIO430Down_Message();
                         udpClient.Send(e430, e308.Length, destEp);
 #endif

@@ -46,7 +46,7 @@ namespace UeiBridge
 
             _deviceMap.Add(0, "AO-308");
             _deviceMap.Add(4, "DIO-403");
-            _deviceMap.Add(6, "DIO-430");
+            //_deviceMap.Add(6, "DIO-430");
             _deviceMap.Add(1, "AI-201-100");
             _deviceMap.Add(5, "SL-508-892");
 

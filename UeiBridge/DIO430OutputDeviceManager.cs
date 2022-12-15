@@ -8,13 +8,13 @@ using UeiDaq;
 namespace UeiBridge
 {
     
-    class DIO430OutputDeviceManager: DioOutputDeviceManager
+    class DIO430OutputDeviceManager: OutputDevice
     {
         public override string DeviceName =>  "DIO-430 not yet ready";
         string _channelsString;
         protected override IConvert AttachedConverter => _attachedConverter;
 
-        protected override string ChannelsString => _channelsString;
+        //protected override string ChannelsString => _channelsString;
 
         public override string InstanceName => throw new NotImplementedException();
 
@@ -30,21 +30,21 @@ namespace UeiBridge
             throw new NotImplementedException();
         }
 
-        protected void HandleRequest(DeviceRequest dr)
+        protected virtual void HandleRequest(DeviceRequest dr)
         {
             // init session, if needed.
             // =======================
             if ((null == _deviceSession) || (_caseUrl != dr.CaseUrl))
             {
-                CloseSession(); // if needed
-                OpenDevice(dr, DeviceName);
+                
+                //OpenDevice(dr, DeviceName);
             }
 
             // write to device
             // ===============
             UInt32[] req = dr.RequestObject as UInt32[];
             System.Diagnostics.Debug.Assert(req != null);// dr.RequestObject.GetType() == typeof(UInt32));
-            _writer.WriteSingleScanUInt32(  req );
+            //_writer.WriteSingleScanUInt32(  req );
 
         }
         public override string GetFormattedStatus()

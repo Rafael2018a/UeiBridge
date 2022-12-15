@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using UeiDaq;
 
 namespace UeiBridge
 {
@@ -10,30 +11,32 @@ namespace UeiBridge
     class DIO403OutputDeviceManager : OutputDevice //DioOutputDeviceManager
     {
         log4net.ILog _logger = StaticMethods.GetLogger();
-        protected override IConvert AttachedConverter => _attachedConverter; // tbd. remove this
+        //protected override IConvert AttachedConverter => _attachedConverter; // tbd. remove this
         private IConvert _attachedConverter;
         string _channelsString;
         string _instanceName;
+        Session _deviceSession;
         UeiDaq.DigitalWriter _writer;
         UInt16[] _lastScan;
         public DIO403OutputDeviceManager( DeviceSetup setup): base( setup)
         {
             _channelsString = "Do0:2"; // first 24 bits as 'out'
+            _instanceName = $"{DeviceName}/Slot{ setup.SlotNumber}";
         }
 
         public override string DeviceName => "DIO-403";
 
-        protected override string ChannelsString => _channelsString;
+        //protected override string ChannelsString => _channelsString;
 
         public override string InstanceName => _instanceName;
 
         public override void Dispose()
         {
-            OutputDevice deviceManager = ProjectRegistry.Instance.OutputDevicesMap[DeviceName];
+            //OutputDevice deviceManager = ProjectRegistry.Instance.OutputDevicesMap[DeviceName];
             //DeviceRequest dr = new DeviceRequest(OutputDevice.CancelTaskRequest, "");
             //deviceManager.Enqueue(dr);
-            System.Threading.Thread.Sleep(100);
-            CloseSession();
+            //System.Threading.Thread.Sleep(100);
+            base.Dispose();
         }
 
         public override bool OpenDevice()
@@ -74,7 +77,7 @@ namespace UeiBridge
 
         protected override void HandleRequest(EthernetMessage request)
         {
-            throw new NotImplementedException();
+            _logger.Debug("HandleRequest... tbd");
         }
     }
 }

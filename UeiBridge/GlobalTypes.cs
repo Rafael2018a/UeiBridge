@@ -102,15 +102,15 @@ namespace UeiBridge
         }
         public IPEndPoint ToIpEp() // tbd. make cast operator
         {
-            try
+            //try
             {
                 IPEndPoint ipep = new IPEndPoint(IPAddress.Parse(Address), Port);
                 return ipep;
             }
-            catch (Exception ex)
-            {
-                return null;
-            }
+            //catch (Exception ex)
+            //{
+            //    return null;
+            //}
         }
     }
 

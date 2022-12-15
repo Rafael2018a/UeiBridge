@@ -15,9 +15,10 @@ namespace UeiBridge
         private string _instanceName;
         public override string DeviceName => "AO-308";
         string _channelsString;
-        protected override IConvert AttachedConverter => _attachedConverter;
+        Session _deviceSession;
+        //protected override IConvert AttachedConverter => _attachedConverter;
 
-        protected override string ChannelsString => throw new NotImplementedException();
+        //protected override string ChannelsString => throw new NotImplementedException();
 
         public override string InstanceName =>  _instanceName;
 
@@ -27,11 +28,8 @@ namespace UeiBridge
             _channelsString = "Ao0:7";
             _instanceName = $"{DeviceName}/Slot{deviceSetup.SlotNumber}";
         }
-
-
         public override bool  OpenDevice()
         {
-
             try
             {
                 _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
@@ -129,12 +127,30 @@ namespace UeiBridge
         {
             //t1.Dispose();
             //t1 = null;
-            OutputDevice deviceManager = ProjectRegistry.Instance.OutputDevicesMap[DeviceName];
+            //OutputDevice deviceManager = ProjectRegistry.Instance.OutputDevicesMap[DeviceName];
             //DeviceRequest dr = new DeviceRequest( OutputDevice.CancelTaskRequest, ""); // tbd. use regular CancelTaskRequest
             //deviceManager.Enqueue(dr);
-            System.Threading.Thread.Sleep(100);
-            CloseSession();
+            //System.Threading.Thread.Sleep(100);
+            //CloseSession();
+
+            base.Dispose();
+
+            if (null != _writer)
+            {
+                _writer.Dispose();
+            }
+            if (null != _deviceSession)
+            {
+                _deviceSession.Stop();
+                _deviceSession.Dispose();
+            }
+
         }
+        public virtual void Dispose1()
+        {
+            _deviceSession = null;
+        }
+
 
     }
 }

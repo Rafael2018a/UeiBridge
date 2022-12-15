@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 using UeiDaq;
 
@@ -13,40 +14,25 @@ namespace UeiBridge
     {
         // abstracts properties
         // -------------------
-        protected abstract string ChannelsString { get; }
         public abstract string DeviceName { get; }
         public abstract string InstanceName { get; }
-        protected abstract IConvert AttachedConverter { get; }
 
         // abstract methods
         // ----------------
         public abstract bool OpenDevice();
         protected abstract void HandleRequest(EthernetMessage request);
         public abstract string GetFormattedStatus();
-        public abstract void Dispose();
-
+        
         // fields
         // --------
         private BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
         log4net.ILog _logger = StaticMethods.GetLogger();
-        protected Session _deviceSession;
         protected string _caseUrl; // remove?
-        public static string CancelTaskRequest => "canceltoken"; // tbd. use standard CanceltationToken
         protected DeviceSetup _deviceSetup; // from config
         protected bool _isDeviceReady=false;
-
         protected OutputDevice(DeviceSetup deviceSetup)
         {
             _deviceSetup = deviceSetup;
-        }
-        public virtual void CloseSession()
-        {
-            if (null != _deviceSession)
-            {
-                _deviceSession.Stop();
-                _deviceSession.Dispose();
-            }
-            _deviceSession = null;
         }
         public void Enqueue(byte[] m)
         {
@@ -61,25 +47,22 @@ namespace UeiBridge
                 _logger.Warn($"Incoming byte message error. {errorString}. message dropped.");
             }
         }
-
-        //public virtual void Start1()
-        //{
-        //    Task.Factory.StartNew(() => OutputDeviceHandler_Task());
-        //}
-
+        /// <summary>
+        /// Message loop
+        /// </summary>
         protected void OutputDeviceHandler_Task()
         {
-            _logger.Debug($"OutputDeviceHandler_Task {DeviceName}");
+            _logger.Debug($"OutputDeviceHandler_Task start. {InstanceName}");
             // message loop
             while (false == _dataItemsQueue2.IsCompleted)
             {
-                // get from q
-                EthernetMessage incomingMessage = _dataItemsQueue2.Take();
-                System.Diagnostics.Debug.Assert(null != incomingMessage);
-                //if (incomingMessage.RequestObject.ToString() == OutputDevice.CancelTaskRequest) // tbd. fix this
-                //{
-                //    break;
-                //}
+                EthernetMessage incomingMessage = _dataItemsQueue2.Take(); // get from q
+
+                if (null == incomingMessage) // end task token
+                {
+                    continue;
+                }
+
                 if (_isDeviceReady)
                 {
                     HandleRequest(incomingMessage);
@@ -89,9 +72,13 @@ namespace UeiBridge
                     _logger.Warn($"Device {DeviceName} not ready. message dropped.");
                 }
             }
-
-            _logger.Debug($"OutputDeviceHandler_Task end {this.GetType().ToString()}");
+            _logger.Debug($"OutputDeviceHandler_Task Fin. {InstanceName}");
         }
-                
+
+        public virtual void Dispose()
+        {
+            _dataItemsQueue2.Add(null); // end task token
+            _dataItemsQueue2.CompleteAdding();
+        }
     }
 }

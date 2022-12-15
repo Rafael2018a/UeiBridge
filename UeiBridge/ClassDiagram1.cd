@@ -2,38 +2,31 @@
 <ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="FullSignature">
   <Class Name="UeiBridge.OutputDevice" Collapsed="true">
     <Position X="11.25" Y="0.5" Width="1.5" />
-    <AssociationLine Name="_deviceSession" Type="UeiDaq.Session" FixedFromPoint="true" FixedToPoint="true">
-      <Path>
-        <Point X="12.688" Y="1.062" />
-        <Point X="12.688" Y="1.781" />
-        <Point X="14.25" Y="1.781" />
-      </Path>
-    </AssociationLine>
     <TypeIdentifier>
-      <HashCode>AABAAAAAECAAAAJEACIGAIgAIAAQAgAgAAAIAAAAgAA=</HashCode>
+      <HashCode>AABAAAAAECAAAAJEAAAGAAgAIAAQAAAgAAAIAAAAAAA=</HashCode>
       <FileName>OutputDevice.cs</FileName>
     </TypeIdentifier>
     <ShowAsAssociation>
-      <Field Name="_deviceSession" />
       <Field Name="_deviceSetup" />
-      <Property Name="AttachedConverter" />
     </ShowAsAssociation>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="UeiBridge.AO308OutputDeviceManager" Collapsed="true">
+  <Class Name="UeiBridge.AO308OutputDeviceManager">
     <Position X="9" Y="5.75" Width="2.25" />
     <TypeIdentifier>
-      <HashCode>AAAAAEAAECAAAEZAAAAEAIAAIAAQAAAAAAAIAAAAgIA=</HashCode>
+      <HashCode>AAAAAEAAECAAAEZAACAEAAAAIAAQAAAAAAAMAAAAAIA=</HashCode>
       <FileName>AO308OutputDeviceManager.cs</FileName>
     </TypeIdentifier>
     <ShowAsAssociation>
       <Field Name="_writer" />
+      <Field Name="_attachedConverter" />
+      <Field Name="_deviceSession" />
     </ShowAsAssociation>
   </Class>
   <Class Name="UeiBridge.DIO403OutputDeviceManager" Collapsed="true">
     <Position X="13" Y="5.75" Width="2.25" />
     <TypeIdentifier>
-      <HashCode>AAAAAEAAECAAAEZAAAAEAIAAIAAQAAAAAAAIAAAAgIA=</HashCode>
+      <HashCode>AAAAAEAAECAAAEZAACAEAAAAIAAQAAAAAAAIAAAAAIA=</HashCode>
       <FileName>DIO403OutputDeviceManager.cs</FileName>
     </TypeIdentifier>
     <ShowAsAssociation>
@@ -43,12 +36,12 @@
   <Class Name="UeiBridge.SL508OutputDeviceManager" Collapsed="true">
     <Position X="15.75" Y="5.75" Width="2.25" />
     <TypeIdentifier>
-      <HashCode>AAABAAAAECAAAAZAAAAEAIQAJAAQAAAAAAAIAAAAgAA=</HashCode>
+      <HashCode>AAABAAAAECAAAAZAAAAEAAQAJAAQAAAAAAAIAAAAAAA=</HashCode>
       <FileName>SL508OutputDeviceManager.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Class Name="UeiDaq.AnalogScaledWriter" Collapsed="true">
-    <Position X="9" Y="7.25" Width="1.75" />
+    <Position X="6.5" Y="6.75" Width="1.75" />
     <TypeIdentifier />
     <Lollipop Position="0.2" />
   </Class>
@@ -58,11 +51,6 @@
       <HashCode>AAAAAAAAAAAAAAAAAAAAAAIQQAAAAQAAAAEIAAAAAAA=</HashCode>
       <FileName>Config2.cs</FileName>
     </TypeIdentifier>
-  </Class>
-  <Class Name="UeiDaq.Session" Collapsed="true">
-    <Position X="14.25" Y="1.5" Width="1.5" />
-    <TypeIdentifier />
-    <Lollipop Position="0.2" />
   </Class>
   <Class Name="UeiDaq.DigitalWriter" Collapsed="true">
     <Position X="13" Y="7.25" Width="1.5" />
@@ -76,8 +64,8 @@
       <FileName>Config2.cs</FileName>
     </TypeIdentifier>
     <ShowAsAssociation>
-      <Field Name="UeiCubes" />
       <Field Name="_instance" />
+      <Field Name="UeiCubes" />
     </ShowAsAssociation>
   </Class>
   <Class Name="UeiBridge.CubeSetup" Collapsed="true">
@@ -97,22 +85,30 @@
       <FileName>Program.cs</FileName>
     </TypeIdentifier>
   </Class>
-  <Class Name="UeiBridge.PerDeviceObjects" Collapsed="true">
-    <Position X="5.25" Y="1" Width="2.5" />
-    <AssociationLine Name="_udpWriter" Type="UeiBridge.UdpWriter" FixedFromPoint="true" FixedToPoint="true">
-      <Path>
-        <Point X="5.75" Y="1.562" />
-        <Point X="5.75" Y="1.937" />
-        <Point X="5.812" Y="1.937" />
-        <Point X="5.812" Y="4" />
-      </Path>
-    </AssociationLine>
+  <Class Name="UeiBridge.PerDeviceObjects">
+    <Position X="5.25" Y="1" Width="1.5" />
     <AssociationLine Name="_outputDeviceManager" Type="UeiBridge.OutputDevice" FixedFromPoint="true" FixedToPoint="true">
       <Path>
-        <Point X="7.75" Y="1.372" />
-        <Point X="8.125" Y="1.372" />
-        <Point X="8.125" Y="0.688" />
+        <Point X="6.75" Y="1.125" />
+        <Point X="7.125" Y="1.125" />
+        <Point X="7.125" Y="0.688" />
         <Point X="11.25" Y="0.688" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="_udpReader" Type="UeiBridge.UdpReader" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="6.5" Y="1.868" />
+        <Point X="6.5" Y="3.625" />
+        <Point X="7.688" Y="3.625" />
+        <Point X="7.688" Y="4" />
+      </Path>
+    </AssociationLine>
+    <AssociationLine Name="_udpWriter" Type="UeiBridge.UdpWriter" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="5.55" Y="1.868" />
+        <Point X="5.55" Y="2.06" />
+        <Point X="5.812" Y="2.06" />
+        <Point X="5.812" Y="4" />
       </Path>
     </AssociationLine>
     <TypeIdentifier>
@@ -120,9 +116,10 @@
       <FileName>GlobalTypes.cs</FileName>
     </TypeIdentifier>
     <ShowAsAssociation>
+      <Field Name="_outputDeviceManager" />
       <Field Name="_udpReader" />
       <Field Name="_udpWriter" />
-      <Field Name="_outputDeviceManager" />
+      <Field Name="_inputDeviceManager" />
     </ShowAsAssociation>
   </Class>
   <Class Name="UeiBridge.UdpReader" Collapsed="true">
@@ -140,8 +137,21 @@
     </TypeIdentifier>
     <Lollipop Position="0.2" />
   </Class>
+  <Class Name="UeiDaq.Session" Collapsed="true">
+    <Position X="6.5" Y="8.25" Width="1.5" />
+    <TypeIdentifier />
+    <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="UeiBridge.InputDevice" Collapsed="true">
+    <Position X="4" Y="2.25" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AEAAAEAAECAAAAAEAGAEAIAAAAAAAAAAAAgIAAAAAAA=</HashCode>
+      <FileName>InputDevice.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
   <Interface Name="UeiBridge.IConvert" Collapsed="true">
-    <Position X="14.25" Y="0.5" Width="1.5" />
+    <Position X="6.5" Y="7.5" Width="1.5" />
     <TypeIdentifier>
       <HashCode>AAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAEAAAIEAAAAAA=</HashCode>
       <FileName>GlobalTypes.cs</FileName>

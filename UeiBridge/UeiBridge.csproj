@@ -86,8 +86,6 @@
     <Compile Include="Converters.cs" />
     <Compile Include="DIO403InputDeviceManager.cs" />
     <Compile Include="DIO403OutputDeviceManager.cs" />
-    <Compile Include="DIO430OutputDeviceManager.cs" />
-    <Compile Include="DioOutputDeviceManager.cs" />
     <Compile Include="InputDevice.cs" />
     <Compile Include="OutputDevice.cs" />
     <Compile Include="ProjectRegistry.cs" />

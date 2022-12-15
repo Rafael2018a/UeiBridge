@@ -9,7 +9,6 @@ namespace UeiBridge
         log4net.ILog _logger = StaticMethods.GetLogger();
         protected DigitalWriter _writer;
         
-
         protected bool OpenDevice( DeviceRequest dr, string _deviceName)
         {
             
@@ -41,7 +40,7 @@ namespace UeiBridge
             // =======================
             if ((null == _deviceSession) || (_caseUrl != dr.CaseUrl))
             {
-                CloseSession(); // if needed
+                
                 OpenDevice(dr, DeviceName);
             }
 

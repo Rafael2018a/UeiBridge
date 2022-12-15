@@ -7,6 +7,7 @@ namespace UeiBridge
     /// <summary>
     /// Convert byte[] to DeviceRequest objects and sends to to appropriate device manager.
     /// </summary>
+    [Obsolete]
     public class EthernetToDevice : IEnqueue<byte[]> 
     {
         BlockingCollection<byte[]> _dataItemsQueue = new BlockingCollection<byte[]>(100);

@@ -28,9 +28,9 @@ namespace UeiBridge
 
         public override string DeviceName => "SL-508-892";
 
-        protected override IConvert AttachedConverter => _attachedConverter;
+        //protected override IConvert AttachedConverter => _attachedConverter;
 
-        protected override string ChannelsString => throw new System.NotImplementedException();
+        //protected override string ChannelsString => throw new System.NotImplementedException();
 
         public override string InstanceName => _instanceName;
 
@@ -154,7 +154,7 @@ namespace UeiBridge
 
         public override bool OpenDevice()
         {
-            _logger.Debug($"{this.DeviceName} OpenDevice()");
+            _logger.Debug($"{this.DeviceName} OpenDevice() ..... tbd");
             return false;
         }
 

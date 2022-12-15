@@ -49,6 +49,7 @@ namespace UeiBridge
             return resultVector;
         }
     }
+    [Obsolete]
     class DIO430Convert : IConvert
     {
         public string DeviceName => "DIO-430";
