@@ -22,15 +22,12 @@ namespace UeiBridge
         public int SlotChannelNumber { get; set; }
         public byte[] PayloadBytes { get; set; }
         public byte[] HeaderBytes { get; set; }
-        public int _debugSerial { get; set; } // serial number of message
+        //public int _debugSerial { get; set; } // serial number of message
 
-        public static int PayloadOffset => 16;// _payloadOffset;
-
-        public static int CardTypeOffset => 5;// _cardTypeOffset;
-
-        public static int SlotChannelNumberOffset => 7;
-
-        public static int LengthOffset => 12;// _lengthOffset;
+        private const int _payloadOffset = 16;// _payloadOffset;
+        private const int _cardTypeOffset = 5;// _cardTypeOffset;
+        private const int _slotChannelNumberOffset = 7;
+        private const int _lengthOffset = 12;// _lengthOffset;
 
         /// <summary>
         /// Convert to current instance byte array (for sending through ethernet)
@@ -41,19 +38,19 @@ namespace UeiBridge
             if (!CheckValid())
                 return null;
 
-            byte[] messageBytes = new byte[PayloadOffset + PayloadBytes.Length];
+            byte[] messageBytes = new byte[_payloadOffset + PayloadBytes.Length];
             Array.Clear(messageBytes, 0, messageBytes.Length);
 
             // card type
-            messageBytes[CardTypeOffset] = (byte)CardType;
-            messageBytes[SlotChannelNumberOffset] = (byte)SlotChannelNumber;
+            messageBytes[_cardTypeOffset] = (byte)CardType;
+            messageBytes[_slotChannelNumberOffset] = (byte)SlotChannelNumber;
 
             // message length
             byte[] twobytes = BitConverter.GetBytes(messageBytes.Length);
-            Array.Copy(twobytes, 0, messageBytes, LengthOffset, twobytes.Length);
+            Array.Copy(twobytes, 0, messageBytes, _lengthOffset, twobytes.Length);
             
             // payload
-            Array.Copy(PayloadBytes, 0, messageBytes, PayloadOffset, PayloadBytes.Length);
+            Array.Copy(PayloadBytes, 0, messageBytes, _payloadOffset, PayloadBytes.Length);
 
             return messageBytes;
         }
@@ -117,19 +114,18 @@ namespace UeiBridge
                 return null;
             }
 
-
-            // Build message
+            // Build message struct
             // ============
             resutlMessage = new EthernetMessage();
             // header & payload
-            resutlMessage.HeaderBytes = new byte[EthernetMessage.PayloadOffset];
-            Array.Copy(byteMessage, resutlMessage.HeaderBytes, EthernetMessage.PayloadOffset);
-            resutlMessage.PayloadBytes = new byte[byteMessage.Length - EthernetMessage.PayloadOffset];
-            Array.Copy(byteMessage, EthernetMessage.PayloadOffset, resutlMessage.PayloadBytes, 0, byteMessage.Length - EthernetMessage.PayloadOffset);
+            resutlMessage.HeaderBytes = new byte[EthernetMessage._payloadOffset];
+            Array.Copy(byteMessage, resutlMessage.HeaderBytes, EthernetMessage._payloadOffset);
+            resutlMessage.PayloadBytes = new byte[byteMessage.Length - EthernetMessage._payloadOffset];
+            Array.Copy(byteMessage, EthernetMessage._payloadOffset, resutlMessage.PayloadBytes, 0, byteMessage.Length - EthernetMessage._payloadOffset);
 
             // type & slot
-            resutlMessage.CardType = byteMessage[EthernetMessage.CardTypeOffset];
-            resutlMessage.SlotChannelNumber = byteMessage[EthernetMessage.SlotChannelNumberOffset];
+            resutlMessage.CardType = byteMessage[EthernetMessage._cardTypeOffset];
+            resutlMessage.SlotChannelNumber = byteMessage[EthernetMessage._slotChannelNumberOffset];
 
             return resutlMessage;
         }
@@ -150,7 +146,7 @@ namespace UeiBridge
                 errorString = $"Byte message wrong preamble";
                 goto exit;
             }
-            UInt16 nominalLengh = BitConverter.ToUInt16(byteMessage, EthernetMessage.LengthOffset);
+            UInt16 nominalLengh = BitConverter.ToUInt16(byteMessage, EthernetMessage._lengthOffset);
             if (nominalLengh != byteMessage.Length)
             {
                 errorString = $"Byte message inconsistent length nominal:{nominalLengh}  actual:{byteMessage.Length}";
@@ -191,7 +187,7 @@ namespace UeiBridge
         public static EthernetMessage CreateEmpty(int cardType, int payloadLength)
         {
             EthernetMessage msg = new EthernetMessage();
-            msg.HeaderBytes = new byte[EthernetMessage.PayloadOffset];
+            msg.HeaderBytes = new byte[EthernetMessage._payloadOffset];
             msg.PayloadBytes = new byte[payloadLength];
             msg.CardType = cardType;
             return msg;

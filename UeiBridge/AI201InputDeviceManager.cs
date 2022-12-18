@@ -56,7 +56,7 @@ namespace UeiBridge
             {
                 // read from device
                 // ===============
-                _lastScan = _reader.ReadSingleScan(); // tbd. access violation
+                _lastScan = _reader.ReadSingleScan(); // access violation?
                 System.Diagnostics.Debug.Assert(_lastScan != null);
                 
                 System.Diagnostics.Debug.Assert(_lastScan.Length == _deviceSession.GetNumberOfChannels(), "wrong number of channels");
@@ -79,13 +79,13 @@ namespace UeiBridge
             }
             try
             {
-                string deviceIndex = StaticMethods.FindDeviceIndex(DeviceName);
+                string deviceIndex = StaticMethods.FindDeviceIndex( Config2.Instance.CubeUrlList[0], DeviceName);
                 if (null == deviceIndex)
                 {
                     _logger.Warn($"Can't find index for device {DeviceName}");
                     return;
                 }
-                string url1 = _caseUrl + deviceIndex + _channelsString;
+                string url1 = _cubeUrl + deviceIndex + _channelsString;
 
                 if (OpenDevice(url1))
                 {

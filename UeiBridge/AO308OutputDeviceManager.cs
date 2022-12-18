@@ -125,14 +125,6 @@ namespace UeiBridge
 
         public override void Dispose()
         {
-            //t1.Dispose();
-            //t1 = null;
-            //OutputDevice deviceManager = ProjectRegistry.Instance.OutputDevicesMap[DeviceName];
-            //DeviceRequest dr = new DeviceRequest( OutputDevice.CancelTaskRequest, ""); // tbd. use regular CancelTaskRequest
-            //deviceManager.Enqueue(dr);
-            //System.Threading.Thread.Sleep(100);
-            //CloseSession();
-
             base.Dispose();
 
             if (null != _writer)
@@ -144,7 +136,6 @@ namespace UeiBridge
                 _deviceSession.Stop();
                 _deviceSession.Dispose();
             }
-
         }
         public virtual void Dispose1()
         {

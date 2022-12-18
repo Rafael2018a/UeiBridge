@@ -68,13 +68,13 @@ namespace UeiBridge
 
             // init session, if needed.
             // =======================
-            string deviceIndex = StaticMethods.FindDeviceIndex(DeviceName);
+            string deviceIndex = StaticMethods.FindDeviceIndex( _cubeUrl, DeviceName);
             if (null == deviceIndex)
             {
                 _logger.Warn($"Can't find index for device {DeviceName}");
                 return;
             }
-            string deviceUrl = _caseUrl + deviceIndex + _channelsString;
+            string deviceUrl = _cubeUrl + deviceIndex + _channelsString;
 
             if (OpenDevice(deviceUrl))
             {

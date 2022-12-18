@@ -125,6 +125,10 @@ namespace UeiBridge
             _deviceSession.GetTiming().SetTimeout(5000); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
             //_deviceSession.ConfigureTimingForSimpleIO();
 
+            {
+                _deviceSession.GetChannels();
+            }
+
             for (int ch = 0; ch < numberOfChannels; ch++)
             {
                 System.Threading.Thread.Sleep(10);
@@ -218,14 +222,14 @@ namespace UeiBridge
         {
             // init session upon need
             // =======================
-            string deviceIndex = StaticMethods.FindDeviceIndex(DeviceName);
+            string deviceIndex = StaticMethods.FindDeviceIndex( _cubeUrl, DeviceName);
             if (null == deviceIndex)
             {
                 _logger.Warn($"Can't find index for device {DeviceName}");
                 return;
             }
 
-            string url1 = _caseUrl + deviceIndex + _channelsString;
+            string url1 = _cubeUrl + deviceIndex + _channelsString;
 
             if (OpenDevices(url1, DeviceName))
             {

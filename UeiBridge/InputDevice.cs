@@ -12,7 +12,7 @@ namespace UeiBridge
     {
 
         protected Session _deviceSession;
-        protected string _caseUrl;
+        protected string _cubeUrl;
         //protected string _deviceName;// = "AO-308";
         protected string _channelsString;
         //protected IConvert _attachedConverter;
@@ -21,11 +21,11 @@ namespace UeiBridge
 
         public abstract void Start();
         public abstract string GetFormattedStatus();
-        protected InputDevice(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl)
+        protected InputDevice(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string cubeUrl)
         {
             _targetConsumer = targetConsumer;
             _samplingInterval = samplingInterval;
-            _caseUrl = caseUrl;
+            _cubeUrl = cubeUrl;
         }
         public abstract string DeviceName { get; }
         protected System.Threading.Timer _samplingTimer;

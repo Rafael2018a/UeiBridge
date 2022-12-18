@@ -7,6 +7,9 @@ using System.Xml.Serialization;
 using System.IO;
 using UeiDaq;
 
+/// <summary>
+/// All classes in this file MUST NOT depend on any other module in the project
+/// </summary>
 namespace UeiBridge
 {
     public class DeviceSetup
@@ -84,7 +87,7 @@ namespace UeiBridge
 
     public static class ConfigFactory
     {
-        public static DeviceSetup CreateConfigInstance( Device ueiDevice)
+        public static DeviceSetup DeviceSetupFactory( Device ueiDevice)
         {
             DeviceSetup result=null;
             
@@ -118,9 +121,9 @@ namespace UeiBridge
         [XmlAttribute("Url")]
         public string CubeUrl { get; set; }
         public int CubeNumber;
-        public DeviceSetup[] DeviceSetupList;
+        public List<DeviceSetup> DeviceSetupList = new List<DeviceSetup>();
 
-        private List<Device> _ueiDeviceList;
+        //private List<Device> _ueiDeviceList;
 
         public CubeSetup()
         {
@@ -129,11 +132,19 @@ namespace UeiBridge
         {
             CubeUrl = cubeUrl;
             CubeNumber = cubeNumber;
-            _ueiDeviceList = StaticMethods.GetDeviceList();
-            DeviceSetupList = new DeviceSetup[_ueiDeviceList.Count];
-            foreach (Device dev in _ueiDeviceList)
+            //_ueiDeviceList = StaticMethods.GetDeviceList();
+            DeviceCollection devColl = new DeviceCollection(cubeUrl);
+            //DeviceSetupList = new DeviceSetup[devColl.Count];
+            foreach (Device dev in devColl)
             {
-                DeviceSetupList[dev.GetIndex()] = ConfigFactory.CreateConfigInstance(dev);
+                if (null == dev)
+                    continue;
+
+                DeviceSetupList.Add( ConfigFactory.DeviceSetupFactory(dev));
+                int li = DeviceSetupList.Count - 1;
+                var last = DeviceSetupList[li];
+                System.Diagnostics.Debug.Assert(last != null);
+                System.Diagnostics.Debug.Assert(li == dev.GetIndex());
             }
         }
     }
@@ -151,13 +162,12 @@ namespace UeiBridge
 
         private Config2()
         {
-            CubeUrlList[0] = "pdna://192.168.100.2/";
-            for (int i = 0; i < UeiCubes.Length; i++)
-            {
-                UeiCubes[i] = new CubeSetup("pdna://192.168.100.2/", i);
-            }
         }
-
+        private Config2(string cubeUrl)
+        {
+            UeiCubes[0] = new CubeSetup(cubeUrl, 0);
+            CubeUrlList[0] = cubeUrl;
+        }
         public static Config2 Instance
         {
             get
@@ -173,7 +183,7 @@ namespace UeiBridge
                 return _instance;
             }
         }
-        internal static Config2 LoadConfig()
+        private static Config2 LoadConfig()
         {
             string filename = "UeiSettings2.config";
             var serializer = new XmlSerializer(typeof(Config2));
@@ -197,7 +207,7 @@ namespace UeiBridge
             else
             {
                 // make fresh config and write it to file
-                resultConfig = new Config2();
+                resultConfig = new Config2("pdna://192.168.100.2/"); // default);
                 using (var writer = new StreamWriter(filename))
                 {
                     serializer.Serialize(writer, resultConfig);

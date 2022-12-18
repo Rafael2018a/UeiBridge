@@ -19,8 +19,8 @@
     </TypeIdentifier>
     <ShowAsAssociation>
       <Field Name="_writer" />
-      <Field Name="_attachedConverter" />
       <Field Name="_deviceSession" />
+      <Field Name="_attachedConverter" />
     </ShowAsAssociation>
   </Class>
   <Class Name="UeiBridge.DIO403OutputDeviceManager" Collapsed="true">
@@ -71,44 +71,28 @@
   <Class Name="UeiBridge.CubeSetup" Collapsed="true">
     <Position X="17" Y="1.25" Width="3" />
     <TypeIdentifier>
-      <HashCode>AAAAAAABAAAAAAAAAQAAAAAAEAAAAAAAAAEAAAAAAAA=</HashCode>
+      <HashCode>AAAAAAABAAAAAAAAAQAAAAAAAAAAAAAAAAEAAAAAAAA=</HashCode>
       <FileName>Config2.cs</FileName>
     </TypeIdentifier>
-    <ShowAsCollectionAssociation>
-      <Field Name="DeviceSetupList" />
-    </ShowAsCollectionAssociation>
   </Class>
   <Class Name="UeiBridge.Program" Collapsed="true">
     <Position X="0.75" Y="1" Width="2.75" />
     <TypeIdentifier>
-      <HashCode>AAAAAgAAABACAAAAAEAAAAAAIAAAgAAAEAAABBAAAAI=</HashCode>
+      <HashCode>BAAEAgAAABACAAAAAEAAAAAAIgAAgAAAEAAABBAAABI=</HashCode>
       <FileName>Program.cs</FileName>
     </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="PerDeviceObjects" />
+    </ShowAsAssociation>
   </Class>
-  <Class Name="UeiBridge.PerDeviceObjects">
+  <Class Name="UeiBridge.PerDeviceObjects" Collapsed="true">
     <Position X="5.25" Y="1" Width="1.5" />
     <AssociationLine Name="_outputDeviceManager" Type="UeiBridge.OutputDevice" FixedFromPoint="true" FixedToPoint="true">
       <Path>
-        <Point X="6.75" Y="1.125" />
-        <Point X="7.125" Y="1.125" />
+        <Point X="6.75" Y="1.054" />
+        <Point X="7.125" Y="1.054" />
         <Point X="7.125" Y="0.688" />
         <Point X="11.25" Y="0.688" />
-      </Path>
-    </AssociationLine>
-    <AssociationLine Name="_udpReader" Type="UeiBridge.UdpReader" FixedFromPoint="true" FixedToPoint="true">
-      <Path>
-        <Point X="6.5" Y="1.868" />
-        <Point X="6.5" Y="3.625" />
-        <Point X="7.688" Y="3.625" />
-        <Point X="7.688" Y="4" />
-      </Path>
-    </AssociationLine>
-    <AssociationLine Name="_udpWriter" Type="UeiBridge.UdpWriter" FixedFromPoint="true" FixedToPoint="true">
-      <Path>
-        <Point X="5.55" Y="1.868" />
-        <Point X="5.55" Y="2.06" />
-        <Point X="5.812" Y="2.06" />
-        <Point X="5.812" Y="4" />
       </Path>
     </AssociationLine>
     <TypeIdentifier>
@@ -116,10 +100,10 @@
       <FileName>GlobalTypes.cs</FileName>
     </TypeIdentifier>
     <ShowAsAssociation>
+      <Field Name="_inputDeviceManager" />
       <Field Name="_outputDeviceManager" />
       <Field Name="_udpReader" />
       <Field Name="_udpWriter" />
-      <Field Name="_inputDeviceManager" />
     </ShowAsAssociation>
   </Class>
   <Class Name="UeiBridge.UdpReader" Collapsed="true">
@@ -128,6 +112,7 @@
       <HashCode>AgAAACAAACgAAEQAAAAAAAAAIAAAAAAAACAAAAAAAQA=</HashCode>
       <FileName>UdpReader.cs</FileName>
     </TypeIdentifier>
+    <Lollipop Position="0.2" />
   </Class>
   <Class Name="UeiBridge.UdpWriter" Collapsed="true">
     <Position X="5" Y="4" Width="1.5" />
@@ -143,12 +128,19 @@
     <Lollipop Position="0.2" />
   </Class>
   <Class Name="UeiBridge.InputDevice" Collapsed="true">
-    <Position X="4" Y="2.25" Width="1.5" />
+    <Position X="2.75" Y="4.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AEAAAEAAECAAAAAEAGAEAIAAAAAAAAAAAAgIAAAAAAA=</HashCode>
+      <HashCode>AEAAAEAAECAACAAAAGAEAIAAAAAAAAAAAAgIAAAAAAA=</HashCode>
       <FileName>InputDevice.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" />
+  </Class>
+  <Class Name="UeiBridge.EthernetMessage">
+    <Position X="1" Y="6" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AEAAAAAAAAAAAwAAAIAQAgAAQEigABIAAgAEAAAaAAA=</HashCode>
+      <FileName>EthernetMessage.cs</FileName>
+    </TypeIdentifier>
   </Class>
   <Interface Name="UeiBridge.IConvert" Collapsed="true">
     <Position X="6.5" Y="7.5" Width="1.5" />

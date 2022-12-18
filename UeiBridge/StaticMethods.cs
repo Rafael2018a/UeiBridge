@@ -12,28 +12,20 @@ namespace UeiBridge
         static string _lastErrorMessage;
         public static string LastErrorMessage { get => _lastErrorMessage; }
 
-        public static List<Device> GetDeviceList()
+        public static List<Device> GetDeviceList( string cubeUrl)
         {
-            DeviceCollection devColl = new DeviceCollection(Config.Instance.DeviceUrl);
+            DeviceCollection devColl = new DeviceCollection(cubeUrl);
             List<Device> resultList = new List<Device>();
-            try
+            foreach (Device dev in devColl)
             {
-                foreach (Device dev in devColl)
+                if (dev != null)
                 {
-                    if (dev != null)
-                    {
-                        resultList.Add(dev);
-                    }
+                    resultList.Add(dev);
                 }
-            }
-            catch (Exception ex)
-            {
-                _lastErrorMessage = ex.Message;
-                return null;
             }
             return resultList;
         }
-        public static List<Device> GetDeviceList( string deviceUrl)
+        public static List<Device> GetDeviceList_notInUse( string deviceUrl)
         {
             DeviceCollection devColl = new DeviceCollection(deviceUrl);
             List<Device> resultList = new List<Device>();
@@ -58,9 +50,9 @@ namespace UeiBridge
         /// Example: input "DO-403", output "Dev0"
         /// return null if device not found
         /// </summary>
-        public static string FindDeviceIndex(string deviceName)
+        public static string FindDeviceIndex(string cubeUrl, string deviceName)
         {
-            List<Device> devList = GetDeviceList();
+            List<Device> devList = GetDeviceList( cubeUrl);
             var x = devList.Find(s => s.GetDeviceName() == deviceName);
             if (null != x)
             {
@@ -125,11 +117,29 @@ namespace UeiBridge
                 if (typeof(OutputDevice).IsAssignableFrom(theType))
                 {
                     OutputDevice oIinstnace = (OutputDevice)Activator.CreateInstance(theType, deviceSetup);
+                    System.Diagnostics.Debug.Assert(oIinstnace.DeviceName.Length > 1);
                     if (oIinstnace.DeviceName == deviceSetup.DeviceName)
                         return oIinstnace;
                 }
             }
             return null;
+        }
+        public static List<Type> GetDeviceManagerList<T1>()
+        {
+            List<Type> resultList = new List<Type>();
+            
+            foreach (Type theType in System.Reflection.Assembly.GetExecutingAssembly().GetTypes())
+            {
+                if (theType.IsInterface || theType.IsAbstract)
+                    continue;
+
+                // if theType is an OutputDevice class
+                if (typeof(T1).IsAssignableFrom(theType))
+                {
+                    resultList.Add(theType);
+                }
+            }
+            return resultList;
         }
         public static void f()
         {

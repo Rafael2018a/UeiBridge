@@ -13,7 +13,7 @@ namespace UeiBridge
     /// <summary>
     /// Reads datagrams from udp channel and sends them to 'consumer'.
     /// </summary>
-    public class UdpReader
+    public class UdpReader: IDisposable
     {
         private IEnqueue<byte[]> _datagramConsumer;
         log4net.ILog _logger = StaticMethods.GetLogger();
@@ -26,6 +26,7 @@ namespace UeiBridge
             this._datagramConsumer = consumer;
             this._instanceName = instanceName;
             this._msListeningiEp = listeninigEp;
+            System.Diagnostics.Debug.Assert(instanceName.Length > 1);
         }
 
         internal void Start()
@@ -125,7 +126,10 @@ namespace UeiBridge
             }
         }
 
-
+        public void Dispose()
+        {
+            _logger.Debug($"Dispose {_instanceName}...... tbd");
+        }
     }
 
 

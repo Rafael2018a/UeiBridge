@@ -11,13 +11,12 @@ namespace UeiBridge
     class DIO403OutputDeviceManager : OutputDevice //DioOutputDeviceManager
     {
         log4net.ILog _logger = StaticMethods.GetLogger();
-        //protected override IConvert AttachedConverter => _attachedConverter; // tbd. remove this
         private IConvert _attachedConverter;
         string _channelsString;
         string _instanceName;
         Session _deviceSession;
         UeiDaq.DigitalWriter _writer;
-        UInt16[] _lastScan;
+        UInt16[] _lastScan; // tbd
         public DIO403OutputDeviceManager( DeviceSetup setup): base( setup)
         {
             _channelsString = "Do0:2"; // first 24 bits as 'out'

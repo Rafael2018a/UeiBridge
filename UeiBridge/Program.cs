@@ -26,95 +26,55 @@ namespace UeiBridge
 
         private void Run()
         {
-            
+
             // print current version
             var v = System.Reflection.Assembly.GetEntryAssembly().GetName().Version.ToString();
-            _logger.Info($"UEI Bridge. Version {v} Device URL: {Config.Instance.DeviceUrl}");
+            _logger.Info($"UEI Bridge. Version {v} Device URL: {Config2.Instance.CubeUrlList[0]}");
 
-            // prepare device list
-            List<Device> deviceList = StaticMethods.GetDeviceList();
-            if (null == deviceList)
+            bool ok = DisplayDeviceList();
+            if (!ok)
             {
-                _logger.Error(StaticMethods.LastErrorMessage);
-                return;
-            }
-            if (0 == deviceList.Count)
-            {
-                _logger.Warn("No device connected");
+                _logger.Info("Any key to exit...");
                 Console.ReadKey();
                 return;
             }
 
-            // display device list
-            _logger.Info(" *** Device list:");
-            //deviceList.ForEach(dev => _logger.Info($"{dev.GetDeviceName()} as Dev{dev.GetIndex()}"));
-            foreach(var dev in deviceList)
-            {
-                _logger.Info($"{dev.GetDeviceName()} as Dev{dev.GetIndex()}");
-            }
-            _logger.Info(" *** End device list:");
-
             // prepare device dictionaries
             ProjectRegistry.Instance.Establish();
 
-
             BuildProgramObjects();
 
-            //var x = Config2.Instance;
-
-            // init downwards objects
-            //EthernetToDevice e2d = new EthernetToDevice();
-            //e2d.Start();
-            //UdpReader ur = new UdpReader(e2d, "from eth");
-            
-
-            // init upwards objects
-            //UdpWriter uw = new UdpWriter(Config.Instance.SenderMulticastAddress, Config.Instance.SenderMulticastPort, "to-aess", Config.Instance.SelectedNicForMcastSend);
-            //DeviceToEthernet d2e = new DeviceToEthernet(uw);
-            //d2e.Start();
-
-            // start input device managers
-            // ============================
-            //_inputDevices.Add(new DIO403InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
-            //_inputDevices.Add(new AI201InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl));
-            //ProjectRegistry.Instance.SerialInputDeviceManager = new SL508InputDeviceManager(d2e, new TimeSpan(0, 0, 0, 0, 10), Config.Instance.DeviceUrl);
-            //_inputDevices.Add( ProjectRegistry.Instance.SerialInputDeviceManager);
-
-            //// start output-device managers
-            //ProjectRegistry.Instance.OutputDevicesMap.ToList().ForEach((pair) => pair.Value.Start());
-
-            //// verify attached convertes
-            //if (false == ProjectRegistry.Instance.OutputDevicesMap.All(item => item.Value.AttachedConverter != null))
-            //{
-            //    _logger.Warn("One of output device managers does not have attached converter");
-            //}
-            //if (false == _inputDevices.All(item => item.AttachedConverter != null))
-            //{
-            //    _logger.Warn("One of input device managers does not have attached converter");
-            //}
-
-            // self tests
-            StartDownwardsTest();
 
             // publish status to StatusViewer
             Task.Factory.StartNew(() => PublishStatus_Task());
 
-            System.Threading.Thread.Sleep(1000);
-            for (int i = 0; i < _inputDevices.Count; i++)
-            {
-                _inputDevices[i].Start();
-            }
+            // self tests
+            StartDownwardsTest();
+
+            Thread.Sleep(1000);
+            //for (int i = 0; i < _inputDevices.Count; i++)
+            //{
+            //    _inputDevices[i].Start();
+            //}
 
             //ur.Start();
             _logger.Info("Any key to exit...");
             Console.ReadKey();
             _logger.Info("Disposing....");
 
-            // dispose output devices
+            DisposeProgramObjects();
+            
+
+            _logger.Info("Any key to exit...");
+            Console.ReadKey();
+        }
+
+        private void DisposeProgramObjest_old()
+        {
             for (int cubeIndex = 0; cubeIndex < _DeviceObjectsTable.Count; cubeIndex++)
             {
                 var dl = _DeviceObjectsTable[cubeIndex];
-                for (int slot = 0; slot<dl.Count; slot++)
+                for (int slot = 0; slot < dl.Count; slot++)
                 {
                     if (null != dl[slot])
                     {
@@ -122,14 +82,37 @@ namespace UeiBridge
                     }
                 }
             }
+        }
 
+        /// <summary>
+        /// Display devices in all cubes
+        /// </summary>
+        /// <returns>true on success</returns>
+        private bool DisplayDeviceList() // tbd: show for ALL cubes
+        {
+            // prepare device list
+            List<Device> deviceList = StaticMethods.GetDeviceList( Config2.Instance.CubeUrlList[0]);
+            if (null == deviceList)
+            {
+                _logger.Error(StaticMethods.LastErrorMessage);
+                return false;
+            }
+            if (0 == deviceList.Count)
+            {
+                _logger.Warn("No device connected");
+                return false;
+            }
 
-            // Dispose
-            _inputDevices.ForEach(dev => dev.Dispose());
-            //ProjectRegistry.Instance.OutputDevicesMap.ToList().ForEach( dev => dev.Value.Dispose());
+            // display device list
+            _logger.Info(" *** Device list:");
+            //deviceList.ForEach(dev => _logger.Info($"{dev.GetDeviceName()} as Dev{dev.GetIndex()}"));
+            foreach (var dev in deviceList)
+            {
+                _logger.Info($"{dev.GetDeviceName()} as Dev{dev.GetIndex()}");
+            }
+            _logger.Info(" *** End device list:");
 
-            _logger.Info("Any key to exit...");
-            Console.ReadKey();
+            return true;
         }
 
         //List<List<OutputDevice>> _outputDeviceList;
@@ -143,7 +126,7 @@ namespace UeiBridge
             int noOfCubes = Config2.Instance.CubeUrlList.Length;
             _DeviceObjectsTable = new List<List<PerDeviceObjects>>(new List<PerDeviceObjects>[noOfCubes]);
 
-            // output device managers
+            // build output device managers
             for (int cubeIndex = 0; cubeIndex < _DeviceObjectsTable.Count; cubeIndex++)
             {
                 BuildOutputDeviceManagersForCube(Config2.Instance.UeiCubes[cubeIndex]);
@@ -168,11 +151,26 @@ namespace UeiBridge
             
         }
 
+        void DisposeProgramObjects()
+        {
+            for (int cubeIndex = 0; cubeIndex < _DeviceObjectsTable.Count; cubeIndex++)
+            {
+                List<PerDeviceObjects> devList = _DeviceObjectsTable[cubeIndex];
+                for(int deviceIndex=0; deviceIndex < devList.Count; deviceIndex++)
+                {
+                    devList[deviceIndex]?._udpReader?.Dispose();
+                    devList[deviceIndex]?._outputDeviceManager.Dispose();
+                }
+            }
+        }
+
         private void BuildOutputDeviceManagersForCube(CubeSetup cubeSetup)
         {
             List<UeiDaq.Device> realDeviceList = StaticMethods.GetDeviceList(cubeSetup.CubeUrl);
+
             // init outputDeviceList
             _DeviceObjectsTable[cubeSetup.CubeNumber] = new List<PerDeviceObjects>(new PerDeviceObjects[realDeviceList.Count]);
+
             // populate outputDeviceList
             foreach( UeiDaq.Device realDevice in realDeviceList)
             {
@@ -296,7 +294,12 @@ namespace UeiBridge
             return eth;
         }
 
-        
-
+        internal PerDeviceObjects PerDeviceObjects
+        {
+            get => default;
+            set
+            {
+            }
+        }
     }
 }

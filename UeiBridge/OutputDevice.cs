@@ -63,6 +63,15 @@ namespace UeiBridge
                     continue;
                 }
 
+                // verify incoming message
+                // slot number
+                if (incomingMessage.SlotNumber != this._deviceSetup.SlotNumber)
+                {
+                    _logger.Warn($"{InstanceName} wrong device number. incoming message dropped.");
+                }
+                
+                // device name
+
                 if (_isDeviceReady)
                 {
                     HandleRequest(incomingMessage);

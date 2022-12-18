@@ -24,6 +24,7 @@ namespace UeiBridge
             {
                 _lastMessagesList.Add(null);
             }
+            _instanceName = $"{DeviceName}/Slot{ setup.SlotNumber}";
         }
 
         public override string DeviceName => "SL-508-892";
