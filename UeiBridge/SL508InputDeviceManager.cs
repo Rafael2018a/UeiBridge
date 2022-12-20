@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UeiDaq;
+using UeiBridgeTypes;
 
 namespace UeiBridge
 {
@@ -28,8 +29,12 @@ namespace UeiBridge
         public List<SerialWriter> SerialWriterList => _serialWriterList;
         public bool InDisposeState => _InDisposeState;
 
+        public override string InstanceName => _instanceName; 
+
+        private Session _serialSession;
+        string _instanceName;
         //public SL508InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
-        public SL508InputDeviceManager( ISend<SendObject> targetConsumer, DeviceSetup setup): base(targetConsumer, setup)
+        public SL508InputDeviceManager( ISend<SendObject> targetConsumer, DeviceSetup setup, Session serialSession): base(targetConsumer, setup)
         {
             _serialPorts = new List<SerialPort>();
             _serialReaderList = new List<SerialReader>();
@@ -40,6 +45,9 @@ namespace UeiBridge
             {
                 _lastMessagesList.Add(null);
             }
+            System.Diagnostics.Debug.Assert(null != serialSession);
+            _serialSession = serialSession;
+            _instanceName = $"{DeviceName}/{setup.SlotNumber}";
         }
 
         public SL508InputDeviceManager() : base(null, null)
@@ -223,7 +231,7 @@ namespace UeiBridge
             }
 
         }
-        public override void Start()
+        public override void OpenDevice()
         {
             // init session upon need
             // =======================
@@ -245,7 +253,39 @@ namespace UeiBridge
                 _logger.Warn($"Device {DeviceName} init fail");
                 return;
             }
-#if dont
+        }
+        public override void Dispose()
+        {
+            _InDisposeState = true;
+            System.Threading.Thread.Sleep(500);
+            CloseDevices();
+        }
+
+        private void CloseDevices()
+        {
+            _deviceSession.Stop();
+
+            for (int i = 0; i < _serialReaderList.Count; i++)
+            {
+                _serialReaderList[i].Dispose();
+                _serialReaderList[i] = null;
+            }
+            for (int i = 0; i < _serialWriterList.Count; i++)
+            {
+                if (null != _serialWriterList[i])
+                {
+                    _serialWriterList[i].Dispose();
+                    _serialWriterList[i] = null;
+                }
+            }
+
+            _deviceSession.Dispose();
+            _deviceSession = null;
+
+        }
+
+#if asyncSerial
+
             System.Threading.Tasks.Task.Factory.StartNew(() =>
             {
                 while (true)
@@ -267,9 +307,7 @@ namespace UeiBridge
                 }
             }
             );
-#endif
-        }
-#if asyncSerial
+
         void ReadChannelsTask()
         {
             // do read for each channel
@@ -306,34 +344,6 @@ namespace UeiBridge
 
         }
 #endif
-        public override void Dispose()
-        {
-            _InDisposeState = true;
-            System.Threading.Thread.Sleep(500);
-            CloseDevices();
-        }
 
-        private void CloseDevices()
-        {
-            _deviceSession.Stop();
-
-            for (int i = 0; i < _serialReaderList.Count; i++)
-            {
-                _serialReaderList[i].Dispose();
-                _serialReaderList[i] = null;
-            }
-            for (int i = 0; i < _serialWriterList.Count; i++)
-            {
-                if (null != _serialWriterList[i])
-                {
-                    _serialWriterList[i].Dispose();
-                    _serialWriterList[i] = null;
-                }
-            }
-
-            _deviceSession.Dispose();
-            _deviceSession = null;
-
-        }
     }
 }

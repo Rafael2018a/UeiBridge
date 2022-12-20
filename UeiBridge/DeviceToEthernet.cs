@@ -4,9 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UeiBridgeTypes;
 
 namespace UeiBridge
 {
+    [Obsolete]
     class DeviceToEthernet : IEnqueue<ScanResult>
     {
         ISend<byte[]> _destination;

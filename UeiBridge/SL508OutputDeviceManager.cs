@@ -3,6 +3,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UeiDaq;
+using UeiBridgeTypes;
 
 namespace UeiBridge
 {
@@ -15,9 +16,9 @@ namespace UeiBridge
         //SL508InputDeviceManager _serialInputManger=null;
         private string _instanceName;
         public override string DeviceName => "SL-508-892";
-
+        Session _serialSession;
         //int _numberOfChannels = 1;
-        public SL508OutputDeviceManager( DeviceSetup setup): base( setup)
+        public SL508OutputDeviceManager( DeviceSetup setup, Session serialSession): base( setup)
         {
              _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
             _lastMessagesList = new List<byte[]>();
@@ -26,6 +27,8 @@ namespace UeiBridge
                 _lastMessagesList.Add(null);
             }
             _instanceName = $"{DeviceName}/Slot{ setup.SlotNumber}/Output";
+            _serialSession = serialSession;
+            System.Diagnostics.Debug.Assert(null != _serialSession);
         }
         public SL508OutputDeviceManager(): base(null)
         { }

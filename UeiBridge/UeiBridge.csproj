@@ -88,6 +88,7 @@
     <Compile Include="DIO403OutputDeviceManager.cs" />
     <Compile Include="InputDevice.cs" />
     <Compile Include="OutputDevice.cs" />
+    <Compile Include="PerDeviceObjects.cs" />
     <Compile Include="ProjectRegistry.cs" />
     <Compile Include="EthernetToDevice.cs" />
     <Compile Include="GlobalTypes.cs" />

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using UeiDaq;
+using UeiBridgeTypes;
 
 /// <summary>
 /// All files in project might refer to this file.
@@ -10,31 +11,34 @@ namespace UeiBridge
 {
     public abstract class InputDevice : IDeviceManager, IDisposable
     {
+        // abstarcts
+        public abstract IConvert AttachedConverter { get; }
+        public abstract string GetFormattedStatus();
+        public abstract void OpenDevice();
+        public abstract string DeviceName { get; }
+        public abstract string InstanceName { get; }
 
+        // protected
         protected Session _deviceSession;
         protected string _cubeUrl;
-        //protected string _deviceName;// = "AO-308";
         protected string _channelsString;
-        //protected IConvert _attachedConverter;
-        public abstract IConvert AttachedConverter { get; }
         protected readonly ISend<SendObject> _targetConsumer;
+        protected System.Threading.Timer _samplingTimer;
+        protected TimeSpan _samplingInterval;
+
         DeviceSetup _deviceSetup;
-        public abstract void Start();
-        public abstract string GetFormattedStatus();
+
         //protected InputDevice(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string cubeUrl)
         //{
         //    _targetConsumer = targetConsumer;
         //    _samplingInterval = samplingInterval;
         //    _cubeUrl = cubeUrl;
         //}
-        protected InputDevice( ISend<SendObject> targetConsumer, DeviceSetup setup)
+        protected InputDevice(ISend<SendObject> targetConsumer, DeviceSetup setup)
         {
             _targetConsumer = targetConsumer;
             _deviceSetup = setup;
         }
-        public abstract string DeviceName { get; }
-        protected System.Threading.Timer _samplingTimer;
-        protected TimeSpan _samplingInterval;
         public virtual void CloseDevice()
         {
             if (null != _deviceSession)

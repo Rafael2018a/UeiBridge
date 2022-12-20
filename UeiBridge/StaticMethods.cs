@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UeiDaq;
+using UeiBridgeTypes;
 
 namespace UeiBridge
 {
@@ -206,6 +207,34 @@ namespace UeiBridge
             }
             //v1.ToList<SerialPortMode>().ForEach(item => { sb.Append(item); sb.Append("\n"); });
             return sb.ToString();
+        }
+
+        public static Session CreateSerialSession( SL508892Setup deviceSetup, string baseUrl)
+        {
+            System.Diagnostics.Debug.Assert(null != deviceSetup);
+            Session serialSession = new Session();
+            
+            foreach (var channel in deviceSetup.Channels)
+            {
+                string finalUrl = baseUrl + channel.portname.ToString();
+                //string finalUrl = baseUrl + "Com0,1";
+                var port = serialSession.CreateSerialPort(finalUrl,
+                                    SerialPortMode.RS232,
+                                    SerialPortSpeed.BitsPerSecond250000,
+                                    SerialPortDataBits.DataBits8,
+                                    SerialPortParity.None,
+                                    SerialPortStopBits.StopBits1,
+                                    "");
+                //_serialPorts.Add(port);
+            }
+
+            int numberOfChannels = serialSession.GetNumberOfChannels();
+            System.Diagnostics.Debug.Assert(numberOfChannels == Config.Instance.SerialChannels.Length);
+
+            serialSession.ConfigureTimingForMessagingIO(1000, 100.0);
+            serialSession.GetTiming().SetTimeout(5000); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
+
+            return serialSession;
         }
 
     }

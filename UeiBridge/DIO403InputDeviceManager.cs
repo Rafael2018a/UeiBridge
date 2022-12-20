@@ -1,5 +1,7 @@
 ﻿using System;
 using UeiDaq;
+using UeiBridgeTypes;
+
 
 namespace UeiBridge
 {
@@ -15,6 +17,9 @@ namespace UeiBridge
         IConvert _attachedConverter;
         public override IConvert AttachedConverter => _attachedConverter;
 
+        public override string InstanceName => _instanceName; 
+
+        string _instanceName;
         //public DIO403InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
         //{
         //    _channelsString = "Di3:5";
@@ -25,6 +30,7 @@ namespace UeiBridge
         {
             _channelsString = "Di3:5";
             _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
+            _instanceName = $"{DeviceName}/{setup.SlotNumber}";
         }
         public DIO403InputDeviceManager():base(null, null) // must have default const.
         {
@@ -68,7 +74,7 @@ namespace UeiBridge
                 _logger.Error(ex.Message);
             }
         }
-        public override void Start()
+        public override void OpenDevice()
         {
             if ((_deviceSession != null) && _deviceSession.IsRunning())
             {
@@ -119,6 +125,5 @@ namespace UeiBridge
             }
             return sb.ToString();
         }
-
     }
 }

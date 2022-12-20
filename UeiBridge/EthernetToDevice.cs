@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
-
+using UeiBridgeTypes;
 namespace UeiBridge
 {
     /// <summary>

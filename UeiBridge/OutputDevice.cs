@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using UeiDaq;
+using UeiBridgeTypes;
 
 /// <summary>
 /// All files in project might refer to this file.

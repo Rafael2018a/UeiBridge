@@ -9,6 +9,7 @@ using System.Net;
 using System.Net.Sockets;
 using log4net;
 using UeiDaq;
+using UeiBridgeTypes;
 
 namespace UeiBridge
 {
@@ -121,7 +122,7 @@ namespace UeiBridge
             foreach (var cube in Config2.Instance.UeiCubes)
             {
                 // init outputDeviceList
-                List<UeiDaq.Device> realDeviceList = StaticMethods.GetDeviceList( cube.CubeUrl);
+                List<UeiDaq.Device> realDeviceList = StaticMethods.GetDeviceList(cube.CubeUrl);
                 _deviceObjectsTable[cube.CubeNumber] = new List<PerDeviceObjects>(new PerDeviceObjects[realDeviceList.Count]);
 
                 CreateDownwardsObjects(cube, _deviceObjectsTable);
@@ -139,16 +140,22 @@ namespace UeiBridge
 
         private static void ActivateProgramObjects(List<PerDeviceObjects> cube)
         {
-            // activate downward objects
+            // activate downward (output) objects
             foreach (PerDeviceObjects deviceObjects in cube)
             {
-                if (null != deviceObjects)
-                {
-                    Thread.Sleep(100);
-                    deviceObjects?._outputDeviceManager?.OpenDevice();
-                    Thread.Sleep(100);
-                    deviceObjects?._udpReader?.Start();
-                }
+                Thread.Sleep(100);
+                deviceObjects?._outputDeviceManager?.OpenDevice();
+                Thread.Sleep(100);
+                deviceObjects?._udpReader?.Start();
+            }
+
+            // activate upward (input) objects
+            foreach (PerDeviceObjects deviceObjects in cube)
+            {
+                Thread.Sleep(100);
+                deviceObjects?._inputDeviceManager?.OpenDevice();
+                //Thread.Sleep(100);
+                //deviceObjects?._udpWriter?.Start();
             }
         }
 
@@ -185,27 +192,47 @@ namespace UeiBridge
                 if (null == devType)
                     continue;
 
-                OutputDevice outDev = (OutputDevice)Activator.CreateInstance(devType, deviceSetup);
-                if (null != outDev)
+                Session serialSession = null;
+                OutputDevice outDev;
+                if (devType.Name.StartsWith("SL508"))
                 {
-                    System.Diagnostics.Debug.Assert(null != deviceSetup.LocalEndPoint);
-                    UdpReader ureader = new UdpReader(deviceSetup.LocalEndPoint.ToIpEp(), outDev, outDev.InstanceName);
                     if (null == deviceObjectsTable[cubeSetup.CubeNumber][realSlot])
                     {
-                        deviceObjectsTable[cubeSetup.CubeNumber][realSlot] = new PerDeviceObjects(outDev, ureader);
+                        serialSession = StaticMethods.CreateSerialSession(deviceSetup as SL508892Setup, cubeSetup.CubeUrl);
                     }
                     else
-                    {
-                        deviceObjectsTable[cubeSetup.CubeNumber][realSlot].NewObjects(outDev, ureader);
+                    { 
+                        serialSession = deviceObjectsTable[cubeSetup.CubeNumber][realSlot].SerialSession; 
                     }
+                    outDev = (OutputDevice)Activator.CreateInstance(devType, deviceSetup, serialSession);
                 }
                 else
                 {
-                    //_logger.Warn($"null device {deviceSetup.DeviceName}");
-                    //deviceObjectsTable[cubeSetup.CubeNumber][realSlot] = null;
+                    outDev = (OutputDevice)Activator.CreateInstance(devType, deviceSetup);
                 }
+
+                System.Diagnostics.Debug.Assert(null != outDev);
+                System.Diagnostics.Debug.Assert(null != deviceSetup.LocalEndPoint);
+
+                UdpReader ureader = new UdpReader(deviceSetup.LocalEndPoint.ToIpEp(), outDev, outDev.InstanceName);
+                if (null == deviceObjectsTable[cubeSetup.CubeNumber][realSlot])
+                {
+                    deviceObjectsTable[cubeSetup.CubeNumber][realSlot] = new PerDeviceObjects(outDev, ureader);
+                    deviceObjectsTable[cubeSetup.CubeNumber][realSlot].SerialSession = serialSession;
+                }
+                else
+                {
+                    deviceObjectsTable[cubeSetup.CubeNumber][realSlot].NewObjects(outDev, ureader);
+                }
+
             }
         }
+
+        /// <summary>
+        /// Creaete input-device managers and udp-writers
+        /// </summary>
+        /// <param name="cubeSetup"></param>
+        /// <param name="deviceObjectsTable"></param>
         private static void CreateUpwardsObjects(CubeSetup cubeSetup, List<List<PerDeviceObjects>> deviceObjectsTable)
         {
             List<UeiDaq.Device> realDeviceList = StaticMethods.GetDeviceList(cubeSetup.CubeUrl);
@@ -222,17 +249,26 @@ namespace UeiBridge
                 Type devType = StaticMethods.GetDeviceManagerType<InputDevice>(deviceSetup.DeviceName);
                 if (null == devType)
                     continue;
+
                 string instanceName = $"{realDevice.GetDeviceName()}/Slot{deviceSetup.SlotNumber}";
                 UdpWriter uWriter = new UdpWriter(instanceName, null);
+                InputDevice inDev;
+                if (devType.Name.StartsWith("SL508"))
+                {
+                    inDev = (InputDevice)Activator.CreateInstance(devType, uWriter, deviceSetup, deviceObjectsTable[cubeSetup.CubeNumber][realSlot].SerialSession);
+                }
+                else
+                {
+                    inDev = (InputDevice)Activator.CreateInstance(devType, uWriter, deviceSetup);
+                }
 
-                InputDevice inDev = (InputDevice)Activator.CreateInstance( devType, uWriter, deviceSetup);
                 if (null == deviceObjectsTable[cubeSetup.CubeNumber][realSlot])
                 {
                     deviceObjectsTable[cubeSetup.CubeNumber][realSlot] = new PerDeviceObjects(inDev, uWriter);
                 }
                 else
                 {
-                    deviceObjectsTable[cubeSetup.CubeNumber][realSlot].NewObjects( inDev, uWriter);
+                    deviceObjectsTable[cubeSetup.CubeNumber][realSlot].NewObjects(inDev, uWriter);
                 }
 
                 //if (null != inDev)
@@ -252,7 +288,7 @@ namespace UeiBridge
 
         void PublishStatus_Task()
         {
-            UdpWriter uw = new UdpWriter( "to-statusViewer", Config.Instance.SelectedNicForMcastSend);
+            UdpWriter uw = new UdpWriter("to-statusViewer", Config.Instance.SelectedNicForMcastSend);
 
             while (true)
             {

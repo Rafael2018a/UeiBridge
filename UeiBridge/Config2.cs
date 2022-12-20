@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using System.IO;
+using System.Net;
 using UeiDaq;
 
 /// <summary>
@@ -12,6 +13,32 @@ using UeiDaq;
 /// </summary>
 namespace UeiBridge
 {
+    public class EndPoint
+    {
+        public string Address;
+        public int Port;
+        public EndPoint()
+        {
+        }
+        public EndPoint(string addressString, int port)
+        {
+            Address = addressString;
+            Port = port;
+        }
+        public IPEndPoint ToIpEp() // tbd. make cast operator
+        {
+            //try
+            {
+                IPEndPoint ipep = new IPEndPoint(IPAddress.Parse(Address), Port);
+                return ipep;
+            }
+            //catch (Exception ex)
+            //{
+            //    return null;
+            //}
+        }
+    }
+
     public class DeviceSetup
     {
         [XmlAttribute("Slot")]

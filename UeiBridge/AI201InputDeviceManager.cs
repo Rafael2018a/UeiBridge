@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UeiDaq;
+using UeiBridgeTypes;
 
 namespace UeiBridge
 {
@@ -19,6 +20,9 @@ namespace UeiBridge
         IConvert _attachedConverter;
         public override IConvert AttachedConverter => _attachedConverter;
 
+        public override string InstanceName => _instanceName;
+        string _instanceName;
+
         //public AI201InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
         //{
         //    _channelsString = "Ai0,1,2,3";
@@ -29,7 +33,7 @@ namespace UeiBridge
         {
             _channelsString = "Ai0,1,2,3";
             _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
-
+            _instanceName = $"{DeviceName}/{setup.SlotNumber}";
         }
 
         public AI201InputDeviceManager(): base(null, null) // must have default const.
@@ -81,7 +85,8 @@ namespace UeiBridge
             }
         }
 
-        public override void Start()
+        public override void OpenDevice()
+        //public override void Start()
         {
             if ((_deviceSession!=null) && _deviceSession.IsRunning())
             {
