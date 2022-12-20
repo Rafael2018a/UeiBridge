@@ -15,14 +15,25 @@ namespace UeiBridge
     {
         AnalogScaledReader _reader;
         log4net.ILog _logger = StaticMethods.GetLogger();
-        public override string DeviceName => "AI-201-100";
+        public override string DeviceName => "AI-201-100"; // 
         IConvert _attachedConverter;
         public override IConvert AttachedConverter => _attachedConverter;
 
-        public AI201InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
+        //public AI201InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
+        //{
+        //    _channelsString = "Ai0,1,2,3";
+        //    _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
+        //}
+
+        public AI201InputDeviceManager(ISend<SendObject> targetConsumer, DeviceSetup setup): base( targetConsumer, setup)
         {
             _channelsString = "Ai0,1,2,3";
             _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
+
+        }
+
+        public AI201InputDeviceManager(): base(null, null) // must have default const.
+        {
         }
 
         bool OpenDevice(string deviceUrl)
@@ -62,7 +73,7 @@ namespace UeiBridge
                 System.Diagnostics.Debug.Assert(_lastScan.Length == _deviceSession.GetNumberOfChannels(), "wrong number of channels");
 
                 ScanResult dr = new ScanResult(_lastScan, this);
-                _targetConsumer.Enqueue(dr);
+                //_targetConsumer.Enqueue(dr); tbd
             }
             catch (Exception ex)
             {
@@ -89,8 +100,9 @@ namespace UeiBridge
 
                 if (OpenDevice(url1))
                 {
+                    
                     var r = _deviceSession.GetDevice().GetAIRanges();
-                    _logger.Info($"{DeviceName}(input) init success. {_deviceSession.GetNumberOfChannels()}ch. Range {r[0].minimum},{r[0].maximum}. {deviceIndex + _channelsString}");
+                    _logger.Info($"Init success { DeviceName}(input) . {_deviceSession.GetNumberOfChannels()}ch. Range {r[0].minimum},{r[0].maximum}. {deviceIndex + _channelsString}");
                 }
                 else
                 {

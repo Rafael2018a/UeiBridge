@@ -39,16 +39,15 @@ namespace UeiBridge
         }
     }
 
-    class UdpWriter : ISend<byte[]>, IDisposable
+    class UdpWriter : ISend<SendObject>, IDisposable
     {
         log4net.ILog _logger = StaticMethods.GetLogger();
         Socket _sendSocket;
         string _instanceName;
-        public UdpWriter( string destAddress, int destPort, string name, string localBindAddress)
+        public UdpWriter( string instnceName, string localBindAddress)
         {
 
-            this._instanceName = name;
-            // tbd. Parse might fail!
+            this._instanceName = instnceName;
 
             try
             {
@@ -56,7 +55,7 @@ namespace UeiBridge
                 _sendSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 
                 // Multicast IP-address
-                IPAddress _mcastDestAddress = IPAddress.Parse(destAddress); //Config.Instance.DestMulticastAddress);
+                //IPAddress _mcastDestAddress = IPAddress.Parse(destAddress); //Config.Instance.DestMulticastAddress);
 
                 // Join multicast group
                 //_sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(_mcastDestAddress));
@@ -65,7 +64,7 @@ namespace UeiBridge
                 _sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 2);
 
                 // Create an endpoint
-                IPEndPoint _mcastDestEP = new IPEndPoint(_mcastDestAddress, destPort);// Config.Instance.DestMulticastPort);
+                //IPEndPoint _mcastDestEP = new IPEndPoint(_mcastDestAddress, destPort);// Config.Instance.DestMulticastPort);
 
                 if (null != localBindAddress)
                 {
@@ -73,9 +72,9 @@ namespace UeiBridge
                     _sendSocket.Bind(localEP);
                 }
                 // Connect to the endpoint
-                _sendSocket.Connect(_mcastDestEP);
+                //_sendSocket.Connect(_mcastDestEP);
 
-                _logger.Info($"Multicast sender - {this._instanceName} - esablished. Dest EP: {_mcastDestEP.ToString()}. Local NIC: {localBindAddress}");
+                _logger.Info($"Multicast sender - {this._instanceName} - esablished. Using NIC: {localBindAddress}");
             }
             catch (SocketException ex)
             {
@@ -105,6 +104,11 @@ namespace UeiBridge
         public void Dispose()
         {
             _sendSocket.Close();
+        }
+
+        public void Send(SendObject sendObj)
+        {
+            _sendSocket.SendTo(sendObj.ByteMessage, SocketFlags.None, sendObj.TargetEndPoint);
         }
     }
 }

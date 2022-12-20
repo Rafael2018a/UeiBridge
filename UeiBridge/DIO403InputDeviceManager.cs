@@ -15,10 +15,20 @@ namespace UeiBridge
         IConvert _attachedConverter;
         public override IConvert AttachedConverter => _attachedConverter;
 
-        public DIO403InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
+        //public DIO403InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
+        //{
+        //    _channelsString = "Di3:5";
+        //    _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
+        //}
+
+        public DIO403InputDeviceManager( ISend<SendObject> targetConsumer, DeviceSetup setup): base(targetConsumer, setup)
         {
             _channelsString = "Di3:5";
             _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
+        }
+        public DIO403InputDeviceManager():base(null, null) // must have default const.
+        {
+
         }
         // todo: add Dispose/d-tor
         bool OpenDevice(string deviceUrl)
@@ -51,7 +61,7 @@ namespace UeiBridge
                 System.Diagnostics.Debug.Assert(_lastScan.Length == _deviceSession.GetNumberOfChannels(), "wrong number of channels");
                 //diData[0] = 0x07;
                 ScanResult dr = new ScanResult(_lastScan, this);
-                _targetConsumer.Enqueue(dr);
+                //_targetConsumer.Enqueue(dr); tbd
             }
             catch (Exception ex)
             {

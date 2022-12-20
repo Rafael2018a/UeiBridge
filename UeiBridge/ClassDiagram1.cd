@@ -78,7 +78,7 @@
   <Class Name="UeiBridge.Program" Collapsed="true">
     <Position X="0.75" Y="1" Width="2.75" />
     <TypeIdentifier>
-      <HashCode>BAAEAgAAABACAAAAAEAAAAAAIgAAgAAAEAAABBAAABI=</HashCode>
+      <HashCode>BABAAgQAABAiAAAAAAAEAAAAIgAAgAAAEAAABBAAABI=</HashCode>
       <FileName>Program.cs</FileName>
     </TypeIdentifier>
     <ShowAsAssociation>
@@ -96,7 +96,7 @@
       </Path>
     </AssociationLine>
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAABgIAAAAAAAAAAAAAAAEAAAAAAAAAAAA=</HashCode>
+      <HashCode>AAAAAAAAAAAABgIAAAAAAAAAAAAAAgEAAAAAAAAAAAA=</HashCode>
       <FileName>GlobalTypes.cs</FileName>
     </TypeIdentifier>
     <ShowAsAssociation>
@@ -130,7 +130,7 @@
   <Class Name="UeiBridge.InputDevice" Collapsed="true">
     <Position X="2.75" Y="4.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AEAAAEAAECAACAAAAGAEAIAAAAAAAAAAAAgIAAAAAAA=</HashCode>
+      <HashCode>AEAAAEAAECAACAAAAGAEAIgAAAAAAAAAAAgIAAAAAAA=</HashCode>
       <FileName>InputDevice.cs</FileName>
     </TypeIdentifier>
     <Lollipop Position="0.2" />

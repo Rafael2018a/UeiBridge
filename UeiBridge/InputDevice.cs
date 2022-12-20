@@ -8,7 +8,7 @@ using UeiDaq;
 /// </summary>
 namespace UeiBridge
 {
-    public abstract class InputDevice : IDisposable
+    public abstract class InputDevice : IDeviceManager, IDisposable
     {
 
         protected Session _deviceSession;
@@ -17,15 +17,20 @@ namespace UeiBridge
         protected string _channelsString;
         //protected IConvert _attachedConverter;
         public abstract IConvert AttachedConverter { get; }
-        protected readonly IEnqueue<ScanResult> _targetConsumer;
-
+        protected readonly ISend<SendObject> _targetConsumer;
+        DeviceSetup _deviceSetup;
         public abstract void Start();
         public abstract string GetFormattedStatus();
-        protected InputDevice(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string cubeUrl)
+        //protected InputDevice(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string cubeUrl)
+        //{
+        //    _targetConsumer = targetConsumer;
+        //    _samplingInterval = samplingInterval;
+        //    _cubeUrl = cubeUrl;
+        //}
+        protected InputDevice( ISend<SendObject> targetConsumer, DeviceSetup setup)
         {
             _targetConsumer = targetConsumer;
-            _samplingInterval = samplingInterval;
-            _cubeUrl = cubeUrl;
+            _deviceSetup = setup;
         }
         public abstract string DeviceName { get; }
         protected System.Threading.Timer _samplingTimer;

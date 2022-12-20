@@ -105,6 +105,7 @@ namespace UeiBridge
             return attachedConverter;
         }
 
+        [Obsolete]
         public static OutputDevice CreateOutputDeviceManager(DeviceSetup deviceSetup)
         {
             //Config2.Instance.UeiCubes[0].SlotList
@@ -124,10 +125,8 @@ namespace UeiBridge
             }
             return null;
         }
-        public static List<Type> GetDeviceManagerList<T1>()
+        public static Type GetDeviceManagerType<T1>( string deviceName) where T1 : IDeviceManager
         {
-            List<Type> resultList = new List<Type>();
-            
             foreach (Type theType in System.Reflection.Assembly.GetExecutingAssembly().GetTypes())
             {
                 if (theType.IsInterface || theType.IsAbstract)
@@ -136,10 +135,13 @@ namespace UeiBridge
                 // if theType is an OutputDevice class
                 if (typeof(T1).IsAssignableFrom(theType))
                 {
-                    resultList.Add(theType);
+                    T1 oIinstnace = (T1)Activator.CreateInstance(theType);
+                    if (oIinstnace.DeviceName == deviceName)
+                        return theType;
+                    
                 }
             }
-            return resultList;
+            return null;
         }
         public static void f()
         {

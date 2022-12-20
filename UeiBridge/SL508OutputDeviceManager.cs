@@ -14,6 +14,7 @@ namespace UeiBridge
         //const string _termString = "\r\n";
         //SL508InputDeviceManager _serialInputManger=null;
         private string _instanceName;
+        public override string DeviceName => "SL-508-892";
 
         //int _numberOfChannels = 1;
         public SL508OutputDeviceManager( DeviceSetup setup): base( setup)
@@ -24,10 +25,11 @@ namespace UeiBridge
             {
                 _lastMessagesList.Add(null);
             }
-            _instanceName = $"{DeviceName}/Slot{ setup.SlotNumber}";
+            _instanceName = $"{DeviceName}/Slot{ setup.SlotNumber}/Output";
         }
+        public SL508OutputDeviceManager(): base(null)
+        { }
 
-        public override string DeviceName => "SL-508-892";
 
         //protected override IConvert AttachedConverter => _attachedConverter;
 

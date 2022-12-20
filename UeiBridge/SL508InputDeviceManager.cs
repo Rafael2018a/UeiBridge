@@ -28,7 +28,8 @@ namespace UeiBridge
         public List<SerialWriter> SerialWriterList => _serialWriterList;
         public bool InDisposeState => _InDisposeState;
 
-        public SL508InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
+        //public SL508InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
+        public SL508InputDeviceManager( ISend<SendObject> targetConsumer, DeviceSetup setup): base(targetConsumer, setup)
         {
             _serialPorts = new List<SerialPort>();
             _serialReaderList = new List<SerialReader>();
@@ -39,6 +40,10 @@ namespace UeiBridge
             {
                 _lastMessagesList.Add(null);
             }
+        }
+
+        public SL508InputDeviceManager() : base(null, null)
+        {
         }
 
         public override string GetFormattedStatus()
@@ -183,7 +188,7 @@ namespace UeiBridge
 
                 // forward to consumer (send by udp)
                 ScanResult sr = new ScanResult(receiveBuffer, this);
-                _targetConsumer.Enqueue(sr);
+                //_targetConsumer.Enqueue(sr); tbd
 
                 // restart reader
                 if (_serialReaderList[channel] != null && base._deviceSession.IsRunning() && _InDisposeState == false)

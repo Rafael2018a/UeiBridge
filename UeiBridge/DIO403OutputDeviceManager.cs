@@ -12,17 +12,19 @@ namespace UeiBridge
     {
         log4net.ILog _logger = StaticMethods.GetLogger();
         private IConvert _attachedConverter;
-        string _channelsString;
+        string _channelsString = "Do0:2";// first 24 bits as 'out'
         string _instanceName;
         Session _deviceSession;
         UeiDaq.DigitalWriter _writer;
         UInt16[] _lastScan; // tbd
         public DIO403OutputDeviceManager( DeviceSetup setup): base( setup)
         {
-            _channelsString = "Do0:2"; // first 24 bits as 'out'
-            _instanceName = $"{DeviceName}/Slot{ setup.SlotNumber}";
+            _instanceName = $"{DeviceName}/Slot{ setup.SlotNumber}/Output";
         }
+        public DIO403OutputDeviceManager(): base(null)
+        {
 
+        }
         public override string DeviceName => "DIO-403";
 
         //protected override string ChannelsString => _channelsString;
@@ -35,6 +37,7 @@ namespace UeiBridge
             //DeviceRequest dr = new DeviceRequest(OutputDevice.CancelTaskRequest, "");
             //deviceManager.Enqueue(dr);
             //System.Threading.Thread.Sleep(100);
+            _logger.Debug($"{InstanceName} dispose");
             base.Dispose();
         }
 
@@ -52,11 +55,10 @@ namespace UeiBridge
 
             int noOfbits = _deviceSession.GetNumberOfChannels() * 8;
             int firstBit = _deviceSession.GetChannel(0).GetIndex()*8;
-            _logger.Info($"{DeviceName} init success. . Bits {firstBit}..{firstBit+noOfbits - 1} as output" ); // { noOfCh} output channels
+            _logger.Info($"Init success: {InstanceName}. Bits {firstBit}..{firstBit+noOfbits - 1} as output" ); // { noOfCh} output channels
 
             _isDeviceReady = true;
             return false;
-
         }
 
 
@@ -76,6 +78,8 @@ namespace UeiBridge
 
         protected override void HandleRequest(EthernetMessage request)
         {
+            var s = _attachedConverter.EthToDevice(request.PayloadBytes);
+            //_lastScan = (ushort[]) request.PayloadBytes;
             _logger.Debug("HandleRequest... tbd");
         }
     }

@@ -44,26 +44,17 @@ namespace UeiBridge
 
             BuildProgramObjects();
 
-
             // publish status to StatusViewer
             Task.Factory.StartNew(() => PublishStatus_Task());
 
             // self tests
             StartDownwardsTest();
 
-            Thread.Sleep(1000);
-            //for (int i = 0; i < _inputDevices.Count; i++)
-            //{
-            //    _inputDevices[i].Start();
-            //}
-
-            //ur.Start();
             _logger.Info("Any key to exit...");
             Console.ReadKey();
-            _logger.Info("Disposing....");
 
+            _logger.Info("Disposing....");
             DisposeProgramObjects();
-            
 
             _logger.Info("Any key to exit...");
             Console.ReadKey();
@@ -71,9 +62,9 @@ namespace UeiBridge
 
         private void DisposeProgramObjest_old()
         {
-            for (int cubeIndex = 0; cubeIndex < _DeviceObjectsTable.Count; cubeIndex++)
+            for (int cubeIndex = 0; cubeIndex < _deviceObjectsTable.Count; cubeIndex++)
             {
-                var dl = _DeviceObjectsTable[cubeIndex];
+                var dl = _deviceObjectsTable[cubeIndex];
                 for (int slot = 0; slot < dl.Count; slot++)
                 {
                     if (null != dl[slot])
@@ -91,7 +82,7 @@ namespace UeiBridge
         private bool DisplayDeviceList() // tbd: show for ALL cubes
         {
             // prepare device list
-            List<Device> deviceList = StaticMethods.GetDeviceList( Config2.Instance.CubeUrlList[0]);
+            List<Device> deviceList = StaticMethods.GetDeviceList(Config2.Instance.CubeUrlList[0]);
             if (null == deviceList)
             {
                 _logger.Error(StaticMethods.LastErrorMessage);
@@ -116,7 +107,7 @@ namespace UeiBridge
         }
 
         //List<List<OutputDevice>> _outputDeviceList;
-        List<List<PerDeviceObjects>> _DeviceObjectsTable;
+        List<List<PerDeviceObjects>> _deviceObjectsTable;
         /// <summary>
         /// 
         /// </summary>
@@ -124,99 +115,166 @@ namespace UeiBridge
         {
             // prepare lists
             int noOfCubes = Config2.Instance.CubeUrlList.Length;
-            _DeviceObjectsTable = new List<List<PerDeviceObjects>>(new List<PerDeviceObjects>[noOfCubes]);
+            _deviceObjectsTable = new List<List<PerDeviceObjects>>(new List<PerDeviceObjects>[noOfCubes]);
 
-            // build output device managers
-            for (int cubeIndex = 0; cubeIndex < _DeviceObjectsTable.Count; cubeIndex++)
+            // Create program Objects
+            foreach (var cube in Config2.Instance.UeiCubes)
             {
-                BuildOutputDeviceManagersForCube(Config2.Instance.UeiCubes[cubeIndex]);
+                // init outputDeviceList
+                List<UeiDaq.Device> realDeviceList = StaticMethods.GetDeviceList( cube.CubeUrl);
+                _deviceObjectsTable[cube.CubeNumber] = new List<PerDeviceObjects>(new PerDeviceObjects[realDeviceList.Count]);
+
+                CreateDownwardsObjects(cube, _deviceObjectsTable);
+                CreateUpwardsObjects(cube, _deviceObjectsTable);
             }
 
-            // activate output device managers
-            foreach ( List<PerDeviceObjects> sList in _DeviceObjectsTable)
+            // Activate program Objects
+            foreach (List<PerDeviceObjects> cube in _deviceObjectsTable)
             {
-                foreach (PerDeviceObjects deviceObjects in sList)
+                ActivateProgramObjects(cube);// _deviceObjectsTable);
+            }
+
+        }
+
+
+        private static void ActivateProgramObjects(List<PerDeviceObjects> cube)
+        {
+            // activate downward objects
+            foreach (PerDeviceObjects deviceObjects in cube)
+            {
+                if (null != deviceObjects)
                 {
-                    //if (deviceObjects!=null)
-                    {
-                        Thread.Sleep(100);
-                        deviceObjects?._outputDeviceManager.OpenDevice();
-                        Thread.Sleep(100);
-                        deviceObjects?._udpReader.Start();
-                    }
+                    Thread.Sleep(100);
+                    deviceObjects?._outputDeviceManager?.OpenDevice();
+                    Thread.Sleep(100);
+                    deviceObjects?._udpReader?.Start();
                 }
             }
-
-            // open output device managers
-            
         }
 
         void DisposeProgramObjects()
         {
-            for (int cubeIndex = 0; cubeIndex < _DeviceObjectsTable.Count; cubeIndex++)
+            for (int cubeIndex = 0; cubeIndex < _deviceObjectsTable.Count; cubeIndex++)
             {
-                List<PerDeviceObjects> devList = _DeviceObjectsTable[cubeIndex];
-                for(int deviceIndex=0; deviceIndex < devList.Count; deviceIndex++)
+                List<PerDeviceObjects> devList = _deviceObjectsTable[cubeIndex];
+                for (int deviceIndex = 0; deviceIndex < devList.Count; deviceIndex++)
                 {
                     devList[deviceIndex]?._udpReader?.Dispose();
-                    devList[deviceIndex]?._outputDeviceManager.Dispose();
+                    devList[deviceIndex]?._outputDeviceManager?.Dispose();
                 }
             }
         }
 
-        private void BuildOutputDeviceManagersForCube(CubeSetup cubeSetup)
+        /// <summary>
+        /// Create output device managers and udp readers
+        /// </summary>
+        private static void CreateDownwardsObjects(CubeSetup cubeSetup, List<List<PerDeviceObjects>> deviceObjectsTable)
         {
             List<UeiDaq.Device> realDeviceList = StaticMethods.GetDeviceList(cubeSetup.CubeUrl);
 
-            // init outputDeviceList
-            _DeviceObjectsTable[cubeSetup.CubeNumber] = new List<PerDeviceObjects>(new PerDeviceObjects[realDeviceList.Count]);
-
             // populate outputDeviceList
-            foreach( UeiDaq.Device realDevice in realDeviceList)
+            foreach (UeiDaq.Device realDevice in realDeviceList)
             {
                 int realSlot = realDevice.GetIndex();
                 DeviceSetup deviceSetup = Config2.Instance.UeiCubes[cubeSetup.CubeNumber].DeviceSetupList[realSlot]; // tbd: first 'DeviceSetup' in config is not neccesseraly in slot 0
                 deviceSetup.CubeUrl = cubeSetup.CubeUrl;
                 System.Diagnostics.Debug.Assert(realSlot == deviceSetup.SlotNumber);
                 System.Diagnostics.Debug.Assert(realDevice.GetDeviceName() == deviceSetup.DeviceName);
-                
-                OutputDevice od = StaticMethods.CreateOutputDeviceManager( deviceSetup);
-                if (null != od)
+
+                Type devType = StaticMethods.GetDeviceManagerType<OutputDevice>(deviceSetup.DeviceName);
+                if (null == devType)
+                    continue;
+
+                OutputDevice outDev = (OutputDevice)Activator.CreateInstance(devType, deviceSetup);
+                if (null != outDev)
                 {
                     System.Diagnostics.Debug.Assert(null != deviceSetup.LocalEndPoint);
-                    UdpReader ur = new UdpReader(deviceSetup.LocalEndPoint.ToIpEp(), od, od.InstanceName);
-                    _DeviceObjectsTable[cubeSetup.CubeNumber][realSlot] = new PerDeviceObjects(od, ur);
+                    UdpReader ureader = new UdpReader(deviceSetup.LocalEndPoint.ToIpEp(), outDev, outDev.InstanceName);
+                    if (null == deviceObjectsTable[cubeSetup.CubeNumber][realSlot])
+                    {
+                        deviceObjectsTable[cubeSetup.CubeNumber][realSlot] = new PerDeviceObjects(outDev, ureader);
+                    }
+                    else
+                    {
+                        deviceObjectsTable[cubeSetup.CubeNumber][realSlot].NewObjects(outDev, ureader);
+                    }
                 }
                 else
                 {
-                    _DeviceObjectsTable[cubeSetup.CubeNumber][realSlot] = null;
+                    //_logger.Warn($"null device {deviceSetup.DeviceName}");
+                    //deviceObjectsTable[cubeSetup.CubeNumber][realSlot] = null;
                 }
-                //if (realSlot == 2) break;
+            }
+        }
+        private static void CreateUpwardsObjects(CubeSetup cubeSetup, List<List<PerDeviceObjects>> deviceObjectsTable)
+        {
+            List<UeiDaq.Device> realDeviceList = StaticMethods.GetDeviceList(cubeSetup.CubeUrl);
+
+            // Create input-devices instances
+            foreach (UeiDaq.Device realDevice in realDeviceList)
+            {
+                int realSlot = realDevice.GetIndex();
+                DeviceSetup deviceSetup = Config2.Instance.UeiCubes[cubeSetup.CubeNumber].DeviceSetupList[realSlot]; // tbd: first 'DeviceSetup' in config is not neccesseraly in slot 0
+                deviceSetup.CubeUrl = cubeSetup.CubeUrl; // for later use
+                System.Diagnostics.Debug.Assert(realSlot == deviceSetup.SlotNumber);
+                System.Diagnostics.Debug.Assert(realDevice.GetDeviceName() == deviceSetup.DeviceName);
+
+                Type devType = StaticMethods.GetDeviceManagerType<InputDevice>(deviceSetup.DeviceName);
+                if (null == devType)
+                    continue;
+                string instanceName = $"{realDevice.GetDeviceName()}/Slot{deviceSetup.SlotNumber}";
+                UdpWriter uWriter = new UdpWriter(instanceName, null);
+
+                InputDevice inDev = (InputDevice)Activator.CreateInstance( devType, uWriter, deviceSetup);
+                if (null == deviceObjectsTable[cubeSetup.CubeNumber][realSlot])
+                {
+                    deviceObjectsTable[cubeSetup.CubeNumber][realSlot] = new PerDeviceObjects(inDev, uWriter);
+                }
+                else
+                {
+                    deviceObjectsTable[cubeSetup.CubeNumber][realSlot].NewObjects( inDev, uWriter);
+                }
+
+                //if (null != inDev)
+                //{
+                //    System.Diagnostics.Debug.Assert(null != deviceSetup.LocalEndPoint);
+                //    UdpWriter ur = new UdpReader(deviceSetup.LocalEndPoint.ToIpEp(), inDev, inDev.InstanceName);
+                //    deviceObjectsTable[cubeSetup.CubeNumber][realSlot] = new PerDeviceObjects(inDev, ur);
+                //}
+                //else
+                //{
+                //    //_logger.Warn($"null device {deviceSetup.DeviceName}");
+                //    deviceObjectsTable[cubeSetup.CubeNumber][realSlot] = null;
+                //}
             }
         }
 
 
         void PublishStatus_Task()
         {
-            UdpWriter uw = new UdpWriter("239.10.10.17", 5093, "to-statusViewer", Config.Instance.SelectedNicForMcastSend);
+            UdpWriter uw = new UdpWriter( "to-statusViewer", Config.Instance.SelectedNicForMcastSend);
 
             while (true)
             {
-                foreach (var item in _DeviceObjectsTable[0]) //ProjectRegistry.Instance.OutputDevicesMap)
+                foreach (PerDeviceObjects deviceObjects in _deviceObjectsTable[0]) //ProjectRegistry.Instance.OutputDevicesMap)
                 {
-                    UeiLibrary.JsonStatusClass js = new UeiLibrary.JsonStatusClass(item?._outputDeviceManager.DeviceName + " (Output)", item?._outputDeviceManager.GetFormattedStatus() ); 
-                    string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
-                    byte[] send_buffer = Encoding.ASCII.GetBytes(s);
-                    uw.Send(send_buffer);
+                    // output
+                    if (null != deviceObjects?._outputDeviceManager)
+                    {
+                        UeiLibrary.JsonStatusClass js = new UeiLibrary.JsonStatusClass(deviceObjects._outputDeviceManager.DeviceName + " (Output)", deviceObjects._outputDeviceManager.GetFormattedStatus());
+                        string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
+                        byte[] send_buffer = Encoding.ASCII.GetBytes(s);
+                        uw.Send(send_buffer);
+                    }
                 }
 
-                foreach (var item in _inputDevices)
-                {
-                    UeiLibrary.JsonStatusClass js = new UeiLibrary.JsonStatusClass(item.DeviceName + " (Input)", item.GetFormattedStatus());
-                    string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
-                    byte[] send_buffer = Encoding.ASCII.GetBytes(s);
-                    uw.Send(send_buffer);
-                }
+                //foreach (var item in _inputDevices)
+                //{
+                //    UeiLibrary.JsonStatusClass js = new UeiLibrary.JsonStatusClass(item.DeviceName + " (Input)", item.GetFormattedStatus());
+                //    string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
+                //    byte[] send_buffer = Encoding.ASCII.GetBytes(s);
+                //    uw.Send(send_buffer);
+                //}
 
                 System.Threading.Thread.Sleep(1000);
             }
@@ -234,7 +292,7 @@ namespace UeiBridge
                     System.Threading.Thread.Sleep(100);
                     IPEndPoint destEp = new IPEndPoint(IPAddress.Parse(Config.Instance.ReceiverMulticastAddress), Config.Instance.ReceiverMulticastPort);
 
-                    for (int i=0; i<1; i++)
+                    for (int i = 0; i < 1; i++)
                     {
 
                         // digital out
@@ -260,12 +318,12 @@ namespace UeiBridge
                         //    System.Threading.Thread.Sleep(50);
                         //}
 
-                        
+
                     }
                     _logger.Info("Downward message simulation end");
 
                 }
-                catch( Exception ex)
+                catch (Exception ex)
                 {
                     _logger.Warn(ex.Message);
                 }

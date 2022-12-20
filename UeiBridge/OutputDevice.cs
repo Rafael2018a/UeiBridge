@@ -10,7 +10,7 @@ using UeiDaq;
 /// </summary>
 namespace UeiBridge
 {
-    public abstract class OutputDevice :  IDisposable, IEnqueue<byte[]> // IEnqueue<DeviceRequest>,
+    public abstract class OutputDevice : IDeviceManager,  IDisposable, IEnqueue<byte[]> // IEnqueue<DeviceRequest>,
     {
         // abstracts properties
         // -------------------

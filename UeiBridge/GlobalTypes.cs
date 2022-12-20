@@ -76,14 +76,28 @@ namespace UeiBridge
         public UdpReader _udpReader;
         public UdpWriter _udpWriter;
 
-        public PerDeviceObjects(InputDevice inputDevice, UdpWriter udpWriter) 
+        public PerDeviceObjects(InputDevice inputDevice, UdpWriter udpWriter)
         {
+            _inputDeviceManager = inputDevice;
+            _udpWriter = udpWriter;
+        }
+        public void NewObjects(InputDevice inputDevice, UdpWriter udpWriter)
+        {
+            System.Diagnostics.Debug.Assert(_inputDeviceManager == null);
+            System.Diagnostics.Debug.Assert(_udpWriter == null);
             _inputDeviceManager = inputDevice;
             _udpWriter = udpWriter;
         }
 
         public PerDeviceObjects(OutputDevice outputDevice, UdpReader udpReader)
         {
+            _outputDeviceManager = outputDevice;
+            _udpReader = udpReader;
+        }
+        public void NewObjects(OutputDevice outputDevice, UdpReader udpReader)
+        {
+            System.Diagnostics.Debug.Assert(null == _outputDeviceManager);
+            System.Diagnostics.Debug.Assert(null == _udpReader);
             _outputDeviceManager = outputDevice;
             _udpReader = udpReader;
         }
@@ -112,6 +126,21 @@ namespace UeiBridge
             //    return null;
             //}
         }
+    }
+    public class SendObject
+    {
+        public IPEndPoint TargetEndPoint { get; }
+        public byte[] ByteMessage { get; }
+        public SendObject(IPEndPoint targetEndPoint, byte[] byteMessage)
+        {
+            TargetEndPoint = targetEndPoint;
+            ByteMessage = byteMessage;
+        }
+    }
+
+    public interface IDeviceManager
+    {
+        string DeviceName { get; }
     }
 
 }

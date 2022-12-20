@@ -14,7 +14,7 @@ namespace UeiBridge
         log4net.ILog _logger = StaticMethods.GetLogger();
         private string _instanceName;
         public override string DeviceName => "AO-308";
-        string _channelsString;
+        const string _channelsString = "Ao0:7";
         Session _deviceSession;
         //protected override IConvert AttachedConverter => _attachedConverter;
 
@@ -25,9 +25,13 @@ namespace UeiBridge
         private IConvert _attachedConverter;
         public AO308OutputDeviceManager( DeviceSetup deviceSetup): base( deviceSetup)
         {
-            _channelsString = "Ao0:7";
-            _instanceName = $"{DeviceName}/Slot{deviceSetup.SlotNumber}";
+            _instanceName = $"{DeviceName}/Slot{deviceSetup.SlotNumber}/Output";
         }
+
+        public AO308OutputDeviceManager(): base(null)
+        {
+        }
+
         public override bool  OpenDevice()
         {
             try
@@ -45,7 +49,7 @@ namespace UeiBridge
                 Task.Factory.StartNew(() => OutputDeviceHandler_Task());
 
                 var range = _deviceSession.GetDevice().GetAORanges();
-                _logger.Info($"{InstanceName} init success. { _deviceSession.GetNumberOfChannels()} output channels. Range {range[0].minimum},{range[0].maximum}V.");
+                _logger.Info($"Init success: {InstanceName} . { _deviceSession.GetNumberOfChannels()} channels. Range {range[0].minimum},{range[0].maximum}V.");
 
                 _isDeviceReady = true;
             }
