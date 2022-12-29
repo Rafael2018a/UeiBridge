@@ -128,7 +128,7 @@ namespace UeiBridge
 
         public void Dispose()
         {
-            _logger.Debug($"Dispose {_instanceName}...... tbd");
+            _logger.Warn($"Dispose {_instanceName}...... tbd");
         }
     }
 

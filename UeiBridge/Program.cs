@@ -287,7 +287,8 @@ namespace UeiBridge
 
         void PublishStatus_Task()
         {
-            UdpWriter uw = new UdpWriter("to-statusViewer", Config.Instance.SelectedNicForMcastSend);
+            UdpWriter uw = new UdpWriter("To-StatusViewer", Config2.Instance.AppSetup.SelectedNicForSendingMcast);
+            IPEndPoint destEP = Config2.Instance.AppSetup.StatusViewerEP.ToIpEp();
 
             while (true)
             {
@@ -296,10 +297,14 @@ namespace UeiBridge
                     // output
                     if (null != deviceObjects?._outputDeviceManager)
                     {
-                        UeiLibrary.JsonStatusClass js = new UeiLibrary.JsonStatusClass(deviceObjects._outputDeviceManager.DeviceName + " (Output)", deviceObjects._outputDeviceManager.GetFormattedStatus());
+
+                        UeiLibrary.JsonStatusClass js = new UeiLibrary.JsonStatusClass( 
+                            desc:deviceObjects._outputDeviceManager.DeviceName + " (Output)", 
+                            formattedStatus: deviceObjects._outputDeviceManager.GetFormattedStatus());
                         string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
                         byte[] send_buffer = Encoding.ASCII.GetBytes(s);
-                        uw.Send(send_buffer);
+                        SendObject so = new SendObject(destEP, send_buffer);
+                        uw.Send(so);
                     }
                 }
 
@@ -325,22 +330,21 @@ namespace UeiBridge
                 {
                     UdpClient udpClient = new UdpClient();
                     System.Threading.Thread.Sleep(100);
-                    IPEndPoint destEp = new IPEndPoint(IPAddress.Parse(Config.Instance.ReceiverMulticastAddress), Config.Instance.ReceiverMulticastPort);
 
                     for (int i = 0; i < 1; i++)
                     {
 
                         // digital out
                         {
-                            destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[5].LocalEndPoint.ToIpEp();
+                            IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[5].LocalEndPoint.ToIpEp();
                             byte[] e403 = StaticMethods.Make_DIO403Down_Message();
-                            //udpClient.Send(e403, e403.Length, destEp);
+                            udpClient.Send(e403, e403.Length, destEp);
                         }
                         // analog out
                         {
-                            destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[0].LocalEndPoint.ToIpEp();
+                            IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[0].LocalEndPoint.ToIpEp();
                             byte[] e308 = StaticMethods.Make_A308Down_message();
-                            //udpClient.Send(e308, e308.Length, destEp);
+                            udpClient.Send(e308, e308.Length, destEp);
                         }
 #if dontremove
                         byte[] e430 = StaticMethods.Make_DIO430Down_Message();
@@ -350,7 +354,7 @@ namespace UeiBridge
                         List<byte[]> e508 = StaticMethods.Make_SL508Down_Messages( i);
                         foreach (byte [] msg in e508)
                         {
-                            destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[3].LocalEndPoint.ToIpEp();
+                            IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[3].LocalEndPoint.ToIpEp();
                             udpClient.Send(msg, msg.Length, destEp);
                             System.Threading.Thread.Sleep(200);
                         }

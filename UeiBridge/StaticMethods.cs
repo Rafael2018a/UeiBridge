@@ -188,6 +188,7 @@ namespace UeiBridge
             msg.PayloadBytes[0] = 0x12;
             msg.PayloadBytes[1] = 0x34;
             msg.PayloadBytes[2] = 0x56;
+            msg.SlotNumber = 5;
 
             return msg.ToByteArrayDown();
         }

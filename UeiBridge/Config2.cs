@@ -39,6 +39,12 @@ namespace UeiBridge
         }
     }
 
+    public class AppSetup
+    {
+        //[XmlElement(ElementName = "AppSetup")]
+        public string SelectedNicForSendingMcast = "221.109.251.103";
+        public EndPoint StatusViewerEP = new EndPoint("239.10.10.17", 5093);
+    }
     public class DeviceSetup
     {
         [XmlAttribute("Slot")]
@@ -184,6 +190,7 @@ namespace UeiBridge
         private static Config2 _instance;
         private static object lockObject = new object();
 
+        public AppSetup AppSetup;
         public string[] CubeUrlList = new string[1];
         public CubeSetup[] UeiCubes = new CubeSetup[1];
 
@@ -192,6 +199,7 @@ namespace UeiBridge
         }
         private Config2(string cubeUrl)
         {
+            AppSetup = new AppSetup();
             UeiCubes[0] = new CubeSetup(cubeUrl, 0);
             CubeUrlList[0] = cubeUrl;
         }

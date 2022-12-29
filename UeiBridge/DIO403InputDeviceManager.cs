@@ -76,7 +76,7 @@ namespace UeiBridge
         }
         public override void OpenDevice()
         {
-            _logger.Debug("DIO304 input, opendevice .... tbd");
+            _logger.Warn("DIO304 input, opendevice .... tbd");
             return;
 
             if ((_deviceSession != null) && _deviceSession.IsRunning())

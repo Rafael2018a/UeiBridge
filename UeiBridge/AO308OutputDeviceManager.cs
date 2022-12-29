@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using UeiDaq;
 using UeiBridgeTypes;
+using System.Timers;
 
 namespace UeiBridge
 {
@@ -11,29 +12,29 @@ namespace UeiBridge
     /// </summary>
     internal class AO308OutputDeviceManager : OutputDevice
     {
+        // publics
+        public override string DeviceName => "AO-308";
+
+        // privates
         AnalogScaledWriter _writer;
         log4net.ILog _logger = StaticMethods.GetLogger();
-        private string _instanceName;
-        public override string DeviceName => "AO-308";
         const string _channelsString = "Ao0:7";
         Session _deviceSession;
-        //protected override IConvert AttachedConverter => _attachedConverter;
+        double[] _lastScan;
 
-        //protected override string ChannelsString => throw new NotImplementedException();
-
-        public override string InstanceName =>  _instanceName;
+        public override string InstanceName { get; }// => _instanceName;
 
         private IConvert _attachedConverter;
-        public AO308OutputDeviceManager( DeviceSetup deviceSetup): base( deviceSetup)
+        public AO308OutputDeviceManager(DeviceSetup deviceSetup) : base(deviceSetup)
         {
-            _instanceName = $"{DeviceName}/Slot{deviceSetup.SlotNumber}/Output";
+            InstanceName = $"{DeviceName}/Slot{deviceSetup.SlotNumber}/Output";
         }
 
-        public AO308OutputDeviceManager(): base(null)
+        public AO308OutputDeviceManager() : base(null)
         {
         }
 
-        public override bool  OpenDevice()
+        public override bool OpenDevice()
         {
             try
             {
@@ -63,7 +64,7 @@ namespace UeiBridge
             return true;
         }
 
-        protected override void HandleRequest( EthernetMessage em)
+        protected override void HandleRequest(EthernetMessage em)
         {
             //DeviceRequest dr;
             // init session, if needed.
@@ -99,20 +100,16 @@ namespace UeiBridge
             // write to device
             // ===============
             var p = _attachedConverter.EthToDevice(em.PayloadBytes);
-            if (_isDeviceReady)
-            {
-                _lastScan = p as double[];
-                if (null != _lastScan)
-                {
-                    _writer.WriteSingleScan(_lastScan);
-                    //_logger.Debug($"AO voltage {_lastScan[0]}");
-                    //_logger.Debug($"scan written to device. Length: {_lastScan.Length}");
-                }
-            }
+            double [] scan = p as double[];
+            System.Diagnostics.Debug.Assert(scan != null);
+            _writer.WriteSingleScan( scan);
+                //_logger.Debug($"AO voltage {_lastScan[0]}");
+                //_logger.Debug($"scan written to device. Length: {_lastScan.Length}");
+            _lastScan = scan;
         }
 
         //StatusStruct _status = new StatusStruct();
-        double[] _lastScan;
+
 
         public override string GetFormattedStatus()
         {
@@ -147,6 +144,12 @@ namespace UeiBridge
             _deviceSession = null;
         }
 
-
+        protected override void resetLastScanTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            if (0 == e.SignalTime.Second % 10)
+            {
+                _lastScan = null;
+            }
+        }
     }
 }

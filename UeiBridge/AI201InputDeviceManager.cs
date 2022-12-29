@@ -42,7 +42,7 @@ namespace UeiBridge
 
         bool OpenDevice(string deviceUrl)
         {
-            _logger.Debug("not ready yet     tbd");
+            _logger.Warn("not ready yet     tbd");
             return false;
 
             try

@@ -34,11 +34,19 @@ namespace UeiBridge
         // ---------
         BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
         log4net.ILog _logger = StaticMethods.GetLogger();
+        System.Timers.Timer _resetLastScanTimer = new System.Timers.Timer(1000);
+
 
         protected OutputDevice(DeviceSetup deviceSetup)
         {
             _deviceSetup = deviceSetup;
+            _resetLastScanTimer.Elapsed += resetLastScanTimer_Elapsed;
+            _resetLastScanTimer.AutoReset = true;
+            _resetLastScanTimer.Enabled = true;
         }
+
+        protected abstract void resetLastScanTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e);
+
         public void Enqueue(byte[] m)
         {
             string errorString;
@@ -65,13 +73,14 @@ namespace UeiBridge
 
                 if (null == incomingMessage) // end task token
                 {
-                    continue;
+                    break;
                 }
 
                 // verify card type
                 if (StaticMethods.GetCardIdFromCardName(this.DeviceName) != incomingMessage.CardType)
                 {
                     _logger.Warn($"{InstanceName} wrong card id. incoming message dropped.");
+                    continue;
                 }
                 // verify payload length
                 // tbd
@@ -80,10 +89,9 @@ namespace UeiBridge
                 if (incomingMessage.SlotNumber != this._deviceSetup.SlotNumber)
                 {
                     _logger.Warn($"{InstanceName} wrong slot number. incoming message dropped.");
+                    continue;
                 }
                 
-
-
                 if (_isDeviceReady)
                 {
                     HandleRequest(incomingMessage);

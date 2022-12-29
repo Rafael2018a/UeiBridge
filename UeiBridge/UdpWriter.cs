@@ -67,15 +67,22 @@ namespace UeiBridge
                 // Create an endpoint
                 //IPEndPoint _mcastDestEP = new IPEndPoint(_mcastDestAddress, destPort);// Config.Instance.DestMulticastPort);
 
+                string usingNic;
                 if (null != localBindAddress)
                 {
-                    IPEndPoint localEP = new IPEndPoint(IPAddress.Parse(localBindAddress), 0);//Config.Instance.LocalBindNicAddress
+                    IPEndPoint localEP = new IPEndPoint(IPAddress.Parse(localBindAddress), 0);
                     _sendSocket.Bind(localEP);
+                    usingNic = $"Using NIC: { localBindAddress}";
+                }
+                else
+                {
+                    usingNic = "(no specific NIC)";
                 }
                 // Connect to the endpoint
                 //_sendSocket.Connect(_mcastDestEP);
+                
 
-                _logger.Info($"Multicast sender - {this._instanceName} - esablished. Using NIC: {localBindAddress}");
+                _logger.Info($"Multicast sender - {this._instanceName} - esablished. {usingNic}");
             }
             catch (SocketException ex)
             {
@@ -94,13 +101,13 @@ namespace UeiBridge
 
         }
 
-        public void Send(byte[] buffer)
-        {
-            if (_sendSocket.Connected)
-            {
-                _sendSocket.Send(buffer, buffer.Length, SocketFlags.None);
-            }
-        }
+        //public void Send(byte[] buffer)
+        //{
+        //    if (_sendSocket.Connected)
+        //    {
+        //        _sendSocket.Send(buffer, buffer.Length, SocketFlags.None);
+        //    }
+        //}
 
         public void Dispose()
         {

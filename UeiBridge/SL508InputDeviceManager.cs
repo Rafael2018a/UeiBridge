@@ -233,7 +233,7 @@ namespace UeiBridge
         }
         public override void OpenDevice()
         {
-            _logger.Debug("SL508 in, opendevice .... tbd");
+            _logger.Warn("SL508 in, opendevice .... tbd");
             return;
             // init session upon need
             // =======================

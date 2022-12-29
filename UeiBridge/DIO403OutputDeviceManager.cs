@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using UeiDaq;
 using UeiBridgeTypes;
+using System.Timers;
 
 namespace UeiBridge
 {
@@ -17,12 +18,12 @@ namespace UeiBridge
         string _instanceName;
         Session _deviceSession;
         UeiDaq.DigitalWriter _writer;
-        UInt16[] _lastScan; // tbd
-        public DIO403OutputDeviceManager( DeviceSetup setup): base( setup)
+        UInt16[] _lastScan;
+        public DIO403OutputDeviceManager(DeviceSetup setup) : base(setup)
         {
             _instanceName = $"{DeviceName}/Slot{ setup.SlotNumber}/Output";
         }
-        public DIO403OutputDeviceManager(): base(null)
+        public DIO403OutputDeviceManager() : base(null)
         {
 
         }
@@ -48,20 +49,19 @@ namespace UeiBridge
             string cubeUrl = $"{_deviceSetup.CubeUrl}Dev{_deviceSetup.SlotNumber}/{_channelsString}";
             _deviceSession = new UeiDaq.Session();
             _deviceSession.CreateDOChannel(cubeUrl);
-            
+
             _deviceSession.ConfigureTimingForSimpleIO();
             _writer = new UeiDaq.DigitalWriter(_deviceSession.GetDataStream());
 
             Task.Factory.StartNew(() => OutputDeviceHandler_Task());
 
             int noOfbits = _deviceSession.GetNumberOfChannels() * 8;
-            int firstBit = _deviceSession.GetChannel(0).GetIndex()*8;
-            _logger.Info($"Init success: {InstanceName}. Bits {firstBit}..{firstBit+noOfbits - 1} as output" ); // { noOfCh} output channels
+            int firstBit = _deviceSession.GetChannel(0).GetIndex() * 8;
+            _logger.Info($"Init success: {InstanceName}. Bits {firstBit}..{firstBit + noOfbits - 1} as output"); // { noOfCh} output channels
 
             _isDeviceReady = true;
             return false;
         }
-
 
         public override string GetFormattedStatus()
         {
@@ -79,9 +79,18 @@ namespace UeiBridge
 
         protected override void HandleRequest(EthernetMessage request)
         {
-            var s = _attachedConverter.EthToDevice(request.PayloadBytes);
-            //_lastScan = (ushort[]) request.PayloadBytes;
-            _logger.Debug("HandleRequest... tbd");
+            var ls = _attachedConverter.EthToDevice(request.PayloadBytes);
+            ushort[] scan = ls as ushort[];
+            System.Diagnostics.Debug.Assert( scan != null);
+            _writer.WriteSingleScanUInt16( scan);
+            _lastScan = scan;
+        }
+        protected override void resetLastScanTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            if (0 == e.SignalTime.Second % 10)
+            {
+                _lastScan = null;
+            }
         }
     }
 }

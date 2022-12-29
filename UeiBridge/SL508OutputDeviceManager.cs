@@ -6,6 +6,7 @@ using UeiDaq;
 using UeiBridgeTypes;
 
 using bytearray = System.Array;
+using System.Timers;
 
 namespace UeiBridge
 {
@@ -69,7 +70,7 @@ namespace UeiBridge
 
         public override void Dispose()
         {
-            _logger.Debug("Dispose.... tbd");
+            _logger.Warn("Dispose.... tbd");
         }
         public override string GetFormattedStatus()
         {
@@ -133,6 +134,18 @@ namespace UeiBridge
             //        _logger.Warn("Failed to send serial message. SerialWriter==null)");
             //    }
             //}
+        }
+
+        protected override void resetLastScanTimer_Elapsed(object sender, ElapsedEventArgs e)
+        {
+            if (0== _lastMessagesList.Count)
+            {
+                return;
+            }
+            int ch = e.SignalTime.Second % _lastMessagesList.Count;
+            _lastMessagesList[ch] = null;
+            //throw new NotImplementedException();
+            //e.SignalTime.Second
         }
         //else
         //{
