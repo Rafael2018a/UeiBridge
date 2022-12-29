@@ -9,7 +9,7 @@ namespace UeiBridge
     public enum Direction { input, output, in_out}
 
 
-
+    [Obsolete]
     internal class ProjectRegistry
     {
         Dictionary<int, string> _deviceMap = new Dictionary<int, string>();

@@ -76,6 +76,9 @@ namespace UeiBridge
         }
         public override void OpenDevice()
         {
+            _logger.Debug("DIO304 input, opendevice .... tbd");
+            return;
+
             if ((_deviceSession != null) && _deviceSession.IsRunning())
             {
                 _logger.Warn("Can't start since device already running");

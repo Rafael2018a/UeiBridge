@@ -12,6 +12,27 @@ namespace UeiBridge
     {
         static string _lastErrorMessage;
         public static string LastErrorMessage { get => _lastErrorMessage; }
+        static Dictionary<int, string> _cardIdMap = new Dictionary<int, string>();
+
+        static StaticMethods()
+        {
+            _cardIdMap.Add(0, "AO-308");
+            _cardIdMap.Add(4, "DIO-403");
+            _cardIdMap.Add(1, "AI-201-100");
+            _cardIdMap.Add(5, "SL-508-892");
+        }
+        public static int GetCardIdFromCardName(string deviceName)
+        {
+            try
+            {
+                var p = _cardIdMap.ToList().Single(pair => pair.Value == deviceName);
+                return p.Key;
+            }
+            catch (System.InvalidOperationException)
+            {
+                return -1;
+            }
+        }
 
         public static List<Device> GetDeviceList( string cubeUrl)
         {
@@ -188,9 +209,10 @@ namespace UeiBridge
                 // string to ascii
 
                 // ascii to string System.Text.Encoding.ASCII.GetString(recvBytes)
-                EthernetMessage msg = EthernetMessage.CreateEmpty(5, 16);
+                EthernetMessage msg = EthernetMessage.CreateEmpty( cardType:5, payloadLength:16);
                 msg.PayloadBytes = System.Text.Encoding.ASCII.GetBytes(m);
-                msg.SlotChannelNumber = ch;
+                msg.SerialChannelNumber = ch;
+                msg.SlotNumber = 3;
                 msgs.Add(msg.ToByteArrayDown());
 
             }
@@ -209,23 +231,21 @@ namespace UeiBridge
             return sb.ToString();
         }
 
-        public static Session CreateSerialSession( SL508892Setup deviceSetup, string baseUrl)
+        public static Session CreateSerialSession( SL508892Setup deviceSetup)
         {
             System.Diagnostics.Debug.Assert(null != deviceSetup);
             Session serialSession = new Session();
             
             foreach (var channel in deviceSetup.Channels)
             {
-                string finalUrl = baseUrl + channel.portname.ToString();
-                //string finalUrl = baseUrl + "Com0,1";
+                string finalUrl = $"{deviceSetup.CubeUrl}Dev{deviceSetup.SlotNumber}/{channel.portname}";
                 var port = serialSession.CreateSerialPort(finalUrl,
-                                    SerialPortMode.RS232,
-                                    SerialPortSpeed.BitsPerSecond250000,
+                                    channel.mode,
+                                    channel.Baudrate,
                                     SerialPortDataBits.DataBits8,
-                                    SerialPortParity.None,
-                                    SerialPortStopBits.StopBits1,
+                                    channel.parity,
+                                    channel.stopbits,
                                     "");
-                //_serialPorts.Add(port);
             }
 
             int numberOfChannels = serialSession.GetNumberOfChannels();

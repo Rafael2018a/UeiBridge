@@ -233,6 +233,8 @@ namespace UeiBridge
         }
         public override void OpenDevice()
         {
+            _logger.Debug("SL508 in, opendevice .... tbd");
+            return;
             // init session upon need
             // =======================
             string deviceIndex = StaticMethods.FindDeviceIndex( _cubeUrl, DeviceName);

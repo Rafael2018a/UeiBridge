@@ -24,13 +24,17 @@ namespace UeiBridge
         protected abstract void HandleRequest(EthernetMessage request);
         public abstract string GetFormattedStatus();
         
-        // fields
-        // --------
-        private BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
-        log4net.ILog _logger = StaticMethods.GetLogger();
+        // protected fields
+        // ----------------
         protected string _caseUrl; // remove?
         protected DeviceSetup _deviceSetup; // from config
         protected bool _isDeviceReady=false;
+
+        // privates
+        // ---------
+        BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
+        log4net.ILog _logger = StaticMethods.GetLogger();
+
         protected OutputDevice(DeviceSetup deviceSetup)
         {
             _deviceSetup = deviceSetup;
@@ -64,14 +68,21 @@ namespace UeiBridge
                     continue;
                 }
 
-                // verify incoming message
-                // slot number
+                // verify card type
+                if (StaticMethods.GetCardIdFromCardName(this.DeviceName) != incomingMessage.CardType)
+                {
+                    _logger.Warn($"{InstanceName} wrong card id. incoming message dropped.");
+                }
+                // verify payload length
+                // tbd
+
+                // verify slot number
                 if (incomingMessage.SlotNumber != this._deviceSetup.SlotNumber)
                 {
-                    _logger.Warn($"{InstanceName} wrong device number. incoming message dropped.");
+                    _logger.Warn($"{InstanceName} wrong slot number. incoming message dropped.");
                 }
                 
-                // device name
+
 
                 if (_isDeviceReady)
                 {

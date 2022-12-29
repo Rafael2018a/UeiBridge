@@ -19,14 +19,15 @@ namespace UeiBridge
         public int UnitId { get; set; }
         public int CardType { get; set; }
         public int SlotNumber { get; set; }
-        public int SlotChannelNumber { get; set; }
+        public int SerialChannelNumber { get; set; }
         public byte[] PayloadBytes { get; set; }
         public byte[] HeaderBytes { get; set; }
         //public int _debugSerial { get; set; } // serial number of message
 
         private const int _payloadOffset = 16;// _payloadOffset;
         private const int _cardTypeOffset = 5;// _cardTypeOffset;
-        private const int _slotChannelNumberOffset = 7;
+        private const int _slotNumberOffset = 6;
+        private const int _serailChannelOffset = 7;
         private const int _lengthOffset = 12;// _lengthOffset;
 
         /// <summary>
@@ -43,7 +44,8 @@ namespace UeiBridge
 
             // card type
             messageBytes[_cardTypeOffset] = (byte)CardType;
-            messageBytes[_slotChannelNumberOffset] = (byte)SlotChannelNumber;
+            messageBytes[_serailChannelOffset] = (byte)SerialChannelNumber;
+            messageBytes[_slotNumberOffset] = (byte)SlotNumber;
 
             // message length
             byte[] twobytes = BitConverter.GetBytes(messageBytes.Length);
@@ -125,7 +127,8 @@ namespace UeiBridge
 
             // type & slot
             resutlMessage.CardType = byteMessage[EthernetMessage._cardTypeOffset];
-            resutlMessage.SlotChannelNumber = byteMessage[EthernetMessage._slotChannelNumberOffset];
+            resutlMessage.SerialChannelNumber = byteMessage[EthernetMessage._serailChannelOffset];
+            resutlMessage.SlotNumber = byteMessage[EthernetMessage._slotNumberOffset];
 
             return resutlMessage;
         }
@@ -164,6 +167,7 @@ namespace UeiBridge
         /// </summary>
         /// <param name="payload"></param>
         /// <param name="deviceString"></param>
+        [Obsolete]
         public static EthernetMessage CreateFromDevice(byte[] payload, string deviceString)
         {
             //ILog _logger = log4net.LogManager.GetLogger("Root");

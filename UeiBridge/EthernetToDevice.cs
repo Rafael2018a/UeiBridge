@@ -146,7 +146,7 @@ namespace UeiBridge
             var devicePayload = converter.EthToDevice( messageObject.PayloadBytes);
             if (null != devicePayload)
             {
-                DeviceRequest dr = new DeviceRequest(devicePayload, Config.Instance.DeviceUrl, messageObject.SlotChannelNumber);
+                DeviceRequest dr = new DeviceRequest(devicePayload, Config.Instance.DeviceUrl, messageObject.SerialChannelNumber);
                 return dr;
             }
             else
