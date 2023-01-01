@@ -39,7 +39,7 @@ namespace UeiBridge
             _serialPorts = new List<SerialPort>();
             _serialReaderList = new List<SerialReader>();
             _serialWriterList = new List<SerialWriter>();
-            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName, setup);
+            _attachedConverter = StaticMethods.CreateConverterInstance( setup);
             _lastMessagesList = new List<byte[]>();
             for (int i = 0; i < 8; i++)
             {

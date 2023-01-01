@@ -29,7 +29,7 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert(null != serialSession);
             _serialSession = serialSession;
             InstanceName = $"{DeviceName}/Slot{ setup.SlotNumber}/Output";
-            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName, setup);
+            _attachedConverter = StaticMethods.CreateConverterInstance( setup);
 
             // init message list
             for (int i = 0; i < serialSession.GetNumberOfChannels(); i++)
@@ -70,7 +70,11 @@ namespace UeiBridge
 
         public override void Dispose()
         {
-            _logger.Warn("Dispose.... tbd");
+            base.Dispose();
+
+            // dispose all writers
+
+            // dispose session
         }
         public override string GetFormattedStatus()
         {

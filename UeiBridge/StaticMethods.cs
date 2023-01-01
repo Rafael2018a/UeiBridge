@@ -34,6 +34,11 @@ namespace UeiBridge
             }
         }
 
+        public static bool  DoesCardIdExist(int cardId)
+        {
+            return _cardIdMap.ContainsKey(cardId);
+        }
+
         public static List<Device> GetDeviceList( string cubeUrl)
         {
             DeviceCollection devColl = new DeviceCollection(cubeUrl);
@@ -105,7 +110,7 @@ namespace UeiBridge
         /// Find and instantiate suitalble converter
         /// </summary>
         /// <returns></returns>
-        public static IConvert CreateConverterInstance(string deviceName, DeviceSetup setup)
+        public static IConvert CreateConverterInstance( DeviceSetup setup) // tbd. deviceName not needed
         {
             IConvert attachedConverter = null;
             foreach (Type theType in System.Reflection.Assembly.GetExecutingAssembly().GetTypes())

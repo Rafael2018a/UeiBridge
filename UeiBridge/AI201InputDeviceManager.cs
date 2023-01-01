@@ -26,7 +26,7 @@ namespace UeiBridge
         public AI201InputDeviceManager(ISend<SendObject> targetConsumer, AI201100Setup setup) : base(targetConsumer)
         {
             _channelsString = "Ai0:23";
-            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName, setup);
+            _attachedConverter = StaticMethods.CreateConverterInstance( setup);
             InstanceName = $"{DeviceName}/Slot{setup.SlotNumber}";
             _targetConsumer = targetConsumer;
             _thisDeviceSetup = setup;

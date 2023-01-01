@@ -96,8 +96,11 @@ namespace UeiBridge
             //    return false;
 
             // card type exists
-            if (!ProjectRegistry.Instance.DeviceKeys.ContainsKey(CardType))
+            if (!StaticMethods.DoesCardIdExist(CardType))
                 return false;
+
+            //if (!ProjectRegistry.Instance.DeviceKeys.ContainsKey(CardType))
+                //return false;
 
             // payload 
             if ((PayloadBytes==null) || (PayloadBytes.Length == 0))

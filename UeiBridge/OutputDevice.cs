@@ -35,6 +35,7 @@ namespace UeiBridge
         BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
         log4net.ILog _logger = StaticMethods.GetLogger();
         System.Timers.Timer _resetLastScanTimer = new System.Timers.Timer(1000);
+        bool _disposeStarted = false;
 
 
         protected OutputDevice(DeviceSetup deviceSetup)
@@ -49,6 +50,9 @@ namespace UeiBridge
 
         public void Enqueue(byte[] m)
         {
+            if (_disposeStarted)
+                return;
+
             string errorString;
             EthernetMessage em = EthernetMessage.CreateFromByteArray(m, out errorString);
             if (em != null)
@@ -92,7 +96,7 @@ namespace UeiBridge
                 // verify slot number
                 if (incomingMessage.SlotNumber != this._deviceSetup.SlotNumber)
                 {
-                    _logger.Warn($"{InstanceName} wrong slot number. incoming message dropped.");
+                    _logger.Warn($"{InstanceName} wrong slot number ({incomingMessage.SlotNumber}). incoming message dropped.");
                     continue;
                 }
                 
@@ -110,6 +114,7 @@ namespace UeiBridge
 
         public virtual void Dispose()
         {
+            _disposeStarted = true;
             _dataItemsQueue2.Add(null); // end task token
             Thread.Sleep(100);
             _dataItemsQueue2.CompleteAdding();

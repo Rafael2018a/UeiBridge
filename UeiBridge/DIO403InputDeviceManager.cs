@@ -30,7 +30,7 @@ namespace UeiBridge
         public DIO403InputDeviceManager( ISend<SendObject> targetConsumer, DeviceSetup setup): base(targetConsumer)
         {
             _channelsString = "Di3:5";
-            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName, setup);
+            _attachedConverter = StaticMethods.CreateConverterInstance( setup);
             _instanceName = $"{DeviceName}/{setup.SlotNumber}";
             _thisDeviceSetup = setup as DIO403Setup;
         }

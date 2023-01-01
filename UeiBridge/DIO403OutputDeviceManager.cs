@@ -39,13 +39,25 @@ namespace UeiBridge
             //DeviceRequest dr = new DeviceRequest(OutputDevice.CancelTaskRequest, "");
             //deviceManager.Enqueue(dr);
             //System.Threading.Thread.Sleep(100);
-            _logger.Debug($"{InstanceName} dispose");
+            //_logger.Debug($"{InstanceName} dispose");
+
             base.Dispose();
+
+            if (null != _writer)
+            {
+                _writer.Dispose();
+            }
+            if (null != _deviceSession)
+            {
+                _deviceSession.Stop();
+                _deviceSession.Dispose();
+            }
+
         }
 
         public override bool OpenDevice()
         {
-            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName, _deviceSetup);
+            _attachedConverter = StaticMethods.CreateConverterInstance( _deviceSetup);
             string cubeUrl = $"{_deviceSetup.CubeUrl}Dev{_deviceSetup.SlotNumber}/{_channelsString}";
             _deviceSession = new UeiDaq.Session();
             _deviceSession.CreateDOChannel(cubeUrl);
