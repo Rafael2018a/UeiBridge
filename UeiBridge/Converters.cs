@@ -18,7 +18,7 @@ namespace UeiBridge
         readonly double  _peekToPeekVoltage;
         readonly double _conversionFactor;
 
-        public AO308Convert()
+        public AO308Convert(DeviceSetup setup)
         {
             _peekToPeekVoltage = Config.Instance.Analog_Out_PeekVoltage * 2;
             _conversionFactor = _peekToPeekVoltage / UInt16.MaxValue;
@@ -50,7 +50,7 @@ namespace UeiBridge
             return resultVector;
         }
     }
-    [Obsolete]
+#if Obsolete
     class DIO430Convert : IConvert
     {
         public string DeviceName => "DIO-430";
@@ -70,13 +70,14 @@ namespace UeiBridge
             //return result;
         }
     }
+#endif
     class DIO403Convert : IConvert
     {
         public string DeviceName => "DIO-403";
         string _lastError=null;
         readonly int _numberOfOutChannels;
 
-        public DIO403Convert()
+        public DIO403Convert(DeviceSetup setup)
         {
             _numberOfOutChannels = Config.Instance.MaxDigital403OutputChannels;
         }
@@ -123,14 +124,15 @@ namespace UeiBridge
         public string DeviceName => "AI-201-100";
         string _lastError=null;
         string IConvert.LastErrorMessage => _lastError;
+        double _peekVoltage;
 
-        //readonly double peekVoltage = Config.Instance.Analog_In_PeekVoltage;
-        //const double peekToPeekVoltage = peekVoltage * 2.0;
-        //const double uInt16range = UInt16.MaxValue;
-        //readonly double _conversionFactor;
-
-        public AI201Converter()
+        public AI201Converter( DeviceSetup setup)
         {
+            AI201100Setup thissetup = setup as AI201100Setup;
+            if (null != thissetup)
+            {
+                _peekVoltage = thissetup.PeekVoltage;
+            }
             //peekVoltage = Config.Instance.Analog_In_PeekVoltage;
             //_conversionFactor = int16range / peekToPeekVoltage;
         }
@@ -142,11 +144,11 @@ namespace UeiBridge
             int ch = 0;
             foreach (double val in inputVector)
             {
-                double peekVoltage = Config.Instance.Analog_In_PeekVoltage;
-                double p2p = peekVoltage * 2.0;
+                //double peekVoltage = Config.Instance.Analog_In_PeekVoltage;
+                double p2p = _peekVoltage * 2.0;
 
                 //double pVal = (Math.Abs(val) < 0.1) ? 0 : val;
-                double zVal = val + peekVoltage; // make zero based
+                double zVal = val + _peekVoltage; // make zero based
                 zVal = (zVal >= p2p) ? p2p : zVal; // protect from high voltage
                 double normVal = zVal / p2p; // 0 < normVal < 1
 
@@ -167,6 +169,10 @@ namespace UeiBridge
 
     class SL508Convert : IConvert
     {
+        public SL508Convert(DeviceSetup setup)
+        {
+        }
+
         public string DeviceName => "SL-508-892";
 
         public string LastErrorMessage => throw new NotImplementedException();

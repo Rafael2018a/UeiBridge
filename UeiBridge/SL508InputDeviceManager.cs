@@ -34,12 +34,12 @@ namespace UeiBridge
         private Session _serialSession;
         string _instanceName;
         //public SL508InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
-        public SL508InputDeviceManager( ISend<SendObject> targetConsumer, DeviceSetup setup, Session serialSession): base(targetConsumer, setup)
+        public SL508InputDeviceManager( ISend<SendObject> targetConsumer, DeviceSetup setup, Session serialSession): base(targetConsumer)
         {
             _serialPorts = new List<SerialPort>();
             _serialReaderList = new List<SerialReader>();
             _serialWriterList = new List<SerialWriter>();
-            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
+            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName, setup);
             _lastMessagesList = new List<byte[]>();
             for (int i = 0; i < 8; i++)
             {
@@ -50,7 +50,7 @@ namespace UeiBridge
             _instanceName = $"{DeviceName}/{setup.SlotNumber}";
         }
 
-        public SL508InputDeviceManager() : base(null, null)
+        public SL508InputDeviceManager() : base(null)
         {
         }
 

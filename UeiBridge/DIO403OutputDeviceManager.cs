@@ -45,7 +45,7 @@ namespace UeiBridge
 
         public override bool OpenDevice()
         {
-            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
+            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName, _deviceSetup);
             string cubeUrl = $"{_deviceSetup.CubeUrl}Dev{_deviceSetup.SlotNumber}/{_channelsString}";
             _deviceSession = new UeiDaq.Session();
             _deviceSession.CreateDOChannel(cubeUrl);

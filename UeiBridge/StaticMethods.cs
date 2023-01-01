@@ -105,7 +105,7 @@ namespace UeiBridge
         /// Find and instantiate suitalble converter
         /// </summary>
         /// <returns></returns>
-        public static IConvert CreateConverterInstance(string deviceName)
+        public static IConvert CreateConverterInstance(string deviceName, DeviceSetup setup)
         {
             IConvert attachedConverter = null;
             foreach (Type theType in System.Reflection.Assembly.GetExecutingAssembly().GetTypes())
@@ -115,8 +115,8 @@ namespace UeiBridge
 
                 if (typeof(IConvert).IsAssignableFrom(theType))
                 {
-                    var at = (IConvert)Activator.CreateInstance(theType);
-                    if (at.DeviceName == deviceName)
+                    var at = (IConvert)Activator.CreateInstance(theType, setup);
+                    if (at.DeviceName == setup.DeviceName)
                     {
                         attachedConverter = at;
                         break;

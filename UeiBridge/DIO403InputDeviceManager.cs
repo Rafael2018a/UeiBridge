@@ -16,6 +16,7 @@ namespace UeiBridge
         public override string DeviceName => "DIO-403";
         IConvert _attachedConverter;
         public override IConvert AttachedConverter => _attachedConverter;
+        DIO403Setup _thisDeviceSetup;
 
         public override string InstanceName => _instanceName; 
 
@@ -26,13 +27,14 @@ namespace UeiBridge
         //    _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
         //}
 
-        public DIO403InputDeviceManager( ISend<SendObject> targetConsumer, DeviceSetup setup): base(targetConsumer, setup)
+        public DIO403InputDeviceManager( ISend<SendObject> targetConsumer, DeviceSetup setup): base(targetConsumer)
         {
             _channelsString = "Di3:5";
-            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
+            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName, setup);
             _instanceName = $"{DeviceName}/{setup.SlotNumber}";
+            _thisDeviceSetup = setup as DIO403Setup;
         }
-        public DIO403InputDeviceManager():base(null, null) // must have default const.
+        public DIO403InputDeviceManager():base(null) // must have default const.
         {
 
         }
@@ -104,8 +106,8 @@ namespace UeiBridge
                 _logger.Warn($"Device {DeviceName} init fail");
                 return;
             }
-
-            _samplingTimer = new System.Threading.Timer(DeviceScan_Callback, null, TimeSpan.Zero, _samplingInterval);
+            TimeSpan interval = TimeSpan.FromMilliseconds(_thisDeviceSetup.SamplingInterval);
+            _samplingTimer = new System.Threading.Timer(DeviceScan_Callback, null, TimeSpan.Zero, interval);
         }
         public override void Dispose()
         {

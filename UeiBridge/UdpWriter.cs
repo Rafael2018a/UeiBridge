@@ -45,7 +45,7 @@ namespace UeiBridge
         log4net.ILog _logger = StaticMethods.GetLogger();
         Socket _sendSocket;
         string _instanceName;
-        public UdpWriter( string instnceName, string localBindAddress)
+        public UdpWriter( string instnceName, IPEndPoint destEp, string localBindAddress)
         {
 
             this._instanceName = instnceName;
@@ -82,7 +82,7 @@ namespace UeiBridge
                 //_sendSocket.Connect(_mcastDestEP);
                 
 
-                _logger.Info($"Multicast sender - {this._instanceName} - esablished. {usingNic}");
+                _logger.Info($"Multicast sender - {this._instanceName} - esablished. Dest:{destEp.ToString()}. {usingNic}");
             }
             catch (SocketException ex)
             {

@@ -250,7 +250,7 @@ namespace UeiBridge
                     continue;
 
                 string instanceName = $"{realDevice.GetDeviceName()}/Slot{deviceSetup.SlotNumber}";
-                UdpWriter uWriter = new UdpWriter(instanceName, null);
+                UdpWriter uWriter = new UdpWriter(instanceName, deviceSetup.DestEndPoint.ToIpEp(), null);
                 InputDevice inDev;
                 if (devType.Name.StartsWith("SL508"))
                 {
@@ -261,6 +261,8 @@ namespace UeiBridge
                     inDev = (InputDevice)Activator.CreateInstance(devType, uWriter, deviceSetup);
                 }
 
+
+                // init or update PerDeviceObjects
                 if (null == deviceObjectsTable[cubeSetup.CubeNumber][realSlot])
                 {
                     deviceObjectsTable[cubeSetup.CubeNumber][realSlot] = new PerDeviceObjects(inDev, uWriter);
@@ -287,9 +289,9 @@ namespace UeiBridge
 
         void PublishStatus_Task()
         {
-            UdpWriter uw = new UdpWriter("To-StatusViewer", Config2.Instance.AppSetup.SelectedNicForSendingMcast);
             IPEndPoint destEP = Config2.Instance.AppSetup.StatusViewerEP.ToIpEp();
-
+            UdpWriter uw = new UdpWriter("To-StatusViewer", destEP, Config2.Instance.AppSetup.SelectedNicForSendingMcast);
+            
             while (true)
             {
                 foreach (PerDeviceObjects deviceObjects in _deviceObjectsTable[0]) //ProjectRegistry.Instance.OutputDevicesMap)

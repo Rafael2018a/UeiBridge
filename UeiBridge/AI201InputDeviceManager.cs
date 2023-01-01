@@ -19,55 +19,23 @@ namespace UeiBridge
         public override string DeviceName => "AI-201-100"; // 
         IConvert _attachedConverter;
         public override IConvert AttachedConverter => _attachedConverter;
+        public override string InstanceName { get; }//=> _instanceName;
+        //ISend<SendObject> _targetConsumer;
+        AI201100Setup _thisDeviceSetup;
 
-        public override string InstanceName => _instanceName;
-        string _instanceName;
-
-        //public AI201InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
-        //{
-        //    _channelsString = "Ai0,1,2,3";
-        //    _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
-        //}
-
-        public AI201InputDeviceManager(ISend<SendObject> targetConsumer, DeviceSetup setup): base( targetConsumer, setup)
+        public AI201InputDeviceManager(ISend<SendObject> targetConsumer, AI201100Setup setup) : base(targetConsumer)
         {
-            _channelsString = "Ai0,1,2,3";
-            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
-            _instanceName = $"{DeviceName}/{setup.SlotNumber}";
+            _channelsString = "Ai0:23";
+            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName, setup);
+            InstanceName = $"{DeviceName}/Slot{setup.SlotNumber}";
+            _targetConsumer = targetConsumer;
+            _thisDeviceSetup = setup;
         }
 
-        public AI201InputDeviceManager(): base(null, null) // must have default const.
+        public AI201InputDeviceManager() : base(null) // must have default const.
         {
         }
 
-        bool OpenDevice(string deviceUrl)
-        {
-            _logger.Warn("not ready yet     tbd");
-            return false;
-
-            try
-            {
-                _deviceSession = new Session();
-                _deviceSession.CreateAIChannel(deviceUrl, -15.0, 15.0, AIChannelInputMode.SingleEnded); // -15,15 means 'no gain'
-                //_numberOfChannels = _deviceSession.GetNumberOfChannels();
-                _deviceSession.ConfigureTimingForSimpleIO();
-                _reader = new AnalogScaledReader(_deviceSession.GetDataStream());
-
-//                _logger.Info($"{DeviceName}(Output) init success. { _deviceSession.GetNumberOfChannels()} channels. Range {range[0].minimum},{range[0].maximum}.");
-
-//                _isDeviceReady = true;
-
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex.Message);
-                _deviceSession = null;
-                return false;
-            }
-
-
-            return true;
-        }
         public void HandleResponse_Callback(object state)
         {
             try
@@ -76,11 +44,13 @@ namespace UeiBridge
                 // ===============
                 _lastScan = _reader.ReadSingleScan(); // access violation?
                 System.Diagnostics.Debug.Assert(_lastScan != null);
-                
+
                 System.Diagnostics.Debug.Assert(_lastScan.Length == _deviceSession.GetNumberOfChannels(), "wrong number of channels");
 
                 ScanResult dr = new ScanResult(_lastScan, this);
-                //_targetConsumer.Enqueue(dr); tbd
+                byte[] bm = _attachedConverter.DeviceToEth(_lastScan);
+                SendObject so = new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), bm);
+                _targetConsumer.Send(so);
             }
             catch (Exception ex)
             {
@@ -89,41 +59,27 @@ namespace UeiBridge
         }
 
         public override void OpenDevice()
-        //public override void Start()
         {
-            if ((_deviceSession!=null) && _deviceSession.IsRunning())
-            {
-                _logger.Warn("Can't start since device already running");
-                return;
-            }
+            double peek = _thisDeviceSetup.PeekVoltage;
             try
             {
-                string deviceIndex = StaticMethods.FindDeviceIndex( Config2.Instance.CubeUrlList[0], DeviceName);
-                if (null == deviceIndex)
-                {
-                    _logger.Warn($"Can't find index for device {DeviceName}");
-                    return;
-                }
-                string url1 = _cubeUrl + deviceIndex + _channelsString;
-
-                if (OpenDevice(url1))
-                {
-                    
-                    var r = _deviceSession.GetDevice().GetAIRanges();
-                    _logger.Info($"Init success { DeviceName}(input) . {_deviceSession.GetNumberOfChannels()}ch. Range {r[0].minimum},{r[0].maximum}. {deviceIndex + _channelsString}");
-                }
-                else
-                {
-                    _logger.Warn($"Device {DeviceName} init fail");
-                    return;
-                }
-                _samplingTimer = new System.Threading.Timer(HandleResponse_Callback, null, TimeSpan.Zero, _samplingInterval);
+                string url1 = $"{_thisDeviceSetup.CubeUrl}Dev{_thisDeviceSetup.SlotNumber}/{_channelsString}";
+                _deviceSession = new Session();
+                _deviceSession.CreateAIChannel(url1, -peek, peek, AIChannelInputMode.SingleEnded); // -15,15 means 'no gain'
+                var numberOfChannels = _deviceSession.GetNumberOfChannels();
+                _deviceSession.ConfigureTimingForSimpleIO();
+                _reader = new AnalogScaledReader(_deviceSession.GetDataStream());
+                var r = _deviceSession.GetDevice().GetAIRanges();
+                TimeSpan interval = TimeSpan.FromMilliseconds(_thisDeviceSetup.SamplingInterval);
+                _samplingTimer = new System.Threading.Timer(HandleResponse_Callback, null, TimeSpan.Zero, interval);
+                _logger.Info($"Init success. {InstanceName}. {_deviceSession.GetNumberOfChannels()} input channels.");
+                return;
 
             }
             catch (Exception ex)
             {
                 _logger.Error(ex.Message);
-            }        
+            }
         }
         public override void Dispose()
         {

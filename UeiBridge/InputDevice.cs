@@ -20,13 +20,13 @@ namespace UeiBridge
 
         // protected
         protected Session _deviceSession;
-        protected string _cubeUrl;
+        protected string _cubeUrl; // tbd. remove this
         protected string _channelsString;
-        protected readonly ISend<SendObject> _targetConsumer;
+        protected ISend<SendObject> _targetConsumer;
         protected System.Threading.Timer _samplingTimer;
-        protected TimeSpan _samplingInterval;
+        //protected TimeSpan _samplingInterval;
 
-        DeviceSetup _deviceSetup;
+        //protected DeviceSetup _deviceSetup;
 
         //protected InputDevice(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string cubeUrl)
         //{
@@ -34,10 +34,10 @@ namespace UeiBridge
         //    _samplingInterval = samplingInterval;
         //    _cubeUrl = cubeUrl;
         //}
-        protected InputDevice(ISend<SendObject> targetConsumer, DeviceSetup setup)
+        protected InputDevice(ISend<SendObject> targetConsumer)//, DeviceSetup setup)
         {
             _targetConsumer = targetConsumer;
-            _deviceSetup = setup;
+            //_deviceSetup = setup;
         }
         public virtual void CloseDevice()
         {

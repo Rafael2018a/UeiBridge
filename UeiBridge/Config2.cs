@@ -52,6 +52,8 @@ namespace UeiBridge
         public string DeviceName;
         public EndPoint LocalEndPoint;
         public EndPoint DestEndPoint;
+        [XmlIgnore]
+        public int SamplingInterval => 100; // ms
         
         public DeviceSetup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDaq.Device device)
         {
@@ -77,6 +79,8 @@ namespace UeiBridge
     }
     public class AI201100Setup : DeviceSetup
     {
+        [XmlIgnore]
+        public double PeekVoltage => 15.0;
         public AI201100Setup( EndPoint destEndPoint, Device device) : base( null, destEndPoint, device)
         {
         }

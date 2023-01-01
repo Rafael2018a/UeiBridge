@@ -29,7 +29,7 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert(null != serialSession);
             _serialSession = serialSession;
             InstanceName = $"{DeviceName}/Slot{ setup.SlotNumber}/Output";
-            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
+            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName, setup);
 
             // init message list
             for (int i = 0; i < serialSession.GetNumberOfChannels(); i++)

@@ -38,7 +38,7 @@ namespace UeiBridge
         {
             try
             {
-                _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
+                _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName, _deviceSetup);
 
                 string cubeUrl = $"{_deviceSetup.CubeUrl}Dev{_deviceSetup.SlotNumber}/{_channelsString}";
 

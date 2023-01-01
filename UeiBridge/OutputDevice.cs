@@ -53,7 +53,10 @@ namespace UeiBridge
             EthernetMessage em = EthernetMessage.CreateFromByteArray(m, out errorString);
             if (em != null)
             {
-                _dataItemsQueue2.Add(em);
+                if (!_dataItemsQueue2.IsCompleted)
+                {
+                    _dataItemsQueue2.Add(em);
+                }
             }
             else
             {
@@ -77,9 +80,10 @@ namespace UeiBridge
                 }
 
                 // verify card type
-                if (StaticMethods.GetCardIdFromCardName(this.DeviceName) != incomingMessage.CardType)
+                int cardId = StaticMethods.GetCardIdFromCardName(this.DeviceName);
+                if ( cardId != incomingMessage.CardType)
                 {
-                    _logger.Warn($"{InstanceName} wrong card id. incoming message dropped.");
+                    _logger.Warn($"{InstanceName} wrong card id {incomingMessage.CardType} while expecting {cardId}. message dropped.");
                     continue;
                 }
                 // verify payload length
@@ -107,6 +111,7 @@ namespace UeiBridge
         public virtual void Dispose()
         {
             _dataItemsQueue2.Add(null); // end task token
+            Thread.Sleep(100);
             _dataItemsQueue2.CompleteAdding();
         }
     }
