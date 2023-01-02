@@ -257,9 +257,12 @@ namespace UeiBridge
             int numberOfChannels = serialSession.GetNumberOfChannels();
             System.Diagnostics.Debug.Assert(numberOfChannels == Config.Instance.SerialChannels.Length);
 
-            serialSession.ConfigureTimingForMessagingIO(1000, 100.0);
-            serialSession.GetTiming().SetTimeout(5000); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
+            //serialSession.ConfigureTimingForMessagingIO(1000, 100.0);
+            //serialSession.GetTiming().SetTimeout(5000); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
 
+            serialSession.ConfigureTimingForSimpleIO();
+
+            serialSession.Start();
             return serialSession;
         }
 

@@ -31,7 +31,7 @@ namespace UeiBridge
         {
             _channelsString = "Di3:5";
             _attachedConverter = StaticMethods.CreateConverterInstance( setup);
-            _instanceName = $"{DeviceName}/{setup.SlotNumber}";
+            _instanceName = $"{DeviceName}/Slot{setup.SlotNumber}/In";
             _thisDeviceSetup = setup as DIO403Setup;
         }
         public DIO403InputDeviceManager():base(null) // must have default const.

@@ -28,7 +28,7 @@ namespace UeiBridge
         {
             System.Diagnostics.Debug.Assert(null != serialSession);
             _serialSession = serialSession;
-            InstanceName = $"{DeviceName}/Slot{ setup.SlotNumber}/Output";
+            InstanceName = $"{DeviceName}/Slot{ setup.SlotNumber}/Out";
             _attachedConverter = StaticMethods.CreateConverterInstance( setup);
 
             // init message list
@@ -52,16 +52,17 @@ namespace UeiBridge
 
             Task.Factory.StartNew(() => OutputDeviceHandler_Task());
 
-            bool firstIteration = false;
+            bool firstIteration = true;
             foreach (SerialPort port in _serialSession.GetChannels())
             {
                 if (firstIteration)
                 {
                     firstIteration = false;
-                    _logger.Info($"*** {DeviceName} init:");
+                    _logger.Info($"Init success {InstanceName}:");
                 }
                 int channleIndex = port.GetIndex();
-                _logger.Info($"Serial CH{channleIndex} init success. {port.GetMode()}  {port.GetSpeed()}.");////{c111.GetResourceName()}");
+                _logger.Info($"CH{channleIndex} {port.GetMode()} {port.GetSpeed()}.");////{c111.GetResourceName()}");
+            
             }
 
             _isDeviceReady = true;

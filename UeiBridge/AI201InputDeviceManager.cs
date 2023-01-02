@@ -22,12 +22,13 @@ namespace UeiBridge
         public override string InstanceName { get; }//=> _instanceName;
         //ISend<SendObject> _targetConsumer;
         AI201100Setup _thisDeviceSetup;
+        double[] _lastScan;
 
         public AI201InputDeviceManager(ISend<SendObject> targetConsumer, AI201100Setup setup) : base(targetConsumer)
         {
             _channelsString = "Ai0:23";
             _attachedConverter = StaticMethods.CreateConverterInstance( setup);
-            InstanceName = $"{DeviceName}/Slot{setup.SlotNumber}";
+            InstanceName = $"{DeviceName}/Slot{setup.SlotNumber}/In";
             _targetConsumer = targetConsumer;
             _thisDeviceSetup = setup;
         }
@@ -88,7 +89,7 @@ namespace UeiBridge
             CloseDevice();
         }
 
-        double[] _lastScan;
+        //
 
         public override string GetFormattedStatus()
         {

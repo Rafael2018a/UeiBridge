@@ -18,15 +18,15 @@ namespace UeiBridge
         public override string DeviceName => "SL-508-892";
         readonly List<SerialPort> _serialPorts;
         readonly List<SerialReader> _serialReaderList;
-        readonly List<SerialWriter> _serialWriterList;
+        //readonly List<SerialWriter> _serialWriterList;
         IConvert _attachedConverter;
         bool _InDisposeState = false;
         List<byte[]> _lastMessagesList;
-        bool _isReady = false;
-        public bool IsReady => _isReady;
+        //bool _isReady = false;
+        //public bool IsReady { get; }
 
         public override IConvert AttachedConverter => _attachedConverter;
-        public List<SerialWriter> SerialWriterList => _serialWriterList;
+        //public List<SerialWriter> SerialWriterList => _serialWriterList;
         public bool InDisposeState => _InDisposeState;
 
         public override string InstanceName => _instanceName; 
@@ -38,7 +38,7 @@ namespace UeiBridge
         {
             _serialPorts = new List<SerialPort>();
             _serialReaderList = new List<SerialReader>();
-            _serialWriterList = new List<SerialWriter>();
+            //_serialWriterList = new List<SerialWriter>();
             _attachedConverter = StaticMethods.CreateConverterInstance( setup);
             _lastMessagesList = new List<byte[]>();
             for (int i = 0; i < 8; i++)
@@ -47,7 +47,7 @@ namespace UeiBridge
             }
             System.Diagnostics.Debug.Assert(null != serialSession);
             _serialSession = serialSession;
-            _instanceName = $"{DeviceName}/{setup.SlotNumber}";
+            _instanceName = $"{DeviceName}/Slot{setup.SlotNumber}/In";
         }
 
         public SL508InputDeviceManager() : base(null)
@@ -113,6 +113,7 @@ namespace UeiBridge
         AsyncCallback readerAsyncCallback;
         private IAsyncResult readerIAsyncResult;
         int minLen = 200;
+        [Obsolete]
         private bool OpenDevices(string baseUrl, string deviceName)
         {
             _deviceSession = new Session();
@@ -148,7 +149,7 @@ namespace UeiBridge
                 SerialReader sr = new SerialReader(_deviceSession.GetDataStream(), _deviceSession.GetChannel(ch).GetIndex());
                 _serialReaderList.Add(sr);
                 SerialWriter sw = new SerialWriter(_deviceSession.GetDataStream(), _deviceSession.GetChannel(ch).GetIndex());
-                _serialWriterList.Add(sw);
+                //_serialWriterList.Add(sw);
                
             }
             _deviceSession.Start();
@@ -178,6 +179,9 @@ namespace UeiBridge
 
         public void ReaderCallback(IAsyncResult ar)
         {
+
+            System.Diagnostics.Debug.Assert(null != _serialSession);
+
             int channel = (int)ar.AsyncState;
             if (null == _serialReaderList[channel]) // if during dispose
             {
@@ -187,7 +191,7 @@ namespace UeiBridge
             {
                 byte[] receiveBuffer = _serialReaderList[channel].EndRead(ar);
 
-                _lastMessagesList[channel] = receiveBuffer;
+                 _lastMessagesList[channel] = receiveBuffer;
                 // send reply (debug only)
                 //string str = System.Text.Encoding.ASCII.GetString(receiveBuffer);
                 //byte[] reply = System.Text.Encoding.ASCII.GetBytes("Reply> " + str);
@@ -197,9 +201,9 @@ namespace UeiBridge
                 // forward to consumer (send by udp)
                 ScanResult sr = new ScanResult(receiveBuffer, this);
                 //_targetConsumer.Enqueue(sr); tbd
-
+                
                 // restart reader
-                if (_serialReaderList[channel] != null && base._deviceSession.IsRunning() && _InDisposeState == false)
+                //if (_serialReaderList[channel] != null && base._deviceSession.IsRunning() && _InDisposeState == false)
                 {
                     readerIAsyncResult = _serialReaderList[channel].BeginRead(minLen, this.ReaderCallback, channel);
                 }
@@ -207,9 +211,9 @@ namespace UeiBridge
             catch (UeiDaqException ex)
             {
                 // only handle exception if the session is running
-                if (null != base._deviceSession)
+                //if (null != base._deviceSession)
                 {
-                    if (base._deviceSession.IsRunning())
+                    //if (base._deviceSession.IsRunning())
                     {
                         _lastMessagesList[channel] = null;
 
@@ -217,9 +221,9 @@ namespace UeiBridge
                         {
                             // Ignore timeout error, they will occur if the send button is not
                             // clicked on fast enough!
-                            if (false == _InDisposeState)
+                            //if (false == _InDisposeState)
                             {
-                                readerIAsyncResult = _serialReaderList[channel].BeginRead(minLen, readerAsyncCallback, channel);
+                                readerIAsyncResult = _serialReaderList[channel].BeginRead(minLen, this.ReaderCallback, channel);
                             }
                         }
                         else
@@ -233,28 +237,19 @@ namespace UeiBridge
         }
         public override void OpenDevice()
         {
-            _logger.Warn("SL508 in, opendevice .... tbd");
-            return;
-            // init session upon need
-            // =======================
-            string deviceIndex = StaticMethods.FindDeviceIndex( _cubeUrl, DeviceName);
-            if (null == deviceIndex)
+            System.Threading.Thread.Sleep(100);
+            //int ch = 0;
+            for(int ch=0; ch<_serialSession.GetNumberOfChannels(); ch++)
             {
-                _logger.Warn($"Can't find index for device {DeviceName}");
-                return;
+                System.Threading.Thread.Sleep(10);
+                var sr = new SerialReader(_serialSession.GetDataStream(), _serialSession.GetChannel(ch).GetIndex());
+                readerAsyncCallback = new AsyncCallback(ReaderCallback);
+                sr.BeginRead(minLen, readerAsyncCallback, ch);
+                _serialReaderList.Add(sr);
             }
 
-            string url1 = _cubeUrl + deviceIndex + _channelsString;
+            _logger.Info($"Init success {InstanceName}:");
 
-            if (OpenDevices(url1, DeviceName))
-            {
-                _isReady = true;
-            }
-            else
-            {
-                _logger.Warn($"Device {DeviceName} init fail");
-                return;
-            }
         }
         public override void Dispose()
         {
@@ -271,14 +266,6 @@ namespace UeiBridge
             {
                 _serialReaderList[i].Dispose();
                 _serialReaderList[i] = null;
-            }
-            for (int i = 0; i < _serialWriterList.Count; i++)
-            {
-                if (null != _serialWriterList[i])
-                {
-                    _serialWriterList[i].Dispose();
-                    _serialWriterList[i] = null;
-                }
             }
 
             _deviceSession.Dispose();

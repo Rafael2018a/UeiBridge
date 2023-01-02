@@ -27,7 +27,7 @@ namespace UeiBridge
         private IConvert _attachedConverter;
         public AO308OutputDeviceManager(DeviceSetup deviceSetup) : base(deviceSetup)
         {
-            InstanceName = $"{DeviceName}/Slot{deviceSetup.SlotNumber}/Output";
+            InstanceName = $"{DeviceName}/Slot{deviceSetup.SlotNumber}/Out";
         }
 
         public AO308OutputDeviceManager() : base(null)

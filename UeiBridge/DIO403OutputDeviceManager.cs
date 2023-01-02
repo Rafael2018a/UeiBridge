@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using UeiDaq;
+//using UeiDaq;
 using UeiBridgeTypes;
 using System.Timers;
 
@@ -12,35 +12,27 @@ namespace UeiBridge
     /// </summary>
     class DIO403OutputDeviceManager : OutputDevice //DioOutputDeviceManager
     {
+        public override string DeviceName => "DIO-403";
+        public override string InstanceName { get; }
+
+        //privates
         log4net.ILog _logger = StaticMethods.GetLogger();
-        private IConvert _attachedConverter;
-        string _channelsString = "Do0:2";// first 24 bits as 'out'
-        string _instanceName;
-        Session _deviceSession;
+        IConvert _attachedConverter;
+        const string _channelsString = "Do0:2";// Do0:2 - 3*8 first bits as 'out'
+        UeiDaq.Session _deviceSession;
         UeiDaq.DigitalWriter _writer;
         UInt16[] _lastScan;
+
         public DIO403OutputDeviceManager(DeviceSetup setup) : base(setup)
         {
-            _instanceName = $"{DeviceName}/Slot{ setup.SlotNumber}/Output";
+            InstanceName = $"{DeviceName}/Slot{ setup.SlotNumber}/Out";
         }
-        public DIO403OutputDeviceManager() : base(null)
+        public DIO403OutputDeviceManager() : base(null) // must have default c-tor
         {
-
         }
-        public override string DeviceName => "DIO-403";
-
-        //protected override string ChannelsString => _channelsString;
-
-        public override string InstanceName => _instanceName;
 
         public override void Dispose()
         {
-            //OutputDevice deviceManager = ProjectRegistry.Instance.OutputDevicesMap[DeviceName];
-            //DeviceRequest dr = new DeviceRequest(OutputDevice.CancelTaskRequest, "");
-            //deviceManager.Enqueue(dr);
-            //System.Threading.Thread.Sleep(100);
-            //_logger.Debug($"{InstanceName} dispose");
-
             base.Dispose();
 
             if (null != _writer)
@@ -52,7 +44,6 @@ namespace UeiBridge
                 _deviceSession.Stop();
                 _deviceSession.Dispose();
             }
-
         }
 
         public override bool OpenDevice()
@@ -65,12 +56,11 @@ namespace UeiBridge
             _deviceSession.ConfigureTimingForSimpleIO();
             _writer = new UeiDaq.DigitalWriter(_deviceSession.GetDataStream());
 
-            Task.Factory.StartNew(() => OutputDeviceHandler_Task());
-
             int noOfbits = _deviceSession.GetNumberOfChannels() * 8;
             int firstBit = _deviceSession.GetChannel(0).GetIndex() * 8;
             _logger.Info($"Init success: {InstanceName}. Bits {firstBit}..{firstBit + noOfbits - 1} as output"); // { noOfCh} output channels
 
+            Task.Factory.StartNew(() => OutputDeviceHandler_Task());
             _isDeviceReady = true;
             return false;
         }
@@ -101,7 +91,7 @@ namespace UeiBridge
         {
             if (0 == e.SignalTime.Second % 10)
             {
-                _lastScan = null;
+                //_lastScan = null;
             }
         }
     }

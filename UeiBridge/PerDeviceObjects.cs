@@ -7,38 +7,36 @@ namespace UeiBridge
 {
     class PerDeviceObjects
     {
-        public InputDevice _inputDeviceManager;
-        public OutputDevice _outputDeviceManager;
-        public UdpReader _udpReader;
-        public UdpWriter _udpWriter;
-        //UeiDaq.Session _serialDeviceSession;
-
+        public InputDevice InputDeviceManager { get; private set; }
+        public OutputDevice OutputDeviceManager { get; private set; }
+        public UdpReader UdpReader { get; private set; }
+        public UdpWriter UdpWriter { get; private set; }
         public Session SerialSession { get; set; }
 
         public PerDeviceObjects(InputDevice inputDevice, UdpWriter udpWriter)
         {
-            _inputDeviceManager = inputDevice;
-            _udpWriter = udpWriter;
+            InputDeviceManager = inputDevice;
+            UdpWriter = udpWriter;
         }
         public void NewObjects(InputDevice inputDevice, UdpWriter udpWriter)
         {
-            System.Diagnostics.Debug.Assert(_inputDeviceManager == null);
-            System.Diagnostics.Debug.Assert(_udpWriter == null);
-            _inputDeviceManager = inputDevice;
-            _udpWriter = udpWriter;
+            System.Diagnostics.Debug.Assert(InputDeviceManager == null);
+            System.Diagnostics.Debug.Assert(UdpWriter == null);
+            InputDeviceManager = inputDevice;
+            UdpWriter = udpWriter;
         }
 
         public PerDeviceObjects(OutputDevice outputDevice, UdpReader udpReader)
         {
-            _outputDeviceManager = outputDevice;
-            _udpReader = udpReader;
+            OutputDeviceManager = outputDevice;
+            UdpReader = udpReader;
         }
         public void NewObjects(OutputDevice outputDevice, UdpReader udpReader)
         {
-            System.Diagnostics.Debug.Assert(null == _outputDeviceManager);
-            System.Diagnostics.Debug.Assert(null == _udpReader);
-            _outputDeviceManager = outputDevice;
-            _udpReader = udpReader;
+            System.Diagnostics.Debug.Assert(null == OutputDeviceManager);
+            System.Diagnostics.Debug.Assert(null == UdpReader);
+            OutputDeviceManager = outputDevice;
+            UdpReader = udpReader;
         }
     }
 
