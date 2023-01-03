@@ -74,7 +74,7 @@ namespace UeiBridge
     class DIO403Convert : IConvert
     {
         public string DeviceName => "DIO-403";
-        string _lastError=null;
+        string _lastError = null;
         readonly int _numberOfOutChannels;
 
         public DIO403Convert(DeviceSetup setup)
@@ -91,7 +91,7 @@ namespace UeiBridge
             UInt16[] deviceVector = (UInt16[])dt;
             byte[] resultVector = new byte[deviceVector.Length];
             Array.Clear(resultVector, 0, resultVector.Length);
-            for( int ch = 0; ch< deviceVector.Length; ch++)
+            for (int ch = 0; ch < deviceVector.Length; ch++)
             {
                 resultVector[ch] = (byte)(deviceVector[ch] & 0xFF);
             }
@@ -108,7 +108,51 @@ namespace UeiBridge
             // ================================
             UInt16[] resultVector = new UInt16[messagePayload.Length];
             Array.Clear(resultVector, 0, resultVector.Length);
-            for(int ch=0; ch<messagePayload.Length; ch++)
+            for (int ch = 0; ch < messagePayload.Length; ch++)
+            {
+                resultVector[ch] = messagePayload[ch];
+            }
+            return resultVector;
+        }
+    }
+    class DIO470Convert : IConvert
+    {
+        public string DeviceName => "DIO-470";
+        string _lastError = null;
+        readonly int _numberOfOutChannels;
+
+        public DIO470Convert(DeviceSetup setup)
+        {
+            _numberOfOutChannels = Config.Instance.MaxDigital403OutputChannels;
+        }
+
+        string IConvert.LastErrorMessage => _lastError;
+
+        public byte[] DeviceToEth(object dt)
+        {
+            // int16 vector goes to int8 vector
+            // ================================
+            UInt16[] deviceVector = (UInt16[])dt;
+            byte[] resultVector = new byte[deviceVector.Length];
+            Array.Clear(resultVector, 0, resultVector.Length);
+            for (int ch = 0; ch < deviceVector.Length; ch++)
+            {
+                resultVector[ch] = (byte)(deviceVector[ch] & 0xFF);
+            }
+            return resultVector;
+        }
+        public object EthToDevice(byte[] messagePayload)
+        {
+            if (messagePayload.Length < _numberOfOutChannels)
+            {
+                _lastError = $"digital-out message too short. {messagePayload.Length} ";
+                return null;
+            }
+            // int8 vector goes to int16 vector
+            // ================================
+            UInt16[] resultVector = new UInt16[messagePayload.Length];
+            Array.Clear(resultVector, 0, resultVector.Length);
+            for (int ch = 0; ch < messagePayload.Length; ch++)
             {
                 resultVector[ch] = messagePayload[ch];
             }

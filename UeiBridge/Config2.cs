@@ -104,6 +104,22 @@ namespace UeiBridge
             //BitOctets[3] = Direction.output;
         }
     }
+    public class DIO470Setup : DeviceSetup
+    {
+        //public Direction[] BitOctets;
+        public DIO470Setup()
+        {
+        }
+
+        public DIO470Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDaq.Device device) : base(localEndPoint, destEndPoint, device)
+        {
+            //BitOctets = new Direction[4];
+            //BitOctets[0] = Direction.input;
+            //BitOctets[1] = Direction.input;
+            //BitOctets[2] = Direction.output;
+            //BitOctets[3] = Direction.output;
+        }
+    }
     public class SL508892Setup: DeviceSetup
     {
         public SerialChannel[] Channels;
@@ -135,7 +151,10 @@ namespace UeiBridge
                     result = new AO308Setup( new EndPoint("227.3.1.10", portNumber++), ueiDevice);
                     break;
                 case "DIO-403":
-                    result = new DIO403Setup(new EndPoint("227.3.1.10", portNumber++), new EndPoint("227.2.1.10", portNumber++), ueiDevice); 
+                    result = new DIO403Setup(new EndPoint("227.3.1.10", portNumber++), new EndPoint("227.2.1.10", portNumber++), ueiDevice);
+                    break;
+                case "DIO-470":
+                    result = new DIO470Setup(new EndPoint("227.3.1.10", portNumber++), new EndPoint("227.2.1.10", portNumber++), ueiDevice);
                     break;
                 case "AI-201-100":
                     result = new AI201100Setup(new EndPoint("227.2.1.10", portNumber++), ueiDevice);
@@ -188,6 +207,7 @@ namespace UeiBridge
     }
     [XmlInclude(typeof(AO308Setup))]
     [XmlInclude(typeof(DIO403Setup))]
+    [XmlInclude(typeof(DIO470Setup))]
     [XmlInclude(typeof(AI201100Setup))]
     [XmlInclude(typeof(SL508892Setup))]
     public class Config2
