@@ -185,7 +185,7 @@ namespace UeiBridge
         /// <summary>
         /// Create output device managers and udp readers
         /// </summary>
-        private static void CreateDownwardsObjects(CubeSetup cubeSetup, List<List<PerDeviceObjects>> deviceObjectsTable)
+        private void CreateDownwardsObjects(CubeSetup cubeSetup, List<List<PerDeviceObjects>> deviceObjectsTable)
         {
             List<UeiDaq.Device> realDeviceList = StaticMethods.GetDeviceList(cubeSetup.CubeUrl);
 
@@ -200,7 +200,10 @@ namespace UeiBridge
 
                 Type devType = StaticMethods.GetDeviceManagerType<OutputDevice>(deviceSetup.DeviceName);
                 if (null == devType)
+                {
+                    _logger.Warn($"Failed to find manager class for device {deviceSetup.DeviceName}/Slot{realSlot}");
                     continue;
+                }
 
                 Session serialSession = null;
                 OutputDevice outDev;
@@ -366,20 +369,20 @@ namespace UeiBridge
                     UdpClient udpClient = new UdpClient();
                     System.Threading.Thread.Sleep(100);
 
-                    for (int i = 0; i < 10; i++)
+                    for (int i = 0; i < 1; i++)
                     {
 
                         // digital out
                         {
-                            IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[5].LocalEndPoint.ToIpEp();
-                            byte[] e403 = StaticMethods.Make_DIO403Down_Message();
-                            udpClient.Send(e403, e403.Length, destEp);
+                            //IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[5].LocalEndPoint?.ToIpEp();
+                            //byte[] e403 = StaticMethods.Make_DIO403Down_Message();
+                            //udpClient.Send(e403, e403.Length, destEp);
                         }
                         // analog out
                         {
-                            IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[0].LocalEndPoint.ToIpEp();
-                            byte[] e308 = StaticMethods.Make_A308Down_message();
-                            udpClient.Send(e308, e308.Length, destEp);
+                            //IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[0].LocalEndPoint.ToIpEp();
+                            //byte[] e308 = StaticMethods.Make_A308Down_message();
+                            //udpClient.Send(e308, e308.Length, destEp);
                         }
 #if dontremove
                         byte[] e430 = StaticMethods.Make_DIO430Down_Message();

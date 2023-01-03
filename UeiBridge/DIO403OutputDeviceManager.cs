@@ -25,7 +25,7 @@ namespace UeiBridge
 
         public DIO403OutputDeviceManager(DeviceSetup setup) : base(setup)
         {
-            InstanceName = $"{DeviceName}/Slot{ setup.SlotNumber}/Out";
+            InstanceName = $"{DeviceName}/Slot{ setup.SlotNumber}/Output";
         }
         public DIO403OutputDeviceManager() : base(null) // must have default c-tor
         {

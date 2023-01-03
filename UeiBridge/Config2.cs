@@ -124,6 +124,7 @@ namespace UeiBridge
 
     public static class ConfigFactory
     {
+        static int portNumber=50035;
         public static DeviceSetup DeviceSetupFactory( Device ueiDevice)
         {
             DeviceSetup result=null;
@@ -131,16 +132,16 @@ namespace UeiBridge
             switch (ueiDevice.GetDeviceName())
             {
                 case "AO-308":
-                    result = new AO308Setup( new EndPoint("227.3.1.10", 50035), ueiDevice);
+                    result = new AO308Setup( new EndPoint("227.3.1.10", portNumber++), ueiDevice);
                     break;
                 case "DIO-403":
-                    result = new DIO403Setup(new EndPoint("227.3.1.10", 50036), new EndPoint("227.2.1.10", 51037), ueiDevice); 
+                    result = new DIO403Setup(new EndPoint("227.3.1.10", portNumber++), new EndPoint("227.2.1.10", portNumber++), ueiDevice); 
                     break;
                 case "AI-201-100":
-                    result = new AI201100Setup(new EndPoint("227.2.1.10", 51038), ueiDevice);
+                    result = new AI201100Setup(new EndPoint("227.2.1.10", portNumber++), ueiDevice);
                     break;
                 case "SL-508-892":
-                    result = new SL508892Setup(new EndPoint("227.3.1.10", 50039), new EndPoint("227.2.1.10", 51040), ueiDevice);
+                    result = new SL508892Setup(new EndPoint("227.3.1.10", portNumber++), new EndPoint("227.2.1.10", portNumber++), ueiDevice);
                     break;
                 default:
                     Console.WriteLine($"Config: Missing setup-class for device {ueiDevice.GetDeviceName()}");

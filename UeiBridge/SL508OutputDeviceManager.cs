@@ -28,7 +28,7 @@ namespace UeiBridge
         {
             System.Diagnostics.Debug.Assert(null != serialSession);
             _serialSession = serialSession;
-            InstanceName = $"{DeviceName}/Slot{ setup.SlotNumber}/Out";
+            InstanceName = $"{DeviceName}/Slot{ setup.SlotNumber}/Output";
             _attachedConverter = StaticMethods.CreateConverterInstance( setup);
 
             // init message list

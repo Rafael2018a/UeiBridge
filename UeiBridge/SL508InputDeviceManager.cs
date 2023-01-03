@@ -47,7 +47,7 @@ namespace UeiBridge
             }
             System.Diagnostics.Debug.Assert(null != serialSession);
             _serialSession = serialSession;
-            _instanceName = $"{DeviceName}/Slot{setup.SlotNumber}/In";
+            _instanceName = $"{DeviceName}/Slot{setup.SlotNumber}/Input";
         }
 
         public SL508InputDeviceManager() : base(null)

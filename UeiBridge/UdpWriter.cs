@@ -67,12 +67,19 @@ namespace UeiBridge
                 // Create an endpoint
                 //IPEndPoint _mcastDestEP = new IPEndPoint(_mcastDestAddress, destPort);// Config.Instance.DestMulticastPort);
 
-                string usingNic;
+                string usingNic=null;
                 if (null != localBindAddress)
                 {
                     IPEndPoint localEP = new IPEndPoint(IPAddress.Parse(localBindAddress), 0);
-                    _sendSocket.Bind(localEP);
-                    usingNic = $"Using NIC: { localBindAddress}";
+                    try
+                    {
+                        _sendSocket.Bind(localEP);
+                        usingNic = $"Using NIC: {localBindAddress}";
+                    }
+                    catch(Exception ex)
+                    {
+                        _logger.Warn($"{instnceName}: Failed to bind to local NIC {localBindAddress}. {ex.Message}");
+                    }
                 }
                 else
                 {

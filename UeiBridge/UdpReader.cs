@@ -81,7 +81,7 @@ namespace UeiBridge
             }
             catch (SocketException ex)
             {
-                _logger.Warn( $"Faild to establish multicast receiver from group {_msListeningiEp}. {ex.Message}");
+                _logger.Warn( $"{_instanceName}: Faild to establish multicast receiver. Group {_msListeningiEp}. {ex.Message}");
             }
         }
 

@@ -28,7 +28,7 @@ namespace UeiBridge
         {
             _channelsString = "Ai0:23";
             _attachedConverter = StaticMethods.CreateConverterInstance( setup);
-            InstanceName = $"{DeviceName}/Slot{setup.SlotNumber}/In";
+            InstanceName = $"{DeviceName}/Slot{setup.SlotNumber}/Input";
             _targetConsumer = targetConsumer;
             _thisDeviceSetup = setup;
         }
