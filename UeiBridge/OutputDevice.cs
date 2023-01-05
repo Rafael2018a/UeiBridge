@@ -11,6 +11,18 @@ using UeiBridgeTypes;
 /// </summary>
 namespace UeiBridge
 {
+    class ViewerItem <T>
+    {
+        public T readValue;
+        public int timeToLive;
+
+        public ViewerItem(T readValue, int timeToLive)
+        {
+            this.readValue = readValue;
+            this.timeToLive = timeToLive;
+        }
+    }
+
     public abstract class OutputDevice : IDeviceManager,  IDisposable, IEnqueue<byte[]> // IEnqueue<DeviceRequest>,
     {
         // abstracts properties

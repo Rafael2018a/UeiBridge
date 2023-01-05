@@ -18,7 +18,7 @@ namespace UeiBridge
         // privates
         log4net.ILog _logger = StaticMethods.GetLogger();
         IConvert _attachedConverter;
-        List<byte[]> _lastMessagesList = new List<byte[]>();
+        List<byte[]> _lastScanList = new List<byte[]>();
         Session _serialSession;
         int _sentBytesAcc = 0;
         int _numberOfSentMessages = 0;
@@ -34,7 +34,7 @@ namespace UeiBridge
             // init message list
             for (int i = 0; i < serialSession.GetNumberOfChannels(); i++)
             {
-                _lastMessagesList.Add(null);
+                _lastScanList.Add(null);
             }
         }
         public SL508OutputDeviceManager() : base(null)// (default c-tor must be present)
@@ -81,9 +81,9 @@ namespace UeiBridge
         {
             StringBuilder formattedString = new StringBuilder();
 
-            for (int ch = 0; ch < _lastMessagesList.Count; ch++) // do NOT use foreach since collection might be updated in other thread
+            for (int ch = 0; ch < _lastScanList.Count; ch++) // do NOT use foreach since collection might be updated in other thread
             {
-                byte[] last = _lastMessagesList[ch];
+                byte[] last = _lastScanList[ch];
                 if (null != last)
                 {
                     int len = (last.Length > 20) ? 20 : last.Length;
@@ -117,12 +117,13 @@ namespace UeiBridge
             try
             {
                 sentBytes = sw.Write(request.PayloadBytes);
+                _logger.Debug($"Write to serial port. ch {request.SerialChannelNumber}");
                 System.Diagnostics.Debug.Assert(sentBytes == request.PayloadBytes.Length);
                 //System.Threading.Thread.Sleep(10);
                 //_logger.Debug($"Sent ch{request.SerialChannel} {BitConverter.ToString(incomingMessage)}");
                 _sentBytesAcc += sentBytes;
                 _numberOfSentMessages++;
-                _lastMessagesList[request.SerialChannelNumber] = request.PayloadBytes;
+                _lastScanList[request.SerialChannelNumber] = request.PayloadBytes;
             }
             catch (UeiDaqException ex)
             {
@@ -143,12 +144,12 @@ namespace UeiBridge
 
         protected override void resetLastScanTimer_Elapsed(object sender, ElapsedEventArgs e)
         {
-            if (0== _lastMessagesList.Count)
+            if (0== _lastScanList.Count)
             {
                 return;
             }
-            int ch = e.SignalTime.Second % _lastMessagesList.Count;
-            _lastMessagesList[ch] = null;
+            int ch = e.SignalTime.Second % _lastScanList.Count;
+            _lastScanList[ch] = null;
             //throw new NotImplementedException();
             //e.SignalTime.Second
         }

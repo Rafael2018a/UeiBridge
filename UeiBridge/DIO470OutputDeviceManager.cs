@@ -8,26 +8,26 @@ namespace UeiBridge
 {
     /// <summary>
     /// from the manual:
-    /// ** 48-channel Digital I/O **
+    /// ** 10 channel relay board **
     /// </summary>
-    class DIO403OutputDeviceManager : OutputDevice //DioOutputDeviceManager
+    class DIO470OutputDeviceManager : OutputDevice
     {
-        public override string DeviceName => "DIO-403";
+        public override string DeviceName => "DIO-470";
         public override string InstanceName { get; }
 
         //privates
         log4net.ILog _logger = StaticMethods.GetLogger();
         IConvert _attachedConverter;
-        const string _channelsString = "Do0:2";// Do0:2 - 3*8 first bits as 'out'
+        const string _channelsString = "Do0";
         UeiDaq.Session _deviceSession;
         UeiDaq.DigitalWriter _writer;
-        System.Collections.Generic.List<ViewerItem<UInt16>> _lastScanList;
+        UInt16[] _lastScan;
 
-        public DIO403OutputDeviceManager(DeviceSetup setup) : base(setup)
+        public DIO470OutputDeviceManager(DeviceSetup setup) : base(setup)
         {
             InstanceName = $"{DeviceName}/Slot{ setup.SlotNumber}/Output";
         }
-        public DIO403OutputDeviceManager() : base(null) // must have default c-tor
+        public DIO470OutputDeviceManager() : base(null) // must have default c-tor
         {
         }
 
@@ -56,11 +56,12 @@ namespace UeiBridge
             _deviceSession.ConfigureTimingForSimpleIO();
             _writer = new UeiDaq.DigitalWriter(_deviceSession.GetDataStream());
 
-            int noOfbits = _deviceSession.GetNumberOfChannels() * 8;
-            int firstBit = _deviceSession.GetChannel(0).GetIndex() * 8;
-            _logger.Info($"Init success: {InstanceName}. Bits {firstBit}..{firstBit + noOfbits - 1} as output"); // { noOfCh} output channels
+            //UInt16[] u16 = { 0x1 };
+            //_writer.WriteSingleScanUInt16(u16);
 
-            _lastScanList = new System.Collections.Generic.List<ViewerItem<UInt16>>(new ViewerItem<UInt16>[_deviceSession.GetNumberOfChannels()]);
+            int noOfbits = 10;// _deviceSession.GetNumberOfChannels() * 8;
+            int firstBit = 0;// _deviceSession.GetChannel(0).GetIndex() * 8;
+            _logger.Info($"Init success: {InstanceName}. Bits {firstBit}..{firstBit + noOfbits - 1} as output"); // { noOfCh} output channels
 
             Task.Factory.StartNew(() => OutputDeviceHandler_Task());
             _isDeviceReady = true;
@@ -69,21 +70,16 @@ namespace UeiBridge
 
         public override string GetFormattedStatus()
         {
-            System.Text.StringBuilder formattedString = new System.Text.StringBuilder("Output bits: ");
-            if (_lastScanList[0]?.timeToLive > 0)
+            System.Text.StringBuilder sb = new System.Text.StringBuilder("Output bits: ");
+            if (null != _lastScan)
             {
-                _lastScanList[0].timeToLive--;
-                foreach (var vi in _lastScanList)
+                foreach (UInt16 val in _lastScan)
                 {
-                    formattedString.Append(Convert.ToString(vi.readValue, 2).PadLeft(8, '0'));
-                    formattedString.Append("  ");
+                    sb.Append(Convert.ToString(val, 2).PadLeft(8, '0'));
+                    sb.Append("  ");
                 }
             }
-            else
-            {
-                formattedString.Append("- - -");
-            }
-            return formattedString.ToString();
+            return sb.ToString();
         }
 
         protected override void HandleRequest(EthernetMessage request)
@@ -92,10 +88,7 @@ namespace UeiBridge
             ushort[] scan = ls as ushort[];
             System.Diagnostics.Debug.Assert( scan != null);
             _writer.WriteSingleScanUInt16( scan);
-            for(int ch=0; ch<scan.Length; ch++)
-            {
-                _lastScanList[ch] = new ViewerItem<UInt16>(scan[ch], timeToLive:5);
-            }
+            _lastScan = scan;
         }
         protected override void resetLastScanTimer_Elapsed(object sender, ElapsedEventArgs e)
         {

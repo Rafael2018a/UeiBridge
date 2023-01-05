@@ -25,7 +25,7 @@ namespace UeiBridge
         public SerialChannel(string portname)
         {
             this.portname = portname;
-            Baudrate = SerialPortSpeed.BitsPerSecond250000;
+            Baudrate = SerialPortSpeed.BitsPerSecond115200;
         }
         public SerialChannel()
         {

@@ -374,14 +374,14 @@ namespace UeiBridge
 
                         // digital out
                         {
-                            //IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[5].LocalEndPoint?.ToIpEp();
-                            //byte[] e403 = StaticMethods.Make_DIO403Down_Message();
+                            IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[5].LocalEndPoint?.ToIpEp();
+                            byte[] e403 = StaticMethods.Make_DIO403Down_Message();
                             //udpClient.Send(e403, e403.Length, destEp);
                         }
                         // analog out
                         {
-                            //IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[0].LocalEndPoint.ToIpEp();
-                            //byte[] e308 = StaticMethods.Make_A308Down_message();
+                            IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[0].LocalEndPoint.ToIpEp();
+                            byte[] e308 = StaticMethods.Make_A308Down_message();
                             //udpClient.Send(e308, e308.Length, destEp);
                         }
 #if dontremove

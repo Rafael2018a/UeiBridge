@@ -20,7 +20,7 @@ namespace UeiBridge
         log4net.ILog _logger = StaticMethods.GetLogger();
         const string _channelsString = "Ao0:7";
         Session _deviceSession;
-        double[] _lastScan;
+        System.Collections.Generic.List<ViewerItem<double>> _lastScanList;
 
         public override string InstanceName { get; }// => _instanceName;
 
@@ -48,6 +48,8 @@ namespace UeiBridge
                 _deviceSession.ConfigureTimingForSimpleIO();
                 _writer = new AnalogScaledWriter(_deviceSession.GetDataStream());
 
+                _lastScanList = new System.Collections.Generic.List<ViewerItem<double>>(new ViewerItem<double>[_deviceSession.GetNumberOfChannels()]);
+
                 Task.Factory.StartNew(() => OutputDeviceHandler_Task());
 
                 var range = _deviceSession.GetDevice().GetAORanges();
@@ -66,63 +68,40 @@ namespace UeiBridge
 
         protected override void HandleRequest(EthernetMessage em)
         {
-            //DeviceRequest dr;
-            // init session, if needed.
-            // =======================
-            //if ((null == _deviceSession) || (_caseUrl != dr.CaseUrl))
-            //{
-            //    CloseDevice();
-
-            //    string deviceIndex = StaticMethods.FindDeviceIndex(DeviceName);
-            //    if (null == deviceIndex)
-            //    {
-            //        _logger.Warn($"Can't find index for device {DeviceName}");
-            //        return;
-            //    }
-
-            //    string url1 = dr.CaseUrl + deviceIndex + _channelsString;
-
-            //    if (OpenDevice(url1))
-            //    {
-            //        var range = _deviceSession.GetDevice().GetAORanges();
-
-            //        //_logger.Info($"{_deviceName} init success. {_numberOfChannels} output channels. {url1}");
-            //        _logger.Info($"{DeviceName}(Output) init success. { _deviceSession.GetNumberOfChannels()} channels. Range {range[0].minimum},{range[0].maximum}. {deviceIndex + _channelsString}");
-            //        _caseUrl = dr.CaseUrl;
-            //    }
-            //    else
-            //    {
-            //        _logger.Warn($"Device {DeviceName} init fail");
-            //        return;
-            //    }
-            //}
-
             // write to device
             // ===============
             var p = _attachedConverter.EthToDevice(em.PayloadBytes);
             double [] scan = p as double[];
             System.Diagnostics.Debug.Assert(scan != null);
             _writer.WriteSingleScan( scan);
-                //_logger.Debug($"AO voltage {_lastScan[0]}");
-                //_logger.Debug($"scan written to device. Length: {_lastScan.Length}");
-            _lastScan = scan;
-        }
+            for (int ch = 0; ch < scan.Length; ch++)
+            {
+                _lastScanList[ch] = new ViewerItem<double>(scan[ch], timeToLive: 5);
+            }
 
-        //StatusStruct _status = new StatusStruct();
+        }
 
 
         public override string GetFormattedStatus()
         {
-            System.Text.StringBuilder sb = new System.Text.StringBuilder("Output voltage: ");
-            if (null != _lastScan)
+            System.Text.StringBuilder formattedString = new System.Text.StringBuilder("Output voltage: ");
+            if (_lastScanList[0]?.timeToLive > 0)
             {
-                foreach (double d in _lastScan)
+                _lastScanList[0].timeToLive--;
+                if (null != _lastScanList)
                 {
-                    sb.Append("  ");
-                    sb.Append(d.ToString("0.0"));
+                    foreach (var vi in _lastScanList)
+                    {
+                        formattedString.Append("  ");
+                        formattedString.Append(vi.readValue.ToString("0.0"));
+                    }
                 }
             }
-            return sb.ToString();
+            else
+            {
+                formattedString.Append("- - -");
+            }
+            return formattedString.ToString();
         }
 
         public override void Dispose()
@@ -148,7 +127,7 @@ namespace UeiBridge
         {
             if (0 == e.SignalTime.Second % 10)
             {
-                _lastScan = null;
+                //_lastScanList = null;
             }
         }
     }
