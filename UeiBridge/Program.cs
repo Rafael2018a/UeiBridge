@@ -178,6 +178,7 @@ namespace UeiBridge
                 {
                     devList[deviceIndex]?.UdpReader?.Dispose();
                     devList[deviceIndex]?.OutputDeviceManager?.Dispose();
+                    devList[deviceIndex]?.InputDeviceManager?.Dispose();
                 }
             }
         }

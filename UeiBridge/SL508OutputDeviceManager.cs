@@ -72,10 +72,16 @@ namespace UeiBridge
         public override void Dispose()
         {
             base.Dispose();
-
-            // dispose all writers
-
-            // dispose session
+            for(int ch=0; ch<_serialWriterList.Count; ch++)
+            {
+                _serialWriterList[ch].Dispose();
+            }
+            //if (_serialSession.IsRunning())
+            //{
+            //    _serialSession?.Stop();
+            //}
+            _serialSession.Dispose();
+            _logger.Debug("_serialSession?.Dispose();");
         }
         public override string GetFormattedStatus()
         {
@@ -117,7 +123,7 @@ namespace UeiBridge
             try
             {
                 sentBytes = sw.Write(request.PayloadBytes);
-                _logger.Debug($"Write to serial port. ch {request.SerialChannelNumber}");
+                _logger.Debug($" *** Write to serial port. ch {request.SerialChannelNumber}");
                 System.Diagnostics.Debug.Assert(sentBytes == request.PayloadBytes.Length);
                 //System.Threading.Thread.Sleep(10);
                 //_logger.Debug($"Sent ch{request.SerialChannel} {BitConverter.ToString(incomingMessage)}");

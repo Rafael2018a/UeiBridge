@@ -139,8 +139,16 @@ namespace UeiBridge
         public override void Dispose()
         {
             _InDisposeState = true;
-            System.Threading.Thread.Sleep(500);
-            CloseDevices();
+            for (int i = 0; i < _serialReaderList.Count; i++)
+            {
+                _serialReaderList[i].Dispose();
+            }
+            //if (_serialSession.IsRunning())
+            //{
+            //    _deviceSession?.Stop();
+            //}
+            _deviceSession?.Dispose();
+
         }
 
         private void CloseDevices()
