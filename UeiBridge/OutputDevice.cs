@@ -14,12 +14,12 @@ namespace UeiBridge
     class ViewerItem <T>
     {
         public T readValue;
-        public int timeToLive;
+        public TimeSpan timeToLive;
 
-        public ViewerItem(T readValue, int timeToLive)
+        public ViewerItem(T readValue, int timeToLiveMs)
         {
             this.readValue = readValue;
-            this.timeToLive = timeToLive;
+            this.timeToLive = TimeSpan.FromMilliseconds(timeToLiveMs);
         }
     }
 
@@ -34,31 +34,32 @@ namespace UeiBridge
         // ----------------
         public abstract bool OpenDevice();
         protected abstract void HandleRequest(EthernetMessage request);
-        public abstract string GetFormattedStatus();
+        public abstract string GetFormattedStatus( TimeSpan interval);
         
         // protected fields
         // ----------------
         protected string _caseUrl; // remove?
         protected DeviceSetup _deviceSetup; // from config
         protected bool _isDeviceReady=false;
+        //protected DateTime _publishTime = DateTime.Now;
 
         // privates
         // ---------
         BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
         log4net.ILog _logger = StaticMethods.GetLogger();
-        System.Timers.Timer _resetLastScanTimer = new System.Timers.Timer(1000);
+        //System.Timers.Timer _resetLastScanTimer = new System.Timers.Timer(1000);
         bool _disposeStarted = false;
 
 
         protected OutputDevice(DeviceSetup deviceSetup)
         {
             _deviceSetup = deviceSetup;
-            _resetLastScanTimer.Elapsed += resetLastScanTimer_Elapsed;
-            _resetLastScanTimer.AutoReset = true;
-            _resetLastScanTimer.Enabled = true;
+            //_resetLastScanTimer.Elapsed += resetLastScanTimer_Elapsed;
+            //_resetLastScanTimer.AutoReset = true;
+            //_resetLastScanTimer.Enabled = true;
         }
 
-        protected abstract void resetLastScanTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e);
+        //protected abstract void resetLastScanTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e);
 
         public void Enqueue(byte[] m)
         {

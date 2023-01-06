@@ -68,7 +68,7 @@ namespace UeiBridge
             return false;
         }
 
-        public override string GetFormattedStatus()
+        public override string GetFormattedStatus( TimeSpan interval)
         {
             System.Text.StringBuilder sb = new System.Text.StringBuilder("Output bits: ");
             if (null != _lastScan)
@@ -89,13 +89,6 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert( scan != null);
             _writer.WriteSingleScanUInt16( scan);
             _lastScan = scan;
-        }
-        protected override void resetLastScanTimer_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            if (0 == e.SignalTime.Second % 10)
-            {
-                //_lastScan = null;
-            }
         }
     }
 }

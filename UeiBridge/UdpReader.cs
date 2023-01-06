@@ -20,29 +20,25 @@ namespace UeiBridge
         UdpClient _udpclient;
         string _instanceName;
         IPEndPoint _msListeningiEp;
+        IPAddress _localNIC;
 
-        public UdpReader( IPEndPoint listeninigEp, IEnqueue<byte[]> consumer, string instanceName)
+        public UdpReader( IPEndPoint listeninigEp, IPAddress localNIC, IEnqueue<byte[]> consumer, string instanceName)
         {
             this._datagramConsumer = consumer;
             this._instanceName = instanceName;
             this._msListeningiEp = listeninigEp;
+            this._localNIC = localNIC;
             System.Diagnostics.Debug.Assert(instanceName.Length > 1);
         }
 
-        internal void Start()
-        {
-            IPAddress mcastAddress;
-            if (IPAddress.TryParse(Config.Instance.ReceiverMulticastAddress, out mcastAddress))
-            {
-                EstablishMulticastReceiver();
-            }
-            else
-            {
-                _logger.Warn($"Fail to parse ip {Config.Instance.ReceiverMulticastAddress}. Udp Receiver disabled.");
-            }
-        }
+        //internal void Start()
+        //{
+        //    //IPAddress mcastAddress;
+        //    //if (IPAddress.TryParse(Config.Instance.ReceiverMulticastAddress, out mcastAddress))
+        //    EstablishMulticastReceiver();
+        //}
         
-        public void EstablishMulticastReceiver()
+        public void Start()
         {
             //int _port;
             //IPAddress _multicastIPaddress;
@@ -55,7 +51,7 @@ namespace UeiBridge
             {
 
                 //IPAddress localIP = (localIPaddress == null) ? IPAddress.Any : localIPaddress;
-                IPAddress localIP = IPAddress.Any;
+                //IPAddress localIP = IPAddress.Any;
 
                 // Create endpoints
                 //IPEndPoint _remoteEndPoint = new IPEndPoint(multicastAddress, multicastPort);
@@ -69,11 +65,11 @@ namespace UeiBridge
                 _udpclient.ExclusiveAddressUse = false;
 
                 // Bind
-                IPEndPoint _localEndPoint = new IPEndPoint(localIP, _msListeningiEp.Port);
+                IPEndPoint _localEndPoint = new IPEndPoint(_localNIC, _msListeningiEp.Port);
                 _udpclient.Client.Bind(_localEndPoint);
 
                 // join
-                _udpclient.JoinMulticastGroup(_msListeningiEp.Address);
+                _udpclient.JoinMulticastGroup(_msListeningiEp.Address, _localNIC);
 
                 _logger.Info($"Multicast receiver - {this._instanceName} - esablished. Listening on {_msListeningiEp}");
                 // Start listening for incoming data
@@ -95,6 +91,7 @@ namespace UeiBridge
             Byte[] receivedBytes = _udpclient.EndReceive(ar, ref sender);
             //_logger.Debug($"Datagram received from {sender.Address}, Length={receivedBytes.Length}");
 
+            
             this._datagramConsumer.Enqueue(receivedBytes);
 
             

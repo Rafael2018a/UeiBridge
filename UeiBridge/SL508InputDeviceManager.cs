@@ -50,7 +50,7 @@ namespace UeiBridge
         {
         }
 
-        public override string GetFormattedStatus()
+        public override string GetFormattedStatus( TimeSpan interval)
         {
             StringBuilder formattedString = new StringBuilder();
             for (int ch = 0; ch < _lastScanList.Count; ch++)
@@ -58,22 +58,21 @@ namespace UeiBridge
                 var item = _lastScanList[ch];
                 if (null != item)
                 {
-                    if (item.timeToLive > 0)
+                    if (item.timeToLive.Ticks > 0)
                     {
-                        item.timeToLive--;
+                        item.timeToLive -= interval;
                         int len = (item.readValue.Length > 20) ? 20 : item.readValue.Length;
-                        string s = $"Payload, ch{ch} ({item.readValue.Length}): {BitConverter.ToString(item.readValue).Substring(0, len * 3 - 1)}\n";
+                        string s = $"Ch{ch}: Payload=({item.readValue.Length}): {BitConverter.ToString(item.readValue).Substring(0, len * 3 - 1)}\n";
                         formattedString.Append(s);
                     }
                     else
                     {
-                        formattedString.Append($"Payload ch{ch}: <empty>\n");
+                        formattedString.Append($"Ch{ch}: <empty>\n");
                     }
-
                 }
                 else
                 {
-                    formattedString.Append($"Payload ch{ch}: <empty>\n");
+                    formattedString.Append($"Ch{ch}: <empty>\n");
                 }
             }
             return formattedString.ToString();
@@ -92,8 +91,8 @@ namespace UeiBridge
             {
                 byte[] receiveBuffer = _serialReaderList[channel].EndRead(ar);
 
-                _lastScanList[channel] = new ViewerItem<byte[]>(receiveBuffer, timeToLive: 5);
-                _logger.Debug($"read from serial port. ch {channel}");
+                _lastScanList[channel] = new ViewerItem<byte[]>(receiveBuffer, timeToLiveMs: 5000);
+                //_logger.Debug($"read from serial port. ch {channel}");
 
                 // forward to consumer (send by udp)
                 ScanResult sr = new ScanResult(receiveBuffer, this);
@@ -150,22 +149,6 @@ namespace UeiBridge
             _deviceSession?.Dispose();
 
         }
-
-        private void CloseDevices()
-        {
-            _deviceSession.Stop();
-
-            for (int i = 0; i < _serialReaderList.Count; i++)
-            {
-                _serialReaderList[i].Dispose();
-                _serialReaderList[i] = null;
-            }
-
-            _deviceSession.Dispose();
-            _deviceSession = null;
-
-        }
-
 
         [Obsolete]
         private bool OpenDevices(string baseUrl, string deviceName)

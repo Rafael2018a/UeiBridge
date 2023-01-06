@@ -109,7 +109,7 @@ namespace UeiBridge
         }
 
         UInt16[] _lastScan;
-        public override string GetFormattedStatus()
+        public override string GetFormattedStatus( TimeSpan interval)
         {
             System.Text.StringBuilder sb = new System.Text.StringBuilder("Input bits: ");
             if (null != _lastScan)

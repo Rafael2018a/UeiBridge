@@ -76,18 +76,17 @@ namespace UeiBridge
             _writer.WriteSingleScan( scan);
             for (int ch = 0; ch < scan.Length; ch++)
             {
-                _lastScanList[ch] = new ViewerItem<double>(scan[ch], timeToLive: 5);
+                _lastScanList[ch] = new ViewerItem<double>(scan[ch], timeToLiveMs: 5000);
             }
-
         }
-
-
-        public override string GetFormattedStatus()
+        
+        public override string GetFormattedStatus( TimeSpan interval)
         {
+
             System.Text.StringBuilder formattedString = new System.Text.StringBuilder("Output voltage: ");
-            if (_lastScanList[0]?.timeToLive > 0)
+            if (_lastScanList[0]?.timeToLive.Ticks > 0)
             {
-                _lastScanList[0].timeToLive--;
+                _lastScanList[0].timeToLive -= interval;
                 if (null != _lastScanList)
                 {
                     foreach (var vi in _lastScanList)
@@ -123,12 +122,12 @@ namespace UeiBridge
             _deviceSession = null;
         }
 
-        protected override void resetLastScanTimer_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            if (0 == e.SignalTime.Second % 10)
-            {
-                //_lastScanList = null;
-            }
-        }
+        //protected override void resetLastScanTimer_Elapsed(object sender, ElapsedEventArgs e)
+        //{
+        //    if (0 == e.SignalTime.Second % 10)
+        //    {
+        //        //_lastScanList = null;
+        //    }
+        //}
     }
 }

@@ -13,7 +13,7 @@ namespace UeiBridge
     {
         // abstarcts
         public abstract IConvert AttachedConverter { get; }
-        public abstract string GetFormattedStatus();
+        public abstract string GetFormattedStatus( TimeSpan interval);
         public abstract void OpenDevice();
         public abstract string DeviceName { get; }
         public abstract string InstanceName { get; }
@@ -24,7 +24,7 @@ namespace UeiBridge
         protected string _channelsString;
         protected ISend<SendObject> _targetConsumer;
         protected System.Threading.Timer _samplingTimer;
-        //protected TimeSpan _samplingInterval;
+        //protected DateTime _publishTime = DateTime.Now;
 
         //protected DeviceSetup _deviceSetup;
 

@@ -18,7 +18,7 @@ namespace UeiBridge
         // privates
         log4net.ILog _logger = StaticMethods.GetLogger();
         IConvert _attachedConverter;
-        List<byte[]> _lastScanList = new List<byte[]>();
+        List<ViewerItem<byte[]>> _lastScanList = new List<ViewerItem<byte[]>>();
         Session _serialSession;
         int _sentBytesAcc = 0;
         int _numberOfSentMessages = 0;
@@ -83,25 +83,30 @@ namespace UeiBridge
             _serialSession.Dispose();
             _logger.Debug("_serialSession?.Dispose();");
         }
-        public override string GetFormattedStatus()
+        public override string GetFormattedStatus(TimeSpan interval)
         {
             StringBuilder formattedString = new StringBuilder();
 
             for (int ch = 0; ch < _lastScanList.Count; ch++) // do NOT use foreach since collection might be updated in other thread
             {
-                byte[] last = _lastScanList[ch];
-                if (null != last)
+                if (null == _lastScanList[ch])
+                    continue;
+
+                _lastScanList[ch].timeToLive -= interval;
+
+                byte[] last = _lastScanList[ch].readValue;
+                if ((null != last) && (_lastScanList[ch].timeToLive.Ticks > 0))
                 {
                     int len = (last.Length > 20) ? 20 : last.Length;
-                    string s = $"Payload ch{ch} ({last.Length}): {BitConverter.ToString(last).Substring(0, len * 3 - 1)}\n";
+                    string s = $"Ch{ch}: Payload=({last.Length}): {BitConverter.ToString(last).Substring(0, len * 3 - 1)}\n";
                     formattedString.Append(s);
                 }
                 else
                 {
-                    formattedString.Append("null\n");
+                    formattedString.Append($"Ch{ch}: null\n");
                 }
             }
-            formattedString.Append($"Total messages {_numberOfSentMessages} bytes {_sentBytesAcc}");
+            formattedString.Append($"Total: {_numberOfSentMessages} messages, {_sentBytesAcc} bytes ");
             return formattedString.ToString();
         }
 
@@ -123,13 +128,13 @@ namespace UeiBridge
             try
             {
                 sentBytes = sw.Write(request.PayloadBytes);
-                _logger.Debug($" *** Write to serial port. ch {request.SerialChannelNumber}");
+                //_logger.Debug($" *** Write to serial port. ch {request.SerialChannelNumber}");
                 System.Diagnostics.Debug.Assert(sentBytes == request.PayloadBytes.Length);
                 //System.Threading.Thread.Sleep(10);
                 //_logger.Debug($"Sent ch{request.SerialChannel} {BitConverter.ToString(incomingMessage)}");
                 _sentBytesAcc += sentBytes;
                 _numberOfSentMessages++;
-                _lastScanList[request.SerialChannelNumber] = request.PayloadBytes;
+                _lastScanList[request.SerialChannelNumber] = new ViewerItem<byte[]>( request.PayloadBytes, 5000);
             }
             catch (UeiDaqException ex)
             {
@@ -148,17 +153,17 @@ namespace UeiBridge
             //}
         }
 
-        protected override void resetLastScanTimer_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            if (0== _lastScanList.Count)
-            {
-                return;
-            }
-            int ch = e.SignalTime.Second % _lastScanList.Count;
-            _lastScanList[ch] = null;
-            //throw new NotImplementedException();
-            //e.SignalTime.Second
-        }
+        //protected override void resetLastScanTimer_Elapsed(object sender, ElapsedEventArgs e)
+        //{
+        //    if (0== _lastScanList.Count)
+        //    {
+        //        return;
+        //    }
+        //    int ch = e.SignalTime.Second % _lastScanList.Count;
+        //    _lastScanList[ch] = null;
+        //    //throw new NotImplementedException();
+        //    //e.SignalTime.Second
+        //}
         //else
         //{
         //    _logger.Warn($"No serial writer for channel {request.SerialChannel}");

@@ -42,7 +42,7 @@ namespace UeiBridge
     public class AppSetup
     {
         //[XmlElement(ElementName = "AppSetup")]
-        public string SelectedNicForSendingMcast = "221.109.251.103";
+        public string SelectedNicForMCast = "221.109.251.103";
         public EndPoint StatusViewerEP = new EndPoint("239.10.10.17", 5093);
     }
     public class DeviceSetup

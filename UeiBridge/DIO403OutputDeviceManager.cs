@@ -67,12 +67,12 @@ namespace UeiBridge
             return false;
         }
 
-        public override string GetFormattedStatus()
+        public override string GetFormattedStatus( TimeSpan interval)
         {
             System.Text.StringBuilder formattedString = new System.Text.StringBuilder("Output bits: ");
-            if (_lastScanList[0]?.timeToLive > 0)
+            if (_lastScanList[0]?.timeToLive.Ticks > 0)
             {
-                _lastScanList[0].timeToLive--;
+                _lastScanList[0].timeToLive -= interval;
                 foreach (var vi in _lastScanList)
                 {
                     formattedString.Append(Convert.ToString(vi.readValue, 2).PadLeft(8, '0'));
@@ -94,14 +94,7 @@ namespace UeiBridge
             _writer.WriteSingleScanUInt16( scan);
             for(int ch=0; ch<scan.Length; ch++)
             {
-                _lastScanList[ch] = new ViewerItem<UInt16>(scan[ch], timeToLive:5);
-            }
-        }
-        protected override void resetLastScanTimer_Elapsed(object sender, ElapsedEventArgs e)
-        {
-            if (0 == e.SignalTime.Second % 10)
-            {
-                //_lastScan = null;
+                _lastScanList[ch] = new ViewerItem<UInt16>(scan[ch], timeToLiveMs:5000);
             }
         }
     }

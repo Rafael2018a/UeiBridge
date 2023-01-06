@@ -152,7 +152,7 @@ namespace UeiBridge
             }
             return null;
         }
-        public static Type GetDeviceManagerType<T1>( string deviceName) where T1 : IDeviceManager
+        public static Type GetDeviceManagerType<ParentType>( string deviceName) where ParentType : IDeviceManager
         {
             foreach (Type theType in System.Reflection.Assembly.GetExecutingAssembly().GetTypes())
             {
@@ -160,9 +160,9 @@ namespace UeiBridge
                     continue;
 
                 // if theType is an OutputDevice class
-                if (typeof(T1).IsAssignableFrom(theType))
+                if (typeof(ParentType).IsAssignableFrom(theType))
                 {
-                    T1 oIinstnace = (T1)Activator.CreateInstance(theType);
+                    ParentType oIinstnace = (ParentType)Activator.CreateInstance(theType);
                     if (oIinstnace.DeviceName == deviceName)
                         return theType;
                     
@@ -209,7 +209,7 @@ namespace UeiBridge
             // build 8 messages, one per channel
             for (int ch = 0; ch < 8; ch++)
             {
-                string m = $"hello ch{ch} seed {seed} ksd klskd kljasldkjf laksjdfkl klsjd fkasdfjlk askldjfklasjdf asdfklj ksdajf ";
+                string m = $"hello ch{ch} seed {seed} ------------ ";
 
                 // string to ascii
 
@@ -219,7 +219,6 @@ namespace UeiBridge
                 msg.SerialChannelNumber = ch;
                 msg.SlotNumber = 3;
                 msgs.Add(msg.ToByteArrayDown());
-
             }
             return msgs;
         }

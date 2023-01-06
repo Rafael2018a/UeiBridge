@@ -202,7 +202,6 @@ namespace UeiBridge
                 Type devType = StaticMethods.GetDeviceManagerType<OutputDevice>(deviceSetup.DeviceName);
                 if (null == devType)
                 {
-                    _logger.Warn($"Failed to find manager class for device {deviceSetup.DeviceName}/Slot{realSlot}");
                     continue;
                 }
 
@@ -229,7 +228,8 @@ namespace UeiBridge
                 System.Diagnostics.Debug.Assert(null != outDev);
                 System.Diagnostics.Debug.Assert(null != deviceSetup.LocalEndPoint);
 
-                UdpReader ureader = new UdpReader(deviceSetup.LocalEndPoint.ToIpEp(), outDev, outDev.InstanceName);
+                var nic = IPAddress.Parse(Config2.Instance.AppSetup.SelectedNicForMCast);
+                UdpReader ureader = new UdpReader(deviceSetup.LocalEndPoint.ToIpEp(), nic,  outDev, outDev.InstanceName);
                 if (null == deviceObjectsTable[cubeSetup.CubeNumber][realSlot])
                 {
                     deviceObjectsTable[cubeSetup.CubeNumber][realSlot] = new PerDeviceObjects(outDev, ureader);
@@ -247,7 +247,7 @@ namespace UeiBridge
         /// </summary>
         /// <param name="cubeSetup"></param>
         /// <param name="deviceObjectsTable"></param>
-        private static void CreateUpwardsObjects(CubeSetup cubeSetup, List<List<PerDeviceObjects>> deviceObjectsTable)
+        private void CreateUpwardsObjects(CubeSetup cubeSetup, List<List<PerDeviceObjects>> deviceObjectsTable)
         {
             List<UeiDaq.Device> realDeviceList = StaticMethods.GetDeviceList(cubeSetup.CubeUrl);
 
@@ -262,7 +262,9 @@ namespace UeiBridge
 
                 Type devType = StaticMethods.GetDeviceManagerType<InputDevice>(deviceSetup.DeviceName);
                 if (null == devType)
+                {
                     continue;
+                }
 
                 string instanceName = $"{realDevice.GetDeviceName()}/Slot{deviceSetup.SlotNumber}";
                 UdpWriter uWriter = new UdpWriter(instanceName, deviceSetup.DestEndPoint.ToIpEp(), null);
@@ -304,60 +306,76 @@ namespace UeiBridge
 
         void PublishStatus_Task()
         {
+            const int intervalMs = 100;
             IPEndPoint destEP = Config2.Instance.AppSetup.StatusViewerEP.ToIpEp();
-            UdpWriter uw = new UdpWriter("To-StatusViewer", destEP, Config2.Instance.AppSetup.SelectedNicForSendingMcast);
-            
-            while (true)
+            UdpWriter uw = new UdpWriter("To-StatusViewer", destEP, Config2.Instance.AppSetup.SelectedNicForMCast);
+            TimeSpan interval = TimeSpan.FromMilliseconds(intervalMs);
+
+
+            List<IDeviceManager> deviceList = new List<IDeviceManager>();
+
+            foreach (PerDeviceObjects deviceObjects in _deviceObjectsTable[0]) //ProjectRegistry.Instance.OutputDevicesMap)
             {
-                foreach (PerDeviceObjects deviceObjects in _deviceObjectsTable[0]) //ProjectRegistry.Instance.OutputDevicesMap)
+                if (deviceObjects?.InputDeviceManager != null)
                 {
-                    if (deviceObjects?.InputDeviceManager!=null)
-                    {
-                        IDeviceManager dm = deviceObjects.InputDeviceManager;
-                        NewMethod(destEP, uw, dm);
-                    }
-
-                    if(deviceObjects?.OutputDeviceManager!=null)
-                    {
-                        IDeviceManager dm = deviceObjects.OutputDeviceManager;
-                        NewMethod(destEP, uw, dm);
-
-                    }
-                    // output
-                    //if (null != deviceObjects?.OutputDeviceManager)
-                    //{
-                    //    UeiLibrary.JsonStatusClass js = new UeiLibrary.JsonStatusClass( 
-                    //        desc:deviceObjects.OutputDeviceManager.DeviceName + " (Output)", 
-                    //        formattedStatus: deviceObjects.OutputDeviceManager.GetFormattedStatus());
-                    //    string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
-                    //    byte[] send_buffer = Encoding.ASCII.GetBytes(s);
-                    //    SendObject so = new SendObject(destEP, send_buffer);
-                    //    uw.Send(so);
-                    //}
+                    deviceList.Add(deviceObjects.InputDeviceManager);
                 }
 
-                //foreach (var item in _inputDevices)
-                //{
-                //    UeiLibrary.JsonStatusClass js = new UeiLibrary.JsonStatusClass(item.DeviceName + " (Input)", item.GetFormattedStatus());
-                //    string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
-                //    byte[] send_buffer = Encoding.ASCII.GetBytes(s);
-                //    uw.Send(send_buffer);
-                //}
-
-                System.Threading.Thread.Sleep(1000);
+                if (deviceObjects?.OutputDeviceManager != null)
+                {
+                    deviceList.Add(deviceObjects.OutputDeviceManager);
+                }
             }
+
+            while(true)
+            {
+                foreach (IDeviceManager dm in deviceList)
+                {
+                    string desc = $"{dm.InstanceName}";
+                    string stat = dm.GetFormattedStatus( interval);
+                    UeiLibrary.JsonStatusClass js = new UeiLibrary.JsonStatusClass(desc, stat);
+                    string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
+                    byte[] send_buffer = Encoding.ASCII.GetBytes(s);
+                    SendObject so = new SendObject(destEP, send_buffer);
+                    uw.Send(so);
+
+                }
+
+                System.Threading.Thread.Sleep(interval);
+            }
+
+            //while (true)
+            //{
+            //    foreach (PerDeviceObjects deviceObjects in _deviceObjectsTable[0]) //ProjectRegistry.Instance.OutputDevicesMap)
+            //    {
+            //        if (deviceObjects?.InputDeviceManager!=null)
+            //        {
+            //            IDeviceManager dm = deviceObjects.InputDeviceManager;
+            //            SendToViewer(destEP, uw, dm);
+            //        }
+
+            //        if(deviceObjects?.OutputDeviceManager!=null)
+            //        {
+            //            IDeviceManager dm = deviceObjects.OutputDeviceManager;
+            //            SendToViewer(destEP, uw, dm);
+
+            //        }
+            //    }
+
+                
+            //}
         }
 
-        private static void NewMethod(IPEndPoint destEP, UdpWriter uw, IDeviceManager dm)
-        {
-            string desc = $"{dm.InstanceName}";
-            string stat = dm.GetFormattedStatus();
-            UeiLibrary.JsonStatusClass js = new UeiLibrary.JsonStatusClass(desc, stat);
-            string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
-            byte[] send_buffer = Encoding.ASCII.GetBytes(s);
-            SendObject so = new SendObject(destEP, send_buffer);
-            uw.Send(so);
-        }
+        //private static void SendToViewer(IPEndPoint destEP, UdpWriter uw, IDeviceManager dm)
+        //{
+        //    string desc = $"{dm.InstanceName}";
+        //    string stat = dm.GetFormattedStatus( );
+        //    UeiLibrary.JsonStatusClass js = new UeiLibrary.JsonStatusClass(desc, stat);
+        //    string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
+        //    byte[] send_buffer = Encoding.ASCII.GetBytes(s);
+        //    SendObject so = new SendObject(destEP, send_buffer);
+        //    uw.Send(so);
+        //}
 
         private void StartDownwardsTest()
         {
@@ -372,7 +390,6 @@ namespace UeiBridge
 
                     for (int i = 0; i < 1; i++)
                     {
-
                         // digital out
                         {
                             IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[5].LocalEndPoint?.ToIpEp();
@@ -383,7 +400,7 @@ namespace UeiBridge
                         {
                             IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[0].LocalEndPoint.ToIpEp();
                             byte[] e308 = StaticMethods.Make_A308Down_message();
-                            //udpClient.Send(e308, e308.Length, destEp);
+                            udpClient.Send(e308, e308.Length, destEp);
                         }
 #if dontremove
                         byte[] e430 = StaticMethods.Make_DIO430Down_Message();
@@ -395,7 +412,7 @@ namespace UeiBridge
                         {
                             IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[3].LocalEndPoint.ToIpEp();
                             udpClient.Send(msg, msg.Length, destEp);
-                            System.Threading.Thread.Sleep(200);
+                            System.Threading.Thread.Sleep(10);
                         }
 
                         Thread.Sleep(100);
