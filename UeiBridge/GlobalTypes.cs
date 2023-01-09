@@ -1,13 +1,13 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Linq;
-using System.Text;
+using System.Net;
 using System.Threading.Tasks;
 
 /// <summary>
 /// All files in project might refer to this file.
 /// Types in this file might NOT refer to types in any other file.
 /// </summary>
-namespace UeiBridge
+namespace UeiBridgeTypes
 {
     /// <summary>
     /// Send items that should be pushed to q (return immediatly)
@@ -30,6 +30,7 @@ namespace UeiBridge
     /// <summary>
     /// (Immutable)
     /// </summary>
+    [Obsolete]
     public class DeviceRequest
     {
         readonly object _requestObject;
@@ -51,16 +52,38 @@ namespace UeiBridge
             _serialChannel = serialChannel;
         }
     }
+
+    /// <summary>
+    /// Contains: Object to write to device, serial channel id (in case of serial)
+    /// </summary>
     public class ScanResult
     {
         object _scan;
-        InputDevice _originDevice;
-        public ScanResult(object scan, InputDevice originDevice)
+        UeiBridge.InputDevice _originDevice; // tbd. remove dependency
+        public ScanResult(object scan, UeiBridge.InputDevice originDevice)
         {
             _scan = scan;
             _originDevice = originDevice;
         }
         public object Scan { get => _scan; }
-        public InputDevice OriginDevice { get => _originDevice; }
+        public UeiBridge.InputDevice OriginDevice { get => _originDevice; }
     }
+    public class SendObject
+    {
+        public IPEndPoint TargetEndPoint { get; }
+        public byte[] ByteMessage { get; }
+        public SendObject(IPEndPoint targetEndPoint, byte[] byteMessage)
+        {
+            TargetEndPoint = targetEndPoint;
+            ByteMessage = byteMessage;
+        }
+    }
+
+    public interface IDeviceManager
+    {
+        string DeviceName { get; }
+        string InstanceName { get; }
+        string GetFormattedStatus( TimeSpan interval);
+    }
+
 }

@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Threading.Tasks;
 using UeiDaq;
+using UeiBridgeTypes;
+using System.Timers;
 
 namespace UeiBridge
 {
@@ -9,33 +12,50 @@ namespace UeiBridge
     /// </summary>
     internal class AO308OutputDeviceManager : OutputDevice
     {
+        // publics
+        public override string DeviceName => "AO-308";
+
+        // privates
         AnalogScaledWriter _writer;
         log4net.ILog _logger = StaticMethods.GetLogger();
+        const string _channelsString = "Ao0:7";
+        Session _deviceSession;
+        System.Collections.Generic.List<ViewerItem<double>> _lastScanList;
 
-        public override string DeviceName => "AO-308";
-        string _channelsString;
-        public override IConvert AttachedConverter => _attachedConverter;
+        public override string InstanceName { get; }// => _instanceName;
 
-        protected override string ChannelsString => throw new NotImplementedException();
-
-        readonly IConvert _attachedConverter;
-        public AO308OutputDeviceManager()
+        private IConvert _attachedConverter;
+        public AO308OutputDeviceManager(DeviceSetup deviceSetup) : base(deviceSetup)
         {
-            _channelsString = "Ao0:7";
-            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
+            InstanceName = $"{DeviceName}/Slot{deviceSetup.SlotNumber}/Output";
         }
 
-        // todo: add Dispose/d-tor
-        bool OpenDevice(string deviceUrl)
+        public AO308OutputDeviceManager() : base(null)
+        {
+        }
+
+        public override bool OpenDevice()
         {
             try
             {
+                _attachedConverter = StaticMethods.CreateConverterInstance(_deviceSetup);
+
+                string cubeUrl = $"{_deviceSetup.CubeUrl}Dev{_deviceSetup.SlotNumber}/{_channelsString}";
+
                 _deviceSession = new Session();
-				//var minmax = Config.Instance.Analog_Out_MinMaxVoltage;
-                _deviceSession.CreateAOChannel(deviceUrl, -Config.Instance.Analog_Out_PeekVoltage, Config.Instance.Analog_Out_PeekVoltage);
-                //_numberOfChannels = _deviceSession.GetNumberOfChannels();
+                var c = _deviceSession.CreateAOChannel(cubeUrl, -Config.Instance.Analog_Out_PeekVoltage, Config.Instance.Analog_Out_PeekVoltage);
+                System.Diagnostics.Debug.Assert(c.GetMaximum() == Config.Instance.Analog_Out_PeekVoltage);
                 _deviceSession.ConfigureTimingForSimpleIO();
                 _writer = new AnalogScaledWriter(_deviceSession.GetDataStream());
+
+                _lastScanList = new System.Collections.Generic.List<ViewerItem<double>>(new ViewerItem<double>[_deviceSession.GetNumberOfChannels()]);
+
+                Task.Factory.StartNew(() => OutputDeviceHandler_Task());
+
+                var range = _deviceSession.GetDevice().GetAORanges();
+                _logger.Info($"Init success: {InstanceName} . { _deviceSession.GetNumberOfChannels()} channels. Range {range[0].minimum},{range[0].maximum}V. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}");
+
+                _isDeviceReady = true;
             }
             catch (Exception ex)
             {
@@ -46,75 +66,75 @@ namespace UeiBridge
             return true;
         }
 
-        protected override void HandleRequest(DeviceRequest dr)
+        protected override void HandleRequest(EthernetMessage em)
         {
-            // init session, if needed.
-            // =======================
-            if ((null == _deviceSession) || (_caseUrl != dr.CaseUrl))
-            {
-                CloseDevice();
-
-                string deviceIndex = StaticMethods.FindDeviceIndex(DeviceName);
-                if (null == deviceIndex)
-                {
-                    _logger.Warn($"Can't find index for device {DeviceName}");
-                    return;
-                }
-
-                string url1 = dr.CaseUrl + deviceIndex + _channelsString;
-
-                if (OpenDevice(url1))
-                {
-                    var range = _deviceSession.GetDevice().GetAORanges();
-
-                    //_logger.Info($"{_deviceName} init success. {_numberOfChannels} output channels. {url1}");
-                    _logger.Info($"{DeviceName}(Output) init success. { _deviceSession.GetNumberOfChannels()} channels. Range {range[0].minimum},{range[0].maximum}. {deviceIndex + _channelsString}");
-                    _caseUrl = dr.CaseUrl;
-                }
-                else
-                {
-                    _logger.Warn($"Device {DeviceName} init fail");
-                    return;
-                }
-            }
-
             // write to device
             // ===============
-            _lastScan = dr.RequestObject as double[];
-            if (null != _lastScan)
+            var p = _attachedConverter.EthToDevice(em.PayloadBytes);
+            double [] scan = p as double[];
+            System.Diagnostics.Debug.Assert(scan != null);
+            _writer.WriteSingleScan( scan);
+            lock (_lastScanList)
             {
-                _writer.WriteSingleScan(_lastScan);
-                //_logger.Debug($"AO voltage {_lastScan[0]}");
-                //_logger.Debug($"scan written to device. Length: {_lastScan.Length}");
-            }
-        }
-
-        //StatusStruct _status = new StatusStruct();
-        double[] _lastScan;
-
-        public override string GetFormattedStatus()
-        {
-            System.Text.StringBuilder sb = new System.Text.StringBuilder("Output voltage: ");
-            if (null != _lastScan)
-            {
-                foreach (double d in _lastScan)
+                for (int ch = 0; ch < scan.Length; ch++)
                 {
-                    sb.Append("  ");
-                    sb.Append(d.ToString("0.0"));
+                    _lastScanList[ch] = new ViewerItem<double>(scan[ch], timeToLiveMs: 5000);
                 }
             }
-            return sb.ToString();
+        }
+        
+        public override string GetFormattedStatus( TimeSpan interval)
+        {
+            // tbd: must lock. collection modifed outside ......
+            System.Text.StringBuilder formattedString = new System.Text.StringBuilder("Output voltage: ");
+            lock (_lastScanList)
+            {
+                if (_lastScanList[0]?.timeToLive.Ticks > 0)
+                {
+                    _lastScanList[0].timeToLive -= interval;
+                    if (null != _lastScanList)
+                    {
+                        foreach (var vi in _lastScanList)
+                        {
+                            formattedString.Append("  ");
+                            formattedString.Append(vi.readValue.ToString("0.0"));
+                        }
+                    }
+                }
+
+                else
+                {
+                    formattedString.Append("- - -");
+                }
+            }
+            return formattedString.ToString();
         }
 
         public override void Dispose()
         {
-            //t1.Dispose();
-            //t1 = null;
-            OutputDevice deviceManager = ProjectRegistry.Instance.OutputDevicesMap[DeviceName];
-            DeviceRequest dr = new DeviceRequest( OutputDevice.CancelTaskRequest, "");
-            deviceManager.Enqueue(dr);
-            System.Threading.Thread.Sleep(100);
-            CloseDevice();
+            base.Dispose();
+
+            if (null != _writer)
+            {
+                _writer.Dispose();
+            }
+            if (null != _deviceSession)
+            {
+                _deviceSession.Stop();
+                _deviceSession.Dispose();
+            }
         }
+        public virtual void Dispose1()
+        {
+            _deviceSession = null;
+        }
+
+        //protected override void resetLastScanTimer_Elapsed(object sender, ElapsedEventArgs e)
+        //{
+        //    if (0 == e.SignalTime.Second % 10)
+        //    {
+        //        //_lastScanList = null;
+        //    }
+        //}
     }
 }

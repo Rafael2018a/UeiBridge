@@ -1,5 +1,7 @@
 ﻿using System;
 using UeiDaq;
+using UeiBridgeTypes;
+
 
 namespace UeiBridge
 {
@@ -14,15 +16,31 @@ namespace UeiBridge
         public override string DeviceName => "DIO-403";
         IConvert _attachedConverter;
         public override IConvert AttachedConverter => _attachedConverter;
+        DIO403Setup _thisDeviceSetup;
+        public override string InstanceName { get; } 
 
-        public DIO403InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
+        //public DIO403InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
+        //{
+        //    _channelsString = "Di3:5";
+        //    _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
+        //}
+
+        public DIO403InputDeviceManager( ISend<SendObject> targetConsumer, DeviceSetup setup): base(targetConsumer)
         {
             _channelsString = "Di3:5";
-            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
+            _attachedConverter = StaticMethods.CreateConverterInstance( setup);
+            InstanceName = $"{DeviceName}/Slot{setup.SlotNumber}/Input";
+            _thisDeviceSetup = setup as DIO403Setup;
+        }
+        public DIO403InputDeviceManager():base(null) // must have default const.
+        {
+
         }
         // todo: add Dispose/d-tor
-        bool OpenDevice(string deviceUrl)
+        public override void OpenDevice()
         {
+            string deviceUrl = $"{_thisDeviceSetup.CubeUrl}Dev{_thisDeviceSetup.SlotNumber}/{_channelsString}";
+
             try
             {
                 _deviceSession = new Session();
@@ -30,15 +48,45 @@ namespace UeiBridge
                 //_numberOfChannels = _deviceSession.GetNumberOfChannels();
                 _deviceSession.ConfigureTimingForSimpleIO();
                 _reader = new DigitalReader(_deviceSession.GetDataStream());
+
+                int noOfbits = _deviceSession.GetNumberOfChannels() * 8;
+                int firstBit = _deviceSession.GetChannel(0).GetIndex() * 8;
+                _logger.Info($"Init success: {InstanceName}(Digital). Bits {firstBit}..{firstBit + noOfbits - 1} as input. Dest: {_thisDeviceSetup.DestEndPoint.ToIpEp()}");
+                TimeSpan interval = TimeSpan.FromMilliseconds(_thisDeviceSetup.SamplingInterval);
+                _samplingTimer = new System.Threading.Timer(DeviceScan_Callback, null, TimeSpan.Zero, interval);
+
             }
             catch (Exception ex)
             {
                 _logger.Error(ex.Message);
                 _deviceSession = null;
-                return false;
+                //return false;
             }
+        }
+        public  void OpenDevice1()
+        {
 
-            return true;
+            // init session, if needed.
+            // =======================
+            string deviceUrl = _cubeUrl + "0" + _channelsString;
+
+            //if (OpenDevice(deviceUrl))
+            {
+                //_logger.Info($"{DeviceName}(Input) init success. {_deviceSession.GetNumberOfChannels()} channels. {deviceIndex + _channelsString}");
+            }
+            //else
+            {
+                _logger.Warn($"Device {DeviceName} init fail");
+                return;
+            }
+            TimeSpan interval = TimeSpan.FromMilliseconds(_thisDeviceSetup.SamplingInterval);
+            _samplingTimer = new System.Threading.Timer(DeviceScan_Callback, null, TimeSpan.Zero, interval);
+        }
+        public override void Dispose()
+        {
+            _samplingTimer.Dispose();
+            System.Threading.Thread.Sleep(200); // wait for callback to finish
+            CloseDevice();
         }
         public void DeviceScan_Callback(object state)
         {
@@ -49,54 +97,19 @@ namespace UeiBridge
                 _lastScan = _reader.ReadSingleScanUInt16();
                 System.Diagnostics.Debug.Assert(_lastScan != null);
                 System.Diagnostics.Debug.Assert(_lastScan.Length == _deviceSession.GetNumberOfChannels(), "wrong number of channels");
-                //diData[0] = 0x07;
-                ScanResult dr = new ScanResult(_lastScan, this);
-                _targetConsumer.Enqueue(dr);
+                byte[] payload = this.AttachedConverter.DeviceToEth(_lastScan);
+                var em = EthernetMessage.CreateFromDevice( payload, DeviceName);
+
+                _targetConsumer.Send(new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), em.ToByteArrayUp()));
             }
             catch (Exception ex)
             {
                 _logger.Error(ex.Message);
             }
         }
-        public override void Start()
-        {
-            if ((_deviceSession != null) && _deviceSession.IsRunning())
-            {
-                _logger.Warn("Can't start since device already running");
-                return;
-            }
-
-            // init session, if needed.
-            // =======================
-            string deviceIndex = StaticMethods.FindDeviceIndex(DeviceName);
-            if (null == deviceIndex)
-            {
-                _logger.Warn($"Can't find index for device {DeviceName}");
-                return;
-            }
-            string deviceUrl = _caseUrl + deviceIndex + _channelsString;
-
-            if (OpenDevice(deviceUrl))
-            {
-                _logger.Info($"{DeviceName}(Input) init success. {_deviceSession.GetNumberOfChannels()} channels. {deviceIndex + _channelsString}");
-            }
-            else
-            {
-                _logger.Warn($"Device {DeviceName} init fail");
-                return;
-            }
-
-            _samplingTimer = new System.Threading.Timer(DeviceScan_Callback, null, TimeSpan.Zero, _samplingInterval);
-        }
-        public override void Dispose()
-        {
-            _samplingTimer.Dispose();
-            System.Threading.Thread.Sleep(200); // wait for callback to finish
-            CloseDevice();
-        }
 
         UInt16[] _lastScan;
-        public override string GetFormattedStatus()
+        public override string GetFormattedStatus( TimeSpan interval)
         {
             System.Text.StringBuilder sb = new System.Text.StringBuilder("Input bits: ");
             if (null != _lastScan)
@@ -109,6 +122,5 @@ namespace UeiBridge
             }
             return sb.ToString();
         }
-
     }
 }

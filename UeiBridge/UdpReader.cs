@@ -6,40 +6,39 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-
+using UeiBridgeTypes;
 
 namespace UeiBridge
 {
     /// <summary>
     /// Reads datagrams from udp channel and sends them to 'consumer'.
     /// </summary>
-    internal class UdpReader
+    public class UdpReader: IDisposable
     {
         private IEnqueue<byte[]> _datagramConsumer;
         log4net.ILog _logger = StaticMethods.GetLogger();
         UdpClient _udpclient;
         string _instanceName;
+        IPEndPoint _msListeningiEp;
+        IPAddress _localNIC;
 
-        public UdpReader(IEnqueue<byte[]> consumer, string name)
+        public UdpReader( IPEndPoint listeninigEp, IPAddress localNIC, IEnqueue<byte[]> consumer, string instanceName)
         {
             this._datagramConsumer = consumer;
-            this._instanceName = name;
+            this._instanceName = instanceName;
+            this._msListeningiEp = listeninigEp;
+            this._localNIC = localNIC;
+            System.Diagnostics.Debug.Assert(instanceName.Length > 1);
         }
 
-        internal void Start()
-        {
-            IPAddress mcastAddress;
-            if (IPAddress.TryParse(Config.Instance.ReceiverMulticastAddress, out mcastAddress))
-            {
-                EstablishMulticastReceiver(mcastAddress, Config.Instance.ReceiverMulticastPort, IPAddress.Parse(Config.Instance.LocalBindNicAddress));
-            }
-            else
-            {
-                _logger.Warn($"Fail to parse ip {Config.Instance.ReceiverMulticastAddress}. Udp Receiver disabled.");
-            }
-        }
+        //internal void Start()
+        //{
+        //    //IPAddress mcastAddress;
+        //    //if (IPAddress.TryParse(Config.Instance.ReceiverMulticastAddress, out mcastAddress))
+        //    EstablishMulticastReceiver();
+        //}
         
-        public void EstablishMulticastReceiver(IPAddress multicastAddress, int multicastPort, IPAddress localIPaddress = null)
+        public void Start()
         {
             //int _port;
             //IPAddress _multicastIPaddress;
@@ -51,10 +50,11 @@ namespace UeiBridge
             try
             {
 
-                IPAddress localIP = (localIPaddress == null) ? IPAddress.Any : localIPaddress;
+                //IPAddress localIP = (localIPaddress == null) ? IPAddress.Any : localIPaddress;
+                //IPAddress localIP = IPAddress.Any;
 
                 // Create endpoints
-                IPEndPoint _remoteEndPoint = new IPEndPoint(multicastAddress, multicastPort);
+                //IPEndPoint _remoteEndPoint = new IPEndPoint(multicastAddress, multicastPort);
 
                 // Create and configure UdpClient
                 _udpclient = new UdpClient();
@@ -65,19 +65,19 @@ namespace UeiBridge
                 _udpclient.ExclusiveAddressUse = false;
 
                 // Bind
-                IPEndPoint _localEndPoint = new IPEndPoint(localIP, multicastPort);
+                IPEndPoint _localEndPoint = new IPEndPoint(_localNIC, _msListeningiEp.Port);
                 _udpclient.Client.Bind(_localEndPoint);
 
                 // join
-                _udpclient.JoinMulticastGroup(multicastAddress, localIP);
+                _udpclient.JoinMulticastGroup(_msListeningiEp.Address, _localNIC);
 
-                _logger.Info($"Multicast receiver - {this._instanceName} - esablished. Listening on {_remoteEndPoint}");
+                //_logger.Info($"Multicast receiver - {this._instanceName} - esablished. Listening on {_msListeningiEp}");
                 // Start listening for incoming data
                 _udpclient.BeginReceive(new AsyncCallback(ReceivedCallback), null);
             }
             catch (SocketException ex)
             {
-                _logger.Warn( $"Faild to establish multicast receiver from group {multicastAddress}. {ex.Message}");
+                _logger.Warn( $"{_instanceName}: Faild to establish multicast receiver. Group {_msListeningiEp}. {ex.Message}");
             }
         }
 
@@ -91,6 +91,7 @@ namespace UeiBridge
             Byte[] receivedBytes = _udpclient.EndReceive(ar, ref sender);
             //_logger.Debug($"Datagram received from {sender.Address}, Length={receivedBytes.Length}");
 
+            
             this._datagramConsumer.Enqueue(receivedBytes);
 
             
@@ -122,7 +123,9 @@ namespace UeiBridge
             }
         }
 
-
+        public void Dispose()
+        {
+        }
     }
 
 

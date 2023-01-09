@@ -3,12 +3,12 @@ using UeiDaq;
 
 namespace UeiBridge
 {
+    [Obsolete("not needed anymore")]
     abstract class DioOutputDeviceManager : OutputDevice
     {
         log4net.ILog _logger = StaticMethods.GetLogger();
         protected DigitalWriter _writer;
         
-
         protected bool OpenDevice( DeviceRequest dr, string _deviceName)
         {
             
@@ -34,13 +34,13 @@ namespace UeiBridge
             return true;
         }
 
-        protected override void HandleRequest(DeviceRequest dr)
+        protected void HandleRequest(DeviceRequest dr)
         {
             // init session, if needed.
             // =======================
             if ((null == _deviceSession) || (_caseUrl != dr.CaseUrl))
             {
-                CloseDevice(); // if needed
+                
                 OpenDevice(dr, DeviceName);
             }
 
@@ -66,6 +66,8 @@ namespace UeiBridge
                 //_numberOfChannels = _deviceSession.GetNumberOfChannels();
                 _deviceSession.ConfigureTimingForSimpleIO();
                 _writer = new DigitalWriter(_deviceSession.GetDataStream());
+
+                var c = _deviceSession.GetChannels();
             }
             catch (Exception ex)
             {
@@ -77,6 +79,11 @@ namespace UeiBridge
         }
 
         UInt16[] _lastScan;
+
+        protected DioOutputDeviceManager(DeviceSetup deviceSetup) : base(deviceSetup)
+        {
+        }
+
         //class StatusStruct // might be generic
         //{
         //    UInt16[] _lastScan = new UInt16[Config.Instance.MaxDigital403OutputChannels];

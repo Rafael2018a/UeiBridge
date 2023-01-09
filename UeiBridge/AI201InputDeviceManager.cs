@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UeiDaq;
+using UeiBridgeTypes;
 
 namespace UeiBridge
 {
@@ -15,49 +16,42 @@ namespace UeiBridge
     {
         AnalogScaledReader _reader;
         log4net.ILog _logger = StaticMethods.GetLogger();
-        public override string DeviceName => "AI-201-100";
+        public override string DeviceName => "AI-201-100"; // 
         IConvert _attachedConverter;
         public override IConvert AttachedConverter => _attachedConverter;
+        public override string InstanceName { get; }//=> _instanceName;
+        //ISend<SendObject> _targetConsumer;
+        AI201100Setup _thisDeviceSetup;
+        double[] _lastScan;
 
-        public AI201InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
+        public AI201InputDeviceManager(ISend<SendObject> targetConsumer, AI201100Setup setup) : base(targetConsumer)
         {
-            _channelsString = "Ai0,1,2,3";
-            _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
+            _channelsString = "Ai0:23";
+            _attachedConverter = StaticMethods.CreateConverterInstance( setup);
+            InstanceName = $"{DeviceName}/Slot{setup.SlotNumber}/Input";
+            _targetConsumer = targetConsumer;
+            _thisDeviceSetup = setup;
         }
 
-        bool OpenDevice(string deviceUrl)
+        public AI201InputDeviceManager() : base(null) // must have default const.
         {
-            try
-            {
-                _deviceSession = new Session();
-                _deviceSession.CreateAIChannel(deviceUrl, -15.0, 15.0, AIChannelInputMode.SingleEnded); // -15,15 means 'no gain'
-                //_numberOfChannels = _deviceSession.GetNumberOfChannels();
-                _deviceSession.ConfigureTimingForSimpleIO();
-                _reader = new AnalogScaledReader(_deviceSession.GetDataStream());
-            }
-            catch (Exception ex)
-            {
-                _logger.Error(ex.Message);
-                _deviceSession = null;
-                return false;
-            }
-
-
-            return true;
         }
+
         public void HandleResponse_Callback(object state)
         {
             try
             {
                 // read from device
                 // ===============
-                _lastScan = _reader.ReadSingleScan(); // tbd. access violation
+                _lastScan = _reader.ReadSingleScan(); // access violation?
                 System.Diagnostics.Debug.Assert(_lastScan != null);
-                
+
                 System.Diagnostics.Debug.Assert(_lastScan.Length == _deviceSession.GetNumberOfChannels(), "wrong number of channels");
 
                 ScanResult dr = new ScanResult(_lastScan, this);
-                _targetConsumer.Enqueue(dr);
+                byte[] bm = _attachedConverter.DeviceToEth(_lastScan);
+                SendObject so = new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), bm);
+                _targetConsumer.Send(so);
             }
             catch (Exception ex)
             {
@@ -65,40 +59,28 @@ namespace UeiBridge
             }
         }
 
-        public override void Start()
+        public override void OpenDevice()
         {
-            if ((_deviceSession!=null) && _deviceSession.IsRunning())
-            {
-                _logger.Warn("Can't start since device already running");
-                return;
-            }
+            double peek = _thisDeviceSetup.PeekVoltage;
             try
             {
-                string deviceIndex = StaticMethods.FindDeviceIndex(DeviceName);
-                if (null == deviceIndex)
-                {
-                    _logger.Warn($"Can't find index for device {DeviceName}");
-                    return;
-                }
-                string url1 = _caseUrl + deviceIndex + _channelsString;
-
-                if (OpenDevice(url1))
-                {
-                    var r = _deviceSession.GetDevice().GetAIRanges();
-                    _logger.Info($"{DeviceName}(input) init success. {_deviceSession.GetNumberOfChannels()}ch. Range {r[0].minimum},{r[0].maximum}. {deviceIndex + _channelsString}");
-                }
-                else
-                {
-                    _logger.Warn($"Device {DeviceName} init fail");
-                    return;
-                }
-                _samplingTimer = new System.Threading.Timer(HandleResponse_Callback, null, TimeSpan.Zero, _samplingInterval);
+                string url1 = $"{_thisDeviceSetup.CubeUrl}Dev{_thisDeviceSetup.SlotNumber}/{_channelsString}";
+                _deviceSession = new Session();
+                _deviceSession.CreateAIChannel(url1, -peek, peek, AIChannelInputMode.SingleEnded); // -15,15 means 'no gain'
+                var numberOfChannels = _deviceSession.GetNumberOfChannels();
+                _deviceSession.ConfigureTimingForSimpleIO();
+                _reader = new AnalogScaledReader(_deviceSession.GetDataStream());
+                var r = _deviceSession.GetDevice().GetAIRanges();
+                TimeSpan interval = TimeSpan.FromMilliseconds(_thisDeviceSetup.SamplingInterval);
+                _samplingTimer = new System.Threading.Timer(HandleResponse_Callback, null, TimeSpan.Zero, interval);
+                _logger.Info($"Init success. {InstanceName}. {_deviceSession.GetNumberOfChannels()} input channels. Dest:{_thisDeviceSetup.DestEndPoint.ToIpEp()}");
+                return;
 
             }
             catch (Exception ex)
             {
                 _logger.Error(ex.Message);
-            }        
+            }
         }
         public override void Dispose()
         {
@@ -107,9 +89,9 @@ namespace UeiBridge
             CloseDevice();
         }
 
-        double[] _lastScan;
+        //
 
-        public override string GetFormattedStatus()
+        public override string GetFormattedStatus( TimeSpan interval)
         {
             System.Text.StringBuilder sb = new System.Text.StringBuilder("Input voltage: ");
             if (null != _lastScan)

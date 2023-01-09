@@ -5,15 +5,19 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Xml.Serialization;
+using System.Net;
 using UeiDaq;
 
 namespace UeiBridge
 {
     public class SerialChannel
     {
+        [XmlAttribute("Port")]
         public string portname = "ComX";
-        public SerialPortMode mode = SerialPortMode.RS485FullDuplex;
-        public SerialPortSpeed baudrate = SerialPortSpeed.BitsPerSecond9600;
+        
+        public SerialPortMode mode = SerialPortMode.RS232;
+        [XmlElement("Baud")]
+        public SerialPortSpeed Baudrate { get; set; }
 
         public SerialPortParity parity = SerialPortParity.None;
         public SerialPortStopBits stopbits = SerialPortStopBits.StopBits1;
@@ -21,11 +25,24 @@ namespace UeiBridge
         public SerialChannel(string portname)
         {
             this.portname = portname;
+            Baudrate = SerialPortSpeed.BitsPerSecond115200;
         }
         public SerialChannel()
         {
         }
     }
+        
+
+    public class SlotSetup
+    {
+        public string CubeIp;
+        public int SlotNumber;
+        public Direction direction;
+        public CardType CardId;
+        public string UdpAddress;
+        public int UdpdPort;
+    }
+    
     public class Config
     {
         public string DeviceUrl = "pdna://192.168.100.2/";
@@ -34,7 +51,7 @@ namespace UeiBridge
         public int ReceiverMulticastPort = 50035;
         public string SenderMulticastAddress = "227.2.1.10";
         public int SenderMulticastPort = 50038;
-        public string LocalBindNicAddress = "221.109.251.103";
+        public string SelectedNicForMcastSend = "221.109.251.103";
 
         readonly int _maxDigital403OutputChannels = 3; // each channel contains 8 bits
 
@@ -42,7 +59,13 @@ namespace UeiBridge
         readonly double _analog_Out_PeekVoltage = 10.0;
         readonly double _analog_In_PeekVoltage = 12.0;
 
+        private EndPoint[] LocalMcastEndPoints;
+        private EndPoint[] DestMcastEndPoints;
+        public SlotSetup[] SlotsSetup;
         public SerialChannel[] SerialChannels = new SerialChannel[8];
+        //public object [] varList = new object[3];
+
+
         public string ValidSerialModes;
         public string ValidBaudRates;
         public string ValidStopBitsValues;
@@ -55,23 +78,42 @@ namespace UeiBridge
             for (int i = 0; i < SerialChannels.Length; i++)
                 SerialChannels[i] = new SerialChannel("Com" + i.ToString());
 
-            ValidSerialModes = GetEnumValues<SerialPortMode>();
-            ValidBaudRates = GetEnumValues<SerialPortSpeed>();
-            ValidStopBitsValues = GetEnumValues<SerialPortStopBits>();
-            ValidParityValues = GetEnumValues<SerialPortParity>();
-        }
+            ValidSerialModes = StaticMethods.GetEnumValues<SerialPortMode>();
+            ValidBaudRates = StaticMethods.GetEnumValues<SerialPortSpeed>();
+            ValidStopBitsValues = StaticMethods.GetEnumValues<SerialPortStopBits>();
+            ValidParityValues = StaticMethods.GetEnumValues<SerialPortParity>();
 
-        private string GetEnumValues<T>() 
-        {
-            T[] v1 = Enum.GetValues(typeof(T)) as T[];
-            StringBuilder sb = new StringBuilder("\n");
-            foreach(var item in v1)
+            LocalMcastEndPoints = new EndPoint[Enum.GetNames(typeof(CardFeature)).Length];
+            DestMcastEndPoints = new EndPoint[Enum.GetNames(typeof(CardFeature)).Length];
+            SlotsSetup = new SlotSetup[10];
+
+            for (int i = 0; i < LocalMcastEndPoints.Length; i++)
             {
-                sb.Append(item);
-                sb.Append("\n");
+                LocalMcastEndPoints[i] = new EndPoint();
+                LocalMcastEndPoints[i].Address = "227.3.1.10";
+                LocalMcastEndPoints[i].Port = 50035 + i;
+                //LocalMcastEndPoints[i].CardFeature = (CardFeature)i;
+
+                DestMcastEndPoints[i] = new EndPoint();
+                DestMcastEndPoints[i].Address = "227.2.1.10";
+                DestMcastEndPoints[i].Port += 50135 + i;
+                //DestMcastEndPoints[i].CardFeature = (CardFeature)i;
             }
-            //v1.ToList<SerialPortMode>().ForEach(item => { sb.Append(item); sb.Append("\n"); });
-            return sb.ToString();
+         
+            for(int i=0; i<SlotsSetup.Length; i++)
+            {
+                SlotsSetup[i] = new SlotSetup();
+                SlotsSetup[i].UdpAddress = "227.3.1.10";
+                SlotsSetup[i].UdpdPort = 30025 + i;
+                SlotsSetup[i].CubeIp = "pdna://192.168.100.2/";
+                SlotsSetup[i].CardId = CardType.AO308;
+                SlotsSetup[i].direction = Direction.input;
+                SlotsSetup[i].SlotNumber = i;
+            }
+
+            //varList[0] = new SerialChannel("portnamexxx");
+            //varList[1] = "Alon";
+            //varList[2] = new DigitalCard1();
         }
 
         public static Config Instance

@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
+using UeiBridgeTypes;
 
 namespace UeiBridge
 {
@@ -39,24 +40,23 @@ namespace UeiBridge
         }
     }
 
-    class UdpWriter : ISend<byte[]>, IDisposable
+    class UdpWriter : ISend<SendObject>, IDisposable
     {
         log4net.ILog _logger = StaticMethods.GetLogger();
         Socket _sendSocket;
         string _instanceName;
-        public UdpWriter( string destAddress, int destPort, string name, string localBindAddress)
+        public UdpWriter( string instnceName, IPEndPoint destEp, string localBindAddress)
         {
 
-            this._instanceName = name;
-            // tbd. Parse might fail!
-
+            this._instanceName = instnceName;
+            System.Diagnostics.Debug.Assert(null != localBindAddress);
             try
             {
                 // Create socket
                 _sendSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
 
                 // Multicast IP-address
-                IPAddress _mcastDestAddress = IPAddress.Parse(destAddress); //Config.Instance.DestMulticastAddress);
+                //IPAddress _mcastDestAddress = IPAddress.Parse(destAddress); //Config.Instance.DestMulticastAddress);
 
                 // Join multicast group
                 //_sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(_mcastDestAddress));
@@ -65,17 +65,31 @@ namespace UeiBridge
                 _sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 2);
 
                 // Create an endpoint
-                IPEndPoint _mcastDestEP = new IPEndPoint(_mcastDestAddress, destPort);// Config.Instance.DestMulticastPort);
+                //IPEndPoint _mcastDestEP = new IPEndPoint(_mcastDestAddress, destPort);// Config.Instance.DestMulticastPort);
 
+                string usingNic=null;
                 if (null != localBindAddress)
                 {
-                    IPEndPoint localEP = new IPEndPoint(IPAddress.Parse(localBindAddress), 0);//Config.Instance.LocalBindNicAddress
-                    _sendSocket.Bind(localEP);
+                    IPEndPoint localEP = new IPEndPoint(IPAddress.Parse(localBindAddress), 0);
+                    try
+                    {
+                        _sendSocket.Bind(localEP);
+                        usingNic = $"Using NIC: {localBindAddress}";
+                    }
+                    catch(Exception ex)
+                    {
+                        _logger.Warn($"{instnceName}: Failed to bind to local NIC {localBindAddress}. {ex.Message}");
+                    }
+                }
+                else
+                {
+                    usingNic = "(no specific NIC)";
                 }
                 // Connect to the endpoint
-                _sendSocket.Connect(_mcastDestEP);
+                //_sendSocket.Connect(_mcastDestEP);
+                
 
-                _logger.Info($"Multicast sender - {this._instanceName} - esablished. Dest EP: {_mcastDestEP.ToString()}. Local NIC: {localBindAddress}");
+                //_logger.Info($"Multicast sender - {this._instanceName} - esablished. Dest:{destEp.ToString()}. {usingNic}");
             }
             catch (SocketException ex)
             {
@@ -94,17 +108,22 @@ namespace UeiBridge
 
         }
 
-        public void Send(byte[] buffer)
-        {
-            if (_sendSocket.Connected)
-            {
-                _sendSocket.Send(buffer, buffer.Length, SocketFlags.None);
-            }
-        }
+        //public void Send(byte[] buffer)
+        //{
+        //    if (_sendSocket.Connected)
+        //    {
+        //        _sendSocket.Send(buffer, buffer.Length, SocketFlags.None);
+        //    }
+        //}
 
         public void Dispose()
         {
             _sendSocket.Close();
+        }
+
+        public void Send(SendObject sendObj)
+        {
+            _sendSocket.SendTo(sendObj.ByteMessage, SocketFlags.None, sendObj.TargetEndPoint);
         }
     }
 }

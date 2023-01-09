@@ -82,14 +82,14 @@
     <Compile Include="AI201InputDeviceManager.cs" />
     <Compile Include="AO308OutputDeviceManager.cs" />
     <Compile Include="Config.cs" />
+    <Compile Include="Config2.cs" />
     <Compile Include="Converters.cs" />
     <Compile Include="DIO403InputDeviceManager.cs" />
     <Compile Include="DIO403OutputDeviceManager.cs" />
-    <Compile Include="DIO430OutputDeviceManager.cs" />
-    <Compile Include="DioOutputDeviceManager.cs" />
-    <Compile Include="EthernetMessageFactory.cs" />
+    <Compile Include="DIO470OutputDeviceManager.cs" />
     <Compile Include="InputDevice.cs" />
     <Compile Include="OutputDevice.cs" />
+    <Compile Include="PerDeviceObjects.cs" />
     <Compile Include="ProjectRegistry.cs" />
     <Compile Include="EthernetToDevice.cs" />
     <Compile Include="GlobalTypes.cs" />
@@ -106,6 +106,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="ClassDiagram1.cd" />
     <None Include="log4net.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

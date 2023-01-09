@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 using UeiDaq;
+using UeiBridgeTypes;
 
 /// <summary>
 /// All files in project might refer to this file.
@@ -9,63 +11,126 @@ using UeiDaq;
 /// </summary>
 namespace UeiBridge
 {
-    public abstract class OutputDevice : IEnqueue<DeviceRequest>, IDisposable
+    class ViewerItem <T>
     {
-        BlockingCollection<DeviceRequest> _dataItemsQueue = new BlockingCollection<DeviceRequest>(100); // max 100 items
-        //protected string _deviceIndex;
-        log4net.ILog _logger = StaticMethods.GetLogger();
+        public T readValue;
+        public TimeSpan timeToLive;
 
-        protected abstract string ChannelsString { get; }
-        protected Session _deviceSession;
-        protected string _caseUrl;
-        //protected string _deviceName;// = "AO-308";
-        //public string DeviceName => _deviceName;
+        public ViewerItem(T readValue, int timeToLiveMs)
+        {
+            this.readValue = readValue;
+            this.timeToLive = TimeSpan.FromMilliseconds(timeToLiveMs);
+        }
+    }
+
+    public abstract class OutputDevice : IDeviceManager,  IDisposable, IEnqueue<byte[]> // IEnqueue<DeviceRequest>,
+    {
+        // abstracts properties
+        // -------------------
         public abstract string DeviceName { get; }
-        public abstract IConvert AttachedConverter { get; }
-        public static string CancelTaskRequest => "canceltoken";
+        public abstract string InstanceName { get; }
 
-        //protected int _numberOfChannels = 0;
-        //public int NumberOfChannels => _numberOfChannels;
-        //protected IConvert _attachedConverter;
-        public virtual void CloseDevice()
+        // abstract methods
+        // ----------------
+        public abstract bool OpenDevice();
+        protected abstract void HandleRequest(EthernetMessage request);
+        public abstract string GetFormattedStatus( TimeSpan interval);
+        
+        // protected fields
+        // ----------------
+        protected string _caseUrl; // remove?
+        protected DeviceSetup _deviceSetup; // from config
+        protected bool _isDeviceReady=false;
+        //protected DateTime _publishTime = DateTime.Now;
+
+        // privates
+        // ---------
+        BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
+        log4net.ILog _logger = StaticMethods.GetLogger();
+        //System.Timers.Timer _resetLastScanTimer = new System.Timers.Timer(1000);
+        bool _disposeStarted = false;
+
+
+        protected OutputDevice(DeviceSetup deviceSetup)
         {
-            if (null != _deviceSession)
+            _deviceSetup = deviceSetup;
+            //_resetLastScanTimer.Elapsed += resetLastScanTimer_Elapsed;
+            //_resetLastScanTimer.AutoReset = true;
+            //_resetLastScanTimer.Enabled = true;
+        }
+
+        //protected abstract void resetLastScanTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e);
+
+        public void Enqueue(byte[] m)
+        {
+            if (_disposeStarted)
+                return;
+
+            string errorString;
+            EthernetMessage em = EthernetMessage.CreateFromByteArray(m, out errorString);
+            if (em != null)
             {
-                _deviceSession.Stop();
-                _deviceSession.Dispose();
+                if (!_dataItemsQueue2.IsCompleted)
+                {
+                    _dataItemsQueue2.Add(em);
+                }
             }
-            _deviceSession = null;
+            else
+            {
+                _logger.Warn($"Incoming byte message error. {errorString}. message dropped.");
+            }
         }
-        protected abstract void HandleRequest(DeviceRequest request);
-        public abstract string GetFormattedStatus();
-
-        public void Enqueue(DeviceRequest dr)
-        {
-            _dataItemsQueue.Add(dr);
-        }
-        public virtual void Start()
-        {
-            Task.Factory.StartNew(() => OutputDeviceHandler_Task());
-        }
-
+        /// <summary>
+        /// Message loop
+        /// </summary>
         protected void OutputDeviceHandler_Task()
         {
+            _logger.Debug($"OutputDeviceHandler_Task start. {InstanceName}");
             // message loop
-            while (false == _dataItemsQueue.IsCompleted)
+            while (false == _dataItemsQueue2.IsCompleted)
             {
-                // get from q
-                DeviceRequest incomingRequest = _dataItemsQueue.Take();
-                System.Diagnostics.Debug.Assert(null != incomingRequest);
-                if (incomingRequest.RequestObject.ToString() == OutputDevice.CancelTaskRequest)
+                EthernetMessage incomingMessage = _dataItemsQueue2.Take(); // get from q
+
+                if (null == incomingMessage) // end task token
                 {
                     break;
                 }
-                HandleRequest(incomingRequest);
-            }
 
-            _logger.Debug($"OutputDeviceHandler_Task end {this.GetType().ToString()}");
+                // verify card type
+                int cardId = StaticMethods.GetCardIdFromCardName(this.DeviceName);
+                if ( cardId != incomingMessage.CardType)
+                {
+                    _logger.Warn($"{InstanceName} wrong card id {incomingMessage.CardType} while expecting {cardId}. message dropped.");
+                    continue;
+                }
+                // verify payload length
+                // tbd
+
+                // verify slot number
+                if (incomingMessage.SlotNumber != this._deviceSetup.SlotNumber)
+                {
+                    _logger.Warn($"{InstanceName} wrong slot number ({incomingMessage.SlotNumber}). incoming message dropped.");
+                    continue;
+                }
+                
+                if (_isDeviceReady)
+                {
+                    HandleRequest(incomingMessage);
+                }
+                else
+                {
+                    _logger.Warn($"Device {DeviceName} not ready. message dropped.");
+                }
+            }
+            _logger.Debug($"OutputDeviceHandler_Task Fin. {InstanceName}");
         }
 
-        public abstract void Dispose();
+        public virtual void Dispose()
+        {
+            _disposeStarted = true;
+            _dataItemsQueue2.Add(null); // end task token
+            Thread.Sleep(100);
+            _dataItemsQueue2.CompleteAdding();
+        }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading;
 using UeiDaq;
+using UeiBridgeTypes;
 
 /// <summary>
 /// All files in project might refer to this file.
@@ -8,28 +9,36 @@ using UeiDaq;
 /// </summary>
 namespace UeiBridge
 {
-    public abstract class InputDevice : IDisposable
+    public abstract class InputDevice : IDeviceManager, IDisposable
     {
-
-        protected Session _deviceSession;
-        protected string _caseUrl;
-        //protected string _deviceName;// = "AO-308";
-        protected string _channelsString;
-        //protected IConvert _attachedConverter;
+        // abstarcts
         public abstract IConvert AttachedConverter { get; }
-        protected readonly IEnqueue<ScanResult> _targetConsumer;
+        public abstract string GetFormattedStatus( TimeSpan interval);
+        public abstract void OpenDevice();
+        public abstract string DeviceName { get; }
+        public abstract string InstanceName { get; }
 
-        public abstract void Start();
-        public abstract string GetFormattedStatus();
-        protected InputDevice(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl)
+        // protected
+        protected Session _deviceSession;
+        protected string _cubeUrl; // tbd. remove this
+        protected string _channelsString;
+        protected ISend<SendObject> _targetConsumer;
+        protected System.Threading.Timer _samplingTimer;
+        //protected DateTime _publishTime = DateTime.Now;
+
+        //protected DeviceSetup _deviceSetup;
+
+        //protected InputDevice(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string cubeUrl)
+        //{
+        //    _targetConsumer = targetConsumer;
+        //    _samplingInterval = samplingInterval;
+        //    _cubeUrl = cubeUrl;
+        //}
+        protected InputDevice(ISend<SendObject> targetConsumer)//, DeviceSetup setup)
         {
             _targetConsumer = targetConsumer;
-            _samplingInterval = samplingInterval;
-            _caseUrl = caseUrl;
+            //_deviceSetup = setup;
         }
-        public abstract string DeviceName { get; }
-        protected System.Threading.Timer _samplingTimer;
-        protected TimeSpan _samplingInterval;
         public virtual void CloseDevice()
         {
             if (null != _deviceSession)

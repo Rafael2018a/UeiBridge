@@ -6,6 +6,8 @@ namespace UeiBridge
     /// <summary>
     /// Create EthernetMessage object from various sources.
     /// </summary>
+    /// 
+    [Obsolete("Method is deprecated, use EthernetMessage instead.")]
     public static class EthernetMessageFactory
     {
         public static EthernetMessage CreateFromByteArray(byte[] byteMessage, out string errorString)

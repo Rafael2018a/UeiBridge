@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
-
+using UeiBridgeTypes;
 namespace UeiBridge
 {
     /// <summary>
     /// Convert byte[] to DeviceRequest objects and sends to to appropriate device manager.
     /// </summary>
+    [Obsolete]
     public class EthernetToDevice : IEnqueue<byte[]> 
     {
         BlockingCollection<byte[]> _dataItemsQueue = new BlockingCollection<byte[]>(100);
@@ -82,7 +83,7 @@ namespace UeiBridge
                 {
                     // convert byte[] to messageObject
                     string errorString;
-                    EthernetMessage messageObj = EthernetMessageFactory.CreateFromByteArray(incomingMessage, out errorString);
+                    EthernetMessage messageObj = EthernetMessage.CreateFromByteArray(incomingMessage, out errorString);
                     if (null == messageObj)
                     {
                         _logger.Warn(errorString);
@@ -96,8 +97,8 @@ namespace UeiBridge
                         //_logger.Debug($"Ethernet Message accepted. Device:{deviceName} Payload length:{messageObj.PayloadBytes.Length}");
                         OutputDevice deviceManager = ProjectRegistry.Instance.OutputDevicesMap[deviceName];
 
-                        DeviceRequest dreq = MakeDeviceRequest(messageObj, deviceManager.AttachedConverter);
-                        deviceManager.Enqueue(dreq);
+                        //DeviceRequest dreq = MakeDeviceRequest(messageObj, deviceManager.AttachedConverter);
+                        //deviceManager.Enqueue(dreq);
                     }
                     else
                     {
@@ -145,7 +146,7 @@ namespace UeiBridge
             var devicePayload = converter.EthToDevice( messageObject.PayloadBytes);
             if (null != devicePayload)
             {
-                DeviceRequest dr = new DeviceRequest(devicePayload, Config.Instance.DeviceUrl, messageObject.SlotChannelNumber);
+                DeviceRequest dr = new DeviceRequest(devicePayload, Config.Instance.DeviceUrl, messageObject.SerialChannelNumber);
                 return dr;
             }
             else
