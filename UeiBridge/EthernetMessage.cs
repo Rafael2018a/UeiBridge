@@ -170,17 +170,15 @@ namespace UeiBridge
         /// </summary>
         /// <param name="payload"></param>
         /// <param name="deviceString"></param>
-        [Obsolete]
-        public static EthernetMessage CreateFromDevice(byte[] payload, string deviceString)
+        //[Obsolete]
+        public static EthernetMessage CreateFromDevice(byte[] payload, string deviceName)
         {
             //ILog _logger = log4net.LogManager.GetLogger("Root");
 
-            int key = ProjectRegistry.Instance.GetDeviceKeyFromDeviceString(deviceString);
-            if (key < 0)
-            {
-                //_logger.Warn($"Unknown device string {deviceString}");
-                return null;
-            }
+            //int key = //ProjectRegistry.Instance.GetDeviceKeyFromDeviceString(deviceName);
+            int key = StaticMethods.GetCardIdFromCardName( deviceName);
+
+            System.Diagnostics.Debug.Assert(key >= 0);
 
             EthernetMessage msg = new EthernetMessage();
             msg.CardType = (byte)key;

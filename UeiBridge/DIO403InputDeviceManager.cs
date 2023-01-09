@@ -31,7 +31,6 @@ namespace UeiBridge
             _attachedConverter = StaticMethods.CreateConverterInstance( setup);
             InstanceName = $"{DeviceName}/Slot{setup.SlotNumber}/Input";
             _thisDeviceSetup = setup as DIO403Setup;
-
         }
         public DIO403InputDeviceManager():base(null) // must have default const.
         {
@@ -52,7 +51,7 @@ namespace UeiBridge
 
                 int noOfbits = _deviceSession.GetNumberOfChannels() * 8;
                 int firstBit = _deviceSession.GetChannel(0).GetIndex() * 8;
-                _logger.Info($"Init success: {InstanceName}. Bits {firstBit}..{firstBit + noOfbits - 1} as input");
+                _logger.Info($"Init success: {InstanceName}(Digital). Bits {firstBit}..{firstBit + noOfbits - 1} as input. Dest: {_thisDeviceSetup.DestEndPoint.ToIpEp()}");
                 TimeSpan interval = TimeSpan.FromMilliseconds(_thisDeviceSetup.SamplingInterval);
                 _samplingTimer = new System.Threading.Timer(DeviceScan_Callback, null, TimeSpan.Zero, interval);
 
@@ -98,9 +97,10 @@ namespace UeiBridge
                 _lastScan = _reader.ReadSingleScanUInt16();
                 System.Diagnostics.Debug.Assert(_lastScan != null);
                 System.Diagnostics.Debug.Assert(_lastScan.Length == _deviceSession.GetNumberOfChannels(), "wrong number of channels");
-                //diData[0] = 0x07;
-                ScanResult dr = new ScanResult(_lastScan, this);
-                //_targetConsumer.Enqueue(dr); tbd
+                byte[] payload = this.AttachedConverter.DeviceToEth(_lastScan);
+                var em = EthernetMessage.CreateFromDevice( payload, DeviceName);
+
+                _targetConsumer.Send(new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), em.ToByteArrayUp()));
             }
             catch (Exception ex)
             {

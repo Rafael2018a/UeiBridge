@@ -49,7 +49,7 @@ namespace UeiBridge
         {
 
             this._instanceName = instnceName;
-
+            System.Diagnostics.Debug.Assert(null != localBindAddress);
             try
             {
                 // Create socket
@@ -89,7 +89,7 @@ namespace UeiBridge
                 //_sendSocket.Connect(_mcastDestEP);
                 
 
-                _logger.Info($"Multicast sender - {this._instanceName} - esablished. Dest:{destEp.ToString()}. {usingNic}");
+                //_logger.Info($"Multicast sender - {this._instanceName} - esablished. Dest:{destEp.ToString()}. {usingNic}");
             }
             catch (SocketException ex)
             {

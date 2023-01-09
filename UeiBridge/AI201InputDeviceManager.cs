@@ -73,7 +73,7 @@ namespace UeiBridge
                 var r = _deviceSession.GetDevice().GetAIRanges();
                 TimeSpan interval = TimeSpan.FromMilliseconds(_thisDeviceSetup.SamplingInterval);
                 _samplingTimer = new System.Threading.Timer(HandleResponse_Callback, null, TimeSpan.Zero, interval);
-                _logger.Info($"Init success. {InstanceName}. {_deviceSession.GetNumberOfChannels()} input channels.");
+                _logger.Info($"Init success. {InstanceName}. {_deviceSession.GetNumberOfChannels()} input channels. Dest:{_thisDeviceSetup.DestEndPoint.ToIpEp()}");
                 return;
 
             }

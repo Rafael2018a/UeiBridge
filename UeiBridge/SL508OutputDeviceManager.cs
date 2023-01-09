@@ -58,7 +58,7 @@ namespace UeiBridge
                 if (firstIteration)
                 {
                     firstIteration = false;
-                    _logger.Info($"Init success {InstanceName}:");
+                    _logger.Info($"Init success {InstanceName}. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}");
                 }
                 int channleIndex = port.GetIndex();
                 _logger.Info($"CH{channleIndex} {port.GetMode()} {port.GetSpeed()}.");////{c111.GetResourceName()}");

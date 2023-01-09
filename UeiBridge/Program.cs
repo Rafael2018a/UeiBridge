@@ -27,7 +27,6 @@ namespace UeiBridge
 
         private void Run()
         {
-
             // print current version
             var v = System.Reflection.Assembly.GetEntryAssembly().GetName().Version.ToString();
             _logger.Info($"UEI Bridge. Version {v} Device URL: {Config2.Instance.CubeUrlList[0]}");
@@ -49,7 +48,7 @@ namespace UeiBridge
             Task.Factory.StartNew(() => PublishStatus_Task());
 
             // self tests
-            StartDownwardsTest();
+            //StartDownwardsTest();
 
             _logger.Info("Any key to exit...");
             Console.ReadKey();
@@ -140,6 +139,7 @@ namespace UeiBridge
 
         private static void ActivateProgramObjects(List<PerDeviceObjects> deviceObjectsList)
         {
+            // activate upward (input) objects
             foreach (PerDeviceObjects deviceObjects in deviceObjectsList)
             {
                 deviceObjects?.InputDeviceManager?.OpenDevice();
@@ -154,11 +154,6 @@ namespace UeiBridge
                 {
                     if (null!=deviceObjects.OutputDeviceManager)
                     {
-                        // if serial, activate session
-                        //if (deviceObjects.OutputDeviceManager.DeviceName.StartsWith("SL508"))
-                        //{
-                        //    deviceObjects.SerialSession.Start();
-                        //}
                         deviceObjects.OutputDeviceManager.OpenDevice();
                         deviceObjects?.UdpReader.Start();
                         Thread.Sleep(10);
@@ -166,7 +161,7 @@ namespace UeiBridge
                 }
             }
 
-            // activate upward (input) objects
+
         }
 
         void DisposeProgramObjects()
@@ -267,7 +262,7 @@ namespace UeiBridge
                 }
 
                 string instanceName = $"{realDevice.GetDeviceName()}/Slot{deviceSetup.SlotNumber}";
-                UdpWriter uWriter = new UdpWriter(instanceName, deviceSetup.DestEndPoint.ToIpEp(), null);
+                UdpWriter uWriter = new UdpWriter(instanceName, deviceSetup.DestEndPoint.ToIpEp(), Config2.Instance.AppSetup.SelectedNicForMCast);
                 InputDevice inDev;
                 if (devType.Name.StartsWith("SL508"))
                 {

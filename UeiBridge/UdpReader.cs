@@ -71,7 +71,7 @@ namespace UeiBridge
                 // join
                 _udpclient.JoinMulticastGroup(_msListeningiEp.Address, _localNIC);
 
-                _logger.Info($"Multicast receiver - {this._instanceName} - esablished. Listening on {_msListeningiEp}");
+                //_logger.Info($"Multicast receiver - {this._instanceName} - esablished. Listening on {_msListeningiEp}");
                 // Start listening for incoming data
                 _udpclient.BeginReceive(new AsyncCallback(ReceivedCallback), null);
             }

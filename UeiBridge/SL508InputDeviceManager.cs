@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using UeiDaq;
 using UeiBridgeTypes;
 
@@ -10,7 +8,8 @@ namespace UeiBridge
 {
 
     /// <summary>
-    /// "SL-508-892"
+    /// "SL-508-892" manager.
+    /// R&R: Reads from serial device and sends the result to 'targetConsumer'
     /// </summary>
     class SL508InputDeviceManager : InputDevice
     {
@@ -18,12 +17,10 @@ namespace UeiBridge
         public override string DeviceName => "SL-508-892";
         readonly List<SerialPort> _serialPorts;
         readonly List<SerialReader> _serialReaderList;
-        //readonly List<SerialWriter> _serialWriterList;
         IConvert _attachedConverter;
         bool _InDisposeState = false;
         List<ViewerItem<byte[]>> _lastScanList;
-        //bool _isReady = false;
-        //public bool IsReady { get; }
+        readonly System.Net.IPEndPoint _targetEp;
 
         public override IConvert AttachedConverter => _attachedConverter;
         //public List<SerialWriter> SerialWriterList => _serialWriterList;
@@ -32,8 +29,6 @@ namespace UeiBridge
         public override string InstanceName { get; }
 
         private Session _serialSession;
-        //string _instanceName;
-        //public SL508InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
         public SL508InputDeviceManager(ISend<SendObject> targetConsumer, DeviceSetup setup, Session serialSession) : base(targetConsumer)
         {
             _serialPorts = new List<SerialPort>();
@@ -44,6 +39,7 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert(null != serialSession);
             _serialSession = serialSession;
             InstanceName = $"{DeviceName}/Slot{setup.SlotNumber}/Input";
+            _targetEp = setup.DestEndPoint.ToIpEp();
         }
 
         public SL508InputDeviceManager() : base(null)
@@ -93,10 +89,11 @@ namespace UeiBridge
 
                 _lastScanList[channel] = new ViewerItem<byte[]>(receiveBuffer, timeToLiveMs: 5000);
                 //_logger.Debug($"read from serial port. ch {channel}");
-
+                byte [] payload = this.AttachedConverter.DeviceToEth(receiveBuffer);
+                EthernetMessage em = EthernetMessage.CreateFromDevice(payload, this.DeviceName);
                 // forward to consumer (send by udp)
-                ScanResult sr = new ScanResult(receiveBuffer, this);
-                //_targetConsumer.Enqueue(sr); tbd
+                //ScanResult sr = new ScanResult(receiveBuffer, this);
+                _targetConsumer.Send(new SendObject(_targetEp, em.ToByteArrayUp()));
 
                 // restart reader
                 readerIAsyncResult = _serialReaderList[channel].BeginRead(minLen, this.ReaderCallback, channel);
@@ -132,7 +129,7 @@ namespace UeiBridge
                 _lastScanList.Add(null);
             }
 
-            _logger.Info($"Init success {InstanceName}. {_serialSession.GetNumberOfChannels()} channels.");
+            _logger.Info($"Init success {InstanceName}. {_serialSession.GetNumberOfChannels()} channels. Dset:{_targetEp}");
 
         }
         public override void Dispose()

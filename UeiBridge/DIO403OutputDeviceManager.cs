@@ -58,7 +58,7 @@ namespace UeiBridge
 
             int noOfbits = _deviceSession.GetNumberOfChannels() * 8;
             int firstBit = _deviceSession.GetChannel(0).GetIndex() * 8;
-            _logger.Info($"Init success: {InstanceName}. Bits {firstBit}..{firstBit + noOfbits - 1} as output"); // { noOfCh} output channels
+            _logger.Info($"Init success: {InstanceName}. Bits {firstBit}..{firstBit + noOfbits - 1} as output. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}"); // { noOfCh} output channels
 
             _lastScanList = new System.Collections.Generic.List<ViewerItem<UInt16>>(new ViewerItem<UInt16>[_deviceSession.GetNumberOfChannels()]);
 
@@ -70,18 +70,21 @@ namespace UeiBridge
         public override string GetFormattedStatus( TimeSpan interval)
         {
             System.Text.StringBuilder formattedString = new System.Text.StringBuilder("Output bits: ");
-            if (_lastScanList[0]?.timeToLive.Ticks > 0)
+            lock (_lastScanList)
             {
-                _lastScanList[0].timeToLive -= interval;
-                foreach (var vi in _lastScanList)
+                if (_lastScanList[0]?.timeToLive.Ticks > 0)
                 {
-                    formattedString.Append(Convert.ToString(vi.readValue, 2).PadLeft(8, '0'));
-                    formattedString.Append("  ");
+                    _lastScanList[0].timeToLive -= interval;
+                    foreach (var vi in _lastScanList)
+                    {
+                        formattedString.Append(Convert.ToString(vi.readValue, 2).PadLeft(8, '0'));
+                        formattedString.Append("  ");
+                    }
                 }
-            }
-            else
-            {
-                formattedString.Append("- - -");
+                else
+                {
+                    formattedString.Append("- - -");
+                }
             }
             return formattedString.ToString();
         }
@@ -92,9 +95,12 @@ namespace UeiBridge
             ushort[] scan = ls as ushort[];
             System.Diagnostics.Debug.Assert( scan != null);
             _writer.WriteSingleScanUInt16( scan);
-            for(int ch=0; ch<scan.Length; ch++)
+            lock (_lastScanList)
             {
-                _lastScanList[ch] = new ViewerItem<UInt16>(scan[ch], timeToLiveMs:5000);
+                for (int ch = 0; ch < scan.Length; ch++)
+                {
+                    _lastScanList[ch] = new ViewerItem<UInt16>(scan[ch], timeToLiveMs: 5000);
+                }
             }
         }
     }

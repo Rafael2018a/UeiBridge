@@ -53,7 +53,7 @@ namespace UeiBridge
                 Task.Factory.StartNew(() => OutputDeviceHandler_Task());
 
                 var range = _deviceSession.GetDevice().GetAORanges();
-                _logger.Info($"Init success: {InstanceName} . { _deviceSession.GetNumberOfChannels()} channels. Range {range[0].minimum},{range[0].maximum}V.");
+                _logger.Info($"Init success: {InstanceName} . { _deviceSession.GetNumberOfChannels()} channels. Range {range[0].minimum},{range[0].maximum}V. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}");
 
                 _isDeviceReady = true;
             }
@@ -74,31 +74,38 @@ namespace UeiBridge
             double [] scan = p as double[];
             System.Diagnostics.Debug.Assert(scan != null);
             _writer.WriteSingleScan( scan);
-            for (int ch = 0; ch < scan.Length; ch++)
+            lock (_lastScanList)
             {
-                _lastScanList[ch] = new ViewerItem<double>(scan[ch], timeToLiveMs: 5000);
+                for (int ch = 0; ch < scan.Length; ch++)
+                {
+                    _lastScanList[ch] = new ViewerItem<double>(scan[ch], timeToLiveMs: 5000);
+                }
             }
         }
         
         public override string GetFormattedStatus( TimeSpan interval)
         {
-
+            // tbd: must lock. collection modifed outside ......
             System.Text.StringBuilder formattedString = new System.Text.StringBuilder("Output voltage: ");
-            if (_lastScanList[0]?.timeToLive.Ticks > 0)
+            lock (_lastScanList)
             {
-                _lastScanList[0].timeToLive -= interval;
-                if (null != _lastScanList)
+                if (_lastScanList[0]?.timeToLive.Ticks > 0)
                 {
-                    foreach (var vi in _lastScanList)
+                    _lastScanList[0].timeToLive -= interval;
+                    if (null != _lastScanList)
                     {
-                        formattedString.Append("  ");
-                        formattedString.Append(vi.readValue.ToString("0.0"));
+                        foreach (var vi in _lastScanList)
+                        {
+                            formattedString.Append("  ");
+                            formattedString.Append(vi.readValue.ToString("0.0"));
+                        }
                     }
                 }
-            }
-            else
-            {
-                formattedString.Append("- - -");
+
+                else
+                {
+                    formattedString.Append("- - -");
+                }
             }
             return formattedString.ToString();
         }
