@@ -10,28 +10,11 @@ using UeiDaq;
 
 namespace UeiBridge
 {
-    public class SerialChannel
-    {
-        [XmlAttribute("Port")]
-        public string portname = "ComX";
-        
-        public SerialPortMode mode = SerialPortMode.RS232;
-        [XmlElement("Baud")]
-        public SerialPortSpeed Baudrate { get; set; }
+    public enum CardFeature { Analog, Digital, Ralay, Serial };
+    public enum CardType { AO308, DIO403, DIO470, AI201100, SL508892 }
+    public enum Direction { input, output, in_out }
 
-        public SerialPortParity parity = SerialPortParity.None;
-        public SerialPortStopBits stopbits = SerialPortStopBits.StopBits1;
 
-        public SerialChannel(string portname)
-        {
-            this.portname = portname;
-            Baudrate = SerialPortSpeed.BitsPerSecond115200;
-        }
-        public SerialChannel()
-        {
-        }
-    }
-        
 
     public class SlotSetup
     {
@@ -55,9 +38,9 @@ namespace UeiBridge
 
         readonly int _maxDigital403OutputChannels = 3; // each channel contains 8 bits
 
-        readonly int _maxAnalogOutputChannels = 8;
-        readonly double _analog_Out_PeekVoltage = 10.0;
-        readonly double _analog_In_PeekVoltage = 12.0;
+        //readonly int _maxAnalogOutputChannels = 8;
+        //readonly double _analog_Out_PeekVoltage = 10.0;
+        //readonly double _analog_In_PeekVoltage = 12.0;
 
         private EndPoint[] LocalMcastEndPoints;
         private EndPoint[] DestMcastEndPoints;
@@ -76,7 +59,7 @@ namespace UeiBridge
         private Config()
         {
             for (int i = 0; i < SerialChannels.Length; i++)
-                SerialChannels[i] = new SerialChannel("Com" + i.ToString());
+                SerialChannels[i] = new SerialChannel("Com" + i.ToString(), SerialPortSpeed.BitsPerSecond14400);
 
             ValidSerialModes = StaticMethods.GetEnumValues<SerialPortMode>();
             ValidBaudRates = StaticMethods.GetEnumValues<SerialPortSpeed>();
@@ -171,9 +154,9 @@ namespace UeiBridge
             return resultConfig;
         }
 
-        public double Analog_Out_PeekVoltage => _analog_Out_PeekVoltage; 
-        public double Analog_In_PeekVoltage => _analog_In_PeekVoltage; 
-        public int MaxAnalogOutputChannels => _maxAnalogOutputChannels;
+        //public double Analog_Out_PeekVoltage => _analog_Out_PeekVoltage; 
+        //public double Analog_In_PeekVoltage => _analog_In_PeekVoltage; 
+        //public int MaxAnalogOutputChannels => _maxAnalogOutputChannels;
         public int MaxDigital403OutputChannels => _maxDigital403OutputChannels;
     }
 }

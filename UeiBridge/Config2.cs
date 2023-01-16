@@ -38,6 +38,28 @@ namespace UeiBridge
             //}
         }
     }
+    public class SerialChannel
+    {
+        [XmlAttribute("Port")]
+        public string portname = "ComX";
+
+        public SerialPortMode mode = SerialPortMode.RS232;
+        [XmlElement("Baud")]
+        public SerialPortSpeed Baudrate { get; set; }
+
+        public SerialPortParity parity = SerialPortParity.None;
+        public SerialPortStopBits stopbits = SerialPortStopBits.StopBits1;
+
+        public SerialChannel(string portname, SerialPortSpeed speed)
+        {
+            this.portname = portname;
+            //Baudrate = SerialPortSpeed.BitsPerSecond115200;
+            Baudrate = speed;
+        }
+        public SerialChannel()
+        {
+        }
+    }
 
     public class AppSetup
     {
@@ -70,6 +92,9 @@ namespace UeiBridge
     }
     public class AO308Setup : DeviceSetup
     {
+        public double PeekVoltage_Out => 10.0;
+        
+
         public AO308Setup()
         {
         }
@@ -80,7 +105,7 @@ namespace UeiBridge
     public class AI201100Setup : DeviceSetup
     {
         [XmlIgnore]
-        public double PeekVoltage => 15.0;
+        public double PeekVoltage_In => 12.0;
         public AI201100Setup( EndPoint destEndPoint, Device device) : base( null, destEndPoint, device)
         {
         }
@@ -131,9 +156,14 @@ namespace UeiBridge
         public SL508892Setup(EndPoint localEndPoint, EndPoint destEndPoint, Device device) : base(localEndPoint, destEndPoint, device)
         {
             Channels = new SerialChannel[8];
+            Channels[0] = new SerialChannel("Com0", SerialPortSpeed.BitsPerSecond19200);
+            Channels[1] = new SerialChannel("Com1", SerialPortSpeed.BitsPerSecond19200);
+            Channels[2] = new SerialChannel("Com2", SerialPortSpeed.BitsPerSecond14400);
+            Channels[3] = new SerialChannel("Com3", SerialPortSpeed.BitsPerSecond14400);
+
             for (int ch = 0; ch < Channels.Length; ch++)
             {
-                Channels[ch] = new SerialChannel($"Com{ch}");
+                Channels[ch] = new SerialChannel($"Com{ch}", SerialPortSpeed.BitsPerSecond115200);
             }
         }
     }
@@ -210,6 +240,7 @@ namespace UeiBridge
     [XmlInclude(typeof(DIO470Setup))]
     [XmlInclude(typeof(AI201100Setup))]
     [XmlInclude(typeof(SL508892Setup))]
+    [XmlInclude(typeof(ValidValuesClass))]
     public class Config2
     {
         private static Config2 _instance;
@@ -218,6 +249,7 @@ namespace UeiBridge
         public AppSetup AppSetup;
         public string[] CubeUrlList = new string[1];
         public CubeSetup[] UeiCubes = new CubeSetup[1];
+        public ValidValuesClass ValidValues = new ValidValuesClass();
 
         private Config2()
         {
@@ -276,6 +308,21 @@ namespace UeiBridge
             }
 
             return resultConfig;
+        }
+    }
+    public class ValidValuesClass
+    {
+        public string ValidSerialModes;
+        public string ValidBaudRates;
+        public string ValidStopBitsValues;
+        public string ValidParityValues;
+
+        public ValidValuesClass()
+        {
+            ValidSerialModes = StaticMethods.GetEnumValues<SerialPortMode>();
+            ValidBaudRates = StaticMethods.GetEnumValues<SerialPortSpeed>();
+            ValidStopBitsValues = StaticMethods.GetEnumValues<SerialPortStopBits>();
+            ValidParityValues = StaticMethods.GetEnumValues<SerialPortParity>();
         }
     }
 }

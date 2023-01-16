@@ -14,15 +14,19 @@ namespace UeiBridge
         string _lastError { get; set; }
         string IConvert.LastErrorMessage => _lastError;
 
-        readonly int _numberOfChannels;
+        const int _numberOfChannels = 8;
         readonly double  _peekToPeekVoltage;
         readonly double _conversionFactor;
 
         public AO308Convert(DeviceSetup setup)
         {
-            _peekToPeekVoltage = Config.Instance.Analog_Out_PeekVoltage * 2;
+            AO308Setup ao308 = setup as AO308Setup;
+            if (null == ao308)
+                return;
+            
+            _peekToPeekVoltage = ao308.PeekVoltage_Out * 2;  //Analog_Out_PeekVoltage * 2;
             _conversionFactor = _peekToPeekVoltage / UInt16.MaxValue;
-            _numberOfChannels = Config.Instance.MaxAnalogOutputChannels;
+            //_numberOfChannels = Config.Instance.MaxAnalogOutputChannels;
         }
 
         public byte[] DeviceToEth(object dt)
@@ -168,14 +172,16 @@ namespace UeiBridge
         public string DeviceName => "AI-201-100";
         string _lastError=null;
         string IConvert.LastErrorMessage => _lastError;
-        double _peekVoltage;
+        //double _peekVoltage;
+        AI201100Setup _thisDeviceSsetup;
 
         public AI201Converter( DeviceSetup setup)
         {
-            AI201100Setup thissetup = setup as AI201100Setup;
-            if (null != thissetup)
+            _thisDeviceSsetup = setup as AI201100Setup;
+            //AI201100Setup thissetup = setup as AI201100Setup;
+            //if (null != thissetup)
             {
-                _peekVoltage = thissetup.PeekVoltage;
+                //_peekVoltage = thissetup.PeekVoltage;
             }
             //peekVoltage = Config.Instance.Analog_In_PeekVoltage;
             //_conversionFactor = int16range / peekToPeekVoltage;
@@ -188,13 +194,14 @@ namespace UeiBridge
             int ch = 0;
             foreach (double val in inputVector)
             {
-                //double peekVoltage = Config.Instance.Analog_In_PeekVoltage;
-                double p2p = _peekVoltage * 2.0;
+                double clippedVal = (val > 12.0) ? 12.0 : val;
+                clippedVal = (clippedVal < -12.0) ? -12.0 : clippedVal;
+                double p2p = _thisDeviceSsetup.PeekVoltage_In * 2.0;
 
-                //double pVal = (Math.Abs(val) < 0.1) ? 0 : val;
-                double zVal = val + _peekVoltage; // make zero based
-                zVal = (zVal >= p2p) ? p2p : zVal; // protect from high voltage
-                double normVal = zVal / p2p; // 0 < normVal < 1
+                double zVal = clippedVal + _thisDeviceSsetup.PeekVoltage_In; // make zero based
+                System.Diagnostics.Debug.Assert(zVal >= 0.0);
+                //zVal = (zVal >= p2p) ? p2p : zVal; // protect from high voltage
+                double normVal = zVal / p2p; 
 
                 int vInt = Convert.ToInt32(normVal * (double)UInt16.MaxValue) - (Int32)Int16.MaxValue -1;
                 Int16 vShort = Convert.ToInt16((vInt));

@@ -137,6 +137,7 @@ namespace UeiBridge
             _InDisposeState = true;
             for (int i = 0; i < _serialReaderList.Count; i++)
             {
+                
                 _serialReaderList[i].Dispose();
             }
             //if (_serialSession.IsRunning())

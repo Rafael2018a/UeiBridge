@@ -22,6 +22,7 @@ namespace UeiBridge
         {
             Program p = new Program();
             p.Run();
+
             System.Threading.Thread.Sleep(1000);
         }
 
@@ -40,7 +41,7 @@ namespace UeiBridge
             }
 
             // prepare device dictionaries
-            ProjectRegistry.Instance.Establish();
+            //ProjectRegistry.Instance.Establish();
 
             BuildProgramObjects();
 
@@ -48,7 +49,7 @@ namespace UeiBridge
             Task.Factory.StartNew(() => PublishStatus_Task());
 
             // self tests
-            //StartDownwardsTest();
+            StartDownwardsTest();
 
             _logger.Info("Any key to exit...");
             Console.ReadKey();
@@ -389,7 +390,7 @@ namespace UeiBridge
                         {
                             IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[5].LocalEndPoint?.ToIpEp();
                             byte[] e403 = StaticMethods.Make_DIO403Down_Message();
-                            //udpClient.Send(e403, e403.Length, destEp);
+                            udpClient.Send(e403, e403.Length, destEp);
                         }
                         // analog out
                         {
@@ -401,6 +402,8 @@ namespace UeiBridge
                         byte[] e430 = StaticMethods.Make_DIO430Down_Message();
                         udpClient.Send(e430, e308.Length, destEp);
 #endif
+                       
+
                         // serial out
                         List<byte[]> e508 = StaticMethods.Make_SL508Down_Messages( i);
                         foreach (byte [] msg in e508)
@@ -408,6 +411,13 @@ namespace UeiBridge
                             IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[3].LocalEndPoint.ToIpEp();
                             udpClient.Send(msg, msg.Length, destEp);
                             System.Threading.Thread.Sleep(10);
+                        }
+
+                        // relays
+                        {
+                            //byte[] e470 = StaticMethods.Make_DIO470_Down_Message();
+                            //IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[4].LocalEndPoint.ToIpEp();
+                            //udpClient.Send(e470, e470.Length, destEp);
                         }
 
                         Thread.Sleep(100);

@@ -90,8 +90,6 @@
     <Compile Include="InputDevice.cs" />
     <Compile Include="OutputDevice.cs" />
     <Compile Include="PerDeviceObjects.cs" />
-    <Compile Include="ProjectRegistry.cs" />
-    <Compile Include="EthernetToDevice.cs" />
     <Compile Include="GlobalTypes.cs" />
     <Compile Include="Mediator.cs" />
     <Compile Include="EthernetMessage.cs" />

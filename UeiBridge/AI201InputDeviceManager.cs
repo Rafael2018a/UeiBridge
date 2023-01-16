@@ -48,9 +48,10 @@ namespace UeiBridge
 
                 System.Diagnostics.Debug.Assert(_lastScan.Length == _deviceSession.GetNumberOfChannels(), "wrong number of channels");
 
-                ScanResult dr = new ScanResult(_lastScan, this);
-                byte[] bm = _attachedConverter.DeviceToEth(_lastScan);
-                SendObject so = new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), bm);
+                //ScanResult dr = new ScanResult(_lastScan, this);
+                byte[] payload = _attachedConverter.DeviceToEth(_lastScan);
+                EthernetMessage em = EthernetMessage.CreateFromDevice(payload, this.DeviceName);
+                SendObject so = new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), em.ToByteArrayUp());
                 _targetConsumer.Send(so);
             }
             catch (Exception ex)
@@ -61,7 +62,7 @@ namespace UeiBridge
 
         public override void OpenDevice()
         {
-            double peek = _thisDeviceSetup.PeekVoltage;
+            double peek = _thisDeviceSetup.PeekVoltage_In;
             try
             {
                 string url1 = $"{_thisDeviceSetup.CubeUrl}Dev{_thisDeviceSetup.SlotNumber}/{_channelsString}";

@@ -18,6 +18,7 @@ namespace UeiBridge
         {
             _cardIdMap.Add(0, "AO-308");
             _cardIdMap.Add(4, "DIO-403");
+            _cardIdMap.Add(6, "DIO-470");
             _cardIdMap.Add(1, "AI-201-100");
             _cardIdMap.Add(5, "SL-508-892");
         }
@@ -194,6 +195,16 @@ namespace UeiBridge
             msg.PayloadBytes[1] = 0x34;
             msg.PayloadBytes[2] = 0x56;
             msg.SlotNumber = 5;
+
+            return msg.ToByteArrayDown();
+        }
+        public static byte[] Make_DIO470_Down_Message()
+        {
+            EthernetMessage msg = EthernetMessage.CreateEmpty(6, 3);
+            msg.PayloadBytes[0] = 0x12;
+            msg.PayloadBytes[1] = 0x34;
+            msg.PayloadBytes[2] = 0x56;
+            msg.SlotNumber = 4;
 
             return msg.ToByteArrayDown();
         }

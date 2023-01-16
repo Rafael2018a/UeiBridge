@@ -21,13 +21,15 @@ namespace UeiBridge
         const string _channelsString = "Ao0:7";
         Session _deviceSession;
         System.Collections.Generic.List<ViewerItem<double>> _lastScanList;
+        AO308Setup _thisDeviceSetup;
 
         public override string InstanceName { get; }// => _instanceName;
 
         private IConvert _attachedConverter;
-        public AO308OutputDeviceManager(DeviceSetup deviceSetup) : base(deviceSetup)
+        public AO308OutputDeviceManager(AO308Setup deviceSetup) : base(deviceSetup)
         {
             InstanceName = $"{DeviceName}/Slot{deviceSetup.SlotNumber}/Output";
+            _thisDeviceSetup = deviceSetup;
         }
 
         public AO308OutputDeviceManager() : base(null)
@@ -42,9 +44,11 @@ namespace UeiBridge
 
                 string cubeUrl = $"{_deviceSetup.CubeUrl}Dev{_deviceSetup.SlotNumber}/{_channelsString}";
 
+                
+
                 _deviceSession = new Session();
-                var c = _deviceSession.CreateAOChannel(cubeUrl, -Config.Instance.Analog_Out_PeekVoltage, Config.Instance.Analog_Out_PeekVoltage);
-                System.Diagnostics.Debug.Assert(c.GetMaximum() == Config.Instance.Analog_Out_PeekVoltage);
+                var c = _deviceSession.CreateAOChannel(cubeUrl, -_thisDeviceSetup.PeekVoltage_Out, _thisDeviceSetup.PeekVoltage_Out);
+                System.Diagnostics.Debug.Assert(c.GetMaximum() == _thisDeviceSetup.PeekVoltage_Out);
                 _deviceSession.ConfigureTimingForSimpleIO();
                 _writer = new AnalogScaledWriter(_deviceSession.GetDataStream());
 
