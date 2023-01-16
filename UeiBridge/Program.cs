@@ -119,26 +119,42 @@ namespace UeiBridge
             _deviceObjectsTable = new List<List<PerDeviceObjects>>(new List<PerDeviceObjects>[noOfCubes]);
 
             // Create program Objects
-            foreach (var cube in Config2.Instance.UeiCubes)
+            foreach (var cubeSetup in Config2.Instance.UeiCubes)
             {
                 // init device list
-                List<UeiDaq.Device> realDeviceList = StaticMethods.GetDeviceList(cube.CubeUrl);
-                _deviceObjectsTable[cube.CubeNumber] = new List<PerDeviceObjects>(new PerDeviceObjects[realDeviceList.Count]);
+                List<UeiDaq.Device> realDeviceList = StaticMethods.GetDeviceList(cubeSetup.CubeUrl);
+                _deviceObjectsTable[cubeSetup.CubeNumber] = new List<PerDeviceObjects>(new PerDeviceObjects[realDeviceList.Count]);
 
-                CreateDownwardsObjects(cube, _deviceObjectsTable);
-                CreateUpwardsObjects(cube, _deviceObjectsTable);
+                CreateDownwardsObjects(cubeSetup, _deviceObjectsTable);
+                CreateUpwardsObjects(cubeSetup, _deviceObjectsTable);
             }
 
             // Activate program Objects
-            foreach (List<PerDeviceObjects> cube in _deviceObjectsTable)
+            foreach (List<PerDeviceObjects> cubeSetup in _deviceObjectsTable)
             {
-                ActivateProgramObjects(cube);// _deviceObjectsTable);
+                ActivateDownwardOjects(cubeSetup);
+                ActivateUpwardObjects(cubeSetup);
             }
-
         }
 
 
-        private static void ActivateProgramObjects(List<PerDeviceObjects> deviceObjectsList)
+        private static void ActivateDownwardOjects(List<PerDeviceObjects> deviceObjectsList)
+        {
+            // activate downward (output) objects
+            foreach (PerDeviceObjects deviceObjects in deviceObjectsList)
+            {
+                if (null != deviceObjects)
+                {
+                    if (null != deviceObjects.OutputDeviceManager)
+                    {
+                        deviceObjects.OutputDeviceManager.OpenDevice();
+                        deviceObjects?.UdpReader.Start();
+                        Thread.Sleep(10);
+                    }
+                }
+            }
+        }
+        private static void ActivateUpwardObjects(List<PerDeviceObjects> deviceObjectsList)
         {
             // activate upward (input) objects
             foreach (PerDeviceObjects deviceObjects in deviceObjectsList)
@@ -147,22 +163,6 @@ namespace UeiBridge
                 Thread.Sleep(10);
                 // (no need to activate udpWriter)
             }
-
-            // activate downward (output) objects
-            foreach (PerDeviceObjects deviceObjects in deviceObjectsList)
-            {
-                if (null!=deviceObjects)
-                {
-                    if (null!=deviceObjects.OutputDeviceManager)
-                    {
-                        deviceObjects.OutputDeviceManager.OpenDevice();
-                        deviceObjects?.UdpReader.Start();
-                        Thread.Sleep(10);
-                    }
-                }
-            }
-
-
         }
 
         void DisposeProgramObjects()
@@ -170,11 +170,18 @@ namespace UeiBridge
             for (int cubeIndex = 0; cubeIndex < _deviceObjectsTable.Count; cubeIndex++)
             {
                 List<PerDeviceObjects> devList = _deviceObjectsTable[cubeIndex];
+                
                 for (int deviceIndex = 0; deviceIndex < devList.Count; deviceIndex++)
                 {
+                    _logger.Debug($"Disposing Slot {deviceIndex}");
+                    // dispose upword object
+                    devList[deviceIndex]?.InputDeviceManager?.Dispose();
+                    // dispose downword object
                     devList[deviceIndex]?.UdpReader?.Dispose();
                     devList[deviceIndex]?.OutputDeviceManager?.Dispose();
-                    devList[deviceIndex]?.InputDeviceManager?.Dispose();
+
+                    // dispose serial session object
+                    devList[deviceIndex]?.SerialSession?.Dispose();
                 }
             }
         }
@@ -201,13 +208,13 @@ namespace UeiBridge
                     continue;
                 }
 
-                Session serialSession = null;
+                SL508Session serialSession = null;
                 OutputDevice outDev;
                 if (devType.Name.StartsWith("SL508")) // special treatment to serial device
                 {
-                    if (null == deviceObjectsTable[cubeSetup.CubeNumber][realSlot])
+                    if (null == deviceObjectsTable[cubeSetup.CubeNumber][realSlot]) // if SL508Session not exists
                     {
-                        serialSession = StaticMethods.CreateSerialSession(deviceSetup as SL508892Setup);
+                        serialSession = new SL508Session(deviceSetup as SL508892Setup);// StaticMethods.CreateSerialSession2(deviceSetup as SL508892Setup);
                     }
                     else
                     { 

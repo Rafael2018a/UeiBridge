@@ -246,6 +246,7 @@ namespace UeiBridge
             return sb.ToString();
         }
 
+        [Obsolete]
         public static Session CreateSerialSession( SL508892Setup deviceSetup)
         {
             System.Diagnostics.Debug.Assert(null != deviceSetup);
@@ -264,7 +265,7 @@ namespace UeiBridge
             }
 
             int numberOfChannels = serialSession.GetNumberOfChannels();
-            System.Diagnostics.Debug.Assert(numberOfChannels == Config.Instance.SerialChannels.Length);
+            //System.Diagnostics.Debug.Assert(numberOfChannels == Config.Instance.SerialChannels.Length);
 
             serialSession.ConfigureTimingForMessagingIO(1000, 100.0);
             serialSession.GetTiming().SetTimeout(5000); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
@@ -273,6 +274,28 @@ namespace UeiBridge
 
             serialSession.Start();
             return serialSession;
+        }
+        [Obsolete]
+        public static Session CreateSerialSession2(SL508892Setup deviceSetup)
+        {
+            Session srSession = new Session();
+            string finalUrl = $"{deviceSetup.CubeUrl}Dev{deviceSetup.SlotNumber}/com0:7";
+
+            srSession.CreateSerialPort(finalUrl,
+                SerialPortMode.RS485FullDuplex,
+                SerialPortSpeed.BitsPerSecond57600,
+                SerialPortDataBits.DataBits8,
+                SerialPortParity.None,
+                SerialPortStopBits.StopBits1,
+                "");
+
+            srSession.ConfigureTimingForMessagingIO(100, 10.0);
+            srSession.GetTiming().SetTimeout(5);
+
+            System.Diagnostics.Debug.Assert(8 == srSession.GetNumberOfChannels());
+
+            srSession.Start();
+            return srSession;
         }
 
     }

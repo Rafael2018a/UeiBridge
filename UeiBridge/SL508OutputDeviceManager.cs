@@ -19,12 +19,12 @@ namespace UeiBridge
         log4net.ILog _logger = StaticMethods.GetLogger();
         IConvert _attachedConverter;
         List<ViewerItem<byte[]>> _lastScanList = new List<ViewerItem<byte[]>>();
-        Session _serialSession;
+        SL508Session _serialSession;
         int _sentBytesAcc = 0;
         int _numberOfSentMessages = 0;
         List<SerialWriter> _serialWriterList = new List<SerialWriter>();
 
-        public SL508OutputDeviceManager(DeviceSetup setup, Session serialSession) : base(setup)
+        public SL508OutputDeviceManager(DeviceSetup setup, SL508Session serialSession) : base(setup)
         {
             System.Diagnostics.Debug.Assert(null != serialSession);
             _serialSession = serialSession;
@@ -72,6 +72,7 @@ namespace UeiBridge
         public override void Dispose()
         {
             base.Dispose();
+            //return;
             for(int ch=0; ch<_serialWriterList.Count; ch++)
             {
                 _serialWriterList[ch].Dispose();
@@ -80,7 +81,7 @@ namespace UeiBridge
             //{
             //    _serialSession?.Stop();
             //}
-            _serialSession.Dispose();
+            //_serialSession.Dispose();
             _logger.Debug("_serialSession?.Dispose();");
         }
         public override string GetFormattedStatus(TimeSpan interval)

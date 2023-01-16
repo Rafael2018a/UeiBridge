@@ -11,7 +11,7 @@ namespace UeiBridge
         public OutputDevice OutputDeviceManager { get; private set; }
         public UdpReader UdpReader { get; private set; }
         public UdpWriter UdpWriter { get; private set; }
-        public Session SerialSession { get; set; }
+        public SL508Session SerialSession { get; set; }
 
         public PerDeviceObjects(InputDevice inputDevice, UdpWriter udpWriter)
         {
