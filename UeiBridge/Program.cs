@@ -116,15 +116,20 @@ namespace UeiBridge
         {
             // prepare lists
             int noOfCubes = Config2.Instance.CubeUrlList.Length;
-            _deviceObjectsTable = new List<List<PerDeviceObjects>>(new List<PerDeviceObjects>[noOfCubes]);
+            _deviceObjectsTable = new List<List<PerDeviceObjects>>(new List<PerDeviceObjects>[noOfCubes]); 
 
             // Create program Objects
             foreach (var cubeSetup in Config2.Instance.UeiCubes)
             {
                 // init device list
                 List<UeiDaq.Device> realDeviceList = StaticMethods.GetDeviceList(cubeSetup.CubeUrl);
-                _deviceObjectsTable[cubeSetup.CubeNumber] = new List<PerDeviceObjects>(new PerDeviceObjects[realDeviceList.Count]);
+                _deviceObjectsTable[cubeSetup.CubeNumber] = new List<PerDeviceObjects>();
+                for (int i=0; i<realDeviceList.Count; i++)
+                {
+                    _deviceObjectsTable[cubeSetup.CubeNumber].Add(new PerDeviceObjects());
+                }
 
+                CreateSerialSessions(cubeSetup, _deviceObjectsTable);
                 CreateDownwardsObjects(cubeSetup, _deviceObjectsTable);
                 CreateUpwardsObjects(cubeSetup, _deviceObjectsTable);
             }
@@ -200,28 +205,23 @@ namespace UeiBridge
                 DeviceSetup deviceSetup = Config2.Instance.UeiCubes[cubeSetup.CubeNumber].DeviceSetupList[realSlot]; // tbd: first 'DeviceSetup' in config is not neccesseraly in slot 0
                 deviceSetup.CubeUrl = cubeSetup.CubeUrl;
                 System.Diagnostics.Debug.Assert(realSlot == deviceSetup.SlotNumber);
-                System.Diagnostics.Debug.Assert(realDevice.GetDeviceName() == deviceSetup.DeviceName);
+                if (realDevice.GetDeviceName() != deviceSetup.DeviceName)
+                {
+                    Console.WriteLine($"Slot{realSlot}: Card of type {realDevice.GetDeviceName()} does not match config entry of type {deviceSetup.DeviceName}. Skipping card.");
+                    continue;
+                }
 
                 Type devType = StaticMethods.GetDeviceManagerType<OutputDevice>(deviceSetup.DeviceName);
-                if (null == devType)
+                if (null == devType) // if no device-manager class support this device
                 {
                     continue;
                 }
 
-                SL508Session serialSession = null;
+                // create device-manager instance
                 OutputDevice outDev;
                 if (devType.Name.StartsWith("SL508")) // special treatment to serial device
                 {
-                    if (null == deviceObjectsTable[cubeSetup.CubeNumber][realSlot]) // if SL508Session not exists
-                    {
-                        serialSession = new SL508Session(deviceSetup as SL508892Setup);// StaticMethods.CreateSerialSession2(deviceSetup as SL508892Setup);
-                    }
-                    else
-                    { 
-                        serialSession = deviceObjectsTable[cubeSetup.CubeNumber][realSlot].SerialSession; 
-                    }
-                    System.Diagnostics.Debug.Assert(null != serialSession);
-                    outDev = (OutputDevice)Activator.CreateInstance(devType, deviceSetup, serialSession);
+                    outDev = (OutputDevice)Activator.CreateInstance(devType, deviceSetup, deviceObjectsTable[cubeSetup.CubeNumber][realSlot].SerialSession);
                 }
                 else
                 {
@@ -231,17 +231,13 @@ namespace UeiBridge
                 System.Diagnostics.Debug.Assert(null != outDev);
                 System.Diagnostics.Debug.Assert(null != deviceSetup.LocalEndPoint);
 
+                // create udp reader for this device
                 var nic = IPAddress.Parse(Config2.Instance.AppSetup.SelectedNicForMCast);
-                UdpReader ureader = new UdpReader(deviceSetup.LocalEndPoint.ToIpEp(), nic,  outDev, outDev.InstanceName);
-                if (null == deviceObjectsTable[cubeSetup.CubeNumber][realSlot])
-                {
-                    deviceObjectsTable[cubeSetup.CubeNumber][realSlot] = new PerDeviceObjects(outDev, ureader);
-                    deviceObjectsTable[cubeSetup.CubeNumber][realSlot].SerialSession = serialSession;
-                }
-                else
-                {
-                    deviceObjectsTable[cubeSetup.CubeNumber][realSlot].NewObjects(outDev, ureader);
-                }
+                UdpReader ureader = new UdpReader(deviceSetup.LocalEndPoint.ToIpEp(), nic, outDev, outDev.InstanceName);
+
+                // add instances to device vector
+                deviceObjectsTable[cubeSetup.CubeNumber][realSlot].OutputDeviceManager = outDev;
+                deviceObjectsTable[cubeSetup.CubeNumber][realSlot].UdpReader = ureader;
             }
         }
 
@@ -261,10 +257,16 @@ namespace UeiBridge
                 DeviceSetup deviceSetup = Config2.Instance.UeiCubes[cubeSetup.CubeNumber].DeviceSetupList[realSlot]; // tbd: first 'DeviceSetup' in config is not neccesseraly in slot 0
                 deviceSetup.CubeUrl = cubeSetup.CubeUrl; // for later use
                 System.Diagnostics.Debug.Assert(realSlot == deviceSetup.SlotNumber);
-                System.Diagnostics.Debug.Assert(realDevice.GetDeviceName() == deviceSetup.DeviceName);
+
+                if (realDevice.GetDeviceName() != deviceSetup.DeviceName)
+                {
+                    Console.WriteLine($"Slot{realSlot}: Card of type {realDevice.GetDeviceName()} does not match config entry of type {deviceSetup.DeviceName}. Skipping card.");
+                    continue;
+                }
+
 
                 Type devType = StaticMethods.GetDeviceManagerType<InputDevice>(deviceSetup.DeviceName);
-                if (null == devType)
+                if (null == devType) // if no device-manager-class supports thid device
                 {
                     continue;
                 }
@@ -272,7 +274,7 @@ namespace UeiBridge
                 string instanceName = $"{realDevice.GetDeviceName()}/Slot{deviceSetup.SlotNumber}";
                 UdpWriter uWriter = new UdpWriter(instanceName, deviceSetup.DestEndPoint.ToIpEp(), Config2.Instance.AppSetup.SelectedNicForMCast);
                 InputDevice inDev;
-                if (devType.Name.StartsWith("SL508"))
+                if (devType.Name.StartsWith("SL508")) // special treatment to serial device
                 {
                     inDev = (InputDevice)Activator.CreateInstance(devType, uWriter, deviceSetup, deviceObjectsTable[cubeSetup.CubeNumber][realSlot].SerialSession);
                 }
@@ -281,31 +283,46 @@ namespace UeiBridge
                     inDev = (InputDevice)Activator.CreateInstance(devType, uWriter, deviceSetup);
                 }
 
-
-                // init or update PerDeviceObjects
-                if (null == deviceObjectsTable[cubeSetup.CubeNumber][realSlot])
-                {
-                    deviceObjectsTable[cubeSetup.CubeNumber][realSlot] = new PerDeviceObjects(inDev, uWriter);
-                }
-                else
-                {
-                    deviceObjectsTable[cubeSetup.CubeNumber][realSlot].NewObjects(inDev, uWriter);
+                deviceObjectsTable[cubeSetup.CubeNumber][realSlot].InputDeviceManager = inDev;
+                deviceObjectsTable[cubeSetup.CubeNumber][realSlot].UdpWriter = uWriter;
                 }
 
-                //if (null != inDev)
-                //{
-                //    System.Diagnostics.Debug.Assert(null != deviceSetup.LocalEndPoint);
-                //    UdpWriter ur = new UdpReader(deviceSetup.LocalEndPoint.ToIpEp(), inDev, inDev.InstanceName);
-                //    deviceObjectsTable[cubeSetup.CubeNumber][realSlot] = new PerDeviceObjects(inDev, ur);
-                //}
-                //else
-                //{
-                //    //_logger.Warn($"null device {deviceSetup.DeviceName}");
-                //    deviceObjectsTable[cubeSetup.CubeNumber][realSlot] = null;
-                //}
+            }
+        
+
+        private void CreateSerialSessions(CubeSetup cubeSetup, List<List<PerDeviceObjects>> deviceObjectsTable)
+        {
+            List<UeiDaq.Device> realDeviceList = StaticMethods.GetDeviceList(cubeSetup.CubeUrl);
+
+            // populate outputDeviceList
+            foreach (UeiDaq.Device realDevice in realDeviceList)
+            {
+                int realSlot = realDevice.GetIndex();
+                DeviceSetup deviceSetup = Config2.Instance.UeiCubes[cubeSetup.CubeNumber].DeviceSetupList[realSlot]; 
+                System.Diagnostics.Debug.Assert(realSlot == deviceSetup.SlotNumber); // first 'DeviceSetup' entry in config must be at slot 0 etc..
+                deviceSetup.CubeUrl = cubeSetup.CubeUrl;
+                if (realDevice.GetDeviceName() != deviceSetup.DeviceName)
+                {
+                    //Console.WriteLine($"Slot{realSlot}: Card of type {realDevice.GetDeviceName()} does not match config entry of type {deviceSetup.DeviceName}. Skipping card.");
+                    continue;
+                }
+
+                Type devType = StaticMethods.GetDeviceManagerType<OutputDevice>(deviceSetup.DeviceName);
+                if (null==devType)
+                {
+                    continue;
+                }
+
+                //OutputDevice outDev;
+                if (devType.Name.StartsWith("SL508")) 
+                {
+                    System.Diagnostics.Debug.Assert(null == deviceObjectsTable[cubeSetup.CubeNumber][realSlot].SerialSession);
+                    SL508Session serialSession = new SL508Session(deviceSetup as SL508892Setup);
+                    System.Diagnostics.Debug.Assert(null != serialSession);
+                    deviceObjectsTable[cubeSetup.CubeNumber][realSlot].SerialSession = serialSession;
+                }
             }
         }
-
 
         void PublishStatus_Task()
         {
