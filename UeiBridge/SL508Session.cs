@@ -10,7 +10,9 @@ namespace UeiBridge
     class SL508Session : IDisposable
     {
         private SL508892Setup _thisDeviceSetup;
-        private Session _serialSession;
+        private Session _serialSession = new Session();
+
+        public Session SerialSession => _serialSession; 
 
         public SL508Session(SL508892Setup setup)
         {
@@ -18,11 +20,53 @@ namespace UeiBridge
             this.OpenSession();
         }
 
-        private void OpenSession1()
-        { 
+        private void OpenSession()
+        {
+            System.Diagnostics.Debug.Assert(null != _thisDeviceSetup);
+            //Session serialSession = new Session();
+            log4net.ILog _logger = StaticMethods.GetLogger();
+            try
+            {
+                foreach (var channel in _thisDeviceSetup.Channels)
+                {
+                    string finalUrl = $"{_thisDeviceSetup.CubeUrl}Dev{_thisDeviceSetup.SlotNumber}/{channel.portname}";
+                    var port = _serialSession.CreateSerialPort(finalUrl,
+                                        channel.mode,
+                                        channel.Baudrate,
+                                        SerialPortDataBits.DataBits8,
+                                        channel.parity,
+                                        channel.stopbits,
+                                        "");
+                }
+
+                System.Diagnostics.Debug.Assert(_serialSession.GetNumberOfChannels() == _thisDeviceSetup.Channels.Length);
+                //System.Diagnostics.Debug.Assert(numberOfChannels == Config.Instance.SerialChannels.Length);
+
+                _serialSession.ConfigureTimingForMessagingIO(1000, 100.0);
+                _serialSession.GetTiming().SetTimeout(5000); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
+
+                //serialSession.ConfigureTimingForSimpleIO();
+
+                _serialSession.Start();
+
+                foreach (Channel c in _serialSession.GetChannels())
+                {
+                    SerialPort sp1 = c as SerialPort;
+                    _logger.Debug($"CH{sp1.GetIndex() }, Speed{sp1.GetSpeed()}");
+                }
+            }
+            catch(UeiDaqException ex)
+            {
+                _logger.Warn($"Failed to init serial card mananger.Slot {_thisDeviceSetup.SlotNumber}. {ex.Message}. Might be invalid baud rate");
+                _serialSession = null;
+            }
+            catch( Exception ex)
+            {
+                _logger.Warn(ex.Message);
+            }
 
         }
-        private void OpenSession()
+        private void OpenSession_Brian()
         {
             log4net.ILog _logger = StaticMethods.GetLogger();
 
@@ -90,15 +134,11 @@ namespace UeiBridge
 
         public void Dispose()
         {
-            try
+            if (null!=this._serialSession)
             {
                 _serialSession.Stop();
                 _serialSession.GetDevice().Reset();
                 _serialSession.Dispose();
-            }
-            catch(Exception ex)
-            {
-                Console.WriteLine($"SL508Session: {ex.Message}");
             }
         }
     }

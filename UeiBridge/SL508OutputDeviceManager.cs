@@ -30,11 +30,15 @@ namespace UeiBridge
             _serialSession = serialSession;
             InstanceName = $"{DeviceName}/Slot{ setup.SlotNumber}/Output";
             _attachedConverter = StaticMethods.CreateConverterInstance( setup);
+            System.Diagnostics.Debug.Assert(null != serialSession);
 
             // init message list
-            for (int i = 0; i < serialSession.GetNumberOfChannels(); i++)
+            if (null != serialSession.SerialSession)
             {
-                _lastScanList.Add(null);
+                for (int i = 0; i < serialSession.GetNumberOfChannels(); i++)
+                {
+                    _lastScanList.Add(null);
+                }
             }
         }
         public SL508OutputDeviceManager() : base(null)// (default c-tor must be present)
@@ -42,7 +46,11 @@ namespace UeiBridge
         public override bool OpenDevice()
         {
             //_logger.Debug($"{this.DeviceName} OpenDevice() ..... tbd");
-
+            if (null==_serialSession.SerialSession)
+            {
+                _logger.Warn($"Failed to open device {this.InstanceName}");
+                return false;
+            }
             for (int ch = 0; ch < _serialSession.GetNumberOfChannels(); ch++)
             {
                 System.Threading.Thread.Sleep(10);
@@ -66,7 +74,7 @@ namespace UeiBridge
             }
 
             _isDeviceReady = true;
-            return false;
+            return true;
         }
 
         public override void Dispose()
@@ -113,7 +121,10 @@ namespace UeiBridge
 
         protected override void HandleRequest(EthernetMessage request)
         {
-
+            if (false==_isDeviceReady)
+            {
+                return;
+            }
             //byte []  incomingMessage = request.RequestObject as byte[];
             //System.Diagnostics.Debug.Assert(incomingMessage != null);
             //System.Diagnostics.Debug.Assert(request.SerialChannel >= 0);

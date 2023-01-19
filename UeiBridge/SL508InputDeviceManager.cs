@@ -37,6 +37,7 @@ namespace UeiBridge
             _attachedConverter = StaticMethods.CreateConverterInstance(setup);
             _lastScanList = new List<ViewerItem<byte[]>>();
             System.Diagnostics.Debug.Assert(null != serialSession);
+            
             _serialSession = serialSession;
             InstanceName = $"{DeviceName}/Slot{setup.SlotNumber}/Input";
             _targetEp = setup.DestEndPoint.ToIpEp();
@@ -125,6 +126,12 @@ namespace UeiBridge
         }
         public override void OpenDevice()
         {
+            if (null == _serialSession.SerialSession)
+            {
+                _logger.Warn($"Failed to open device {this.InstanceName}");
+                return;
+            }
+
             _lastScanList = new List<ViewerItem<byte[]>>(new ViewerItem<byte[]>[_serialSession.GetNumberOfChannels()]);
 
             System.Threading.Thread.Sleep(100);
@@ -145,9 +152,6 @@ namespace UeiBridge
                 AsyncCallback readerAsyncCallback = new AsyncCallback(ReaderCallback);
                 sl.BeginRead(minLen, readerAsyncCallback, ch1++);
             }
-
-
-
             //for (int i = 0; i < _serialSession.GetNumberOfChannels(); i++)
             //{
             //    _lastScanList.Add(null);
