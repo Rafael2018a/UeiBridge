@@ -156,14 +156,14 @@ namespace UeiBridge
         public SL508892Setup(EndPoint localEndPoint, EndPoint destEndPoint, Device device) : base(localEndPoint, destEndPoint, device)
         {
             Channels = new SerialChannel[8];
-            Channels[0] = new SerialChannel("Com0", SerialPortSpeed.BitsPerSecond19200);
-            Channels[1] = new SerialChannel("Com1", SerialPortSpeed.BitsPerSecond19200);
-            Channels[2] = new SerialChannel("Com2", SerialPortSpeed.BitsPerSecond14400);
-            Channels[3] = new SerialChannel("Com3", SerialPortSpeed.BitsPerSecond14400);
+            //Channels[0] = new SerialChannel("Com0", SerialPortSpeed.BitsPerSecond19200);
+            //Channels[1] = new SerialChannel("Com1", SerialPortSpeed.BitsPerSecond19200);
+            //Channels[2] = new SerialChannel("Com2", SerialPortSpeed.BitsPerSecond14400);
+            //Channels[3] = new SerialChannel("Com3", SerialPortSpeed.BitsPerSecond14400);
 
             for (int ch = 0; ch < Channels.Length; ch++)
             {
-                Channels[ch] = new SerialChannel($"Com{ch}", SerialPortSpeed.BitsPerSecond115200);
+                Channels[ch] = new SerialChannel($"Com{ch}", SerialPortSpeed.BitsPerSecond57600);
             }
         }
     }

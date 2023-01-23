@@ -81,7 +81,6 @@
   <ItemGroup>
     <Compile Include="AI201InputDeviceManager.cs" />
     <Compile Include="AO308OutputDeviceManager.cs" />
-    <Compile Include="Config.cs" />
     <Compile Include="Config2.cs" />
     <Compile Include="Converters.cs" />
     <Compile Include="DIO403InputDeviceManager.cs" />
@@ -97,6 +96,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SL508InputDeviceManager.cs" />
     <Compile Include="SL508OutputDeviceManager.cs" />
+    <Compile Include="SL508Session.cs" />
     <Compile Include="StaticMethods.cs" />
     <Compile Include="UdpReader.cs" />
     <Compile Include="UdpWriter.cs" />

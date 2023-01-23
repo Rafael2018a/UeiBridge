@@ -112,7 +112,10 @@ namespace UeiBridge
                     _logger.Warn($"{InstanceName} wrong slot number ({incomingMessage.SlotNumber}). incoming message dropped.");
                     continue;
                 }
-                
+                if (_dataItemsQueue2.Count ==  _dataItemsQueue2.BoundedCapacity)
+                {
+                    _logger.Warn($"Input queue items = {_dataItemsQueue2.Count}");
+                }
                 if (_isDeviceReady)
                 {
                     HandleRequest(incomingMessage);

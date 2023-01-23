@@ -63,6 +63,7 @@ namespace UeiBridge
                 //return false;
             }
         }
+#if dont
         public  void OpenDevice1()
         {
 
@@ -82,6 +83,7 @@ namespace UeiBridge
             TimeSpan interval = TimeSpan.FromMilliseconds(_thisDeviceSetup.SamplingInterval);
             _samplingTimer = new System.Threading.Timer(DeviceScan_Callback, null, TimeSpan.Zero, interval);
         }
+#endif
         public override void Dispose()
         {
             _samplingTimer.Dispose();

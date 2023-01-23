@@ -22,6 +22,7 @@ namespace UeiBridge
         Session _deviceSession;
         System.Collections.Generic.List<ViewerItem<double>> _lastScanList;
         AO308Setup _thisDeviceSetup;
+        bool _inDisposeState = false;
 
         public override string InstanceName { get; }// => _instanceName;
 
@@ -43,8 +44,6 @@ namespace UeiBridge
                 _attachedConverter = StaticMethods.CreateConverterInstance(_deviceSetup);
 
                 string cubeUrl = $"{_deviceSetup.CubeUrl}Dev{_deviceSetup.SlotNumber}/{_channelsString}";
-
-                
 
                 _deviceSession = new Session();
                 var c = _deviceSession.CreateAOChannel(cubeUrl, -_thisDeviceSetup.PeekVoltage_Out, _thisDeviceSetup.PeekVoltage_Out);
@@ -72,6 +71,10 @@ namespace UeiBridge
 
         protected override void HandleRequest(EthernetMessage em)
         {
+            if (_inDisposeState)
+            {
+                return;
+            }
             // write to device
             // ===============
             var p = _attachedConverter.EthToDevice(em.PayloadBytes);
@@ -116,12 +119,13 @@ namespace UeiBridge
 
         public override void Dispose()
         {
+            _inDisposeState = true;
             base.Dispose();
 
-            if (null != _writer)
-            {
-                _writer.Dispose();
-            }
+            //if (null != _writer)
+            //{
+            //    _writer.Dispose();
+            //}
             if (null != _deviceSession)
             {
                 _deviceSession.Stop();

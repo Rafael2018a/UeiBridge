@@ -9,6 +9,7 @@ using UeiBridgeTypes;
 
 namespace UeiBridge
 {
+#if old
     class UdpWriter_old : ISend<byte[]>
     {
         log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
@@ -39,7 +40,7 @@ namespace UeiBridge
             
         }
     }
-
+#endif
     class UdpWriter : ISend<SendObject>, IDisposable
     {
         log4net.ILog _logger = StaticMethods.GetLogger();
