@@ -81,7 +81,6 @@
   <ItemGroup>
     <Compile Include="AI201InputDeviceManager.cs" />
     <Compile Include="AO308OutputDeviceManager.cs" />
-    <Compile Include="Config.cs" />
     <Compile Include="Config2.cs" />
     <Compile Include="Converters.cs" />
     <Compile Include="DIO403InputDeviceManager.cs" />

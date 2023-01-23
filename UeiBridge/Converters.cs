@@ -83,7 +83,7 @@ namespace UeiBridge
 
         public DIO403Convert(DeviceSetup setup)
         {
-            _numberOfOutChannels = Config.Instance.MaxDigital403OutputChannels;
+            _numberOfOutChannels = 3;// Config.Instance.MaxDigital403OutputChannels;
         }
 
         string IConvert.LastErrorMessage => _lastError;
@@ -127,7 +127,7 @@ namespace UeiBridge
 
         public DIO470Convert(DeviceSetup setup)
         {
-            _numberOfOutChannels = Config.Instance.MaxDigital403OutputChannels;
+            _numberOfOutChannels = 3;// Config.Instance.MaxDigital403OutputChannels;
         }
 
         string IConvert.LastErrorMessage => _lastError;

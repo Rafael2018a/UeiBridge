@@ -40,16 +40,13 @@ namespace UeiBridge
                 return;
             }
 
-            // prepare device dictionaries
-            //ProjectRegistry.Instance.Establish();
-
             BuildProgramObjects();
 
             // publish status to StatusViewer
             Task.Factory.StartNew(() => PublishStatus_Task());
 
             // self tests
-            StartDownwardsTest();
+            //StartDownwardsTest();
 
             _logger.Info("Any key to exit...");
             Console.ReadKey();

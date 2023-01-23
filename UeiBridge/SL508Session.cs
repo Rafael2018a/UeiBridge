@@ -19,7 +19,6 @@ namespace UeiBridge
             this._thisDeviceSetup = setup;
             this.OpenSession();
         }
-
         private void OpenSession()
         {
             System.Diagnostics.Debug.Assert(null != _thisDeviceSetup);

@@ -111,7 +111,7 @@ namespace UeiBridge
                     }
                     else
                     {
-                        _logger.Debug($"ReaderCallback - dispose. ch{channel}");
+                        _logger.Debug($"{InstanceName} stopped listening on ch{channel}");
                     }
                 }
                 else
@@ -164,12 +164,11 @@ namespace UeiBridge
         {
             //return;
             _InDisposeState = true;
-            System.Threading.Thread.Sleep(3000);
-            _logger.Debug("fin");
+            //System.Threading.Thread.Sleep(5000);
+            //_logger.Debug("fin");
             for (int i = 0; i < _serialReaderList.Count; i++)
             {
-                
-                _serialReaderList[i].Dispose();
+                //_serialReaderList[i].Dispose();
             }
             //if (_serialSession.IsRunning())
             //{
