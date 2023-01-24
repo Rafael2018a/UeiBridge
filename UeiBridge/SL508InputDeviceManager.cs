@@ -166,7 +166,7 @@ namespace UeiBridge
             _InDisposeState = true;
             //System.Threading.Thread.Sleep(5000);
             //_logger.Debug("fin");
-            for (int i = 0; i < _serialReaderList.Count; i++)
+            for (int i = 0; i < _serialReaderList.Count; i++) // tbd. seems that dispose is needed.
             {
                 //_serialReaderList[i].Dispose();
             }

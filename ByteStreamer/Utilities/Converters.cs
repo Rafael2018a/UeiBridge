@@ -5,6 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+
+/// <summary>
+/// Xaml convertes
+/// </summary>
 namespace ByteStreamer.Utilities
 {
     /// <summary>

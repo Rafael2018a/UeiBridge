@@ -3,6 +3,9 @@ using System.Windows;
 using System.ComponentModel;
 using System.Net;
 using System.Collections.Generic;
+using System.IO;
+using Newtonsoft;
+using Newtonsoft.Json;
 using ByteStreamer.Utilities;
 
 
@@ -13,25 +16,31 @@ namespace ByteStreamer
         public event PropertyChangedEventHandler PropertyChanged;
 
         SettingBag _settings;
-
         IpPlayer player;
         System.Windows.Threading.DispatcherTimer _rateUpdateTimer = new System.Windows.Threading.DispatcherTimer();
-        System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
-        MovingAverageFloat maBps = new MovingAverageFloat(10);
-        //MovingAverageFloat desiredMaKbps = new MovingAverageFloat(10);
-        int _delayVectorLength = 1000;
-        //byte[] delayVector = new byte[_delayVectorLength];
-        System.Threading.Timer _delayVectorUpdateTimer;
-        //int _delayVectorFilledCells = 0;
-        DelayVector _dv;
+        System.Diagnostics.Stopwatch _stopWatch = new System.Diagnostics.Stopwatch();
+        MovingAverageFloat _mvAvgBitPerSec = new MovingAverageFloat(10);
         string _settingsFilename = "bytestreamer.setting.bin";
-
 
         public MainViewModel()
         {
             LoadCommands();
-            _dv = new DelayVector(_delayVectorLength);
+            //_dv = new DelayVector(_delayVectorLength);
             _settings = LoadSetting();
+
+            // save default file (for example)
+            JsonMessageHeader mh = new JsonMessageHeader();
+            JsonMessageBody mb = new JsonMessageBody(new int[] { 11, 21, 22 });
+            JsonMessage jm = new JsonMessage(mh, mb);
+            string jsonString = Newtonsoft.Json.JsonConvert.SerializeObject(jm, Formatting.Indented);
+            using (StreamWriter file = File.CreateText("MessagePrototype.json"))
+            {
+                file.WriteLine(jsonString);
+            }
+
+            // show number of message files
+            var x = Directory.GetFiles(".", "*.json");
+            _numberOfFilesInFolder = x.Length;
         }
 
         ~MainViewModel()
@@ -53,9 +62,6 @@ namespace ByteStreamer
                 sb = new SettingBag();
             }
 
-            //if (o != null)
-            //    return sb;
-            //else
             return sb;
         }
 
@@ -113,6 +119,16 @@ namespace ByteStreamer
                 }
             }
         }
+        int _numberOfFilesInFolder;
+        public int NumberOfFilesInFolder
+        {
+            get => _numberOfFilesInFolder;
+            set
+            {
+                _numberOfFilesInFolder = value;
+                RaisePropertyChangedEvent("NumberOfFilesInFolder");
+            }
+        }
         public long PlayedBytesCount
         {
             get
@@ -128,24 +144,24 @@ namespace ByteStreamer
             }
         }
 
-        double _playRateMbps;
-        public double PlayRate // mbit/sec
+        float _playRateKbitPerSec;
+        public string PlayRateKbitPerSec 
         {
-            get => _playRateMbps;
+            get => "100";//_playRateKbitPerSec;
             set
             {
-                _playRateMbps = value;
-                RaisePropertyChangedEvent("PlayRate");
+                _playRateKbitPerSec = float.Parse( value);
+                RaisePropertyChangedEvent("PlayRateKbitPerSec");
             }
         }
-        double _desiredPlayRateMbps;
-        public double DesiredRate
+        JsonMessageHeader _nowPlayingFile;
+        public JsonMessageHeader NowPlayingHeader
         {
-            get => _desiredPlayRateMbps;
-            set
+            get => _nowPlayingFile;
+            set 
             {
-                _desiredPlayRateMbps = value;
-                RaisePropertyChangedEvent("DesiredRate");
+                _nowPlayingFile = value;
+                RaisePropertyChangedEvent("NowPlayingHeader");
             }
         }
         bool _isPlaying = false;
@@ -170,9 +186,6 @@ namespace ByteStreamer
         #endregion
 
         #region ICommands =====
-        //public Utilities.RelayCommand StartPlayCommand1 { get; set; }
-        //public Utilities.RelayCommand StopPlayCommand1 { get; set; }
-
         private Utilities.RelayCommand _startPlayCommand;
         public Utilities.RelayCommand StartPlayCommand
         {
@@ -185,6 +198,7 @@ namespace ByteStreamer
             get { return _stopPlayCommand; }
             set { _stopPlayCommand = value; }
         }
+
 
         private void LoadCommands()
         {
@@ -233,17 +247,20 @@ namespace ByteStreamer
             _rateUpdateTimer.Interval = TimeSpan.FromMilliseconds(1000);
             _rateUpdateTimer.Start();
 
-            _delayVectorUpdateTimer = new System.Threading.Timer(new System.Threading.TimerCallback(OnDelayVectorUpdateTick), null, 1000, 1000);
+            //_delayVectorUpdateTimer = new System.Threading.Timer(new System.Threading.TimerCallback(OnDelayVectorUpdateTick), null, 1000, 1000);
 
             player = new IpPlayer(destEp);
             //byte[] block = new byte[BlockLength];
             //player.StartPlayAsync2(block, TimeSpan.FromMilliseconds(_settings.waitStatesMS), _dv).ContinueWith((t) => { IsPlaying = false; });
             List<byte[]> blockList = Make_SL508Down_Messages(10);
-            player.StartPlayAsync3(blockList, TimeSpan.FromMilliseconds(_settings.waitStatesMS)).ContinueWith((t) => { IsPlaying = false; });
+            //player.StartPlayAsync3(blockList, TimeSpan.FromMilliseconds(_settings.waitStatesMS)).ContinueWith((t) => { IsPlaying = false; });
+            player.StartPlayAsync4(".");
+
+
 
             StartPlayCommand.OnCanExecuteChanged();
 
-            sw.Start();
+            _stopWatch.Start();
         }
 
         bool CanStartPlay(object obj)
@@ -257,8 +274,8 @@ namespace ByteStreamer
             IsPlaying = false;
             StopPlayCommand.OnCanExecuteChanged();
             _rateUpdateTimer.Stop();
-            PlayRate = 0;
-            DesiredRate = 0;
+            PlayRateKbitPerSec = "";
+            //DesiredRate = 0;
         }
         bool CanStopPlay(object obj)
         {
@@ -276,18 +293,19 @@ namespace ByteStreamer
             {
                 playedBytes = player.PlayedBytesCount;
                 player.PlayedBytesCount = 0;
+                NowPlayingHeader = player.NowPlayingHeader;
                 //desiredBytes = player.DesiredBytesCount;
                 //player.DesiredBytesCount = 0;
             }
-            double sec = Convert.ToDouble( sw.ElapsedMilliseconds / 1000.0);
+            double sec = Convert.ToDouble( _stopWatch.ElapsedMilliseconds / 1000.0);
             
-            sw.Restart();
+            _stopWatch.Restart();
 
             if (sec > 0)
             {
                 double bps = 8.0 * playedBytes / sec;
-                maBps.AddItem(bps);
-                PlayRate = maBps.Average / 1000000.0;
+                _mvAvgBitPerSec.AddItem(bps);
+                PlayRateKbitPerSec = (_mvAvgBitPerSec.Average / 1000.0).ToString();
 
                 //int dkbps = Convert.ToInt32(8 * desiredBytes / ms);
                 //desiredMaKbps.AddItem(dkbps);
@@ -296,11 +314,11 @@ namespace ByteStreamer
 
         }
 
-        void OnDelayVectorUpdateTick(object obj)
-        {
-            double delayPercent = 100.0 - RatePercent;
-            _dv.SetFillPercent(delayPercent);
-        }
+        //void OnDelayVectorUpdateTick(object obj)
+        //{
+        //    double delayPercent = 100.0 - RatePercent;
+        //    _dv.SetFillPercent(delayPercent);
+        //}
 
         //    void OnDelayVectorUpdateTick1(object obj)
         //{

@@ -198,12 +198,12 @@ namespace UeiBridge
 
             return msg.ToByteArrayDown();
         }
-        public static byte[] Make_DIO470_Down_Message()
+        public static byte[] Make_DIO470_Down_Message(byte b0)
         {
             EthernetMessage msg = EthernetMessage.CreateEmpty(6, 3);
-            msg.PayloadBytes[0] = 0x12;
-            msg.PayloadBytes[1] = 0x34;
-            msg.PayloadBytes[2] = 0x56;
+            msg.PayloadBytes[0] = b0;
+            msg.PayloadBytes[1] = 0;// x34;
+            msg.PayloadBytes[2] = 0;// x56;
             msg.SlotNumber = 4;
 
             return msg.ToByteArrayDown();
