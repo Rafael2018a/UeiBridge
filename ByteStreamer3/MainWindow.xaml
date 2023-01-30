@@ -4,14 +4,19 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ByteStreamer3"
+        xmlns:local1="clr-namespace:ByteStreamer3.Utilities"
         mc:Ignorable="d"
         Title="MainWindow" Height="420" Width="680">
+    <Window.Resources>
+        <local1:RadioBoolToIntConverter x:Key="radioBoolToIntConverter" />
+    </Window.Resources>
+
     <Grid>
         <!--<Border Margin="5" BorderBrush="Red" BorderThickness="2">-->
         <TabControl Margin="5">
             <TabItem Header="Play multiple files">
                 <!--<Label Content="Content goes here..." />-->
-                <Border BorderBrush="Navy" BorderThickness="1" Margin="10" CornerRadius="5" Visibility="Visible">
+                <!--<Border BorderBrush="Navy" BorderThickness="1" Margin="10" CornerRadius="5" Visibility="Visible">-->
                     <Grid ShowGridLines="False">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="12*"></RowDefinition>
@@ -33,17 +38,20 @@
                                 <!--<Setter Property="Background" Value="LightYellow"/>-->
                             </Style>
                             <Style TargetType="RadioButton">
-                                <Setter Property="Margin" Value="5"/>
+                                <!--<Setter Property="Margin" Value="5"/>-->
+                            </Style>
+                            <Style TargetType="StackPanel">
+                                <Setter Property="Orientation" Value="Horizontal"/>
                             </Style>
                         </Grid.Resources>
-                        <GroupBox BorderBrush="Gray" Margin="5" BorderThickness="1" Header="Control panel">
+                        <GroupBox BorderBrush="Gray" Margin="5" BorderThickness="1" Header="Control">
                             <Grid ShowGridLines="False">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="auto"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="1">
-                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,8">
+                                <StackPanel Grid.Column="1" Orientation="Vertical">
+                                    <StackPanel  Margin="0,8,0,8">
                                         <TextBlock Text="Folder"/>
                                         <TextBox MinWidth="200"/>
                                         <Button Content="Browse.." >
@@ -55,57 +63,56 @@
                                         </Button>
                                     </StackPanel>
                                     <Separator />
-                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,8">
-                                        <TextBlock Text="Next Playing file"/>
-                                        <TextBox x:Name="SelectdFileFolder" Text="xyz.json" MinWidth="100"/>
-                                    </StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,8">
+                                    <StackPanel Margin="0,8,0,8">
+                                        <TextBlock Text="To be palyed:"/>
+                                        <TextBox x:Name="ToBePlayed" Text="xyz.json" MinWidth="100"/>
+                                    <Button Content="Skip"/>
+                                </StackPanel>
+                                    <StackPanel  Margin="0,8,0,8">
                                         <TextBlock Text="Destination adderss" />
                                         <TextBox MinWidth="100" Text="{Binding DestinationAddress}"/>
                                         <TextBlock Text="Port" Width="auto"/>
                                         <TextBox Width="50"/>
-                                    </StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,8">
+                                </StackPanel>
+                                    <StackPanel  Margin="0,8,0,8">
                                         <TextBlock Text="Block length" />
                                         <TextBox Text="8583" Width="50"/>
                                         <TextBlock Text="Wait state (ms)" Width="auto"/>
                                         <TextBox Width="50"/>
                                     </StackPanel>
-                                    <StackPanel Orientation="Horizontal">
+                                    <StackPanel >
                                     </StackPanel>
                                     <Separator/>
-                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,8">
-                                        <StackPanel Orientation="Horizontal">
-                                        <ComboBox Height="22">
-                                            <ComboBoxItem Content="Play all" IsSelected="True" />
-                                            <ComboBoxItem Content="Play single file"/>
-                                            <ComboBoxItem Content="Play single block"/>
-                                        </ComboBox>
-                                        </StackPanel>
-                                        <Button Content="Start" Margin="5" Command="{Binding StartPlayCommand}"/>
-                                        <Button Content="Stop" Margin="5"/>
+                                    <StackPanel  Margin="0,8,0,8">
+                                    <RadioButton Content="Play all" Margin="10,0,10,0"                  IsChecked="{Binding Path=IsSuccess, Converter={StaticResource radioBoolToIntConverter}, ConverterParameter=1}"/>
+                                            <RadioButton Content="Play single file" Margin="10,0,10,0"  IsChecked="{Binding Path=IsSuccess, Converter={StaticResource radioBoolToIntConverter}, ConverterParameter=2}"/>
+                                            <RadioButton Content="Play single block" Margin="10,0,10,0" IsChecked="{Binding Path=IsSuccess, Converter={StaticResource radioBoolToIntConverter}, ConverterParameter=3}"/>
                                     </StackPanel>
-                                    <CheckBox Content="Continuous play"/>
+                                    <StackPanel Margin="0,15,0,0">
+                                    <Button Content="Start" Command="{Binding StartPlayCommand}" />
+                                        <Button Content="Stop" IsEnabled="False"/>
+                                        <CheckBox Content="Continuous play" Margin="20,0,0,0" VerticalAlignment="Center"/>
+                                    </StackPanel>
                                 </StackPanel>
                             </Grid>
                         </GroupBox>
                         <GroupBox Grid.Row="1" BorderBrush="Gray" Margin="5" BorderThickness="1" Header="Status">
                             <StackPanel>
-                                <StackPanel Orientation="Horizontal">
+                                <StackPanel >
                                 </StackPanel>
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="Cycle number" Width="auto"/>
+                                <StackPanel >
+                                    <TextBlock Text="Cycle number" Width="auto" Height="20"/>
                                     <TextBox Width="100"/>
-                                    <TextBlock Text="Baud rate" Width="auto"/>
+                                <TextBlock Text="Baud rate" Width="auto" Height="20"/>
                                     <TextBox Width="100"/>
-                                    <TextBlock Text="played blocks" Width="auto"/>
+                                <TextBlock Text="played blocks" Width="auto" Height="20"/>
                                     <TextBox Width="100"/>
                                 </StackPanel>
                             </StackPanel>
                         </GroupBox>
                     </Grid>
 
-                </Border>
+                <!--</Border>-->
             </TabItem>
             <TabItem Header="Play single file" >
 

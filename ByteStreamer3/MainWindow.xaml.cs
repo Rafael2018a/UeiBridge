@@ -23,6 +23,7 @@ namespace ByteStreamer3
         public MainWindow()
         {
             InitializeComponent();
+            DataContext = new MainViewModel();
         }
     }
 }
