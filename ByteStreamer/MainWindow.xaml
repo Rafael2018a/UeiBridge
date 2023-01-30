@@ -74,7 +74,9 @@
                 <StackPanel Height="40">
                     <TextBlock Text="Now playing file:"/>
                     <Label Content="lsakd.json" MinWidth="100"/>
-                    <TextBlock Text="Title:"/>
+                    <Border BorderThickness="1" BorderBrush="Black">
+                    <TextBlock Text="Title:" Background="LightGray" Height="25"/>
+                    </Border>
                     <Label Content="analog card 100" MinWidth="100"/>
                 </StackPanel>
                 <StackPanel Height="40">
