@@ -80,6 +80,7 @@
     </ApplicationDefinition>
     <Compile Include="PacketPlayer.cs" />
     <Compile Include="Utilities\Converters.cs" />
+    <Compile Include="Utilities\JsonMessage.cs" />
     <Compile Include="Utilities\RelayCommand.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
