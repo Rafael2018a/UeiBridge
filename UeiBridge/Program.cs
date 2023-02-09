@@ -32,15 +32,21 @@ namespace UeiBridge
             var v = System.Reflection.Assembly.GetEntryAssembly().GetName().Version.ToString();
             _logger.Info($"UEI Bridge. Version {v} Device URL: {Config2.Instance.CubeUrlList[0]}");
 
-            bool ok = DisplayDeviceList();
-            if (!ok)
+            _logger.Info("Searching for UEI cubes...");
+            List<IPAddress> cubeIpList = CubeSeeker.FindCubesInRange(IPAddress.Parse("192.168.100.1"), 250);
+            
+            
+            if (0 == cubeIpList.Count)
             {
+                _logger.Warn("Failed to find UEI cubes");
                 _logger.Info("Any key to exit...");
                 Console.ReadKey();
                 return;
             }
 
-            BuildProgramObjects();
+            DisplayDeviceList( cubeIpList);
+
+            BuildProgramObjects( cubeIpList);
 
             // publish status to StatusViewer
             Task.Factory.StartNew(() => PublishStatus_Task());
@@ -77,30 +83,33 @@ namespace UeiBridge
         /// Display devices in all cubes
         /// </summary>
         /// <returns>true on success</returns>
-        private bool DisplayDeviceList() // tbd: show for ALL cubes
+        private bool DisplayDeviceList(List<IPAddress> cubeIpList) 
         {
-            // prepare device list
-            List<Device> deviceList = StaticMethods.GetDeviceList(Config2.Instance.CubeUrlList[0]);
-            if (null == deviceList)
+            foreach (IPAddress ip in cubeIpList)
             {
-                _logger.Error(StaticMethods.LastErrorMessage);
-                return false;
-            }
-            if (0 == deviceList.Count)
-            {
-                _logger.Warn("No device connected");
-                return false;
-            }
+                string res = "pdna://" + ip.ToString();
+                // prepare device list
+                List<Device> deviceList = StaticMethods.GetDeviceList(res);
+                if (null == deviceList)
+                {
+                    _logger.Error(StaticMethods.LastErrorMessage);
+                    return false;
+                }
+                if (0 == deviceList.Count)
+                {
+                    _logger.Warn("No device connected");
+                    return false;
+                }
 
-            // display device list
-            _logger.Info(" *** Device list:");
-            //deviceList.ForEach(dev => _logger.Info($"{dev.GetDeviceName()} as Dev{dev.GetIndex()}"));
-            foreach (var dev in deviceList)
-            {
-                _logger.Info($"{dev.GetDeviceName()} as Dev{dev.GetIndex()}");
+                // display device list
+                _logger.Info($"Devices for cube {ip}:");
+                //deviceList.ForEach(dev => _logger.Info($"{dev.GetDeviceName()} as Dev{dev.GetIndex()}"));
+                foreach (var dev in deviceList)
+                {
+                    _logger.Info($"{dev.GetDeviceName()} as Dev{dev.GetIndex()}");
+                }
+                //_logger.Info(" *** End device list:");
             }
-            _logger.Info(" *** End device list:");
-
             return true;
         }
 
@@ -109,15 +118,22 @@ namespace UeiBridge
         /// <summary>
         /// 
         /// </summary>
-        private void BuildProgramObjects()
+        private void BuildProgramObjects(List<IPAddress> cubeIpList)
         {
             // prepare lists
-            int noOfCubes = Config2.Instance.CubeUrlList.Length;
-            _deviceObjectsTable = new List<List<PerDeviceObjects>>(new List<PerDeviceObjects>[noOfCubes]); 
+            //int noOfCubes = Config2.Instance.CubeUrlList.Length;
+            _deviceObjectsTable = new List<List<PerDeviceObjects>>(new List<PerDeviceObjects>[cubeIpList.Count]); 
 
             // Create program Objects
-            foreach (var cubeSetup in Config2.Instance.UeiCubes)
+            //foreach (var cubeSetup in Config2.Instance.UeiCubes)
+            foreach(IPAddress cubeIp in cubeIpList)
             {
+                CubeSetup cubeSetup = FindSetupForCube(cubeIp);
+                if (null==cubeSetup)
+                {
+                    _logger.Warn($"Failed to find setup for cube {cubeIp.ToString()} in config file");
+                    continue;
+                }
                 // init device list
                 List<UeiDaq.Device> realDeviceList = StaticMethods.GetDeviceList(cubeSetup.CubeUrl);
                 _deviceObjectsTable[cubeSetup.CubeNumber] = new List<PerDeviceObjects>();
@@ -139,6 +155,10 @@ namespace UeiBridge
             }
         }
 
+        private CubeSetup FindSetupForCube(IPAddress cubeIp)
+        {
+            throw new NotImplementedException();
+        }
 
         private static void ActivateDownwardOjects(List<PerDeviceObjects> deviceObjectsList)
         {

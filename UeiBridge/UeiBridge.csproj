@@ -83,6 +83,7 @@
     <Compile Include="AO308OutputDeviceManager.cs" />
     <Compile Include="Config2.cs" />
     <Compile Include="Converters.cs" />
+    <Compile Include="CubeSeeker.cs" />
     <Compile Include="DIO403InputDeviceManager.cs" />
     <Compile Include="DIO403OutputDeviceManager.cs" />
     <Compile Include="DIO470OutputDeviceManager.cs" />
