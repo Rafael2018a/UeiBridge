@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
-//using UeiDaq;
-using UeiBridgeTypes;
 using System.Timers;
+using UeiBridge.Library;
 
 namespace UeiBridge
 {
@@ -48,7 +47,7 @@ namespace UeiBridge
 
         public override bool OpenDevice()
         {
-            _attachedConverter = StaticMethods.CreateConverterInstance( _deviceSetup);
+            _attachedConverter = LocalStaticMethods.CreateConverterInstance( _deviceSetup);
             string cubeUrl = $"{_deviceSetup.CubeUrl}Dev{_deviceSetup.SlotNumber}/{_channelsString}";
             _deviceSession = new UeiDaq.Session();
             _deviceSession.CreateDOChannel(cubeUrl);

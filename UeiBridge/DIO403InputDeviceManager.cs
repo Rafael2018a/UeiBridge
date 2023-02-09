@@ -1,7 +1,6 @@
 ﻿using System;
 using UeiDaq;
-using UeiBridgeTypes;
-
+using UeiBridge.Library;
 
 namespace UeiBridge
 {
@@ -28,7 +27,7 @@ namespace UeiBridge
         public DIO403InputDeviceManager( ISend<SendObject> targetConsumer, DeviceSetup setup): base(targetConsumer)
         {
             _channelsString = "Di3:5";
-            _attachedConverter = StaticMethods.CreateConverterInstance( setup);
+            _attachedConverter = LocalStaticMethods.CreateConverterInstance( setup);
             InstanceName = $"{DeviceName}/Slot{setup.SlotNumber}/Input";
             _thisDeviceSetup = setup as DIO403Setup;
 
@@ -103,7 +102,7 @@ namespace UeiBridge
                 System.Diagnostics.Debug.Assert(_lastScan != null);
                 System.Diagnostics.Debug.Assert(_lastScan.Length == _deviceSession.GetNumberOfChannels(), "wrong number of channels");
                 byte[] payload = this.AttachedConverter.DeviceToEth(_lastScan);
-                var em = EthernetMessage.CreateFromDevice( payload, _thisDeviceSetup);
+                var em = LocalStaticMethods.CreateEthernetMessage( payload, _thisDeviceSetup);
 
                 _targetConsumer.Send(new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), em.ToByteArrayUp()));
             }

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 /// All files in project might refer to this file.
 /// Types in this file might NOT refer to types in any other file.
 /// </summary>
-namespace UeiBridgeTypes
+namespace UeiBridge.Library
 {
     /// <summary>
     /// Send items that should be pushed to q (return immediatly)
@@ -52,7 +52,7 @@ namespace UeiBridgeTypes
             _serialChannel = serialChannel;
         }
     }
-
+#if dont
     /// <summary>
     /// Contains: Object to write to device, serial channel id (in case of serial)
     /// </summary>
@@ -68,6 +68,7 @@ namespace UeiBridgeTypes
         public object Scan { get => _scan; }
         public UeiBridge.InputDevice OriginDevice { get => _originDevice; }
     }
+#endif
     public class SendObject
     {
         public IPEndPoint TargetEndPoint { get; }

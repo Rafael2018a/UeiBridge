@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 using UeiDaq;
-using UeiBridgeTypes;
+using UeiBridge.Library;
 
 /// <summary>
 /// All files in project might refer to this file.

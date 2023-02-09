@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using UeiLibrary;
+using UeiBridge.Library;
 
 namespace StatusViewer
 {

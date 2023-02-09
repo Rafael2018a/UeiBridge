@@ -3,7 +3,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UeiDaq;
-using UeiBridgeTypes;
+using UeiBridge.Library;
 
 using bytearray = System.Array;
 using System.Timers;
@@ -31,7 +31,7 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert(null != serialSession);
             _serialSession = serialSession;
             InstanceName = $"{DeviceName}/Slot{ setup.SlotNumber}/Output";
-            _attachedConverter = StaticMethods.CreateConverterInstance(setup);
+            _attachedConverter = LocalStaticMethods.CreateConverterInstance(setup);
             System.Diagnostics.Debug.Assert(null != serialSession);
 
             // init message list

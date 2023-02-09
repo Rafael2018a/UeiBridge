@@ -9,6 +9,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Configuration;
 using Newtonsoft.Json;
+using UeiBridge.Library;
 
 namespace StatusViewer
 {
@@ -163,7 +164,7 @@ namespace StatusViewer
             UdpClient udpListener = udpState.Item1;
             IPEndPoint ep = udpState.Item2;
             byte[] receiveBuffer = null;
-            UeiLibrary.JsonStatusClass js;
+            JsonStatusClass js;
             try // just in case socket was closed before reaching here
             {
                 receiveBuffer = udpListener.EndReceive(asyncResult, ref ep);
@@ -171,7 +172,7 @@ namespace StatusViewer
                 //str = System.Text.Encoding.ASCII.GetString(receiveBuffer);
                 //str = System.Text.Encoding.Unicode.GetString(receiveBuffer);
                 
-                js = JsonConvert.DeserializeObject<UeiLibrary.JsonStatusClass>(str);
+                js = JsonConvert.DeserializeObject<JsonStatusClass>(str);
 
                 
             }

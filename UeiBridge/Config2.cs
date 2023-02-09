@@ -7,6 +7,7 @@ using System.Xml.Serialization;
 using System.IO;
 using System.Net;
 using UeiDaq;
+using UeiBridge.Library;
 
 /// <summary>
 /// All classes in this file MUST NOT depend on any other module in the project

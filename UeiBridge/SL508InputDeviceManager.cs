@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using UeiDaq;
-using UeiBridgeTypes;
+using UeiBridge.Library;
 
 namespace UeiBridge
 {
@@ -35,7 +35,7 @@ namespace UeiBridge
             _serialPorts = new List<SerialPort>();
             _serialReaderList = new List<SerialReader>();
             //_serialWriterList = new List<SerialWriter>();
-            _attachedConverter = StaticMethods.CreateConverterInstance(setup);
+            _attachedConverter = LocalStaticMethods.CreateConverterInstance(setup);
             _lastScanList = new List<ViewerItem<byte[]>>();
             
             
@@ -98,7 +98,7 @@ namespace UeiBridge
                 _lastScanList[channel] = new ViewerItem<byte[]>(receiveBuffer, timeToLiveMs: 5000);
                 //_logger.Debug($"read from serial port. ch {channel}");
                 byte [] payload = this.AttachedConverter.DeviceToEth(receiveBuffer);
-                EthernetMessage em = EthernetMessage.CreateFromDevice(payload, this._thisDevieSetup, channel);
+                EthernetMessage em = LocalStaticMethods.CreateEthernetMessage(payload, this._thisDevieSetup, channel);
                 // forward to consumer (send by udp)
                 //ScanResult sr = new ScanResult(receiveBuffer, this);
                 _targetConsumer.Send(new SendObject(_targetEp, em.ToByteArrayUp()));

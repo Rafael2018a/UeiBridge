@@ -9,7 +9,7 @@ using System.Net;
 using System.Net.Sockets;
 using log4net;
 using UeiDaq;
-using UeiBridgeTypes;
+using UeiBridge.Library;
 
 namespace UeiBridge
 {
@@ -56,21 +56,6 @@ namespace UeiBridge
 
             _logger.Info("Any key to exit...");
             Console.ReadKey();
-        }
-
-        private void DisposeProgramObjest_old()
-        {
-            for (int cubeIndex = 0; cubeIndex < _deviceObjectsTable.Count; cubeIndex++)
-            {
-                var dl = _deviceObjectsTable[cubeIndex];
-                for (int slot = 0; slot < dl.Count; slot++)
-                {
-                    if (null != dl[slot])
-                    {
-                        dl[slot].OutputDeviceManager.Dispose();
-                    }
-                }
-            }
         }
 
         /// <summary>
@@ -138,7 +123,6 @@ namespace UeiBridge
                 ActivateUpwardObjects(cubeSetup);
             }
         }
-
 
         private static void ActivateDownwardOjects(List<PerDeviceObjects> deviceObjectsList)
         {
@@ -350,7 +334,7 @@ namespace UeiBridge
                 {
                     string desc = $"{dm.InstanceName}";
                     string stat = dm.GetFormattedStatus( interval);
-                    UeiLibrary.JsonStatusClass js = new UeiLibrary.JsonStatusClass(desc, stat);
+                    JsonStatusClass js = new JsonStatusClass(desc, stat);
                     string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
                     byte[] send_buffer = Encoding.ASCII.GetBytes(s);
                     SendObject so = new SendObject(destEP, send_buffer);
@@ -361,38 +345,7 @@ namespace UeiBridge
                 System.Threading.Thread.Sleep(interval);
             }
 
-            //while (true)
-            //{
-            //    foreach (PerDeviceObjects deviceObjects in _deviceObjectsTable[0]) //ProjectRegistry.Instance.OutputDevicesMap)
-            //    {
-            //        if (deviceObjects?.InputDeviceManager!=null)
-            //        {
-            //            IDeviceManager dm = deviceObjects.InputDeviceManager;
-            //            SendToViewer(destEP, uw, dm);
-            //        }
-
-            //        if(deviceObjects?.OutputDeviceManager!=null)
-            //        {
-            //            IDeviceManager dm = deviceObjects.OutputDeviceManager;
-            //            SendToViewer(destEP, uw, dm);
-
-            //        }
-            //    }
-
-                
-            //}
         }
-
-        //private static void SendToViewer(IPEndPoint destEP, UdpWriter uw, IDeviceManager dm)
-        //{
-        //    string desc = $"{dm.InstanceName}";
-        //    string stat = dm.GetFormattedStatus( );
-        //    UeiLibrary.JsonStatusClass js = new UeiLibrary.JsonStatusClass(desc, stat);
-        //    string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
-        //    byte[] send_buffer = Encoding.ASCII.GetBytes(s);
-        //    SendObject so = new SendObject(destEP, send_buffer);
-        //    uw.Send(so);
-        //}
 
         private void StartDownwardsTest()
         {
@@ -410,13 +363,13 @@ namespace UeiBridge
                         // digital out
                         {
                             IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[5].LocalEndPoint?.ToIpEp();
-                            byte[] e403 = StaticMethods.Make_DIO403Down_Message();
+                            byte[] e403 = LocalStaticMethods.Make_DIO403Down_Message();
                             udpClient.Send(e403, e403.Length, destEp);
                         }
                         // analog out
                         {
                             IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[0].LocalEndPoint.ToIpEp();
-                            byte[] e308 = StaticMethods.Make_A308Down_message();
+                            byte[] e308 = LocalStaticMethods.Make_A308Down_message();
                             udpClient.Send(e308, e308.Length, destEp);
                         }
 #if dontremove
@@ -426,7 +379,7 @@ namespace UeiBridge
                        
 
                         // serial out
-                        List<byte[]> e508 = StaticMethods.Make_SL508Down_Messages( i);
+                        List<byte[]> e508 = LocalStaticMethods.Make_SL508Down_Messages( i);
                         foreach (byte [] msg in e508)
                         {
                             IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[3].LocalEndPoint.ToIpEp();
@@ -452,36 +405,6 @@ namespace UeiBridge
                     _logger.Warn(ex.Message);
                 }
             });
-        }
-
-        private byte[] Make_AO308_Message_old()
-        {
-            byte[] eth = new byte[32];
-            Array.Clear(eth, 0, eth.Length);
-
-            eth[0] = 0xAA;
-            eth[1] = 0x55;
-
-            Int16 val = 0;
-            for (int i = 0; i < 8; i++)
-            {
-                byte[] bytes = BitConverter.GetBytes(val);
-                bytes.CopyTo(eth, 16 + i * 2);
-                val += 2000;
-            }
-            Int16 len = 32;
-            byte[] bytes1 = BitConverter.GetBytes(len);
-            bytes1.CopyTo(eth, 12);
-
-            return eth;
-        }
-
-        internal PerDeviceObjects PerDeviceObjects
-        {
-            get => default;
-            set
-            {
-            }
         }
     }
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using UeiBridgeTypes;
+using UeiBridge.Library;
 
 namespace UeiBridge
 {

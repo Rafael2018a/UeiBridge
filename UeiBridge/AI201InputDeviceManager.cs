@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UeiDaq;
-using UeiBridgeTypes;
+using UeiBridge.Library;
 
 namespace UeiBridge
 {
@@ -27,7 +27,7 @@ namespace UeiBridge
         public AI201InputDeviceManager(ISend<SendObject> targetConsumer, AI201100Setup setup) : base(targetConsumer)
         {
             _channelsString = "Ai0:23";
-            _attachedConverter = StaticMethods.CreateConverterInstance( setup);
+            _attachedConverter = LocalStaticMethods.CreateConverterInstance( setup);
             InstanceName = $"{DeviceName}/Slot{setup.SlotNumber}/Input";
             _targetConsumer = targetConsumer;
             _thisDeviceSetup = setup;
@@ -51,7 +51,7 @@ namespace UeiBridge
 
                 //ScanResult dr = new ScanResult(_lastScan, this);
                 byte[] payload = _attachedConverter.DeviceToEth(_lastScan);
-                EthernetMessage em = EthernetMessage.CreateFromDevice(payload, this._thisDeviceSetup);
+                EthernetMessage em = LocalStaticMethods.CreateEthernetMessage(payload, this._thisDeviceSetup);
                 SendObject so = new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), em.ToByteArrayUp());
                 _targetConsumer.Send(so);
             }

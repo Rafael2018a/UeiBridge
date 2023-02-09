@@ -81,6 +81,7 @@
   <ItemGroup>
     <Compile Include="AI201InputDeviceManager.cs" />
     <Compile Include="AO308OutputDeviceManager.cs" />
+    <Compile Include="LocalStaticMethods.cs" />
     <Compile Include="Config2.cs" />
     <Compile Include="Converters.cs" />
     <Compile Include="DIO403InputDeviceManager.cs" />
@@ -89,18 +90,13 @@
     <Compile Include="InputDevice.cs" />
     <Compile Include="OutputDevice.cs" />
     <Compile Include="PerDeviceObjects.cs" />
-    <Compile Include="GlobalTypes.cs" />
-    <Compile Include="Mediator.cs" />
-    <Compile Include="EthernetMessage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SL508InputDeviceManager.cs" />
     <Compile Include="SL508OutputDeviceManager.cs" />
     <Compile Include="SL508Session.cs" />
-    <Compile Include="StaticMethods.cs" />
     <Compile Include="UdpReader.cs" />
     <Compile Include="UdpWriter.cs" />
-    <Compile Include="DeviceToEthernet.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
