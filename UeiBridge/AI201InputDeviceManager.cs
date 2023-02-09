@@ -31,6 +31,7 @@ namespace UeiBridge
             InstanceName = $"{DeviceName}/Slot{setup.SlotNumber}/Input";
             _targetConsumer = targetConsumer;
             _thisDeviceSetup = setup;
+            System.Diagnostics.Debug.Assert(this.DeviceName.Equals(setup.DeviceName));
         }
 
         public AI201InputDeviceManager() : base(null) // must have default const.
@@ -50,7 +51,7 @@ namespace UeiBridge
 
                 //ScanResult dr = new ScanResult(_lastScan, this);
                 byte[] payload = _attachedConverter.DeviceToEth(_lastScan);
-                EthernetMessage em = EthernetMessage.CreateFromDevice(payload, this.DeviceName);
+                EthernetMessage em = EthernetMessage.CreateFromDevice(payload, this._thisDeviceSetup);
                 SendObject so = new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), em.ToByteArrayUp());
                 _targetConsumer.Send(so);
             }

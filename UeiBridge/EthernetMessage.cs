@@ -171,16 +171,23 @@ namespace UeiBridge
         /// <param name="payload"></param>
         /// <param name="deviceString"></param>
         //[Obsolete]
-        public static EthernetMessage CreateFromDevice(byte[] payload, string deviceName)
+        public static EthernetMessage CreateFromDevice(byte[] payload, DeviceSetup setup, int serialChannel=0)
         {
             //ILog _logger = log4net.LogManager.GetLogger("Root");
 
             //int key = //ProjectRegistry.Instance.GetDeviceKeyFromDeviceString(deviceName);
-            int key = StaticMethods.GetCardIdFromCardName( deviceName);
+            int key = StaticMethods.GetCardIdFromCardName( setup.DeviceName);
 
             System.Diagnostics.Debug.Assert(key >= 0);
 
             EthernetMessage msg = new EthernetMessage();
+            if (setup.GetType() == typeof(SL508892Setup))
+            {
+                msg.SerialChannelNumber = serialChannel;
+            }
+           
+            msg.SlotNumber = setup.SlotNumber;
+            msg.UnitId = 0; // tbd
             msg.CardType = (byte)key;
             msg.PayloadBytes = payload;
 

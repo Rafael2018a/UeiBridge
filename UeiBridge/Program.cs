@@ -327,7 +327,7 @@ namespace UeiBridge
             IPEndPoint destEP = Config2.Instance.AppSetup.StatusViewerEP.ToIpEp();
             UdpWriter uw = new UdpWriter("To-StatusViewer", destEP, Config2.Instance.AppSetup.SelectedNicForMCast);
             TimeSpan interval = TimeSpan.FromMilliseconds(intervalMs);
-
+            _logger.Info($"StatusViewer dest ep: {destEP.ToString()}");
 
             List<IDeviceManager> deviceList = new List<IDeviceManager>();
 

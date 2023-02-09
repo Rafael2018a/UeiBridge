@@ -31,6 +31,9 @@ namespace UeiBridge
             _attachedConverter = StaticMethods.CreateConverterInstance( setup);
             InstanceName = $"{DeviceName}/Slot{setup.SlotNumber}/Input";
             _thisDeviceSetup = setup as DIO403Setup;
+
+            System.Diagnostics.Debug.Assert(null != setup);
+            System.Diagnostics.Debug.Assert(DeviceName.Equals(setup.DeviceName));
         }
         public DIO403InputDeviceManager():base(null) // must have default const.
         {
@@ -100,7 +103,7 @@ namespace UeiBridge
                 System.Diagnostics.Debug.Assert(_lastScan != null);
                 System.Diagnostics.Debug.Assert(_lastScan.Length == _deviceSession.GetNumberOfChannels(), "wrong number of channels");
                 byte[] payload = this.AttachedConverter.DeviceToEth(_lastScan);
-                var em = EthernetMessage.CreateFromDevice( payload, DeviceName);
+                var em = EthernetMessage.CreateFromDevice( payload, _thisDeviceSetup);
 
                 _targetConsumer.Send(new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), em.ToByteArrayUp()));
             }

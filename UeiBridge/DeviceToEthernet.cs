@@ -41,9 +41,10 @@ namespace UeiBridge
 
                     byte[] payload = dr.OriginDevice.AttachedConverter.DeviceToEth(dr.Scan);
 
-                    EthernetMessage mo = EthernetMessage.CreateFromDevice(payload, dr.OriginDevice.DeviceName);
-                    byte[] bytes = mo?.ToByteArrayUp();
-                    _destination.Send(bytes);
+                    throw new NotImplementedException(); 
+                    //EthernetMessage mo = EthernetMessage.CreateFromDevice(payload, dr.OriginDevice.DeviceName);
+                    //byte[] bytes = mo?.ToByteArrayUp();
+                    //_destination.Send(bytes);
                 }
                 catch (Exception ex)
                 {

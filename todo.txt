@@ -1,0 +1,23 @@
+staus viewer:
+----------------------
+in each entry, replace the clock with incoming counter
+when clearing, clear alse the received datatgram counter
+make multiline in inherent feature
+chnage "local ip bind" to "local NIC"
+accept also repeating error messages
+
+
+ueibridge
+-----------
+change the instance name from DIO-403/Slot5/Input to DIO-403/Input(slot-5)
+remove DeviceToEthernet.cs and other obsolete files
+
+
+
+AO-308/Slot0/Output . 8 channels. Range -10,10V. Listening on 227.3.1.10:50035
+SL508OutputDeviceManager/71: Init success SL-508-892/Slot3/Output. Listening on 227.3.1.10:50037
+DIO403OutputDeviceManager/61: Init success: DIO-403/Slot5/Output. Bits 0..23 as output. Listening on 227.3.1.10:50039
+AI201InputDeviceManager/78: Init success. AI-201-100/Slot2/Input. 24 input channels. Dest:227.2.1.10:50036
+SL508InputDeviceManager/167: Init success SL-508-892/Slot3/Input. 8 channels. Dest:227.2.1.10:50038
+DIO403InputDeviceManager/57: Init success: DIO-403/Slot5/Input(Digital). Bits 24..47 as input. Dest: 227.2.1.10:50040
+

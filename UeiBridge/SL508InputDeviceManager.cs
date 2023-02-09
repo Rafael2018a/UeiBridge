@@ -21,6 +21,7 @@ namespace UeiBridge
         bool _InDisposeState = false;
         List<ViewerItem<byte[]>> _lastScanList;
         readonly System.Net.IPEndPoint _targetEp;
+        readonly SL508892Setup _thisDevieSetup;
 
         public override IConvert AttachedConverter => _attachedConverter;
         //public List<SerialWriter> SerialWriterList => _serialWriterList;
@@ -36,11 +37,17 @@ namespace UeiBridge
             //_serialWriterList = new List<SerialWriter>();
             _attachedConverter = StaticMethods.CreateConverterInstance(setup);
             _lastScanList = new List<ViewerItem<byte[]>>();
-            System.Diagnostics.Debug.Assert(null != serialSession);
+            
             
             _serialSession = serialSession;
             InstanceName = $"{DeviceName}/Slot{setup.SlotNumber}/Input";
             _targetEp = setup.DestEndPoint.ToIpEp();
+
+            _thisDevieSetup = setup as SL508892Setup;
+
+            System.Diagnostics.Debug.Assert(null != serialSession);
+            System.Diagnostics.Debug.Assert(null != setup);
+            System.Diagnostics.Debug.Assert(this.DeviceName.Equals(setup.DeviceName));
         }
 
         public SL508InputDeviceManager() : base(null)
@@ -91,7 +98,7 @@ namespace UeiBridge
                 _lastScanList[channel] = new ViewerItem<byte[]>(receiveBuffer, timeToLiveMs: 5000);
                 //_logger.Debug($"read from serial port. ch {channel}");
                 byte [] payload = this.AttachedConverter.DeviceToEth(receiveBuffer);
-                EthernetMessage em = EthernetMessage.CreateFromDevice(payload, this.DeviceName);
+                EthernetMessage em = EthernetMessage.CreateFromDevice(payload, this._thisDevieSetup, channel);
                 // forward to consumer (send by udp)
                 //ScanResult sr = new ScanResult(receiveBuffer, this);
                 _targetConsumer.Send(new SendObject(_targetEp, em.ToByteArrayUp()));
