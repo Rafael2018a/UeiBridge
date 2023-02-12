@@ -32,7 +32,7 @@ namespace UeiBridge
         // ----------------
         public abstract bool OpenDevice();
         protected abstract void HandleRequest(EthernetMessage request);
-        public abstract string GetFormattedStatus( TimeSpan interval);
+        public abstract string GetFormattedStatus( TimeSpan interval, out StatusTrait trait);
         
         // protected fields
         // ----------------

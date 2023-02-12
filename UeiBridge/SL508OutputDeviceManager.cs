@@ -113,7 +113,7 @@ namespace UeiBridge
             //_serialSession.Dispose();
             _logger.Debug("_serialSession?.Dispose();");
         }
-        public override string GetFormattedStatus(TimeSpan interval)
+        public override string GetFormattedStatus(TimeSpan interval, out StatusTrait trait)
         {
             StringBuilder formattedString = new StringBuilder();
 
@@ -137,6 +137,7 @@ namespace UeiBridge
                 }
             }
             formattedString.Append($"Total: {_numberOfSentMessages} messages, {_sentBytesAcc} bytes ");
+            trait = StatusTrait.IsRegular;
             return formattedString.ToString();
         }
 

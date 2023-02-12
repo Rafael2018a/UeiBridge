@@ -93,7 +93,7 @@ namespace UeiBridge
 
         //
 
-        public override string GetFormattedStatus( TimeSpan interval)
+        public override string GetFormattedStatus( TimeSpan interval, out StatusTrait trait)
         {
             System.Text.StringBuilder sb = new System.Text.StringBuilder("Input voltage: ");
             if (null != _lastScan)
@@ -104,6 +104,7 @@ namespace UeiBridge
                     sb.Append(d.ToString("0.0"));
                 }
             }
+            trait = StatusTrait.IsRegular;
             return sb.ToString();
         }
 

@@ -6,18 +6,21 @@ using System.Threading.Tasks;
 
 namespace UeiBridge.Library
 {
-    public class JsonStatusClass
+    public class StatusEntryJson
     {
         string _fieldTitle;
-        string _formattedStatus;
+        string [] _formattedStatus;
+        StatusTrait _trait;
 
-        public JsonStatusClass(string desc, string formattedStatus)
+        public StatusEntryJson(string title, string [] formattedStatus, StatusTrait trait)
         {
-            _fieldTitle = desc;
+            this._fieldTitle = title;
             this._formattedStatus = formattedStatus;
+            this._trait = trait;
         }
 
         public string FieldTitle { get => _fieldTitle; set => _fieldTitle = value; }
-        public string FormattedStatus { get => _formattedStatus; set => _formattedStatus = value; }
+        public string [] FormattedStatus { get => _formattedStatus; set => _formattedStatus = value; }
+        public StatusTrait Trait { get => _trait; }
     }
 }

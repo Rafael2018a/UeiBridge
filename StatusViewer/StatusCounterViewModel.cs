@@ -11,7 +11,7 @@ namespace StatusViewer
         long _incomingValue = 0;
         long _sum;
         double _rate;
-        ProjMessageModel prevMessageModel;
+        StatusEntryModel prevMessageModel;
 
         public long IncomingValue
         {
@@ -45,7 +45,7 @@ namespace StatusViewer
         public bool IsSumming { get; set; } // tbd. 2 del
 
         public static bool EnableBindingUpdate { get; set; }
-        public StatusCounterViewModel(ProjMessageModel messageModel) : base(messageModel)
+        public StatusCounterViewModel(StatusEntryModel messageModel) : base(messageModel)
         {
             IncomingValue = messageModel.Int64value;
             //Sum = messageModel.Int64value;
@@ -57,7 +57,7 @@ namespace StatusViewer
             //_IsRateMeasure = (receiveBuffer[3] & 0x02) > 0;
         }
 
-        public void Update( ProjMessageModel messageModel)
+        public void Update( StatusEntryModel messageModel)
         {
             IncomingValue = messageModel.Int64value;
             //Sum += messageModel.Int64value;

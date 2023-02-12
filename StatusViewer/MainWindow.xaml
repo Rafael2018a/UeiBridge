@@ -36,7 +36,7 @@
                 <Button         x:Name="buttonClearAll" Content="Clear All" Command="MediaCommands.ChannelDown"/>
                 <Button         x:Name="buttonStop" Content="Stop" Command="MediaCommands.Stop"/>
                 <TextBlock      x:Name="textBlock" Margin="5" Text="{Binding Path=MachineState, Converter={StaticResource EnumToStringConverter} }" VerticalAlignment="Center" Visibility="Collapsed"/>
-                <TextBlock      Text="Local IP Bind" VerticalAlignment="Center" Margin="15,0,4,0"/>
+                <TextBlock      Text="Local NIC" VerticalAlignment="Center" Margin="15,0,4,0"/>
                 <ComboBox       Height="23" Width="120" ItemsSource="{Binding LocalIpList}"  SelectedValue="{Binding SelectedLocalIp}" IsEnabled="{Binding AtInitialState}"/>
                 <ContentControl Width="20"/>
                 <!--<TextBlock Text="test" />-->
@@ -45,17 +45,16 @@
         <Border Grid.Row="1" BorderBrush="Blue " BorderThickness="2" Margin="5" CornerRadius="3">
             <ListBox  x:Name="listBox2" ItemsSource="{Binding Path=EntriesList}" HorizontalContentAlignment="Stretch" BorderBrush="Transparent" >
                 <ListBox.Resources>
-                    <DataTemplate DataType="{x:Type local:StatusTextViewModel}">
+                    <DataTemplate DataType="{x:Type local:StatusEntryViewModel}">
                         <GroupBox BorderThickness="2" Margin="4">
                             <GroupBox.BorderBrush>
-                                <SolidColorBrush Color="RoyalBlue"/>
+                                <SolidColorBrush Color="{Binding BorderBrushColor}"/>
                             </GroupBox.BorderBrush>
                             <GroupBox.Header>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{Binding Path=Desc}" Margin="3" TextDecorations="{x:Null}" FontWeight="Bold" Background="Transparent" />
-                                    <TextBlock Text=". Updated " Margin="3"/>
-                                    <TextBlock Text="{Binding Path=LastUpdate}" Margin="3"/>
-                                    <!--<TextBlock Text="{Binding Path=LastUpdateInSec, Converter={StaticResource SecondsToTimeConverter}}" Margin="3"/>-->
+                                    <TextBlock Text=". Datagram count: " Margin="3"/>
+                                    <TextBlock Text="{Binding Path=UpdateCounter}" Margin="3"/>
                                 </StackPanel>
                             </GroupBox.Header>
                             <StackPanel Orientation="Horizontal"  Margin="3">
@@ -79,7 +78,6 @@
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{Binding Path=Desc}" Margin="3" TextDecorations="{x:Null}" FontWeight="Bold" Background="Transparent" />
                                     <TextBlock Text=". Updated " Margin="3"/>
-                                    <!--<TextBlock Text="{Binding Path=LastUpdateInSec, Converter={StaticResource SecondsToTimeConverter}}" Margin="3"/>-->
                                     <TextBlock Text="{Binding Path=LastUpdate}" Margin="3"/>
                                 </StackPanel>
                             </GroupBox.Header>
@@ -98,8 +96,6 @@
                                     <TextBlock Text="Unit/Sec" Visibility="{Binding ElementName=textBlockRate, Path=Visibility}"/>
                                     <ContentControl Width="10"/>
 
-                                    <!--<TextBlock Text="Last Update: "/>
-                                    <TextBlock Text="{Binding Path=LastUpdateInSec, Converter={StaticResource SecondsToTimeConverter}}"/>-->
                                 </StackPanel>
                                 <StackPanel Orientation="Horizontal"  Margin="3">
                                 </StackPanel>
@@ -107,45 +103,6 @@
                         </GroupBox>
                     </DataTemplate>
                 </ListBox.Resources>
-                <!--<ListBox.ItemTemplate>
-                    <DataTemplate>
-                        <DataTemplate.Resources>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Padding" Value="3,0"/>
-                            </Style>
-                        </DataTemplate.Resources>
-                        <GroupBox BorderThickness="2" Margin="4">
-                            <GroupBox.BorderBrush>
-                                <SolidColorBrush Color="RoyalBlue"/>
-                            </GroupBox.BorderBrush>
-                            <GroupBox.Header>
-                                <TextBlock Text="{Binding Path=Desc}" Margin="3" TextDecorations="{x:Null}" FontWeight="Bold" Background="Transparent" />
-                            </GroupBox.Header>
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal"  Margin="3">
-                                    <TextBlock  Text="Value: "/>
-                                    <TextBlock Text="{Binding Path=IncomingValue, StringFormat={}{0:n0}}" Background="LightYellow"/>
-                                    <ContentControl Width="10"/>
-                                    
-                                    <TextBlock Name="textBlockSum" Text="Sum" Visibility="{Binding Path=IsSumming, Converter={StaticResource BoolToVisibleConverter}}"/>
-                                    <TextBlock Text="{Binding Path=Sum}" Visibility="{Binding ElementName=textBlockSum, Path=Visibility}" Foreground="Blue"/>
-                                    <ContentControl Width="10"/>
-                                    
-                                    <TextBlock Name="textBlockRate" Text="Rate:" Visibility="{Binding Path=IsRateMeasure, Converter={StaticResource BoolToVisibleConverter}}"/>
-                                    <TextBlock Text="{Binding Path=Rate, StringFormat={}{0:n0}}"  Visibility="{Binding ElementName=textBlockRate, Path=Visibility}" Foreground="Blue" />
-                                    <TextBlock Text="Unit/Sec" Visibility="{Binding ElementName=textBlockRate, Path=Visibility}"/>
-                                    <ContentControl Width="10"/>
-                                    
-                                    <TextBlock Text="Updated: "/>
-                                    <TextBlock Text="{Binding Path=LastUpdateInSec, Converter={StaticResource SecondsToTimeConverter}}"/>
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal"  Margin="3">
-                                </StackPanel>
-                            </StackPanel>
-                        </GroupBox>
-
-                    </DataTemplate>
-                </ListBox.ItemTemplate>-->
             </ListBox>
         </Border>
         <Border Grid.Row="2" BorderThickness="2" BorderBrush="Blue" Margin="5" CornerRadius="3">
@@ -153,13 +110,10 @@
                 <TextBlock Text="Received datagrams: " VerticalAlignment="Center"/>
                 <TextBlock x:Name="textBlock_totalReceived" Margin="6" Text="{Binding Path=ReceivedDatagrams}"/>
                 <Separator Width="2"/>
-                <!--<TextBlock Text="Local EP: "/>
-                <TextBlock Text="{Binding Path=LocalEp}"/>-->
                 <Separator Width="2"/>
                 <TextBlock Text="Multicast address: "/>
                 <TextBlock Text="{Binding Path=MulticastEP}"/>
             </StatusBar>
         </Border>
-        <!--<ContentControl Grid.Row="1" Content="{Binding Path=StatCounter}"/>-->
     </Grid>
 </Window>

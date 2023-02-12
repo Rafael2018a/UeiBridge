@@ -80,11 +80,16 @@ namespace UeiBridge.Library
         }
     }
 
+    [Flags]
+    public enum StatusTrait
+    {
+        IsRegular, IsWarning
+    }
     public interface IDeviceManager
     {
         string DeviceName { get; }
         string InstanceName { get; }
-        string GetFormattedStatus( TimeSpan interval);
+        string GetFormattedStatus( TimeSpan interval, out StatusTrait trait);
     }
 
 }

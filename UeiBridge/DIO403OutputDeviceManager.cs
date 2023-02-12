@@ -65,7 +65,7 @@ namespace UeiBridge
             return false;
         }
 
-        public override string GetFormattedStatus( TimeSpan interval)
+        public override string GetFormattedStatus( TimeSpan interval, out StatusTrait trait)
         {
             System.Text.StringBuilder formattedString = new System.Text.StringBuilder("Output bits: ");
             lock (_lastScanList)
@@ -84,6 +84,7 @@ namespace UeiBridge
                     formattedString.Append("- - -");
                 }
             }
+            trait = StatusTrait.IsRegular;
             return formattedString.ToString();
         }
 

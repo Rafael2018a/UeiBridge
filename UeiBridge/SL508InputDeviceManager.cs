@@ -54,7 +54,7 @@ namespace UeiBridge
         {
         }
 
-        public override string GetFormattedStatus( TimeSpan interval)
+        public override string GetFormattedStatus( TimeSpan interval, out StatusTrait trait)
         {
             StringBuilder formattedString = new StringBuilder();
             for (int ch = 0; ch < _lastScanList.Count; ch++)
@@ -79,6 +79,7 @@ namespace UeiBridge
                     formattedString.Append($"Ch{ch}: <empty>\n");
                 }
             }
+            trait = StatusTrait.IsRegular;
             return formattedString.ToString();
         }
         //AsyncCallback readerAsyncCallback;

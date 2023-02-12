@@ -333,8 +333,9 @@ namespace UeiBridge
                 foreach (IDeviceManager dm in deviceList)
                 {
                     string desc = $"{dm.InstanceName}";
-                    string stat = dm.GetFormattedStatus( interval);
-                    JsonStatusClass js = new JsonStatusClass(desc, stat);
+                    StatusTrait tr;
+                    string stat = dm.GetFormattedStatus( interval, out tr);
+                    StatusEntryJson js = new StatusEntryJson(desc, new string[] { stat }, tr);
                     string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
                     byte[] send_buffer = Encoding.ASCII.GetBytes(s);
                     SendObject so = new SendObject(destEP, send_buffer);
