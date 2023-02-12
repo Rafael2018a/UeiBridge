@@ -58,7 +58,8 @@
                                 </StackPanel>
                             </GroupBox.Header>
                             <StackPanel Orientation="Horizontal"  Margin="3">
-                                <TextBlock Text="{Binding StatusText}"></TextBlock>
+                                <!--<TextBlock Text="{Binding StatusText}"></TextBlock>-->
+                                <ListBox ItemsSource="{Binding Path=StatusText}" BorderBrush="Transparent"/>
                                 <ContentControl Width="10"/>
                             </StackPanel>
                         </GroupBox>

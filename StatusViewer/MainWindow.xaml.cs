@@ -121,7 +121,10 @@ namespace StatusViewer
                     UdpClient udpClient = new UdpClient();
                     System.Threading.Thread.Sleep(100);
 
-                    StatusEntryJson js = new StatusEntryJson("Test message", new string [] { $"Regular message {i}" }, StatusTrait.IsRegular);
+                    string[] slist = new string[2];
+                    slist[0]=  $"Regular message {i}";
+                    slist[1] = $"line 2 {i * 2}";
+                    StatusEntryJson js = new StatusEntryJson("Test message", slist , StatusTrait.IsRegular);
                     StatusEntryJson js1 = new StatusEntryJson( "Warn message", new string[] { $"Warning message {i}" }, StatusTrait.IsWarning);
                     string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
                     byte[] send_buffer = Encoding.ASCII.GetBytes(s);
@@ -135,7 +138,7 @@ namespace StatusViewer
 
                         IPAddress ip = IPAddress.Parse(ip1);
                         udpClient.Send(send_buffer, send_buffer.Length, new IPEndPoint(ip, port));
-                        udpClient.Send(send_buffer1, send_buffer.Length, new IPEndPoint(ip, port));
+                        udpClient.Send(send_buffer1, send_buffer1.Length, new IPEndPoint(ip, port));
                     }
                     catch (Exception e)
                     {

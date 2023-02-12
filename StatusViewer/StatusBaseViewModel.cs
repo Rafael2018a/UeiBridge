@@ -1,6 +1,5 @@
 ﻿using System;
 using System.ComponentModel;
-using System.Windows.Media;
 
 namespace StatusViewer
 {
@@ -12,7 +11,7 @@ namespace StatusViewer
         //protected double _lastUpdateInSec;
         protected string _lastUpdate;
         protected string _desc;
-        System.Windows.Media.Color _borderBrushColor;
+        
 
 
         // publics (for bind)
@@ -34,16 +33,6 @@ namespace StatusViewer
             {
                 _lastUpdate = value;
                 RaisePropertyChangedEvent("LastUpdate");
-            }
-        }
-
-        public Color BorderBrushColor
-        {
-            get => _borderBrushColor;
-            set
-            {
-                _borderBrushColor = value;
-                RaisePropertyChangedEvent("BorderBrushColor");
             }
         }
 
