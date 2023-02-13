@@ -113,9 +113,10 @@ namespace UeiBridge
             //_serialSession.Dispose();
             _logger.Debug("_serialSession?.Dispose();");
         }
-        public override string GetFormattedStatus(TimeSpan interval)
+        public override string [] GetFormattedStatus(TimeSpan interval)
         {
-            StringBuilder formattedString = new StringBuilder();
+            //StringBuilder formattedString = new StringBuilder();
+            List<string> resultList = new List<string>();
 
             for (int ch = 0; ch < _lastScanList.Count; ch++) // do NOT use foreach since collection might be updated in other thread
             {
@@ -128,16 +129,17 @@ namespace UeiBridge
                 if ((null != last) && (_lastScanList[ch].timeToLive.Ticks > 0))
                 {
                     int len = (last.Length > 20) ? 20 : last.Length;
-                    string s = $"Ch{ch}: Payload=({last.Length}): {BitConverter.ToString(last).Substring(0, len * 3 - 1)}\n";
-                    formattedString.Append(s);
+                    string s = $"Ch{ch}: Payload=({last.Length}): {BitConverter.ToString(last).Substring(0, len * 3 - 1)}";
+                    resultList.Add(s);
                 }
                 else
                 {
-                    formattedString.Append($"Ch{ch}: null\n");
+                    resultList.Add($"Ch{ch}: null");
                 }
             }
-            formattedString.Append($"Total: {_numberOfSentMessages} messages, {_sentBytesAcc} bytes ");
-            return formattedString.ToString();
+            resultList.Add($"Total: {_numberOfSentMessages} messages, {_sentBytesAcc} bytes ");
+
+            return resultList.ToArray();
         }
 
         protected override void HandleRequest(EthernetMessage request)

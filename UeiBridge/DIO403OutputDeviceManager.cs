@@ -67,7 +67,7 @@ namespace UeiBridge
             return false;
         }
 
-        public override string GetFormattedStatus( TimeSpan interval)
+        public override string [] GetFormattedStatus( TimeSpan interval)
         {
             System.Text.StringBuilder formattedString = new System.Text.StringBuilder("Output bits: ");
             lock (_lastScanList)
@@ -86,7 +86,7 @@ namespace UeiBridge
                     formattedString.Append("- - -");
                 }
             }
-            return formattedString.ToString();
+            return new string[] { formattedString.ToString() };
         }
 
         protected override void HandleRequest(EthernetMessage request)

@@ -13,7 +13,7 @@ namespace UeiBridge
     {
         // abstarcts
         public abstract IConvert AttachedConverter { get; }
-        public abstract string GetFormattedStatus( TimeSpan interval);
+        public abstract string [] GetFormattedStatus( TimeSpan interval);
         public abstract void OpenDevice();
         public abstract string DeviceName { get; }
         public abstract string InstanceName { get; }

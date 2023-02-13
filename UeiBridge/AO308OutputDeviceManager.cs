@@ -90,7 +90,7 @@ namespace UeiBridge
             }
         }
         
-        public override string GetFormattedStatus( TimeSpan interval)
+        public override string [] GetFormattedStatus( TimeSpan interval)
         {
             // tbd: must lock. collection modifed outside ......
             System.Text.StringBuilder formattedString = new System.Text.StringBuilder("Output voltage: ");
@@ -114,7 +114,7 @@ namespace UeiBridge
                     formattedString.Append("- - -");
                 }
             }
-            return formattedString.ToString();
+            return new string[] { formattedString.ToString() };
         }
 
         public override void Dispose()

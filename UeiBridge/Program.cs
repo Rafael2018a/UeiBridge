@@ -350,13 +350,12 @@ namespace UeiBridge
                 {
                     string desc = $"{dm.InstanceName}";
                     StatusTrait tr= StatusTrait.IsRegular;
-                    string stat = dm.GetFormattedStatus( interval);
-                    StatusEntryJson js = new StatusEntryJson(desc, new string[] { stat }, tr);
+                    string [] stat = dm.GetFormattedStatus( interval);
+                    StatusEntryJson js = new StatusEntryJson(desc, stat, tr);
                     string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
                     byte[] send_buffer = Encoding.ASCII.GetBytes(s);
                     SendObject so = new SendObject(destEP, send_buffer);
                     uw.Send(so);
-
                 }
 
                 System.Threading.Thread.Sleep(interval);

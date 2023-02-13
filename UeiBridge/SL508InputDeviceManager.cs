@@ -54,9 +54,10 @@ namespace UeiBridge
         {
         }
 
-        public override string GetFormattedStatus( TimeSpan interval)
+        public override string [] GetFormattedStatus( TimeSpan interval)
         {
-            StringBuilder formattedString = new StringBuilder();
+            //StringBuilder formattedString = new StringBuilder();
+            List<string> resultList = new List<string>();
             for (int ch = 0; ch < _lastScanList.Count; ch++)
             {
                 var item = _lastScanList[ch];
@@ -66,20 +67,21 @@ namespace UeiBridge
                     {
                         item.timeToLive -= interval;
                         int len = (item.readValue.Length > 20) ? 20 : item.readValue.Length;
-                        string s = $"Ch{ch}: Payload=({item.readValue.Length}): {BitConverter.ToString(item.readValue).Substring(0, len * 3 - 1)}\n";
-                        formattedString.Append(s);
+                        string s = $"Ch{ch}: Payload=({item.readValue.Length}): {BitConverter.ToString(item.readValue).Substring(0, len * 3 - 1)}";
+                        resultList.Add(s);
+                        //formattedString.Append(s);
                     }
                     else
                     {
-                        formattedString.Append($"Ch{ch}: <empty>\n");
+                        resultList.Add( $"Ch{ch}: <empty>");
                     }
                 }
                 else
                 {
-                    formattedString.Append($"Ch{ch}: <empty>\n");
+                    resultList.Add($"Ch{ch}: <empty>");
                 }
             }
-            return formattedString.ToString();
+            return resultList.ToArray();
         }
         //AsyncCallback readerAsyncCallback;
         private IAsyncResult readerIAsyncResult;
@@ -87,7 +89,6 @@ namespace UeiBridge
 
         public void ReaderCallback(IAsyncResult ar)
         {
-
             System.Diagnostics.Debug.Assert(null != _serialSession);
             int channel = (int)ar.AsyncState;
             //_logger.Debug($"(int)ar.AsyncState; {channel}");

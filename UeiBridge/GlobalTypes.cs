@@ -83,7 +83,7 @@ namespace UeiBridgeTypes
     {
         string DeviceName { get; }
         string InstanceName { get; }
-        string GetFormattedStatus( TimeSpan interval);
+        string [] GetFormattedStatus( TimeSpan interval);
     }
 
 }
