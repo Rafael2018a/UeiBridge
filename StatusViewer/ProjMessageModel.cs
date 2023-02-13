@@ -1,41 +1,52 @@
 ﻿using System;
 using System.Diagnostics;
-using UeiLibrary;
+using UeiBridge.Library;
 
 namespace StatusViewer
 {
     public enum ProjMessageType { Counter = 0, SimpleLog =1,  Text=2, Invalid};
-    public class ProjMessageModel
+    public class StatusEntryModel
     {
         int _severity;
         ProjMessageType _messageType;
         Int64 _int64value;
-        string _stringValue;
+        string [] _stringValue;
         double _projTimeInSec;
         double fracFactor = Math.Pow(2, 32) - 1; // tbd. not sure about -1
-        private string _desc;
+        string _desc;
+        StatusTrait _trait;
         //private JsonStatusClass _jsonMessage;
 
+        [Obsolete]
         public int Severity { get => _severity; }
+        [Obsolete]
         public ProjMessageType MessageType { get => _messageType; }
+        [Obsolete]
         public long Int64value { get => _int64value; }
-        public string StringValue { get => _stringValue; }
+        public string [] StringValue { get => _stringValue; }
+        [Obsolete]
         public double ProjTimeInSec { get => _projTimeInSec; }
         public string Desc { get => _desc; }
-        public ProjMessageModel(string desc, Int64 val) // this c-tor is for demo messages
+        public StatusTrait Trait { get => _trait; }
+
+        [Obsolete]
+        public StatusEntryModel(string desc, Int64 val) // this c-tor is for demo messages
         {
             _desc = desc;
             _int64value = val;
             _messageType = ProjMessageType.Counter;
         }
-        public ProjMessageModel(string desc, string val) // this c-tor is for demo messages
+        //[Obsolete]
+        //public StatusEntryModel(string desc, string val) // this c-tor is for demo messages
+        //{
+        //    _desc = desc;
+        //    _stringValue = val;
+        //    _messageType = ProjMessageType.Text;
+        //}
+        [Obsolete]
+        public StatusEntryModel(byte[] receiveBuffer)
         {
-            _desc = desc;
-            _stringValue = val;
-            _messageType = ProjMessageType.Text;
-        }
-        public ProjMessageModel(byte[] receiveBuffer)
-        {
+            System.Diagnostics.Debug.Assert(false);
             int projMessageLength = 232;
             int projMessageTextFieldLength = 200;
 
@@ -78,6 +89,7 @@ namespace StatusViewer
                         _stringValue = null;
                         _desc = theMessageText;
                         _int64value = BitConverter.ToInt64(receiveBuffer, 24);
+                        System.Diagnostics.Debug.Assert(false);
                         break;
                     case ProjMessageType.Text:
                         {
@@ -85,17 +97,18 @@ namespace StatusViewer
                             if (sa.Length > 1)
                             {
                                 _desc = sa[0];
-                                _stringValue = sa[1];
+                                //_stringValue = sa[1];
                             }
                             else
                             {
                                 _desc = theMessageText;
-                                _stringValue = "<< no text in message >>";
+                                //_stringValue = "<< no text in message >>";
                             }
                         }
                         break;
                     case ProjMessageType.SimpleLog:
-                        _stringValue = theMessageText;
+                        //_stringValue = theMessageText;
+                        System.Diagnostics.Debug.Assert(false);
                         break;
                 }
 
@@ -111,12 +124,13 @@ namespace StatusViewer
             }
         }
 
-        public ProjMessageModel(JsonStatusClass js)
+        public StatusEntryModel(StatusEntryJson js)
         {
             //this._jsonMessage = js;
-            _messageType = ProjMessageType.Text;
+            _messageType = ProjMessageType.Text; // not is use
             _desc = js.FieldTitle;
             _stringValue = js.FormattedStatus;
+            _trait = js.Trait;
         }
     }
 }

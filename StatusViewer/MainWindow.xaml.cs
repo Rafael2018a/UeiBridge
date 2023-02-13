@@ -8,7 +8,10 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Configuration;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
+using UeiBridge.Library;
+using System.Text;
 
 namespace StatusViewer
 {
@@ -94,6 +97,12 @@ namespace StatusViewer
             logDic.Add("INFO");
             logDic.Add("DEBUG");
 
+
+            //StatusEntryJson jsonStatus = new StatusEntryJson("test desc", "test val", StatusTrait.IsRegular);
+            //m_entriesList.Add(new StatusEntryViewModel(new StatusEntryModel(jsonStatus)));
+            //jsonStatus = new StatusEntryJson("waring desc", "warn val", StatusTrait.IsWarning);
+            //m_entriesList.Add(new StatusEntryViewModel(new StatusEntryModel(jsonStatus)));
+
             SetCommands();
 
             LocalIpList = GetLocalIpList();
@@ -105,7 +114,38 @@ namespace StatusViewer
 
             StartCommand_Executed(this, null); // simulate 'start' command (as if user clicked 'start' right after startup)
 
+            Task.Factory.StartNew(() =>
+            {
+                for (int i = 0; i < 1000; i++)
+                {
+                    UdpClient udpClient = new UdpClient();
+                    System.Threading.Thread.Sleep(100);
 
+                    string[] slist = new string[2];
+                    slist[0]=  $"Regular message {i}";
+                    slist[1] = $"line 2 {i * 2}";
+                    StatusEntryJson js = new StatusEntryJson("Test message", slist , StatusTrait.IsRegular);
+                    StatusEntryJson js1 = new StatusEntryJson( "Warn message", new string[] { $"Warning message {i}" }, StatusTrait.IsWarning);
+                    string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
+                    byte[] send_buffer = Encoding.ASCII.GetBytes(s);
+                    string s1 = Newtonsoft.Json.JsonConvert.SerializeObject(js1);
+                    byte[] send_buffer1 = Encoding.ASCII.GetBytes(s1);
+
+                    try
+                    {
+                        string ip1 = ConfigurationManager.AppSettings["multicastIp"];
+                        int port = Int32.Parse( ConfigurationManager.AppSettings["multicastPort"]);
+
+                        IPAddress ip = IPAddress.Parse(ip1);
+                        udpClient.Send(send_buffer, send_buffer.Length, new IPEndPoint(ip, port));
+                        udpClient.Send(send_buffer1, send_buffer1.Length, new IPEndPoint(ip, port));
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e.ToString());
+                    }
+                }
+            });
         }
         private List<IPAddress> GetLocalIpList()
         {
@@ -157,23 +197,21 @@ namespace StatusViewer
             clearAllCommand.CanExecute += ClearAllCommand_CanExecute;
         }
 
+        /// <summary>
+        /// This callback should be called upon receiving datagram from publisher
+        /// </summary>
         void UdpReceiveCallback(IAsyncResult asyncResult)
         {
             Tuple<UdpClient, IPEndPoint> udpState = (Tuple<UdpClient, IPEndPoint>)asyncResult.AsyncState;
             UdpClient udpListener = udpState.Item1;
             IPEndPoint ep = udpState.Item2;
             byte[] receiveBuffer = null;
-            UeiLibrary.JsonStatusClass js;
+            StatusEntryJson js;
             try // just in case socket was closed before reaching here
             {
                 receiveBuffer = udpListener.EndReceive(asyncResult, ref ep);
-                string str = System.Text.Encoding.Default.GetString(receiveBuffer);
-                //str = System.Text.Encoding.ASCII.GetString(receiveBuffer);
-                //str = System.Text.Encoding.Unicode.GetString(receiveBuffer);
-                
-                js = JsonConvert.DeserializeObject<UeiLibrary.JsonStatusClass>(str);
-
-                
+                string str = Encoding.Default.GetString(receiveBuffer);
+                js = JsonConvert.DeserializeObject<StatusEntryJson>(str);
             }
             catch (ObjectDisposedException) // socket already closed
             {
@@ -183,7 +221,7 @@ namespace StatusViewer
             ReceivedBytes += receiveBuffer.Length;
             ReceivedDatagrams++;
 
-            ProjMessageModel messageModel = new ProjMessageModel(js);
+            StatusEntryModel messageModel = new StatusEntryModel(js);
 
             switch (messageModel.MessageType)
             {
@@ -200,12 +238,12 @@ namespace StatusViewer
                         StatusBaseViewModel baseViewModel = TryGetValue(m_entriesList, messageModel.Desc);
                         if (baseViewModel != null) // if object already exist
                         {
-                            StatusTextViewModel vm = baseViewModel as StatusTextViewModel;
-                            vm.Update( messageModel);
+                            StatusEntryViewModel vm = baseViewModel as StatusEntryViewModel;
+                            vm.Update(messageModel);
                         }
                         else // object not exists. create new one
                         {
-                            StatusTextViewModel vm = new StatusTextViewModel( messageModel);
+                            StatusEntryViewModel vm = new StatusEntryViewModel(messageModel);
                             Application.Current.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.DataBind, new Action(() => EntriesList.Add(vm)));
                         }
                     }
@@ -228,22 +266,22 @@ namespace StatusViewer
                         }
                     }
                     break;
-                case ProjMessageType.SimpleLog: //entry to emit to DebugView
-                    {
-                        long timeInTicks = Convert.ToInt64(messageModel.ProjTimeInSec * 10000000.0);
-                        TimeSpan ts = new TimeSpan(timeInTicks);
+                //case ProjMessageType.SimpleLog: //entry to emit to DebugView
+                //    {
+                //        long timeInTicks = Convert.ToInt64(messageModel.ProjTimeInSec * 10000000.0);
+                //        TimeSpan ts = new TimeSpan(timeInTicks);
 
-                        if (false == messageModel.StringValue.StartsWith("=["))
-                        {
-                            string formattedString = string.Format("=#= [{0}; {1}] {2} ", logDic[messageModel.Severity], ts.ToString(@"hh\:mm\:ss"), messageModel.StringValue);
-                            Trace.Write(formattedString);
-                        }
-                        else
-                        {
-                            Trace.Write(messageModel.StringValue);
-                        }
-                    }
-                    break;
+                //        if (false == messageModel.StringValue.StartsWith("=["))
+                //        {
+                //            string formattedString = string.Format("=#= [{0}; {1}] {2} ", logDic[messageModel.Severity], ts.ToString(@"hh\:mm\:ss"), messageModel.StringValue);
+                //            Trace.Write(formattedString);
+                //        }
+                //        else
+                //        {
+                //            Trace.Write(messageModel.StringValue);
+                //        }
+                //    }
+                //    break;
 
             }
 
@@ -278,6 +316,7 @@ namespace StatusViewer
         private void ClearAllCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             EntriesList.Clear();
+            ReceivedDatagrams = 0;
         }
 
 
@@ -291,6 +330,8 @@ namespace StatusViewer
             StartMulticast();
             MachineState = MachineStateEnum.Running;
             StatusCounterViewModel.EnableBindingUpdate = true; // just in case we came here after freeze
+
+
         }
 
         private void StartMulticast()
@@ -298,6 +339,7 @@ namespace StatusViewer
             IPAddress mcAddress = null;
             //int mcPort = -1;
 
+            
             string mcIp = ConfigurationSettings.AppSettings["multicastIp"];
             mcAddress = (mcIp != null) ? IPAddress.Parse(mcIp) : IPAddress.Parse("239.10.10.17"); // get from config or use default
             string mcPort1 = ConfigurationSettings.AppSettings["multicastPort"];

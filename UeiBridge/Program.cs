@@ -10,6 +10,7 @@ using System.Net.Sockets;
 using log4net;
 using UeiDaq;
 using UeiBridgeTypes;
+using UeiBridge.Library;
 
 namespace UeiBridge
 {
@@ -138,7 +139,6 @@ namespace UeiBridge
                 ActivateUpwardObjects(cubeSetup);
             }
         }
-
 
         private static void ActivateDownwardOjects(List<PerDeviceObjects> deviceObjectsList)
         {
@@ -349,8 +349,9 @@ namespace UeiBridge
                 foreach (IDeviceManager dm in deviceList)
                 {
                     string desc = $"{dm.InstanceName}";
+                    StatusTrait tr= StatusTrait.IsRegular;
                     string stat = dm.GetFormattedStatus( interval);
-                    UeiLibrary.JsonStatusClass js = new UeiLibrary.JsonStatusClass(desc, stat);
+                    StatusEntryJson js = new StatusEntryJson(desc, new string[] { stat }, tr);
                     string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
                     byte[] send_buffer = Encoding.ASCII.GetBytes(s);
                     SendObject so = new SendObject(destEP, send_buffer);

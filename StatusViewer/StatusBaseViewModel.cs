@@ -3,26 +3,29 @@ using System.ComponentModel;
 
 namespace StatusViewer
 {
-    public class StatusBaseViewModel :INotifyPropertyChanged
+    public class StatusBaseViewModel : INotifyPropertyChanged
     {
+        // privates
         protected static bool _enableBindingUpdate = true;
         protected DateTime lastMidnight;
-        protected double _lastUpdateInSec;
-
+        //protected double _lastUpdateInSec;
         protected string _lastUpdate;
-        //public string Desc { get; set; }
         protected string _desc;
-        public string Desc => _desc;
+        
 
-        public double LastUpdateInSec
-        {
-            get { return _lastUpdateInSec; }
-            set
-            {
-                _lastUpdateInSec = value;
-                RaisePropertyChangedEvent("LastUpdateInSec");
-            }
-        }
+
+        // publics (for bind)
+        public string Desc => _desc;
+        //public System.Windows.Media.Color BorderBrushColor => System.Windows.Media.Colors.RoyalBlue;
+        //public double LastUpdateInSec
+        //{
+        //    get { return _lastUpdateInSec; }
+        //    set
+        //    {
+        //        _lastUpdateInSec = value;
+        //        RaisePropertyChangedEvent("LastUpdateInSec");
+        //    }
+        //}
         public string LastUpdate
         {
             get { return _lastUpdate; }
@@ -34,11 +37,11 @@ namespace StatusViewer
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
-        public StatusBaseViewModel(ProjMessageModel messageModel)
+        public StatusBaseViewModel(StatusEntryModel messageModel)
         {
             DateTime now = DateTime.Now;
             lastMidnight = new DateTime(now.Year, now.Month, now.Day);
-            _lastUpdateInSec = messageModel.ProjTimeInSec;
+            //_lastUpdateInSec = messageModel.ProjTimeInSec;
             _desc = messageModel.Desc;
         }
         protected void RaisePropertyChangedEvent(string eventName)
