@@ -6,25 +6,11 @@ using System.Threading.Tasks;
 using System.Net;
 using System.IO;
 using ByteStreame3.Utilities;
+using Newtonsoft;
 
 namespace ByteStreamer3
 {
-    /// <summary>
-    /// This class represent all data from json file
-    /// </summary>
-    //class PlayItemInfo
-    //{
-    //    string SourceFileFullname { get; set; }
-    //    string _title;
-    //    IPEndPoint _destEP;
-    //    TimeSpan _waitState;
-    //    int _blockLength;
-    //    string _converterName;
-    //}
-    class PlayItemState
-    {
-        int NumberOfPlayedBlocks;
-    }
+
     /// <summary>
     /// Class role: reads json files from given folder, convert them to bytes-block, and sends each block to appropriate udp end point.
     /// </summary>
@@ -33,46 +19,59 @@ namespace ByteStreamer3
         // publics
         public int NumberOfItemsToPlay
         {
-            get => _jsonItemList.Count;
+            get => _playItemList.Count;
         }
-
         // privates
-
-        List<JsonMessage> _jsonItemList = new List<JsonMessage>();
-        DirectoryInfo _playFolder;
-        List<FileInfo> _inputFilelist;
+        List<PlayItemInfo> _playItemList = new List<PlayItemInfo>();
         System.Threading.CancellationTokenSource _cts = new System.Threading.CancellationTokenSource();
-
-        public PacketPlayer(DirectoryInfo di)
+        bool _repeatFlag;
+        bool _playOneByOneFlag;
+        public PacketPlayer(DirectoryInfo playDir, bool repeatFlag, bool playOneByOneFlag)
         {
-            this._playFolder = di;
-            _inputFilelist = new List<FileInfo>(_playFolder.GetFiles("*.json"));
-            foreach (FileInfo fi in _inputFilelist)
+            List<FileInfo> inputFilelist = new List<FileInfo>( playDir.GetFiles("*.json"));
+            _repeatFlag = repeatFlag;
+            _playOneByOneFlag = playOneByOneFlag;
+
+            foreach (FileInfo fi in inputFilelist)
             {
                 JsonMessage jm = JsonFileToMessage(fi);
                 if (null != jm)
                 {
-                    _jsonItemList.Add(jm);
+                    _playItemList.Add(new PlayItemInfo(jm));
+                }
+            }
+
+            // if no file, create sample file.
+            if ( 0 == _playItemList.Count)
+            {
+                string fullname = playDir.FullName + @"\sample.json";
+                using (StreamWriter file = File.CreateText( fullname))
+                {
+                    var jm = new JsonMessage(new JsonMessageHeader(), new JsonMessageBody(new int[] { 0, 1, 2, 3 }));
+                    var s = Newtonsoft.Json.JsonConvert.SerializeObject(jm, Newtonsoft.Json.Formatting.Indented);
+                    file.Write(s);
                 }
             }
         }
 
         private JsonMessage JsonFileToMessage(FileInfo fi)
         {
-            throw new NotImplementedException();
+            return null;
         }
 
-        bool PlayOneByOneFlag { get; set; }
-        bool RepeatFlag { get; set; }
-        internal void Start()
+        //bool PlayOneByOneFlag { get; set; }
+        //bool RepeatFlag { get; set; }
+        internal List<PlayItemInfo> PlayItemList => _playItemList;
+
+        internal void StartPlay()
         {
-            if (PlayOneByOneFlag)
+            if (_playOneByOneFlag)
             {
-                StartPlayOneByOne(_jsonItemList, RepeatFlag);
+                StartPlayOneByOne();
             }
             else
             {
-                StartPlaySimultaneously(_jsonItemList, RepeatFlag);
+                StartPlaySimultaneously();
             }
         }
 
@@ -84,30 +83,30 @@ namespace ByteStreamer3
         /// <summary>
         /// Play all items at once
         /// </summary>
-        private void StartPlaySimultaneously(List<JsonMessage> jsonItems, bool repeatFlag)
+        private void StartPlaySimultaneously()
         {
-            Task.Factory.StartNew(() =>
-            {
-                do
-                {
-                    foreach (JsonMessage jm in jsonItems)
-                    {
-                        byte[] block = JsonToBlock(jm);
-                        System.Threading.Thread.Sleep(jm.Header.WaitStateMs);
-                        IPAddress ip = IPAddress.Parse(jm.Header.DestIp);
-                        if (null != ip)
-                        {
-                            IPEndPoint ep = new IPEndPoint(ip, jm.Header.DestPort);
-                            SendUdp(block, ep);
-                        }
+            //Task.Factory.StartNew(() =>
+            //{
+            //    do
+            //    {
+            //        foreach (PlayItemInfo jm in _playItemList)
+            //        {
+            //            byte[] block = JsonToBlock(jm);
+            //            System.Threading.Thread.Sleep(jm.Header.WaitStateMs);
+            //            IPAddress ip = IPAddress.Parse(jm.Header.DestIp);
+            //            if (null != ip)
+            //            {
+            //                IPEndPoint ep = new IPEndPoint(ip, jm.Header.DestPort);
+            //                SendUdp(block, ep);
+            //            }
 
-                        if (_cts.Token.IsCancellationRequested)
-                        {
-                            break;
-                        }
-                    }
-                } while (repeatFlag && (false == _cts.Token.IsCancellationRequested));
-            });
+            //            if (_cts.Token.IsCancellationRequested)
+            //            {
+            //                break;
+            //            }
+            //        }
+            //    } while (repeatFlag && (false == _cts.Token.IsCancellationRequested));
+            //});
         }
 
         void PlayTask(object o)
@@ -141,31 +140,33 @@ namespace ByteStreamer3
         //    } while (repeatFlag && (false == token.IsCancellationRequested));
         //}
 
-        private void StartPlayOneByOne(List<JsonMessage> jsonItems, bool repeatFlag)
+        private void StartPlayOneByOne()
         {
-            //Task.Factory.StartNew(() => PlayOneByOneTask(jsonItems, repeatFlag, _cts.Token));
 
             Task.Factory.StartNew(() => 
             {
                 do
                 {
-                    foreach (JsonMessage jm in jsonItems)
+                    // for each file
+                    foreach (PlayItemInfo item in _playItemList)
                     {
-                        byte[] block = JsonToBlock(jm);
-                        System.Threading.Thread.Sleep(jm.Header.WaitStateMs);
-                        IPAddress ip = IPAddress.Parse(jm.Header.DestIp);
-                        if (null != ip)
-                        {
-                            IPEndPoint ep = new IPEndPoint(ip, jm.Header.DestPort);
-                            SendUdp(block, ep);
-                        }
+                        byte[] block = JsonToByteBlock( item.SourceItem);
+                        //System.Threading.Thread.Sleep( item.SourceItem.Header.WaitStateMs);
+                        IPAddress ip = IPAddress.Parse( item.SourceItem.Header.DestIp);
+
+                        item.NumberOfPlayedBlocks = 11;
+                        //if (null != ip)
+                        //{
+                        //    IPEndPoint ep = new IPEndPoint( ip, item.SourceItem.Header.DestPort);
+                        //    SendUdp(block, ep);
+                        //}
 
                         if (_cts.Token.IsCancellationRequested)
                         {
                             break;
                         }
                     }
-                } while (repeatFlag && (false == _cts.Token.IsCancellationRequested));
+                } while (_repeatFlag && (false == _cts.Token.IsCancellationRequested));
             });
         }
 
@@ -174,9 +175,19 @@ namespace ByteStreamer3
             throw new NotImplementedException();
         }
 
-        private static byte[] JsonToBlock(JsonMessage jm)
+        private static byte[] JsonToByteBlock(JsonMessage jm)
         {
-            throw new NotImplementedException();
+            return null;
         }
     }
+    class PlayItemInfo
+    {
+        public int NumberOfPlayedBlocks { get; set; }
+        public JsonMessage SourceItem { get; set; }
+        public PlayItemInfo(JsonMessage SourceItem)
+        {
+            this.SourceItem = SourceItem;
+        }
+    }
+
 }

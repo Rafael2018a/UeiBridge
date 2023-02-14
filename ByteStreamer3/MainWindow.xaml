@@ -47,8 +47,8 @@
                         <StackPanel Grid.Column="1" Orientation="Vertical">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="Folder" Margin="5"/>
-                                <TextBox MinWidth="200" Margin="5" Text="{Binding PlayFolder}"/>
-                                <Button Content="Browse.." Margin="5" Command="{Binding BrowseFolderCommand}">
+                                <TextBox MinWidth="300" Margin="5" Text="{Binding PlayFolder}"/>
+                                <Button Content="..." Margin="5" Command="{Binding BrowseFolderCommand}">
                                 </Button>
                             </StackPanel>
                             <Separator/>
@@ -66,14 +66,13 @@
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="Name: " />
+                                            <TextBlock Text="Playing: "/>
                                             <TextBlock Text="{Binding Name}" FontWeight="Bold" />
-                                            <TextBlock Text=", " />
-                                            <TextBlock Text="Age: " />
-                                            <TextBlock Text="{Binding Age}" FontWeight="Bold" />
-                                            <TextBlock Text=" (" />
+                                            <TextBlock Text="Played blocks: "/>
+                                            <TextBlock Text="{Binding PlayedBlocks}" FontWeight="Bold"/>
+                                            <!--<TextBlock Text=" (" />
                                             <TextBlock Text="{Binding Mail}" TextDecorations="Underline" Foreground="Blue" Cursor="Hand" />
-                                            <TextBlock Text=")" />
+                                            <TextBlock Text=")" />-->
                                         </StackPanel>
                                     </DataTemplate>
                                 </ListView.ItemTemplate>
