@@ -3,7 +3,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UeiDaq;
-using UeiBridgeTypes;
+using UeiBridge.Types;
 
 using bytearray = System.Array;
 using System.Timers;

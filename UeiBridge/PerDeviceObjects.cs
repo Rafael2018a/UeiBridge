@@ -12,9 +12,14 @@ namespace UeiBridge
         public UdpReader UdpReader { get; set; }
         public UdpWriter UdpWriter { get; set; }
         public SL508Session SerialSession { get; set; }
-
+        //public BlockSensorManager BlockSensor { get; set; }
         public PerDeviceObjects()
         { }
+        //public PerDeviceObjects( BlockSensorManager bsensor, UdpReader udpReader)
+        //{
+        //    this.BlockSensor = bsensor;
+        //    this.UdpReader = udpReader;
+        //}
         private PerDeviceObjects(InputDevice inputDevice, UdpWriter udpWriter)
         {
             InputDeviceManager = inputDevice;
@@ -28,7 +33,7 @@ namespace UeiBridge
             UdpWriter = udpWriter;
         }
 
-        private PerDeviceObjects(OutputDevice outputDevice, UdpReader udpReader)
+        public PerDeviceObjects(OutputDevice outputDevice, UdpReader udpReader)
         {
             OutputDeviceManager = outputDevice;
             UdpReader = udpReader;

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using UeiDaq;
-using UeiBridgeTypes;
+using UeiBridge.Types;
 using System.Timers;
 
 namespace UeiBridge

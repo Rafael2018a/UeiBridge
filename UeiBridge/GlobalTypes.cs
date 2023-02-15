@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 /// All files in project might refer to this file.
 /// Types in this file might NOT refer to types in any other file.
 /// </summary>
-namespace UeiBridgeTypes
+namespace UeiBridge.Types
 {
     /// <summary>
     /// Send items that should be pushed to q (return immediatly)
@@ -68,6 +68,9 @@ namespace UeiBridgeTypes
         public object Scan { get => _scan; }
         public UeiBridge.InputDevice OriginDevice { get => _originDevice; }
     }
+    /// <summary>
+    /// This class encapsulates payload with dest address
+    /// </summary>
     public class SendObject
     {
         public IPEndPoint TargetEndPoint { get; }
@@ -86,4 +89,19 @@ namespace UeiBridgeTypes
         string [] GetFormattedStatus( TimeSpan interval);
     }
 
+    public class TeeObject : ISend<SendObject>
+    {
+        IEnqueue<byte[]> send1;
+        ISend<SendObject> send2;
+        public TeeObject(IEnqueue<byte[]> send1, ISend<SendObject> send2)
+        {
+            this.send1 = send1;
+            this.send2 = send2;
+        }
+        public void Send(SendObject obj)
+        {
+            send1.Enqueue(obj.ByteMessage);
+            send2.Send(obj);
+        }
+    }
 }

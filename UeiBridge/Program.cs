@@ -9,7 +9,7 @@ using System.Net;
 using System.Net.Sockets;
 using log4net;
 using UeiDaq;
-using UeiBridgeTypes;
+using UeiBridge.Types;
 using UeiBridge.Library;
 
 namespace UeiBridge
@@ -114,7 +114,7 @@ namespace UeiBridge
         {
             // prepare lists
             int noOfCubes = Config2.Instance.CubeUrlList.Length;
-            _deviceObjectsTable = new List<List<PerDeviceObjects>>(new List<PerDeviceObjects>[noOfCubes]); 
+            _deviceObjectsTable = new List<List<PerDeviceObjects>>(new List<PerDeviceObjects>[noOfCubes]);
 
             // Create program Objects
             foreach (var cubeSetup in Config2.Instance.UeiCubes)
@@ -122,14 +122,36 @@ namespace UeiBridge
                 // init device list
                 List<UeiDaq.Device> realDeviceList = StaticMethods.GetDeviceList(cubeSetup.CubeUrl);
                 _deviceObjectsTable[cubeSetup.CubeNumber] = new List<PerDeviceObjects>();
-                for (int i=0; i<realDeviceList.Count; i++)
+                for (int i = 0; i < realDeviceList.Count + 1; i++) // add 1 for blocksensor
                 {
                     _deviceObjectsTable[cubeSetup.CubeNumber].Add(new PerDeviceObjects());
                 }
 
+                // special treatment to blockSenser which is 'an OutputDevice'
+
+                var bsSetup = new DeviceSetup(null, null, null);
+                BlockSensorManager blockSensor = CreateBlockSensorObject(realDeviceList, bsSetup);
+                if (null != blockSensor)
+                {
+                    var nic = IPAddress.Parse(Config2.Instance.AppSetup.SelectedNicForMCast);
+                    UdpReader ureader = new UdpReader(bsSetup.LocalEndPoint.ToIpEp(), nic, blockSensor, "blocksensor");
+                    var pdo = new PerDeviceObjects(blockSensor, ureader);
+                    _deviceObjectsTable[cubeSetup.CubeNumber].Add(pdo);
+                }
+                ///
+
                 CreateSerialSessions(cubeSetup, _deviceObjectsTable);
                 CreateDownwardsObjects(cubeSetup, _deviceObjectsTable);
                 CreateUpwardsObjects(cubeSetup, _deviceObjectsTable);
+
+                // attach ao308 to blocksensor
+                if (null != blockSensor)
+                {
+                    var x = _deviceObjectsTable[cubeSetup.CubeNumber].Where(d => (d.OutputDeviceManager != null) && d.OutputDeviceManager.DeviceName.StartsWith("AO308")).Select(d => d.OutputDeviceManager);
+                    AO308OutputDeviceManager ao308 = x.First() as AO308OutputDeviceManager;
+                    System.Diagnostics.Debug.Assert(null != ao308);
+                    blockSensor.SetAnalogOuputInterface(ao308);
+                }
             }
 
             // Activate program Objects
@@ -150,9 +172,13 @@ namespace UeiBridge
                     if (null != deviceObjects.OutputDeviceManager)
                     {
                         deviceObjects.OutputDeviceManager.OpenDevice();
-                        deviceObjects?.UdpReader.Start();
-                        Thread.Sleep(10);
+                        deviceObjects.UdpReader.Start();
                     }
+                    //if (null != deviceObjects.BlockSensor)
+                    //{
+                    //    deviceObjects.BlockSensor.Start();
+                    //}
+                    Thread.Sleep(10);
                 }
             }
         }
@@ -172,7 +198,7 @@ namespace UeiBridge
             for (int cubeIndex = 0; cubeIndex < _deviceObjectsTable.Count; cubeIndex++)
             {
                 List<PerDeviceObjects> devList = _deviceObjectsTable[cubeIndex];
-                
+
                 for (int deviceIndex = 0; deviceIndex < devList.Count; deviceIndex++)
                 {
                     _logger.Debug($"Disposing Slot {deviceIndex}");
@@ -236,6 +262,8 @@ namespace UeiBridge
                 deviceObjectsTable[cubeSetup.CubeNumber][realSlot].OutputDeviceManager = outDev;
                 deviceObjectsTable[cubeSetup.CubeNumber][realSlot].UdpReader = ureader;
             }
+
+
         }
 
         /// <summary>
@@ -246,6 +274,11 @@ namespace UeiBridge
         private void CreateUpwardsObjects(CubeSetup cubeSetup, List<List<PerDeviceObjects>> deviceObjectsTable)
         {
             List<UeiDaq.Device> realDeviceList = StaticMethods.GetDeviceList(cubeSetup.CubeUrl);
+
+            // search for blocksensor, this affcet creation of DIO403Input
+
+            var x = _deviceObjectsTable[cubeSetup.CubeNumber].Where(d => d.OutputDeviceManager.DeviceName.StartsWith("Block") == true).Select(d => d.OutputDeviceManager);
+            OutputDevice blockSensor = x.First() as OutputDevice;
 
             // Create input-devices instances
             foreach (UeiDaq.Device realDevice in realDeviceList)
@@ -275,6 +308,11 @@ namespace UeiBridge
                 {
                     inDev = (InputDevice)Activator.CreateInstance(devType, uWriter, deviceSetup, deviceObjectsTable[cubeSetup.CubeNumber][realSlot].SerialSession);
                 }
+                else if ((null != blockSensor) && (devType.Name.StartsWith("DIO403In")))
+                {
+                    TeeObject tee = new TeeObject(blockSensor, uWriter);
+                    inDev = (InputDevice)Activator.CreateInstance(devType, tee, deviceSetup);
+                }
                 else
                 {
                     inDev = (InputDevice)Activator.CreateInstance(devType, uWriter, deviceSetup);
@@ -282,10 +320,13 @@ namespace UeiBridge
 
                 deviceObjectsTable[cubeSetup.CubeNumber][realSlot].InputDeviceManager = inDev;
                 deviceObjectsTable[cubeSetup.CubeNumber][realSlot].UdpWriter = uWriter;
-                }
-
             }
-        
+        }
+
+        private BlockSensorManager CreateBlockSensorObject(List<Device> realDeviceList, DeviceSetup analogSensorSetup)
+        {
+            throw new NotImplementedException();
+        }
 
         private void CreateSerialSessions(CubeSetup cubeSetup, List<List<PerDeviceObjects>> deviceObjectsTable)
         {
@@ -295,7 +336,7 @@ namespace UeiBridge
             foreach (UeiDaq.Device realDevice in realDeviceList)
             {
                 int realSlot = realDevice.GetIndex();
-                DeviceSetup deviceSetup = Config2.Instance.UeiCubes[cubeSetup.CubeNumber].DeviceSetupList[realSlot]; 
+                DeviceSetup deviceSetup = Config2.Instance.UeiCubes[cubeSetup.CubeNumber].DeviceSetupList[realSlot];
                 System.Diagnostics.Debug.Assert(realSlot == deviceSetup.SlotNumber); // first 'DeviceSetup' entry in config must be at slot 0 etc..
                 deviceSetup.CubeUrl = cubeSetup.CubeUrl;
                 if (realDevice.GetDeviceName() != deviceSetup.DeviceName)
@@ -305,13 +346,13 @@ namespace UeiBridge
                 }
 
                 Type devType = StaticMethods.GetDeviceManagerType<OutputDevice>(deviceSetup.DeviceName);
-                if (null==devType)
+                if (null == devType)
                 {
                     continue;
                 }
 
                 //OutputDevice outDev;
-                if (devType.Name.StartsWith("SL508")) 
+                if (devType.Name.StartsWith("SL508"))
                 {
                     System.Diagnostics.Debug.Assert(null == deviceObjectsTable[cubeSetup.CubeNumber][realSlot].SerialSession);
                     SL508Session serialSession = new SL508Session(deviceSetup as SL508892Setup);
@@ -344,13 +385,13 @@ namespace UeiBridge
                 }
             }
 
-            while(true)
+            while (true)
             {
                 foreach (IDeviceManager dm in deviceList)
                 {
                     string desc = $"{dm.InstanceName}";
-                    StatusTrait tr= StatusTrait.IsRegular;
-                    string [] stat = dm.GetFormattedStatus( interval);
+                    StatusTrait tr = StatusTrait.IsRegular;
+                    string[] stat = dm.GetFormattedStatus(interval);
                     StatusEntryJson js = new StatusEntryJson(desc, stat, tr);
                     string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
                     byte[] send_buffer = Encoding.ASCII.GetBytes(s);
@@ -379,7 +420,7 @@ namespace UeiBridge
             //        }
             //    }
 
-                
+
             //}
         }
 
@@ -423,11 +464,11 @@ namespace UeiBridge
                         byte[] e430 = StaticMethods.Make_DIO430Down_Message();
                         udpClient.Send(e430, e308.Length, destEp);
 #endif
-                       
+
 
                         // serial out
-                        List<byte[]> e508 = StaticMethods.Make_SL508Down_Messages( i);
-                        foreach (byte [] msg in e508)
+                        List<byte[]> e508 = StaticMethods.Make_SL508Down_Messages(i);
+                        foreach (byte[] msg in e508)
                         {
                             IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[3].LocalEndPoint.ToIpEp();
                             udpClient.Send(msg, msg.Length, destEp);
