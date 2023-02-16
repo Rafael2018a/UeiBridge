@@ -25,7 +25,7 @@ namespace UeiBridge
         //public int _debugSerial { get; set; } // serial number of message
 
         private const int _payloadOffset = 16;// _payloadOffset;
-        private const int _cardTypeOffset = 5;// _cardTypeOffset;
+        public const int _cardTypeOffset = 5;// _cardTypeOffset;
         private const int _slotNumberOffset = 6;
         private const int _serailChannelOffset = 7;
         private const int _lengthOffset = 12;// _lengthOffset;
@@ -113,15 +113,16 @@ namespace UeiBridge
         /// </summary>
         public static EthernetMessage CreateFromByteArray(byte[] byteMessage, out string errorString)
         {
-            EthernetMessage resutlMessage = null;
             if (false == CheckByteArrayValidity(byteMessage, out errorString))
             {
                 return null;
             }
+            return BuildEthernetMessage(byteMessage);
+        }
 
-            // Build message struct
-            // ============
-            resutlMessage = new EthernetMessage();
+        public static EthernetMessage BuildEthernetMessage(byte[] byteMessage)
+        {
+            EthernetMessage resutlMessage = new EthernetMessage();
             // header & payload
             resutlMessage.HeaderBytes = new byte[EthernetMessage._payloadOffset];
             Array.Copy(byteMessage, resutlMessage.HeaderBytes, EthernetMessage._payloadOffset);
@@ -132,7 +133,6 @@ namespace UeiBridge
             resutlMessage.CardType = byteMessage[EthernetMessage._cardTypeOffset];
             resutlMessage.SerialChannelNumber = byteMessage[EthernetMessage._serailChannelOffset];
             resutlMessage.SlotNumber = byteMessage[EthernetMessage._slotNumberOffset];
-
             return resutlMessage;
         }
 

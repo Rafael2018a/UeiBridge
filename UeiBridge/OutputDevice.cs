@@ -61,7 +61,7 @@ namespace UeiBridge
 
         //protected abstract void resetLastScanTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e);
 
-        public void Enqueue(byte[] m)
+        public virtual void Enqueue(byte[] m)
         {
             if (_disposeStarted)
                 return;

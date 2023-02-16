@@ -128,13 +128,13 @@ namespace UeiBridge
                 }
 
                 // special treatment to blockSenser which is 'an OutputDevice'
-
-                var bsSetup = new DeviceSetup(null, null, null);
-                BlockSensorManager blockSensor = CreateBlockSensorObject(realDeviceList, bsSetup);
+                //var bsSetup = new DeviceSetup(new EndPoint("227.3.1.10", 50050), null, "BlockSensor");
+                BlockSensorManager blockSensor = CreateBlockSensorObject(realDeviceList, Config2.Instance.Blocksensor);
+                
                 if (null != blockSensor)
                 {
                     var nic = IPAddress.Parse(Config2.Instance.AppSetup.SelectedNicForMCast);
-                    UdpReader ureader = new UdpReader(bsSetup.LocalEndPoint.ToIpEp(), nic, blockSensor, "blocksensor");
+                    UdpReader ureader = new UdpReader(Config2.Instance.Blocksensor.LocalEndPoint.ToIpEp(), nic, blockSensor, "blocksensor");
                     var pdo = new PerDeviceObjects(blockSensor, ureader);
                     _deviceObjectsTable[cubeSetup.CubeNumber].Add(pdo);
                 }
@@ -147,7 +147,8 @@ namespace UeiBridge
                 // attach ao308 to blocksensor
                 if (null != blockSensor)
                 {
-                    var x = _deviceObjectsTable[cubeSetup.CubeNumber].Where(d => (d.OutputDeviceManager != null) && d.OutputDeviceManager.DeviceName.StartsWith("AO308")).Select(d => d.OutputDeviceManager);
+                    var x = _deviceObjectsTable[cubeSetup.CubeNumber].Where(d => (d.OutputDeviceManager != null) && d.OutputDeviceManager.DeviceName.StartsWith("AO-308")).Select(d => d.OutputDeviceManager);
+                    System.Diagnostics.Debug.Assert(x.Count() > 0);
                     AO308OutputDeviceManager ao308 = x.First() as AO308OutputDeviceManager;
                     System.Diagnostics.Debug.Assert(null != ao308);
                     blockSensor.SetAnalogOuputInterface(ao308);
@@ -276,9 +277,10 @@ namespace UeiBridge
             List<UeiDaq.Device> realDeviceList = StaticMethods.GetDeviceList(cubeSetup.CubeUrl);
 
             // search for blocksensor, this affcet creation of DIO403Input
-
-            var x = _deviceObjectsTable[cubeSetup.CubeNumber].Where(d => d.OutputDeviceManager.DeviceName.StartsWith("Block") == true).Select(d => d.OutputDeviceManager);
+            var x = _deviceObjectsTable[cubeSetup.CubeNumber].Where(d => { return d.OutputDeviceManager?.DeviceName.StartsWith("BlockSensor") == true; }).Select(d => d.OutputDeviceManager);
             OutputDevice blockSensor = x.First() as OutputDevice;
+            System.Diagnostics.Debug.Assert(blockSensor.DeviceName == "BlockSensor");
+
 
             // Create input-devices instances
             foreach (UeiDaq.Device realDevice in realDeviceList)
@@ -323,9 +325,22 @@ namespace UeiBridge
             }
         }
 
+        /// <summary>
+        /// BlockSensorManager might be created only if digital and analog cards exists
+        /// </summary>
         private BlockSensorManager CreateBlockSensorObject(List<Device> realDeviceList, DeviceSetup analogSensorSetup)
         {
-            throw new NotImplementedException();
+            BlockSensorManager result=null;
+            List<string> list1 = new List<string>();
+            //foreach(var x in realDeviceList) { list1.Add(x.GetDeviceName()); }
+
+            bool digitalExist = realDeviceList.Any(d => d.GetDeviceName().StartsWith("AO-308"));
+            bool analogExist = realDeviceList.Any(d => d.GetDeviceName().StartsWith("DIO-403"));
+            if (digitalExist && analogExist)
+            {
+                result = new BlockSensorManager(analogSensorSetup);
+            }
+            return result;
         }
 
         private void CreateSerialSessions(CubeSetup cubeSetup, List<List<PerDeviceObjects>> deviceObjectsTable)
@@ -372,6 +387,7 @@ namespace UeiBridge
 
             List<IDeviceManager> deviceList = new List<IDeviceManager>();
 
+            // prepare list
             foreach (PerDeviceObjects deviceObjects in _deviceObjectsTable[0]) //ProjectRegistry.Instance.OutputDevicesMap)
             {
                 if (deviceObjects?.InputDeviceManager != null)
@@ -385,6 +401,7 @@ namespace UeiBridge
                 }
             }
 
+            // get formatted string for each device in list
             while (true)
             {
                 foreach (IDeviceManager dm in deviceList)

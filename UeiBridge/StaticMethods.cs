@@ -12,7 +12,7 @@ namespace UeiBridge
     {
         static string _lastErrorMessage;
         public static string LastErrorMessage { get => _lastErrorMessage; }
-        static Dictionary<int, string> _cardIdMap = new Dictionary<int, string>();
+        static Dictionary<int, string> _cardIdMap = new Dictionary<int, string>(); // card-id vs card name
 
         static StaticMethods()
         {
@@ -21,6 +21,7 @@ namespace UeiBridge
             _cardIdMap.Add(6, "DIO-470");
             _cardIdMap.Add(1, "AI-201-100");
             _cardIdMap.Add(5, "SL-508-892");
+            _cardIdMap.Add(32, "BlockSensor");
         }
         public static int GetCardIdFromCardName(string deviceName)
         {
@@ -184,7 +185,7 @@ namespace UeiBridge
             EthernetMessage msg = EthernetMessage.CreateEmpty(0, 16);
             for(int i=0; i<16; i+=2)
             {
-                msg.PayloadBytes[i] = (byte)(i * 10);
+                msg.PayloadBytes[i] = (byte)(i);
             }
             return msg.ToByteArrayDown();
         }
