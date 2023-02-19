@@ -1,0 +1,27 @@
+ByteStreamer3 use cases.
+
+Use case: start up.
+1. app checks to see if sample.json exists in current folder.
+2. if not, create one.
+3. for current selected folder, find all json files with valid 'ItemHeader' field.
+4. app displays number of valid files besides the folder name
+	
+Use case: select play folder
+1. User selects folder
+2. app updates textbox.
+2. app checks to see how many json files with valid 'ItemHeader' field exists in folder
+3. app displays number of valid files besides the folder name
+
+Use case: play
+1. app gets list of compatible json files 
+2. App fills list box, entry per file.
+3. For each file
+	a. App converts json to byte-block
+	b. app starts sending the block repeatedly
+	c. app updates the entries in the list box.
+
+Use case: Stop 
+
+
+	
+	

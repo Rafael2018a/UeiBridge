@@ -33,15 +33,4 @@ namespace ByteStreamer3
             DataContext = new MainViewModel();
         }
     }
-    public class PlayItem
-    {
-        public string Name { get; set; }
-
-        public int PlayedBlocks { get; set; }
-        public string Mail { get; set; }
-        //public override string ToString()
-        //{
-        //    return this.Name + ", " + this.Age + " years old";
-        //}
-    }
 }

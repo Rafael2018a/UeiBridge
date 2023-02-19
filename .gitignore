@@ -3,3 +3,5 @@
 
 obj
 bin
+*.p7s
+/packages/
