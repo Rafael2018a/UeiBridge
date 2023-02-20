@@ -19,21 +19,30 @@ namespace ByteStreamer3
 
         #region === privates ======
         string _destinationAddress = "10.10.10.10";
-        DirectoryInfo _playFolder = new DirectoryInfo(@"c:\Users\Rafael\_gitRepos\UeiBridge.ByteStreamer3\ByteStreamer3\SampleJson\");
-
-        ObservableCollection<PlayItemInfo> _nowPlayingList = new ObservableCollection<PlayItemInfo>();
+        DirectoryInfo _playFolder;// = new DirectoryInfo(@"c:\Users\Rafael\_gitRepos\UeiBridge.ByteStreamer3\ByteStreamer3\SampleJson\");
+        ObservableCollection<PlayItemInfo> _PlayList = new ObservableCollection<PlayItemInfo>();
         bool _nowPlayingFlag;
         bool _repeatFlag;
         bool _playOneByOneFlag;
         PacketPlayer _packetPlayer;
         string _filesToPlayMessage;
-        //ObservableCollection<PlayItemInfo> _nowPlayingList;
+        string _playFolderBoxBorderColor;
+        string _settingsFilename = "bytestreamer3.setting.bin";
+        SettingBag _settingBag;
         #endregion
-
         #region ==== Prop's =======
         public bool PlayOneByOneFlag { get => _playOneByOneFlag; set => _playOneByOneFlag = value; }
         public bool RepeatFlag { get => _repeatFlag; set => _repeatFlag = value; }
-        public ObservableCollection<PlayItemInfo> NowPlayingList => _packetPlayer.NowPlayingList;
+        public ObservableCollection<PlayItemInfo> NowPlayingList 
+        {
+            get
+            { return _PlayList; }
+            set
+            {
+                _PlayList = value;
+                RaisePropertyChangedEvent("NowPlayingList");
+            }
+        }
         public string PlayFolder 
         {
             get { return _playFolder.FullName; }
@@ -52,6 +61,7 @@ namespace ByteStreamer3
                 RaisePropertyChangedEvent("NowPlayingFlag");
             }
         }
+        [Obsolete]
         public string DestinationAddress
         {
             get => _destinationAddress;
@@ -61,6 +71,7 @@ namespace ByteStreamer3
                 RaisePropertyChangedEvent("DestinationAddress");
             }
         }
+        [Obsolete]
         public string FilesToPlayMessage 
         { 
             get => _filesToPlayMessage;
@@ -70,27 +81,79 @@ namespace ByteStreamer3
                 RaisePropertyChangedEvent("FilesToPlayMessage");
             }
         }
+        public string PlayFolderBoxBorderColor
+        {
+            get => _playFolderBoxBorderColor;
+            set
+            {
+                _playFolderBoxBorderColor = value;
+                RaisePropertyChangedEvent("PlayFolderBoxBorderColor");
+            }
+        }
+        #endregion
+        #region ==== Commands =====
+        RelayCommand _startPlayCommand;
+        public Utilities.RelayCommand StartPlayCommand { get => _startPlayCommand; set => _startPlayCommand = value; }
+        Utilities.RelayCommand _browseFolderCommand;
+        RelayCommand _stopPlayCommand;
+        public RelayCommand StopPlayCommand { get => _stopPlayCommand; set => _stopPlayCommand = value; }
+        public RelayCommand BrowseFolderCommand { get => _browseFolderCommand; set => _browseFolderCommand = value; }
+        void StartPlay(object obj)
+        {
+            _packetPlayer.StartPlay();
+        }
+        bool CanStartPlay(object obj)
+        {
+            return (NowPlayingFlag == false);
+        }
+
+        void SelectPlayFolder(object obj)
+        {
+            var dialog = new CommonOpenFileDialog();
+            dialog.IsFolderPicker = true;
+            dialog.RestoreDirectory = true;
+            dialog.AddToMostRecentlyUsedList = true;
+            dialog.InitialDirectory = PlayFolder;
+            CommonFileDialogResult result = dialog.ShowDialog();
+            if (result == CommonFileDialogResult.Ok)
+            {
+                PlayFolder = dialog.FileName;
+                _settingBag.PlayFolder = PlayFolder;
+                _packetPlayer.SetPlayFolder(new DirectoryInfo(PlayFolder));
+                PlayFolderBoxBorderColor = (_playFolder.Exists) ? "Gray" : "Red";
+                NowPlayingList = _packetPlayer.NowPlayingList;
+            }
+        }
+        bool CanSelectPlayFolder(object obj)
+        {
+            return true;
+        }
         #endregion
 
         public MainViewModel()
         {
             LoadCommands();
+            _settingBag = LoadSetting();
 
+            _playFolder = new DirectoryInfo(_settingBag.PlayFolder);
             // start update gui task
             System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer();
             timer.Interval = TimeSpan.FromSeconds(3);
             timer.Tick += UpateGui_timeCallback;
             timer.Start();
 
+            PlayFolderBoxBorderColor = (_playFolder.Exists) ? "Gray" : "Red";
             _packetPlayer = new PacketPlayer(_playFolder, _repeatFlag, _playOneByOneFlag);
-            var n = _packetPlayer.NowPlayingList.Count();
-            FilesToPlayMessage = $"{n} valid json files";
+            NowPlayingList = _packetPlayer.NowPlayingList;
+        }
+        ~MainViewModel()
+        {
+            SaveSetting(_settingBag);
         }
 
         private void UpateGui_timeCallback(object sender, EventArgs e)
         {
-            //_nowPlayingList.Add(new PlayItem() { Name = "File1", PlayedBlocks = 425 });
-
+            
         }
 
         void RaisePropertyChangedEvent(string propName)
@@ -112,47 +175,36 @@ namespace ByteStreamer3
             set
             { _radBtnId = value; }
         }
-
-
-        #region ==== Commands =====
-        RelayCommand _startPlayCommand;
-        public Utilities.RelayCommand StartPlayCommand { get => _startPlayCommand; set => _startPlayCommand = value; }
-        Utilities.RelayCommand _browseFolderCommand;
-        RelayCommand _stopPlayCommand;
-        public RelayCommand StopPlayCommand { get => _stopPlayCommand; set => _stopPlayCommand = value; }
-        public RelayCommand BrowseFolderCommand { get => _browseFolderCommand; set => _browseFolderCommand = value; }
-        void StartPlay(object obj)
+        private SettingBag LoadSetting()
         {
-            
-            _packetPlayer.StartPlay();
-        }
-        bool CanStartPlay(object obj)
-        {
-            return (NowPlayingFlag == false);
-        }
-
-        void SelectPlayFolder(object obj)
-        {
-            var dialog = new CommonOpenFileDialog();
-            dialog.IsFolderPicker = true;
-            dialog.RestoreDirectory = true;
-            dialog.AddToMostRecentlyUsedList = true;
-            dialog.InitialDirectory = PlayFolder;
-            CommonFileDialogResult result = dialog.ShowDialog();
-            if (result == CommonFileDialogResult.Ok)
+            System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+            SettingBag sb;
+            try
             {
-                PlayFolder = dialog.FileName;
+                System.IO.FileStream fs = new System.IO.FileStream(_settingsFilename, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+                object o = formatter.Deserialize(fs);
+                sb = o as SettingBag;
+            }
+            catch (Exception ex)
+            {
+                sb = new SettingBag();
             }
 
-            var n = _packetPlayer.NowPlayingList.Count;
-            FilesToPlayMessage = $"{n} valid json files";
-        }
-        bool CanSelectPlayFolder(object obj)
-        {
-            return true;
+            //if (o != null)
+            //    return sb;
+            //else
+            return sb;
         }
 
-        #endregion
+        void SaveSetting(SettingBag setting)
+        {
+            System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+            System.IO.FileStream fs = new System.IO.FileStream(_settingsFilename, System.IO.FileMode.Create, System.IO.FileAccess.Write);
+            formatter.Serialize(fs, setting);
+            fs.Close();
+        }
+
+
 
     }
 }

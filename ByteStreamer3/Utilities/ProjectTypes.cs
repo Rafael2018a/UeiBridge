@@ -20,5 +20,17 @@ namespace ByteStreamer3.Utilities
         //    return this.Name + ", " + this.Age + " years old";
         //}
     }
+    [Serializable]
+    class SettingBag
+    {
+        public string PlayFolder=".";
+        //public string destinationIp = "92.220.113.22";
+        //public int destinationPort = 5000;
+        //public double ratePercent = 0;
+        //public int blockLength = 0;
+        //public int waitStatesMS = 1;
+        //public double playRateMbps;
+    }
+
 
 }

@@ -29,17 +29,22 @@ namespace ByteStreamer3
         System.Threading.CancellationTokenSource _cts = new System.Threading.CancellationTokenSource();
         bool _repeatFlag;
         bool _playOneByOneFlag;
+        DirectoryInfo _playFolder;
         #endregion
 
-        public PacketPlayer(DirectoryInfo playDir, bool repeatFlag, bool playOneByOneFlag)
-        {
-            List<FileInfo> l1 = GetValidJsonFilesList(playDir);
-            var l2 = l1.Select(i => new PlayItemInfo(i));
-            NowPlayingList = new ObservableCollection<PlayItemInfo>(l2);
 
-            List<FileInfo> palyFilelist = new List<FileInfo>( playDir.GetFiles("*.json"));
+        public void SetPlayFolder(DirectoryInfo playFolder)
+        {
+            _playFolder = playFolder;
+            NowPlayingList = BuildNowPlayingList(playFolder);
+        }
+        public PacketPlayer(DirectoryInfo playFolder, bool repeatFlag, bool playOneByOneFlag)
+        {
+            _playFolder = playFolder;
             _repeatFlag = repeatFlag;
             _playOneByOneFlag = playOneByOneFlag;
+
+            NowPlayingList = BuildNowPlayingList(playFolder);
 
             //foreach (FileInfo fileToPlay in palyFilelist)
             //{
@@ -55,18 +60,43 @@ namespace ByteStreamer3
             // if no file, create sample file.
             if ( 0 == _playItemList.Count)
             {
-                string fullname = playDir.FullName + @"\sample.json";
+                string fullname = "example.json";
                 using (StreamWriter file = File.CreateText( fullname))
                 {
                     var jm = new PlayItemJson(new ItemHeader(), new ItemBody(new int[] { 0, 1, 2, 3 }));
-                    var s = Newtonsoft.Json.JsonConvert.SerializeObject(jm, Newtonsoft.Json.Formatting.Indented);
+                    var s = JsonConvert.SerializeObject(jm, Newtonsoft.Json.Formatting.Indented);
                     file.Write(s);
                 }
             }
         }
 
+        private ObservableCollection<PlayItemInfo> BuildNowPlayingList(DirectoryInfo playFolder)
+        {
+            List<FileInfo> l1 = GetValidJsonFilesList(playFolder);
+            ObservableCollection<PlayItemInfo> resultList;
+            if (null != l1)
+            {
+                var l2 = l1.Select(i => new PlayItemInfo(i));
+                resultList = new ObservableCollection<PlayItemInfo>(l2);
+            }
+            else
+            {
+                resultList = new ObservableCollection<PlayItemInfo>();
+            }
+            return resultList;
+        }
+
+        /// <summary>
+        /// Get list of json's from current dir.
+        /// Only files with compatible json struct
+        /// </summary>
+        /// <param name="folder"></param>
+        /// <returns></returns>
         List<FileInfo> GetValidJsonFilesList(DirectoryInfo folder)
         {
+            if (!folder.Exists)
+                return null;
+
             FileInfo[] list = folder.GetFiles("*.json");
             List<FileInfo> result = new List<FileInfo>();
             foreach (FileInfo jfile in list)
