@@ -128,17 +128,14 @@ namespace UeiBridge
                 }
 
                 // special treatment to blockSenser which is 'an OutputDevice'
-                //var bsSetup = new DeviceSetup(new EndPoint("227.3.1.10", 50050), null, "BlockSensor");
                 BlockSensorManager blockSensor = CreateBlockSensorObject(realDeviceList, Config2.Instance.Blocksensor);
-                
                 if (null != blockSensor)
                 {
                     var nic = IPAddress.Parse(Config2.Instance.AppSetup.SelectedNicForMCast);
                     UdpReader ureader = new UdpReader(Config2.Instance.Blocksensor.LocalEndPoint.ToIpEp(), nic, blockSensor, "blocksensor");
-                    var pdo = new PerDeviceObjects(blockSensor, ureader);
+                    var pdo = new PerDeviceObjects(blockSensor, ureader, null);
                     _deviceObjectsTable[cubeSetup.CubeNumber].Add(pdo);
                 }
-                ///
 
                 CreateSerialSessions(cubeSetup, _deviceObjectsTable);
                 CreateDownwardsObjects(cubeSetup, _deviceObjectsTable);
@@ -260,15 +257,15 @@ namespace UeiBridge
                 UdpReader ureader = new UdpReader(deviceSetup.LocalEndPoint.ToIpEp(), nic, outDev, outDev.InstanceName);
 
                 // add instances to device vector
-                deviceObjectsTable[cubeSetup.CubeNumber][realSlot].OutputDeviceManager = outDev;
-                deviceObjectsTable[cubeSetup.CubeNumber][realSlot].UdpReader = ureader;
+                //deviceObjectsTable[cubeSetup.CubeNumber][realSlot].OutputDeviceManager = outDev;
+                //deviceObjectsTable[cubeSetup.CubeNumber][realSlot].UdpReader = ureader;
+                var ss = deviceObjectsTable[cubeSetup.CubeNumber][realSlot].SerialSession;
+                deviceObjectsTable[cubeSetup.CubeNumber][realSlot] = new PerDeviceObjects(outDev, ureader, ss);
             }
-
-
         }
 
         /// <summary>
-        /// Creaete input-device managers and udp-writers
+        /// Create input-device managers and udp-writers
         /// </summary>
         /// <param name="cubeSetup"></param>
         /// <param name="deviceObjectsTable"></param>
@@ -276,7 +273,7 @@ namespace UeiBridge
         {
             List<UeiDaq.Device> realDeviceList = StaticMethods.GetDeviceList(cubeSetup.CubeUrl);
 
-            // search for blocksensor, this affcet creation of DIO403Input
+            // search for blocksensor, this affect creation of DIO403Input
             var x = _deviceObjectsTable[cubeSetup.CubeNumber].Where(d => { return d.OutputDeviceManager?.DeviceName.StartsWith("BlockSensor") == true; }).Select(d => d.OutputDeviceManager);
             OutputDevice blockSensor = x.First() as OutputDevice;
             System.Diagnostics.Debug.Assert(blockSensor.DeviceName == "BlockSensor");
@@ -286,7 +283,7 @@ namespace UeiBridge
             foreach (UeiDaq.Device realDevice in realDeviceList)
             {
                 int realSlot = realDevice.GetIndex();
-                DeviceSetup deviceSetup = Config2.Instance.UeiCubes[cubeSetup.CubeNumber].DeviceSetupList[realSlot]; // tbd: first 'DeviceSetup' in config is not neccesseraly in slot 0
+                DeviceSetup deviceSetup = Config2.Instance.UeiCubes[cubeSetup.CubeNumber].DeviceSetupList[realSlot]; // tbd: first 'DeviceSetup' in config is not necessarily in slot 0
                 deviceSetup.CubeUrl = cubeSetup.CubeUrl; // for later use
                 System.Diagnostics.Debug.Assert(realSlot == deviceSetup.SlotNumber);
 
@@ -320,8 +317,10 @@ namespace UeiBridge
                     inDev = (InputDevice)Activator.CreateInstance(devType, uWriter, deviceSetup);
                 }
 
-                deviceObjectsTable[cubeSetup.CubeNumber][realSlot].InputDeviceManager = inDev;
-                deviceObjectsTable[cubeSetup.CubeNumber][realSlot].UdpWriter = uWriter;
+                //deviceObjectsTable[cubeSetup.CubeNumber][realSlot].InputDeviceManager = inDev;
+                //deviceObjectsTable[cubeSetup.CubeNumber][realSlot].UdpWriter = uWriter;
+                var ss = deviceObjectsTable[cubeSetup.CubeNumber][realSlot].SerialSession;
+                deviceObjectsTable[cubeSetup.CubeNumber][realSlot] = new PerDeviceObjects(inDev, uWriter, ss);
             }
         }
 
@@ -371,7 +370,7 @@ namespace UeiBridge
                 {
                     System.Diagnostics.Debug.Assert(null == deviceObjectsTable[cubeSetup.CubeNumber][realSlot].SerialSession);
                     SL508Session serialSession = new SL508Session(deviceSetup as SL508892Setup);
-                    System.Diagnostics.Debug.Assert(null != serialSession);
+                    //System.Diagnostics.Debug.Assert(null != serialSession);
                     deviceObjectsTable[cubeSetup.CubeNumber][realSlot].SerialSession = serialSession;
                 }
             }

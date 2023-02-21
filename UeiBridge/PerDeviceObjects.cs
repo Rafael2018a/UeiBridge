@@ -1,49 +1,31 @@
 ﻿using UeiDaq;
-/// <summary>
-/// All files in project might refer to this file.
-/// Types in this file might NOT refer to types in any other file.
-/// </summary>
 namespace UeiBridge
 {
+    /// <summary>
+    /// This class holds objects that refer to specific card in uei cube.
+    /// A card might have input or output manager or both
+    /// reference to udp-reader or udp-writer is also included, (even thought each device manager have its own reference)
+    /// </summary>
     class PerDeviceObjects
     {
-        public InputDevice InputDeviceManager { get; set; }
-        public OutputDevice OutputDeviceManager { get; set; }
-        public UdpReader UdpReader { get; set; }
-        public UdpWriter UdpWriter { get; set; }
+        public InputDevice InputDeviceManager { get; private set; }
+        public OutputDevice OutputDeviceManager { get; private set; }
+        public UdpReader UdpReader { get; private set; }
+        public UdpWriter UdpWriter { get; private set; }
         public SL508Session SerialSession { get; set; }
-        //public BlockSensorManager BlockSensor { get; set; }
         public PerDeviceObjects()
         { }
-        //public PerDeviceObjects( BlockSensorManager bsensor, UdpReader udpReader)
-        //{
-        //    this.BlockSensor = bsensor;
-        //    this.UdpReader = udpReader;
-        //}
-        private PerDeviceObjects(InputDevice inputDevice, UdpWriter udpWriter)
+        public PerDeviceObjects(InputDevice inputDevice, UdpWriter udpWriter, SL508Session serialSession)
         {
-            InputDeviceManager = inputDevice;
-            UdpWriter = udpWriter;
+            this.InputDeviceManager = inputDevice;
+            this.UdpWriter = udpWriter;
+            this.SerialSession = serialSession;
         }
-        private void NewObjects(InputDevice inputDevice, UdpWriter udpWriter)
+        public PerDeviceObjects(OutputDevice outputDevice, UdpReader udpReader, SL508Session serialSession)
         {
-            System.Diagnostics.Debug.Assert(InputDeviceManager == null);
-            System.Diagnostics.Debug.Assert(UdpWriter == null);
-            InputDeviceManager = inputDevice;
-            UdpWriter = udpWriter;
-        }
-
-        public PerDeviceObjects(OutputDevice outputDevice, UdpReader udpReader)
-        {
-            OutputDeviceManager = outputDevice;
-            UdpReader = udpReader;
-        }
-        private void NewObjects(OutputDevice outputDevice, UdpReader udpReader)
-        {
-            System.Diagnostics.Debug.Assert(null == OutputDeviceManager);
-            System.Diagnostics.Debug.Assert(null == UdpReader);
-            OutputDeviceManager = outputDevice;
-            UdpReader = udpReader;
+            this.OutputDeviceManager = outputDevice;
+            this.UdpReader = udpReader;
+            this.SerialSession = serialSession;
         }
     }
 
