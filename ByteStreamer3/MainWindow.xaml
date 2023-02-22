@@ -55,30 +55,31 @@
                             <StackPanel Orientation="Horizontal">
                                 <Button Content="Start" Command="{Binding StartPlayCommand}" />
                                 <Button Content="Stop" IsEnabled="False"/>
-                                <CheckBox Content="Repeat" VerticalAlignment="Center"/>
-                                <CheckBox Content="Play one by one" VerticalAlignment="Center"/>
+                                <CheckBox Content="Repeat" VerticalAlignment="Center" />
+                                <CheckBox Content="Play one by one" VerticalAlignment="Center" IsChecked="{Binding IsPlayOneByOne}"/>
                             </StackPanel>
                         </StackPanel>
                     </GroupBox>
-                    <GroupBox Grid.Row="1" BorderBrush="Gray" Margin="5,0,5,0" BorderThickness="1" Header="Status" >
-                        <StackPanel>
-                            <ListView Name="NowPlayingListView" ItemsSource="{Binding Path=NowPlayingList}" BorderThickness="0">
+                    <GroupBox x:Name="Status" Grid.Row="1" BorderBrush="Gray" Margin="5,0,5,0" BorderThickness="1" Header="Status" >
+                        
+                            <ListView Name="NowPlayingListView" ItemsSource="{Binding Path=PlayList}" BorderThickness="0">
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
-                                            <TextBlock Text="Playing: "/>
-                                            <TextBlock Text="{Binding Name}" FontWeight="Bold" />
-                                            <TextBlock Text="Played blocks: "/>
-                                            <TextBlock Text="{Binding PlayedBlocks}" FontWeight="Bold"/>
+                                            <CheckBox/>
+                                            <!--<TextBlock Text="File: />-->
+                                            <TextBlock Text="{Binding Name}" FontWeight="Bold" VerticalAlignment="Center" />
+                                            <!--<TextBlock Text="Played blocks: "/>-->
+                                            <!--<TextBlock Text="{Binding PlayedBlocks}" FontWeight="Bold"/>-->
                                             <!--<TextBlock Text=" (" />
                                             <TextBlock Text="{Binding Mail}" TextDecorations="Underline" Foreground="Blue" Cursor="Hand" />
                                             <TextBlock Text=")" />-->
                                         </StackPanel>
                                     </DataTemplate>
                                 </ListView.ItemTemplate>
+                                
                             </ListView>
-
-                        </StackPanel>
+                        
                     </GroupBox>
                 </Grid>
 

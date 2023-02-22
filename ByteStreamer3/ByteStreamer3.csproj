@@ -85,6 +85,8 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="PacketPlayer.cs" />
+    <Compile Include="Utilities\PlayItem.cs" />
+    <Compile Include="PlayItemViewModel.cs" />
     <Compile Include="Utilities\Converters.cs" />
     <Compile Include="Utilities\PlayItemJson.cs" />
     <Compile Include="Utilities\ProjectTypes.cs" />
@@ -130,6 +132,11 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\UeiLibrary\UeiLibrary.csproj">
+      <Project>{73ac748f-67f0-4adc-a6cb-0e497f51e6ab}</Project>
+      <Name>UeiLibrary</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

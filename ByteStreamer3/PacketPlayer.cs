@@ -10,6 +10,7 @@ using Newtonsoft;
 using System.Collections.ObjectModel;
 using Newtonsoft.Json;
 
+
 namespace ByteStreamer3
 {
 
@@ -19,24 +20,21 @@ namespace ByteStreamer3
     class PacketPlayer
     {
         #region === publics ===
-        public int NumberOfItemsToPlay => _playItemList.Count;
-        internal List<PlayItemInfo> PlayItemList => _playItemList;
-
-        public ObservableCollection<PlayItemInfo> NowPlayingList { get; internal set; }
+        //public int NumberOfItemsToPlay => _playItemList.Count;
+        internal List<PlayItem> PlayList => _playList;
         #endregion
         #region === privates ====
-        List<PlayItemInfo> _playItemList = new List<PlayItemInfo>();
+        List<PlayItem> _playList = new List<PlayItem>();
         System.Threading.CancellationTokenSource _cts = new System.Threading.CancellationTokenSource();
         bool _repeatFlag;
         bool _playOneByOneFlag;
         DirectoryInfo _playFolder;
         #endregion
 
-
         public void SetPlayFolder(DirectoryInfo playFolder)
         {
             _playFolder = playFolder;
-            NowPlayingList = BuildNowPlayingList(playFolder);
+            _playList = BuildPlayList(playFolder);
         }
         public PacketPlayer(DirectoryInfo playFolder, bool repeatFlag, bool playOneByOneFlag)
         {
@@ -44,21 +42,10 @@ namespace ByteStreamer3
             _repeatFlag = repeatFlag;
             _playOneByOneFlag = playOneByOneFlag;
 
-            NowPlayingList = BuildNowPlayingList(playFolder);
-
-            //foreach (FileInfo fileToPlay in palyFilelist)
-            //{
-            //    //PlayItemJson jm = JsonFileToMessage(fileToPlay);
-            //    PlayItemInfo itemInfo = new PlayItemInfo(fileToPlay);
-            //    itemInfo.ByteBlock = ConvertPlayItemToBytes(itemInfo.JsonItem);
-            //    if (null != itemInfo.ByteBlock)
-            //    {
-            //        _playItemList.Add(itemInfo);
-            //    }
-            //}
+            _playList = BuildPlayList(playFolder);
 
             // if no file, create sample file.
-            if ( 0 == _playItemList.Count)
+            if ( 0 == _playList.Count)
             {
                 string fullname = "example.json";
                 using (StreamWriter file = File.CreateText( fullname))
@@ -70,20 +57,18 @@ namespace ByteStreamer3
             }
         }
 
-        private ObservableCollection<PlayItemInfo> BuildNowPlayingList(DirectoryInfo playFolder)
+        private List<PlayItem> BuildPlayList(DirectoryInfo playFolder)
         {
-            List<FileInfo> l1 = GetValidJsonFilesList(playFolder);
-            ObservableCollection<PlayItemInfo> resultList;
+            List<FileInfo> l1 = ReadJsonFilesList(playFolder);
+            //ObservableCollection<PlayItem> resultList;
             if (null != l1)
             {
-                var l2 = l1.Select(i => new PlayItemInfo(i));
-                resultList = new ObservableCollection<PlayItemInfo>(l2);
+                return new List<PlayItem>( l1.Select(i => new PlayItem(i)));
             }
             else
             {
-                resultList = new ObservableCollection<PlayItemInfo>();
+                return new List<PlayItem>();
             }
-            return resultList;
         }
 
         /// <summary>
@@ -92,7 +77,7 @@ namespace ByteStreamer3
         /// </summary>
         /// <param name="folder"></param>
         /// <returns></returns>
-        List<FileInfo> GetValidJsonFilesList(DirectoryInfo folder)
+        List<FileInfo> ReadJsonFilesList(DirectoryInfo folder)
         {
             if (!folder.Exists)
                 return null;
@@ -106,7 +91,6 @@ namespace ByteStreamer3
                     try
                     {
                         var js = JsonConvert.DeserializeObject<PlayItemJson>(reader.ReadToEnd());
-
                         if (null != js && null != js.Header)
                         {
                             result.Add(jfile);
@@ -130,9 +114,6 @@ namespace ByteStreamer3
         {
             return null;
         }
-
-        //bool PlayOneByOneFlag { get; set; }
-        //bool RepeatFlag { get; set; }
 
         internal void StartPlay()
         {
@@ -219,12 +200,20 @@ namespace ByteStreamer3
                 do
                 {
                     // for each file
-                    foreach (PlayItemInfo item in _playItemList)
+                    foreach (PlayItem item in _playList)
                     {
-                        //byte[] block = JsonToByteBlock( item.SourceItem);
-                        ////System.Threading.Thread.Sleep( item.SourceItem.Header.WaitStateMs);
-                        //IPAddress ip = IPAddress.Parse( item.SourceItem.Header.DestIp);
+                        if (!item.IsValidItem)
+                            continue;
 
+                        for (int i = 0; i < item.PlayObject.Header.NumberOfCycles; i++)
+                        {
+                            byte[] block = item.EthMessage.GetByteArray(UeiBridge.Library.MessageDirection.downstream);
+                            System.Threading.Thread.Sleep(item.PlayObject.Header.WaitStateMs);
+                            ++item.PlayedBlockCount;
+
+                            //Console.WriteLine($"{item.PlayFile.Name} # {item.NumberOfPlayedBlocks}");
+                        }
+                        //IPAddress ip = IPAddress.Parse( item.SourceItem.Header.DestIp);
                         //item.NumberOfPlayedBlocks = 11;
                         ////if (null != ip)
                         ////{
@@ -246,34 +235,9 @@ namespace ByteStreamer3
             throw new NotImplementedException();
         }
 
-        private static byte[] JsonToByteBlock(PlayItemJson jm)
-        {
-            return null;
-        }
-    }
-    class PlayItemInfo
-    {
-        string _name = "name1";
-        int _playedBlocks = 19;
-        #region == public ==
-        public string Name { get => _name; set => _name = value; }
-        public int PlayedBlocks { get => _playedBlocks; set => _playedBlocks = value; }
-        #endregion
-        FileInfo filename;
-        private FileInfo fileToPlay;
-        public byte[] ByteBlock;
-        public int NumberOfPlayedBlocks { get; set; }
-        public PlayItemJson JsonItem { get; set; }
-        
-
-
-        //public PlayItemInfo(PlayItemJson jsonItem)
+        //private static byte[] JsonToByteBlock(PlayItemJson jm)
         //{
-        //    this.JsonItem = jsonItem;
+        //    return null;
         //}
-        public PlayItemInfo(FileInfo fileToPlay)
-        {
-            this.fileToPlay = fileToPlay;
-        }
     }
 }

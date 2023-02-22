@@ -225,11 +225,6 @@ namespace StatusViewer
 
             switch (messageModel.MessageType)
             {
-                case ProjMessageType.Invalid:
-                    {
-                        AppServices.WriteToTrace(" **** Invalid message ****");
-                    }
-                    break;
 
                 case ProjMessageType.Text:
                     {
@@ -248,47 +243,8 @@ namespace StatusViewer
                         }
                     }
                     break;
-
-                case ProjMessageType.Counter:
-                    {
-                        // create or update counter entry
-                        // ==============================
-                        StatusBaseViewModel baseViewModel = TryGetValue(m_entriesList, messageModel.Desc);
-                        if (baseViewModel != null) // if object already exist
-                        {
-                            StatusCounterViewModel vm = baseViewModel as StatusCounterViewModel;
-                            vm.Update(messageModel);
-                        }
-                        else // object not exists. create new one
-                        {
-                            StatusCounterViewModel vm = new StatusCounterViewModel(messageModel);
-                            Application.Current.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.DataBind, new Action(() => EntriesList.Add(vm)));
-                        }
-                    }
-                    break;
-                //case ProjMessageType.SimpleLog: //entry to emit to DebugView
-                //    {
-                //        long timeInTicks = Convert.ToInt64(messageModel.ProjTimeInSec * 10000000.0);
-                //        TimeSpan ts = new TimeSpan(timeInTicks);
-
-                //        if (false == messageModel.StringValue.StartsWith("=["))
-                //        {
-                //            string formattedString = string.Format("=#= [{0}; {1}] {2} ", logDic[messageModel.Severity], ts.ToString(@"hh\:mm\:ss"), messageModel.StringValue);
-                //            Trace.Write(formattedString);
-                //        }
-                //        else
-                //        {
-                //            Trace.Write(messageModel.StringValue);
-                //        }
-                //    }
-                //    break;
-
             }
-
-            // ********* tbd. change to socket and use ReceiveAsync   !!!!!!!!!!!!!!!!!!
-
             udpListener.BeginReceive(new AsyncCallback(UdpReceiveCallback), udpState);
-
         }
 
 
@@ -329,7 +285,7 @@ namespace StatusViewer
         {
             StartMulticast();
             MachineState = MachineStateEnum.Running;
-            StatusCounterViewModel.EnableBindingUpdate = true; // just in case we came here after freeze
+            //StatusCounterViewModel.EnableBindingUpdate = true; // just in case we came here after freeze
 
 
         }
@@ -377,12 +333,12 @@ namespace StatusViewer
             if (tb.IsChecked.Value)
             {
                 MachineState = MachineStateEnum.Freeze;
-                StatusCounterViewModel.EnableBindingUpdate = false;
+                //StatusCounterViewModel.EnableBindingUpdate = false;
             }
             else
             {
                 MachineState = MachineStateEnum.Running;
-                StatusCounterViewModel.EnableBindingUpdate = true;
+                //StatusCounterViewModel.EnableBindingUpdate = true;
             }
         }
 

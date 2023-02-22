@@ -13,17 +13,17 @@ using System.Windows.Data;
 
 namespace ByteStreamer3
 {
-    class MainViewModel : System.ComponentModel.INotifyPropertyChanged
+    class MainViewModel : INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
         #region === privates ======
         string _destinationAddress = "10.10.10.10";
         DirectoryInfo _playFolder;// = new DirectoryInfo(@"c:\Users\Rafael\_gitRepos\UeiBridge.ByteStreamer3\ByteStreamer3\SampleJson\");
-        ObservableCollection<PlayItemInfo> _PlayList = new ObservableCollection<PlayItemInfo>();
+        ObservableCollection<PlayItemViewModel> _PlayList = new ObservableCollection<PlayItemViewModel>();
         bool _nowPlayingFlag;
         bool _repeatFlag;
-        bool _playOneByOneFlag;
+        bool _playOneByOneFlag=true;
         PacketPlayer _packetPlayer;
         string _filesToPlayMessage;
         string _playFolderBoxBorderColor;
@@ -31,9 +31,9 @@ namespace ByteStreamer3
         SettingBag _settingBag;
         #endregion
         #region ==== Prop's =======
-        public bool PlayOneByOneFlag { get => _playOneByOneFlag; set => _playOneByOneFlag = value; }
+        public bool IsPlayOneByOne { get => _playOneByOneFlag; set => _playOneByOneFlag = value; }
         public bool RepeatFlag { get => _repeatFlag; set => _repeatFlag = value; }
-        public ObservableCollection<PlayItemInfo> NowPlayingList 
+        public ObservableCollection<PlayItemViewModel> PlayList 
         {
             get
             { return _PlayList; }
@@ -121,7 +121,7 @@ namespace ByteStreamer3
                 _settingBag.PlayFolder = PlayFolder;
                 _packetPlayer.SetPlayFolder(new DirectoryInfo(PlayFolder));
                 PlayFolderBoxBorderColor = (_playFolder.Exists) ? "Gray" : "Red";
-                NowPlayingList = _packetPlayer.NowPlayingList;
+                PlayList = new ObservableCollection<PlayItemViewModel>( _packetPlayer.PlayList.Select( i => new PlayItemViewModel(i)));
             }
         }
         bool CanSelectPlayFolder(object obj)
@@ -144,7 +144,7 @@ namespace ByteStreamer3
 
             PlayFolderBoxBorderColor = (_playFolder.Exists) ? "Gray" : "Red";
             _packetPlayer = new PacketPlayer(_playFolder, _repeatFlag, _playOneByOneFlag);
-            NowPlayingList = _packetPlayer.NowPlayingList;
+            PlayList = new ObservableCollection<PlayItemViewModel>(_packetPlayer.PlayList.Select(i => new PlayItemViewModel(i)));
         }
         ~MainViewModel()
         {
