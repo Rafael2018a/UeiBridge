@@ -133,8 +133,7 @@ namespace UeiBridge
                 {
                     var nic = IPAddress.Parse(Config2.Instance.AppSetup.SelectedNicForMCast);
                     UdpReader ureader = new UdpReader(Config2.Instance.Blocksensor.LocalEndPoint.ToIpEp(), nic, blockSensor, "blocksensor");
-                    var pdo = new PerDeviceObjects(blockSensor, ureader, null);
-                    _deviceObjectsTable[cubeSetup.CubeNumber].Add(pdo);
+                    _deviceObjectsTable[cubeSetup.CubeNumber].Add(new PerDeviceObjects(blockSensor, ureader, null));
                 }
 
                 CreateSerialSessions(cubeSetup, _deviceObjectsTable);

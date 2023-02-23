@@ -4,11 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UeiBridge.Types;
+using UeiBridge.Library;
 
 namespace UeiBridge
 {
     /// <summary>
-    /// Receive 
+    /// This manager handles the 'block sensor'.
+    /// It gets a udp message which define series of voltage values.
+    /// According to input from digital card, it decide into which analog output is should emit this values.
     /// </summary>
     class BlockSensorManager : OutputDevice//, ISend<SendObject>
     {
@@ -25,7 +28,7 @@ namespace UeiBridge
         {
             _deviceSetup = deviceSetup;
         }
-        public BlockSensorManager() : base(null) // must be here for for Activator.CreateInstance
+        public BlockSensorManager() : base(null) // must be here for Activator.CreateInstance
         {
         }
 
@@ -53,18 +56,15 @@ namespace UeiBridge
         /// <summary>
         /// Two types of messages might reach here
         /// 1. From "DIO-403". (Actually, this is an outgoing message and a copy of it is delivered to here)
-        /// 2. From ethernet. the id: _cardIdMap.Add(32, "BlockSensor"). The first message 'opens' this manager
+        /// 2. From Ethernet. the id: _cardIdMap.Add(32, "BlockSensor"). The first message 'opens' this manager
         /// </summary>
         public override void Enqueue(byte[] byteMessage)
         {
-            int digital = StaticMethods.GetCardIdFromCardName("DIO-403");
-            System.Diagnostics.Debug.Assert(digital >= 0);
-            
-            // if message comtes from digital card
-            if (byteMessage[EthernetMessage._cardTypeOffset] == digital)
+            // if message comes from digital card
+            if (byteMessage[EthernetMessage._cardTypeOffset] == StaticMethods.GetCardIdFromCardName("DIO-403"))
             {
                 // convert
-                EthernetMessage.BuildEthernetMessage(byteMessage);
+                //EthernetMessage.BuildEthernetMessage(byteMessage);
 
                 // emit to analog card
                 var b = StaticMethods.Make_A308Down_message();

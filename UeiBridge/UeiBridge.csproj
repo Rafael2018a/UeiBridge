@@ -92,7 +92,6 @@
     <Compile Include="PerDeviceObjects.cs" />
     <Compile Include="GlobalTypes.cs" />
     <Compile Include="Mediator.cs" />
-    <Compile Include="EthernetMessage.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ProgramObjectsFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

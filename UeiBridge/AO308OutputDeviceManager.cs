@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using UeiDaq;
 using UeiBridge.Types;
 using System.Timers;
+using UeiBridge.Library;
 
 namespace UeiBridge
 {

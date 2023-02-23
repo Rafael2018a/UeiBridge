@@ -1,6 +1,7 @@
 ﻿using System;
 using UeiDaq;
 using UeiBridge.Types;
+using UeiBridge.Library;
 
 
 namespace UeiBridge
@@ -103,9 +104,9 @@ namespace UeiBridge
                 System.Diagnostics.Debug.Assert(_lastScan != null);
                 System.Diagnostics.Debug.Assert(_lastScan.Length == _deviceSession.GetNumberOfChannels(), "wrong number of channels");
                 byte[] payload = this.AttachedConverter.DeviceToEth(_lastScan);
-                var em = EthernetMessage.CreateFromDevice( payload, _thisDeviceSetup);
+                var em = StaticMethods.BuildEthernetMessageFromDevice( payload, _thisDeviceSetup);
 
-                _targetConsumer.Send(new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), em.ToByteArrayUp()));
+                _targetConsumer.Send(new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), em.GetByteArray( MessageDirection.upstream)));
             }
             catch (Exception ex)
             {

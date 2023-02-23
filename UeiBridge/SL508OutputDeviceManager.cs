@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using UeiDaq;
 using UeiBridge.Types;
+using UeiBridge.Library;
 
 using bytearray = System.Array;
 using System.Timers;

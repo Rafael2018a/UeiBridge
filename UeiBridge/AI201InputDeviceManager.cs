@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UeiDaq;
 using UeiBridge.Types;
+using UeiBridge.Library;
 
 namespace UeiBridge
 {
@@ -51,8 +52,8 @@ namespace UeiBridge
 
                 //ScanResult dr = new ScanResult(_lastScan, this);
                 byte[] payload = _attachedConverter.DeviceToEth(_lastScan);
-                EthernetMessage em = EthernetMessage.CreateFromDevice(payload, this._thisDeviceSetup);
-                SendObject so = new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), em.ToByteArrayUp());
+                EthernetMessage em = StaticMethods.BuildEthernetMessageFromDevice(payload, this._thisDeviceSetup);
+                SendObject so = new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), em.GetByteArray( MessageDirection.upstream));
                 _targetConsumer.Send(so);
             }
             catch (Exception ex)
