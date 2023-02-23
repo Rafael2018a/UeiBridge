@@ -41,11 +41,19 @@ namespace ByteStreamer3
         public PlayItem(FileInfo fileToPlay)
         {
             this._playFile = fileToPlay;
-            using (StreamReader reader = _playFile.OpenText())
+            try
             {
-                _playObject = JsonConvert.DeserializeObject<PlayItemJson>(reader.ReadToEnd());
+                using (StreamReader reader = _playFile.OpenText())
+                {
+                    _playObject = JsonConvert.DeserializeObject<PlayItemJson>(reader.ReadToEnd());
+                }
+                EthMessage = JsonToEtherentMessage(_playObject);
             }
-            EthMessage = JsonToEtherentMessage(_playObject);
+            catch(JsonSerializationException)
+            {
+                _playObject = null;
+                EthMessage = null;
+            }
         }
 
         private UeiBridge.Library.EthernetMessage JsonToEtherentMessage(PlayItemJson playItem)

@@ -20,29 +20,24 @@ namespace ByteStreamer3
     class PacketPlayer
     {
         #region === publics ===
-        //public int NumberOfItemsToPlay => _playItemList.Count;
         internal List<PlayItem> PlayList => _playList;
         #endregion
         #region === privates ====
-        List<PlayItem> _playList = new List<PlayItem>();
+        List<PlayItem> _playList;
         System.Threading.CancellationTokenSource _cts = new System.Threading.CancellationTokenSource();
         bool _repeatFlag;
         bool _playOneByOneFlag;
-        DirectoryInfo _playFolder;
+        //DirectoryInfo _playFolder;
         #endregion
 
-        public void SetPlayFolder(DirectoryInfo playFolder)
+        public PacketPlayer(List<PlayItem> playList, bool repeatFlag, bool playOneByOneFlag)
         {
-            _playFolder = playFolder;
-            _playList = BuildPlayList(playFolder);
-        }
-        public PacketPlayer(DirectoryInfo playFolder, bool repeatFlag, bool playOneByOneFlag)
-        {
-            _playFolder = playFolder;
+            //_playFolder = playFolder;
+            _playList = playList;
             _repeatFlag = repeatFlag;
             _playOneByOneFlag = playOneByOneFlag;
 
-            _playList = BuildPlayList(playFolder);
+            //_playList = BuildPlayList(playFolder);
 
             // if no file, create sample file.
             if ( 0 == _playList.Count)
@@ -57,53 +52,6 @@ namespace ByteStreamer3
             }
         }
 
-        private List<PlayItem> BuildPlayList(DirectoryInfo playFolder)
-        {
-            List<FileInfo> l1 = ReadJsonFilesList(playFolder);
-            //ObservableCollection<PlayItem> resultList;
-            if (null != l1)
-            {
-                return new List<PlayItem>( l1.Select(i => new PlayItem(i)));
-            }
-            else
-            {
-                return new List<PlayItem>();
-            }
-        }
-
-        /// <summary>
-        /// Get list of json's from current dir.
-        /// Only files with compatible json struct
-        /// </summary>
-        /// <param name="folder"></param>
-        /// <returns></returns>
-        List<FileInfo> ReadJsonFilesList(DirectoryInfo folder)
-        {
-            if (!folder.Exists)
-                return null;
-
-            FileInfo[] list = folder.GetFiles("*.json");
-            List<FileInfo> result = new List<FileInfo>();
-            foreach (FileInfo jfile in list)
-            {
-                using (StreamReader reader = jfile.OpenText())
-                {
-                    try
-                    {
-                        var js = JsonConvert.DeserializeObject<PlayItemJson>(reader.ReadToEnd());
-                        if (null != js && null != js.Header)
-                        {
-                            result.Add(jfile);
-                        }
-                    }
-                    catch (JsonSerializationException ex)
-                    {
-
-                    }
-                }
-            }
-            return result;
-        }
 
         private byte[] ConvertPlayItemToBytes(PlayItemJson jsonItem)
         {

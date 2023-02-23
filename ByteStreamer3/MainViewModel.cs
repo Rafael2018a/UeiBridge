@@ -18,31 +18,17 @@ namespace ByteStreamer3
         public event PropertyChangedEventHandler PropertyChanged;
 
         #region === privates ======
-        string _destinationAddress = "10.10.10.10";
-        DirectoryInfo _playFolder;// = new DirectoryInfo(@"c:\Users\Rafael\_gitRepos\UeiBridge.ByteStreamer3\ByteStreamer3\SampleJson\");
-        ObservableCollection<PlayItemViewModel> _PlayList = new ObservableCollection<PlayItemViewModel>();
+        DirectoryInfo _playFolder;
         bool _nowPlayingFlag;
-        bool _repeatFlag;
-        bool _playOneByOneFlag=true;
-        PacketPlayer _packetPlayer;
         string _filesToPlayMessage;
         string _playFolderBoxBorderColor;
         string _settingsFilename = "bytestreamer3.setting.bin";
         SettingBag _settingBag;
         #endregion
         #region ==== Prop's =======
-        public bool IsPlayOneByOne { get => _playOneByOneFlag; set => _playOneByOneFlag = value; }
-        public bool RepeatFlag { get => _repeatFlag; set => _repeatFlag = value; }
-        public ObservableCollection<PlayItemViewModel> PlayList 
-        {
-            get
-            { return _PlayList; }
-            set
-            {
-                _PlayList = value;
-                RaisePropertyChangedEvent("NowPlayingList");
-            }
-        }
+        public bool IsPlayOneByOne { get; set; }
+        public bool IsRepeat { get; set; }
+        public PacketPlayerViewModel PlayerViewModel { get; private set; }
         public string PlayFolder 
         {
             get { return _playFolder.FullName; }
@@ -61,17 +47,6 @@ namespace ByteStreamer3
                 RaisePropertyChangedEvent("NowPlayingFlag");
             }
         }
-        [Obsolete]
-        public string DestinationAddress
-        {
-            get => _destinationAddress;
-            set
-            {
-                _destinationAddress = value;
-                RaisePropertyChangedEvent("DestinationAddress");
-            }
-        }
-        [Obsolete]
         public string FilesToPlayMessage 
         { 
             get => _filesToPlayMessage;
@@ -100,7 +75,7 @@ namespace ByteStreamer3
         public RelayCommand BrowseFolderCommand { get => _browseFolderCommand; set => _browseFolderCommand = value; }
         void StartPlay(object obj)
         {
-            _packetPlayer.StartPlay();
+            PlayerViewModel.StartPlay();
         }
         bool CanStartPlay(object obj)
         {
@@ -119,9 +94,9 @@ namespace ByteStreamer3
             {
                 PlayFolder = dialog.FileName;
                 _settingBag.PlayFolder = PlayFolder;
-                _packetPlayer.SetPlayFolder(new DirectoryInfo(PlayFolder));
+                PlayerViewModel.SetPlayFolder(new DirectoryInfo(PlayFolder));
                 PlayFolderBoxBorderColor = (_playFolder.Exists) ? "Gray" : "Red";
-                PlayList = new ObservableCollection<PlayItemViewModel>( _packetPlayer.PlayList.Select( i => new PlayItemViewModel(i)));
+                
             }
         }
         bool CanSelectPlayFolder(object obj)
@@ -130,6 +105,7 @@ namespace ByteStreamer3
         }
         #endregion
 
+        //PacketPlayerViewModel _playerViewModel;
         public MainViewModel()
         {
             LoadCommands();
@@ -143,8 +119,11 @@ namespace ByteStreamer3
             timer.Start();
 
             PlayFolderBoxBorderColor = (_playFolder.Exists) ? "Gray" : "Red";
-            _packetPlayer = new PacketPlayer(_playFolder, _repeatFlag, _playOneByOneFlag);
-            PlayList = new ObservableCollection<PlayItemViewModel>(_packetPlayer.PlayList.Select(i => new PlayItemViewModel(i)));
+            IsPlayOneByOne = true; // tbd
+            PlayerViewModel = new PacketPlayerViewModel(_playFolder, IsRepeat, IsPlayOneByOne);
+
+            //_packetPlayer = new PacketPlayer(_playFolder, _repeatFlag, _playOneByOneFlag);
+            //PlayList = new ObservableCollection<PlayItemViewModel>(_packetPlayer.PlayList.Select(i => new PlayItemViewModel(i)));
         }
         ~MainViewModel()
         {

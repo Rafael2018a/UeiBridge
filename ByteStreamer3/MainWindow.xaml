@@ -60,9 +60,8 @@
                             </StackPanel>
                         </StackPanel>
                     </GroupBox>
-                    <GroupBox x:Name="Status" Grid.Row="1" BorderBrush="Gray" Margin="5,0,5,0" BorderThickness="1" Header="Status" >
-                        
-                            <ListView Name="NowPlayingListView" ItemsSource="{Binding Path=PlayList}" BorderThickness="0">
+                    <GroupBox x:Name="Playlist" Grid.Row="1" BorderBrush="Gray" Margin="5,0,5,0" BorderThickness="1" Header="Play list" >
+                        <ListView x:Name="NowPlayingListView" ItemsSource="{Binding Path=PlayerViewModel.PlayList}" BorderThickness="0">
                                 <ListView.ItemTemplate>
                                     <DataTemplate>
                                         <StackPanel Orientation="Horizontal">
