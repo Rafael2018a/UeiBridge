@@ -135,6 +135,10 @@ namespace UeiBridge
                     UdpReader ureader = new UdpReader(Config2.Instance.Blocksensor.LocalEndPoint.ToIpEp(), nic, blockSensor, "blocksensor");
                     _deviceObjectsTable[cubeSetup.CubeNumber].Add(new PerDeviceObjects(blockSensor, ureader, null));
                 }
+                else
+                {
+                    _logger.Debug("Block sensor not supported");
+                }
 
                 CreateSerialSessions(cubeSetup, _deviceObjectsTable);
                 CreateDownwardsObjects(cubeSetup, _deviceObjectsTable);
@@ -199,9 +203,9 @@ namespace UeiBridge
                 for (int deviceIndex = 0; deviceIndex < devList.Count; deviceIndex++)
                 {
                     _logger.Debug($"Disposing Slot {deviceIndex}");
-                    // dispose upword object
+                    // dispose upward object
                     devList[deviceIndex]?.InputDeviceManager?.Dispose();
-                    // dispose downword object
+                    // dispose downward object
                     devList[deviceIndex]?.UdpReader?.Dispose();
                     devList[deviceIndex]?.OutputDeviceManager?.Dispose();
 
@@ -234,6 +238,7 @@ namespace UeiBridge
                 Type devType = StaticMethods.GetDeviceManagerType<OutputDevice>(deviceSetup.DeviceName);
                 if (null == devType) // if no device-manager class support this device
                 {
+                    _logger.Debug($"Output device of type {deviceSetup.DeviceName} not supported");
                     continue;
                 }
 
@@ -274,8 +279,9 @@ namespace UeiBridge
 
             // search for blocksensor, this affect creation of DIO403Input
             var x = _deviceObjectsTable[cubeSetup.CubeNumber].Where(d => { return d.OutputDeviceManager?.DeviceName.StartsWith("BlockSensor") == true; }).Select(d => d.OutputDeviceManager);
-            OutputDevice blockSensor = x.First() as OutputDevice;
-            System.Diagnostics.Debug.Assert(blockSensor.DeviceName == "BlockSensor");
+            OutputDevice blockSensor = x.FirstOrDefault() as OutputDevice;
+
+            
 
 
             // Create input-devices instances
@@ -294,19 +300,20 @@ namespace UeiBridge
 
 
                 Type devType = StaticMethods.GetDeviceManagerType<InputDevice>(deviceSetup.DeviceName);
-                if (null == devType) // if no device-manager-class supports thid device
+                if (null == devType) // if no device-manager-class supports this device
                 {
+                    _logger.Debug($"Input device of type {deviceSetup.DeviceName} not supported");
                     continue;
                 }
 
                 string instanceName = $"{realDevice.GetDeviceName()}/Slot{deviceSetup.SlotNumber}";
                 UdpWriter uWriter = new UdpWriter(instanceName, deviceSetup.DestEndPoint.ToIpEp(), Config2.Instance.AppSetup.SelectedNicForMCast);
                 InputDevice inDev;
-                if (devType.Name.StartsWith("SL508")) // special treatment to serial device
+                if (devType.Name.StartsWith("SL508")) // special treatment for serial device
                 {
                     inDev = (InputDevice)Activator.CreateInstance(devType, uWriter, deviceSetup, deviceObjectsTable[cubeSetup.CubeNumber][realSlot].SerialSession);
                 }
-                else if ((null != blockSensor) && (devType.Name.StartsWith("DIO403In")))
+                else if ((null != blockSensor) && (devType.Name.StartsWith("DIO403In"))) // special treatment for block sensor
                 {
                     TeeObject tee = new TeeObject(blockSensor, uWriter);
                     inDev = (InputDevice)Activator.CreateInstance(devType, tee, deviceSetup);

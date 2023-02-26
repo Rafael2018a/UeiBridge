@@ -124,6 +124,15 @@ namespace UeiBridge
         {
         }
     }
+    public class SimuAO16Setup : DeviceSetup
+    {
+        public SimuAO16Setup()
+        {
+        }
+        public SimuAO16Setup(EndPoint localEndPoint, UeiDaq.Device device) : base(localEndPoint, null, device)
+        {
+        }
+    }
     public class AI201100Setup : DeviceSetup
     {
         [XmlIgnore]
@@ -202,6 +211,9 @@ namespace UeiBridge
                 case "SL-508-892":
                     result = new SL508892Setup(new EndPoint( LocalIP, portNumber++), new EndPoint(RemoteIp, portNumber++), ueiDevice);
                     break;
+                case "Simu-AO16":
+                    result = new SimuAO16Setup(new EndPoint(LocalIP, portNumber++), ueiDevice);
+                    break;
                 default:
                     Console.WriteLine($"Config: Missing setup-class for device {ueiDevice.GetDeviceName()}");
                     result = new DeviceSetup(null, null, ueiDevice);
@@ -255,6 +267,7 @@ namespace UeiBridge
     [XmlInclude(typeof(SL508892Setup))]
     [XmlInclude(typeof(BlockSensorSetup))]
     [XmlInclude(typeof(ValidValuesClass))]
+    [XmlInclude(typeof(SimuAO16Setup))]
     public class Config2
     {
         private static Config2 _instance;
@@ -315,6 +328,7 @@ namespace UeiBridge
             {
                 // make fresh config and write it to file
                 resultConfig = new Config2("pdna://192.168.100.2/"); // default);
+                //resultConfig = new Config2("simu://"); // default);
                 using (var writer = new StreamWriter(filename))
                 {
                     serializer.Serialize(writer, resultConfig);

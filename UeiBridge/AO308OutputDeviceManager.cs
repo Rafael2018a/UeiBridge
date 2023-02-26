@@ -15,6 +15,7 @@ namespace UeiBridge
     {
         // publics
         public override string DeviceName => "AO-308";
+        public override string InstanceName { get; }
 
         // privates
         AnalogScaledWriter _writer;
@@ -25,7 +26,7 @@ namespace UeiBridge
         AO308Setup _thisDeviceSetup;
         bool _inDisposeState = false;
 
-        public override string InstanceName { get; }// => _instanceName;
+        
 
         private IConvert _attachedConverter;
         public AO308OutputDeviceManager(AO308Setup deviceSetup) : base(deviceSetup)
@@ -145,5 +146,34 @@ namespace UeiBridge
         //        //_lastScanList = null;
         //    }
         //}
+    }
+
+    internal class SimuAO16 : OutputDevice
+    {
+        public override string DeviceName => "Simu-AO16";
+        public override string InstanceName { get; }
+        log4net.ILog _logger = StaticMethods.GetLogger();
+
+        public SimuAO16(DeviceSetup deviceSetup) : base(deviceSetup as AO308Setup)
+        {
+            InstanceName = $"{DeviceName}/Slot{deviceSetup.SlotNumber}/Output";
+        }
+        public SimuAO16() : base(null) { }
+
+        public override bool OpenDevice()
+        {
+            _logger.Info($"Init success: {InstanceName}");
+            return true;
+        }
+
+        protected override void HandleRequest(EthernetMessage request)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override string[] GetFormattedStatus(TimeSpan interval)
+        {
+            return new string[] { "Simu-Ao16" };
+        }
     }
 }
