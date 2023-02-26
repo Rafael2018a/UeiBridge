@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ByteStreamer3", "ByteStream
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ByteStreamer", "ByteStreamer\ByteStreamer.csproj", "{DAFD5FE0-5043-494E-B43D-E000E13603BF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestProject", "TestProject\TestProject.csproj", "{AE104A9D-B2DD-4E73-B673-E6DD0A7A1D29}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -95,6 +97,18 @@ Global
 		{DAFD5FE0-5043-494E-B43D-E000E13603BF}.Release|x64.Build.0 = Release|x64
 		{DAFD5FE0-5043-494E-B43D-E000E13603BF}.Release|x86.ActiveCfg = Release|Any CPU
 		{DAFD5FE0-5043-494E-B43D-E000E13603BF}.Release|x86.Build.0 = Release|Any CPU
+		{AE104A9D-B2DD-4E73-B673-E6DD0A7A1D29}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AE104A9D-B2DD-4E73-B673-E6DD0A7A1D29}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AE104A9D-B2DD-4E73-B673-E6DD0A7A1D29}.Debug|x64.ActiveCfg = Debug|x64
+		{AE104A9D-B2DD-4E73-B673-E6DD0A7A1D29}.Debug|x64.Build.0 = Debug|x64
+		{AE104A9D-B2DD-4E73-B673-E6DD0A7A1D29}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{AE104A9D-B2DD-4E73-B673-E6DD0A7A1D29}.Debug|x86.Build.0 = Debug|Any CPU
+		{AE104A9D-B2DD-4E73-B673-E6DD0A7A1D29}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AE104A9D-B2DD-4E73-B673-E6DD0A7A1D29}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AE104A9D-B2DD-4E73-B673-E6DD0A7A1D29}.Release|x64.ActiveCfg = Release|Any CPU
+		{AE104A9D-B2DD-4E73-B673-E6DD0A7A1D29}.Release|x64.Build.0 = Release|Any CPU
+		{AE104A9D-B2DD-4E73-B673-E6DD0A7A1D29}.Release|x86.ActiveCfg = Release|Any CPU
+		{AE104A9D-B2DD-4E73-B673-E6DD0A7A1D29}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

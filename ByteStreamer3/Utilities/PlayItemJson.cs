@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ByteStreame3.Utilities
+namespace ByteStreamer3.Utilities
 {
     public class ItemHeader
     {

@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net;
 using System.IO;
-using ByteStreame3.Utilities;
+using ByteStreamer3.Utilities;
 using Newtonsoft;
 using System.Collections.ObjectModel;
 using Newtonsoft.Json;

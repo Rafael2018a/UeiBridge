@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-using ByteStreame3.Utilities;
+using ByteStreamer3.Utilities;
 using Newtonsoft.Json;
 
 
@@ -10,7 +10,7 @@ namespace ByteStreamer3
     /// Holds all available info on single play item
     /// (json file name, the class that represents file contents...)
     /// </summary>
-    internal class PlayItem
+    public class PlayItem
     {
         #region == publics ==
         public PlayItemJson PlayObject => _playObject; 

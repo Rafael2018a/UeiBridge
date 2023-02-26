@@ -8,7 +8,6 @@ using ByteStreamer3.Utilities;
 using System.Collections.ObjectModel;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Newtonsoft.Json;
-using ByteStreame3.Utilities;
 using System.Windows.Data;
 
 namespace ByteStreamer3
