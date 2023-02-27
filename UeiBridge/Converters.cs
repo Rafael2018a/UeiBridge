@@ -90,7 +90,7 @@ namespace UeiBridge
 
         public byte[] DeviceToEth(object dt)
         {
-            // int16 vector goes to int8 vector
+            // convert int16 vector to int8 vector
             // ================================
             UInt16[] deviceVector = (UInt16[])dt;
             byte[] resultVector = new byte[deviceVector.Length];
@@ -108,7 +108,7 @@ namespace UeiBridge
                 _lastError = $"digital-out message too short. {messagePayload.Length} ";
                 return null;
             }
-            // int8 vector goes to int16 vector
+            // convert int8 vector to int16 vector
             // ================================
             UInt16[] resultVector = new UInt16[messagePayload.Length];
             Array.Clear(resultVector, 0, resultVector.Length);

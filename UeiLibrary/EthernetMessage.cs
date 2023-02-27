@@ -106,16 +106,17 @@ namespace UeiBridge.Library
         /// <summary>
         /// Create EthernetMessage from byte array
         /// </summary>
-        public static EthernetMessage CreateFromByteArray(byte[] byteMessage, out string errorString)
+        public static EthernetMessage CreateFromByteArray(byte[] byteMessage, MessageDirection way)
         {
             EthernetMessage resutlMessage = null;
-            if (false == CheckByteArrayValidity(byteMessage, out errorString))
+            string errMsg;
+            if (false == CheckByteArrayValidity(byteMessage, way, out errMsg))
             {
-                return null;
+                throw new ArgumentException(errMsg);
             }
 
             // Build message struct
-            // ============
+            // ====================
             resutlMessage = new EthernetMessage();
             // header & payload
             //resutlMessage.HeaderBytes = new byte[EthernetMessage._payloadOffset];
@@ -131,7 +132,7 @@ namespace UeiBridge.Library
             return resutlMessage;
         }
 
-        private static bool CheckByteArrayValidity(byte[] byteMessage, out string errorString)
+        private static bool CheckByteArrayValidity(byte[] byteMessage, MessageDirection way, out string errorString)
         {
             errorString  = null;
             bool rc = false;
@@ -142,10 +143,21 @@ namespace UeiBridge.Library
                 goto exit;
             }
             // preamble
-            if (byteMessage[0] != 0xAA || byteMessage[1] != 0x55)
+            if (way == MessageDirection.downstream)
             {
-                errorString = $"Byte message wrong preamble";
-                goto exit;
+                if (byteMessage[0] != 0xAA || byteMessage[1] != 0x55)
+                {
+                    errorString = $"Byte message wrong preamble";
+                    goto exit;
+                }
+            }
+            else // upstream
+            {
+                if (byteMessage[0] != 0x55 || byteMessage[1] != 0xAA)
+                {
+                    errorString = $"Byte message wrong preamble";
+                    goto exit;
+                }
             }
             UInt16 nominalLengh = BitConverter.ToUInt16(byteMessage, EthernetMessage._lengthOffset);
             if (nominalLengh != byteMessage.Length)

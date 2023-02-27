@@ -22,6 +22,8 @@ namespace UeiBridge
         #region === privates ===
         AO308OutputDeviceManager _ao308Device;
         log4net.ILog _logger = StaticMethods.GetLogger();
+        List<BlockSensorEntry> _blockSensorTable = new List<BlockSensorEntry>();
+        DIO403Convert _digitalConverter = new DIO403Convert( null);
         #endregion
 
         public BlockSensorManager(DeviceSetup deviceSetup) : base(deviceSetup)
@@ -60,15 +62,28 @@ namespace UeiBridge
         /// </summary>
         public override void Enqueue(byte[] byteMessage)
         {
+
+            return;
+
             // if message comes from digital card
             if (byteMessage[EthernetMessage._cardTypeOffset] == StaticMethods.GetCardIdFromCardName("DIO-403"))
             {
                 // convert
-                //EthernetMessage.BuildEthernetMessage(byteMessage);
+                try
+                {
+                    EthernetMessage msg = EthernetMessage.CreateFromByteArray(byteMessage, MessageDirection.upstream);
+                    System.Diagnostics.Debug.Assert(null != msg);
+                    byte[] digitalVector = _digitalConverter.EthToDevice(msg.PayloadBytes) as byte[];
+                    System.Diagnostics.Debug.Assert(null != digitalVector);
 
-                // emit to analog card
-                var b = StaticMethods.Make_A308Down_message();
-                _ao308Device.Enqueue(b);
+                    // emit to analog card
+                    var b = StaticMethods.Make_A308Down_message();
+                    _ao308Device.Enqueue(b);
+                }
+                catch (ArgumentException ex)
+                {
+                    _logger.Warn($"BlockSensor: {ex.Message}");
+                }
             }
 
 
@@ -78,5 +93,11 @@ namespace UeiBridge
         {
             _ao308Device = ao308;
         }
+    }
+    class BlockSensorEntry
+    {
+        string signalName;
+        int subaddress; // address
+        int chan_ain;
     }
 }

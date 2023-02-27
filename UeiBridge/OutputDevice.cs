@@ -26,31 +26,27 @@ namespace UeiBridge
 
     public abstract class OutputDevice : IDeviceManager,  IDisposable, IEnqueue<byte[]> // IEnqueue<DeviceRequest>,
     {
-        // abstracts properties
-        // -------------------
+        #region abstracts properties
         public abstract string DeviceName { get; }
         public abstract string InstanceName { get; }
-
-        // abstract methods
-        // ----------------
+        #endregion
+        #region abstract methods
         public abstract bool OpenDevice();
         protected abstract void HandleRequest(EthernetMessage request);
         public abstract string [] GetFormattedStatus( TimeSpan interval);
-        
-        // protected fields
-        // ----------------
+        #endregion
+        #region protected fields
         protected string _caseUrl; // remove?
         protected DeviceSetup _deviceSetup; // from config
         protected bool _isDeviceReady=false;
         //protected DateTime _publishTime = DateTime.Now;
-
-        // privates
-        // ---------
+        #endregion
+        #region privates
         BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
         log4net.ILog _logger = StaticMethods.GetLogger();
         //System.Timers.Timer _resetLastScanTimer = new System.Timers.Timer(1000);
         bool _disposeStarted = false;
-
+        #endregion
 
         protected OutputDevice(DeviceSetup deviceSetup)
         {
@@ -62,24 +58,30 @@ namespace UeiBridge
 
         //protected abstract void resetLastScanTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e);
 
+        /// <summary>
+        /// Enqueue message from Ethernet
+        /// </summary>
+        /// <param name="m"></param>
         public virtual void Enqueue(byte[] m)
         {
             if (_disposeStarted)
                 return;
 
-            string errorString;
-            EthernetMessage em = EthernetMessage.CreateFromByteArray(m, out errorString);
-            if (em != null)
+            //string errorString;
+            try
             {
+                EthernetMessage em = EthernetMessage.CreateFromByteArray(m, MessageDirection.downstream);
+                System.Diagnostics.Debug.Assert(em != null);
                 if (!_dataItemsQueue2.IsCompleted)
                 {
                     _dataItemsQueue2.Add(em);
                 }
             }
-            else
+            catch( ArgumentException ex)
             {
-                _logger.Warn($"Incoming byte message error. {errorString}. message dropped.");
+                _logger.Warn($"Incoming byte message error. {ex.Message}. message dropped.");
             }
+
         }
         /// <summary>
         /// Message loop
