@@ -18,7 +18,8 @@ namespace UeiBridge
         IConvert _attachedConverter;
         public override IConvert AttachedConverter => _attachedConverter;
         DIO403Setup _thisDeviceSetup;
-        public override string InstanceName { get; } 
+        public override string InstanceName { get; }
+        public ISend<SendObject> TargetConsumer { get => _targetConsumer; set => _targetConsumer = value; }
 
         //public DIO403InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
         //{

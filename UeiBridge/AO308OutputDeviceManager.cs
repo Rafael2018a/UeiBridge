@@ -7,6 +7,34 @@ using UeiBridge.Library;
 
 namespace UeiBridge
 {
+    public class AnalogWriteAdapter: IAnalogWrite
+    {
+        AnalogScaledWriter _ueiAnalogWriter;
+        //string _deviceUrl;
+
+        //public AnalogWriteAdapter(string deviceUrl)
+        //{
+        //    _deviceUrl = deviceUrl;
+        //}
+
+        public AnalogWriteAdapter(AnalogScaledWriter analogWriter, int numberOfChannels)
+        {
+            this._ueiAnalogWriter = analogWriter;
+            this.NumberOfChannels = numberOfChannels;
+        }
+
+        public int NumberOfChannels { get; set; }
+
+        //public bool WriteScan(double[] scen)
+        //{
+        //    throw new NotImplementedException();
+        //}
+
+        public void WriteSingleScan( double [] scan)
+        {
+            _ueiAnalogWriter.WriteSingleScan(scan);
+        }
+    }
     /// <summary>
     /// from the manual:
     /// ** 8-Channel, 16-bit, ±10V Analog Output Board **
@@ -16,17 +44,16 @@ namespace UeiBridge
         // publics
         public override string DeviceName => "AO-308";
         public override string InstanceName { get; }
-
+        public IAnalogWrite AnalogWriter => _writer;
         // privates
-        AnalogScaledWriter _writer;
+        //AnalogScaledWriter _writer;
+        AnalogWriteAdapter _writer;
         log4net.ILog _logger = StaticMethods.GetLogger();
         const string _channelsString = "Ao0:7";
         Session _deviceSession;
         System.Collections.Generic.List<ViewerItem<double>> _lastScanList;
         AO308Setup _thisDeviceSetup;
         bool _inDisposeState = false;
-
-        
 
         private IConvert _attachedConverter;
         public AO308OutputDeviceManager(AO308Setup deviceSetup) : base(deviceSetup)
@@ -51,7 +78,7 @@ namespace UeiBridge
                 var c = _deviceSession.CreateAOChannel(cubeUrl, -_thisDeviceSetup.PeekVoltage_Out, _thisDeviceSetup.PeekVoltage_Out);
                 System.Diagnostics.Debug.Assert(c.GetMaximum() == _thisDeviceSetup.PeekVoltage_Out);
                 _deviceSession.ConfigureTimingForSimpleIO();
-                _writer = new AnalogScaledWriter(_deviceSession.GetDataStream());
+                _writer = new AnalogWriteAdapter( new AnalogScaledWriter(_deviceSession.GetDataStream()), _deviceSession.GetNumberOfChannels());
 
                 _lastScanList = new System.Collections.Generic.List<ViewerItem<double>>(new ViewerItem<double>[_deviceSession.GetNumberOfChannels()]);
 
@@ -82,6 +109,7 @@ namespace UeiBridge
             var p = _attachedConverter.EthToDevice(em.PayloadBytes);
             double [] scan = p as double[];
             System.Diagnostics.Debug.Assert(scan != null);
+            
             _writer.WriteSingleScan( scan);
             lock (_lastScanList)
             {
@@ -94,7 +122,7 @@ namespace UeiBridge
         
         public override string [] GetFormattedStatus( TimeSpan interval)
         {
-            // tbd: must lock. collection modifed outside ......
+            // tbd: must lock. collection modified outside ......
             System.Text.StringBuilder formattedString = new System.Text.StringBuilder("Output voltage: ");
             lock (_lastScanList)
             {

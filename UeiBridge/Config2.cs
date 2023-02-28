@@ -103,7 +103,7 @@ namespace UeiBridge
     }
     public class BlockSensorSetup : DeviceSetup
     {
-
+        public bool IsActive { get; set; }
         public BlockSensorSetup(EndPoint localEndPoint, string deviceName) : base(localEndPoint, null, deviceName)
         {
         }

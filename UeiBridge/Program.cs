@@ -116,6 +116,7 @@ namespace UeiBridge
             int noOfCubes = Config2.Instance.CubeUrlList.Length;
             _deviceObjectsTable = new List<List<PerDeviceObjects>>(new List<PerDeviceObjects>[noOfCubes]);
 
+            System.Diagnostics.Debug.Assert(Config2.Instance.UeiCubes.Length == 1); // only one cube handled!
             // Create program Objects
             foreach (var cubeSetup in Config2.Instance.UeiCubes)
             {
@@ -129,44 +130,38 @@ namespace UeiBridge
                     _deviceObjectsTable[cubeSetup.CubeNumber].Add(new PerDeviceObjects(dev.GetDeviceName(), dev.GetIndex(), cubeSetup.CubeNumber));
                     ++slot;
                 }
-                // add 1 for block-sensor
-
-
-                // special treatment to blockSenser which is 'an OutputDevice'
-                BlockSensorManager blockSensor = CreateBlockSensorObject(realDeviceList, Config2.Instance.Blocksensor);
-                if (null != blockSensor)
-                {
-                    var nic = IPAddress.Parse(Config2.Instance.AppSetup.SelectedNicForMCast);
-                    UdpReader ureader = new UdpReader(Config2.Instance.Blocksensor.LocalEndPoint.ToIpEp(), nic, blockSensor, "BlockSensor");
-                    _deviceObjectsTable[cubeSetup.CubeNumber].Add(new PerDeviceObjects("BlockSensor", -1, cubeSetup.CubeNumber));
-                    _deviceObjectsTable[cubeSetup.CubeNumber].Last().Update(blockSensor, ureader, -1);
-                }
-                else
-                {
-                    _logger.Debug("Block sensor not supported");
-                }
 
                 CreateSerialSessions(cubeSetup, _deviceObjectsTable);
                 CreateDownwardsObjects(cubeSetup, _deviceObjectsTable);
                 CreateUpwardsObjects(cubeSetup, _deviceObjectsTable);
 
-                // attach ao308 to blocksensor
+                System.Threading.Thread.Sleep(100);
+
+                ActivateDownwardOjects(_deviceObjectsTable[cubeSetup.CubeNumber]);
+                ActivateUpwardObjects(_deviceObjectsTable[cubeSetup.CubeNumber]);
+
+                // special treatment to blockSenser which is 'an OutputDevice'
+                BlockSensorManager blockSensor = CreateBlockSensorObject(realDeviceList, Config2.Instance.Blocksensor);
                 if (null != blockSensor)
                 {
-                    var x = _deviceObjectsTable[cubeSetup.CubeNumber].Where(d => (d.OutputDeviceManager != null) && d.OutputDeviceManager.DeviceName.StartsWith("AO-308")).Select(d => d.OutputDeviceManager);
-                    System.Diagnostics.Debug.Assert(x.Count() > 0);
-                    AO308OutputDeviceManager ao308 = x.First() as AO308OutputDeviceManager;
-                    System.Diagnostics.Debug.Assert(null != ao308);
-                    blockSensor.SetAnalogOuputInterface(ao308);
+                    var x1 = _deviceObjectsTable[cubeSetup.CubeNumber].Where(i => i.InputDeviceManager!=null);
+                    var x2 = x1.Where( i => i.InputDeviceManager.DeviceName.StartsWith("DIO")).Select(i => i.InputDeviceManager).FirstOrDefault();
+                    DIO403InputDeviceManager di = x2 as DIO403InputDeviceManager;
+                    di.TargetConsumer = blockSensor;
+
+                    var nic = IPAddress.Parse(Config2.Instance.AppSetup.SelectedNicForMCast);
+                    UdpReader ureader = new UdpReader(Config2.Instance.Blocksensor.LocalEndPoint.ToIpEp(), nic, blockSensor, "BlockSensor");
+                    _deviceObjectsTable[cubeSetup.CubeNumber].Add(new PerDeviceObjects("BlockSensor", -1, cubeSetup.CubeNumber));
+                    _deviceObjectsTable[cubeSetup.CubeNumber].Last().Update(blockSensor, ureader, -1);
                 }
             }
 
             // Activate program Objects
-            foreach (List<PerDeviceObjects> cubeSetup in _deviceObjectsTable)
-            {
-                ActivateDownwardOjects(cubeSetup);
-                ActivateUpwardObjects(cubeSetup);
-            }
+            //foreach (List<PerDeviceObjects> cubeSetup in _deviceObjectsTable)
+            //{
+            //    ActivateDownwardOjects(cubeSetup);
+            //    ActivateUpwardObjects(cubeSetup);
+            //}
         }
 
         private static void ActivateDownwardOjects(List<PerDeviceObjects> deviceObjectsList)
@@ -244,7 +239,7 @@ namespace UeiBridge
                 Type devType = StaticMethods.GetDeviceManagerType<OutputDevice>(deviceSetup.DeviceName);
                 if (null == devType) // if no device-manager class support this device
                 {
-                    _logger.Debug($"Output device of type {deviceSetup.DeviceName} not supported");
+                    //_logger.Debug($"Output device of type {deviceSetup.DeviceName} not supported");
                     continue;
                 }
 
@@ -266,7 +261,7 @@ namespace UeiBridge
                 var nic = IPAddress.Parse(Config2.Instance.AppSetup.SelectedNicForMCast);
                 UdpReader ureader = new UdpReader(deviceSetup.LocalEndPoint.ToIpEp(), nic, outDev, outDev.InstanceName);
 
-                // updae device table
+                // update device table
                 deviceObjectsTable[cubeSetup.CubeNumber][realSlot].Update( outDev, ureader, realSlot);
             }
         }
@@ -283,9 +278,6 @@ namespace UeiBridge
             // search for blocksensor, this affect creation of DIO403Input
             var x = _deviceObjectsTable[cubeSetup.CubeNumber].Where(d => { return d.OutputDeviceManager?.DeviceName.StartsWith("BlockSensor") == true; }).Select(d => d.OutputDeviceManager);
             OutputDevice blockSensor = x.FirstOrDefault() as OutputDevice;
-
-            
-
 
             // Create input-devices instances
             foreach (UeiDaq.Device realDevice in realDeviceList)
@@ -305,7 +297,7 @@ namespace UeiBridge
                 Type devType = StaticMethods.GetDeviceManagerType<InputDevice>(deviceSetup.DeviceName);
                 if (null == devType) // if no device-manager-class supports this device
                 {
-                    _logger.Debug($"Input device of type {deviceSetup.DeviceName} not supported");
+                    //_logger.Debug($"Input device of type {deviceSetup.DeviceName} not supported");
                     continue;
                 }
 
@@ -316,11 +308,11 @@ namespace UeiBridge
                 {
                     inDev = (InputDevice)Activator.CreateInstance(devType, uWriter, deviceSetup, deviceObjectsTable[cubeSetup.CubeNumber][realSlot].SerialSession);
                 }
-                else if ((null != blockSensor) && (devType.Name.StartsWith("DIO403In"))) // special treatment for block sensor
-                {
-                    TeeObject tee = new TeeObject(blockSensor, uWriter);
-                    inDev = (InputDevice)Activator.CreateInstance(devType, tee, deviceSetup);
-                }
+                //else if ((null != blockSensor) && (devType.Name.StartsWith("DIO403In"))) // special treatment for block sensor
+                //{
+                //    TeeObject tee = new TeeObject(blockSensor, uWriter);
+                //    inDev = (InputDevice)Activator.CreateInstance(devType, tee, deviceSetup);
+                //}
                 else
                 {
                     inDev = (InputDevice)Activator.CreateInstance(devType, uWriter, deviceSetup);
@@ -333,17 +325,28 @@ namespace UeiBridge
         /// <summary>
         /// BlockSensorManager might be created only if digital and analog cards exists
         /// </summary>
-        private BlockSensorManager CreateBlockSensorObject(List<Device> realDeviceList, DeviceSetup analogSensorSetup)
+        private BlockSensorManager CreateBlockSensorObject(List<Device> realDeviceList, BlockSensorSetup blockSensorSetup)
         {
-            BlockSensorManager result=null;
-            List<string> list1 = new List<string>();
-            //foreach(var x in realDeviceList) { list1.Add(x.GetDeviceName()); }
-
-            bool digitalExist = realDeviceList.Any(d => d.GetDeviceName().StartsWith("AO-308"));
-            bool analogExist = realDeviceList.Any(d => d.GetDeviceName().StartsWith("DIO-403"));
-            if (digitalExist && analogExist)
+            if (false == blockSensorSetup.IsActive)
             {
-                result = new BlockSensorManager(analogSensorSetup);
+                _logger.Debug("Block sensor disabled.");
+                return null;
+            }
+
+            BlockSensorManager result = null;
+            var x = _deviceObjectsTable[0].Where(d => (d.OutputDeviceManager != null) && d.OutputDeviceManager.DeviceName.StartsWith("AO-308")).Select(d => d.OutputDeviceManager);
+            System.Diagnostics.Debug.Assert(x.Count() > 0);
+            AO308OutputDeviceManager ao308 = x.FirstOrDefault() as AO308OutputDeviceManager;
+            System.Diagnostics.Debug.Assert(null != ao308);
+            bool digitalExist = realDeviceList.Any(d => d.GetDeviceName().StartsWith("DIO-403"));
+            if (digitalExist && ao308!=null)
+            {
+                result = new BlockSensorManager(blockSensorSetup, ao308.AnalogWriter);
+                _logger.Info("Blocksensor object created");
+            }
+            else
+            {
+                _logger.Warn("Failed to create blocksensor object");
             }
             return result;
         }

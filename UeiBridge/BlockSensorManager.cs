@@ -13,24 +13,47 @@ namespace UeiBridge
     /// It gets a udp message which define series of voltage values.
     /// According to input from digital card, it decide into which analog output is should emit this values.
     /// </summary>
-    class BlockSensorManager : OutputDevice//, ISend<SendObject>
+    class BlockSensorManager : OutputDevice, ISend<SendObject>
     {
         #region === publics ====
         public override string DeviceName => "BlockSensor";
         public override string InstanceName => "BlockSensorManager";
         #endregion
         #region === privates ===
-        AO308OutputDeviceManager _ao308Device;
+        //AO308OutputDeviceManager _ao308Device;
         log4net.ILog _logger = StaticMethods.GetLogger();
         List<BlockSensorEntry> _blockSensorTable = new List<BlockSensorEntry>();
         DIO403Convert _digitalConverter = new DIO403Convert( null);
+        IAnalogWrite _analogWriter;
+        int _subaddress;
+        double[] _analogScan;
         #endregion
 
-        public BlockSensorManager(DeviceSetup deviceSetup) : base(deviceSetup)
+        public BlockSensorManager(DeviceSetup deviceSetup, IAnalogWrite writer) : base(deviceSetup)
         {
+            System.Diagnostics.Debug.Assert(writer != null);
             _deviceSetup = deviceSetup;
+            _analogWriter = writer;
+
+            _blockSensorTable.Add(new BlockSensorEntry("ps1", 4, 0));
+            _blockSensorTable.Add(new BlockSensorEntry("ps2", 6, 1));
+            _blockSensorTable.Add(new BlockSensorEntry("ps3", 5, 2));
+            _blockSensorTable.Add(new BlockSensorEntry("pd1", 1, 0));
+            _blockSensorTable.Add(new BlockSensorEntry("pd2", 1, 1));
+            _blockSensorTable.Add(new BlockSensorEntry("pd3", 1, 2));
+            _blockSensorTable.Add(new BlockSensorEntry("t1",  2, 0));
+            _blockSensorTable.Add(new BlockSensorEntry("t2",  2, 1));
+            _blockSensorTable.Add(new BlockSensorEntry("t3",  4, 2));
+            _blockSensorTable.Add(new BlockSensorEntry("vref1", 5, 0));
+            _blockSensorTable.Add(new BlockSensorEntry("vref2", 5, 1));
+            _blockSensorTable.Add(new BlockSensorEntry("vref3", 7, 2));
+            _blockSensorTable.Add(new BlockSensorEntry("vref4", 0, 3));
+            _blockSensorTable.Add(new BlockSensorEntry("p5v3", 1, 3));
+
+            _analogScan = new double[writer.NumberOfChannels];
+            Array.Clear(_analogScan, 0, _analogScan.Length);
         }
-        public BlockSensorManager() : base(null) // must be here for Activator.CreateInstance
+        public BlockSensorManager() : base(null) // empty c-tor for Activator.CreateInstance()
         {
         }
 
@@ -57,15 +80,12 @@ namespace UeiBridge
 
         /// <summary>
         /// Two types of messages might reach here
-        /// 1. From "DIO-403". (Actually, this is an outgoing message and a copy of it is delivered to here)
-        /// 2. From Ethernet. the id: _cardIdMap.Add(32, "BlockSensor"). The first message 'opens' this manager
+        /// 1. From "DIO-403/Input". (a copy of the upstream message)
+        /// 2. From Ethernet. id of this message is 32 ("to BlockSensor").
         /// </summary>
         public override void Enqueue(byte[] byteMessage)
         {
-
-            return;
-
-            // if message comes from digital card
+            // upstream message from digital/input card
             if (byteMessage[EthernetMessage._cardTypeOffset] == StaticMethods.GetCardIdFromCardName("DIO-403"))
             {
                 // convert
@@ -73,12 +93,10 @@ namespace UeiBridge
                 {
                     EthernetMessage msg = EthernetMessage.CreateFromByteArray(byteMessage, MessageDirection.upstream);
                     System.Diagnostics.Debug.Assert(null != msg);
-                    byte[] digitalVector = _digitalConverter.EthToDevice(msg.PayloadBytes) as byte[];
-                    System.Diagnostics.Debug.Assert(null != digitalVector);
+                    //byte[] digitalVector = _digitalConverter.EthToDevice(msg.PayloadBytes) as byte[];
+                    //System.Diagnostics.Debug.Assert(null != digitalVector);
 
-                    // emit to analog card
-                    var b = StaticMethods.Make_A308Down_message();
-                    _ao308Device.Enqueue(b);
+                    _subaddress = msg.PayloadBytes[0] & 0x7; // get lower 3 bits
                 }
                 catch (ArgumentException ex)
                 {
@@ -86,18 +104,41 @@ namespace UeiBridge
                 }
             }
 
-
-
+            // downstream message aimed to block sensor
+            if (byteMessage[EthernetMessage._cardTypeOffset] == StaticMethods.GetCardIdFromCardName("BlockSensor"))
+            {
+                var selectedEntries = _blockSensorTable.Where(ent => ent.Subaddress == this._subaddress);
+                foreach (var entry in selectedEntries)
+                {
+                    int line = entry.chan_ain;
+                    UInt16 a = byteMessage[line];
+                    var at = (IConvert)Activator.CreateInstance( typeof( AO308Convert), null);
+                    // emit to analog card
+                    _analogWriter.WriteSingleScan(null);
+                }
+            }
         }
-        internal void SetAnalogOuputInterface(AO308OutputDeviceManager ao308)
+
+        public void Send(SendObject obj)
         {
-            _ao308Device = ao308;
+            this.Enqueue(obj.ByteMessage);
         }
+        //internal void SetAnalogOuputInterface(AO308OutputDeviceManager ao308)
+        //{
+        //    _ao308Device = ao308;
+        //}
     }
     class BlockSensorEntry
     {
-        string signalName;
-        int subaddress; // address
-        int chan_ain;
+        public string SignalName { get; private set; }
+        public int chan_ain { get; private set; }
+        public int Subaddress { get; private set; }
+
+        public BlockSensorEntry(string signalName, int chan_ain, int subaddress)
+        {
+            SignalName = signalName;
+            this.chan_ain = chan_ain;
+            Subaddress = subaddress;
+        }
     }
 }

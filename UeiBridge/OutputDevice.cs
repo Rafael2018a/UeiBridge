@@ -88,7 +88,7 @@ namespace UeiBridge
         /// </summary>
         protected void OutputDeviceHandler_Task()
         {
-            _logger.Debug($"OutputDeviceHandler_Task start. {InstanceName}");
+           // _logger.Debug($"OutputDeviceHandler_Task start. {InstanceName}");
             // message loop
             while (false == _dataItemsQueue2.IsCompleted)
             {
