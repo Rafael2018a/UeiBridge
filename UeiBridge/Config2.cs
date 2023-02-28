@@ -338,6 +338,13 @@ namespace UeiBridge
 
             return resultConfig;
         }
+
+        public DeviceSetup GetSetupEntryForDevice(int cubeId, string deviceName)
+        {
+            var ds = this.UeiCubes[0].DeviceSetupList.Where(i => i.DeviceName == deviceName);
+            return ds.FirstOrDefault();
+        }
+
     }
     public class ValidValuesClass
     {

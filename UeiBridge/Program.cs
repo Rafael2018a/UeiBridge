@@ -153,6 +153,8 @@ namespace UeiBridge
                     UdpReader ureader = new UdpReader(Config2.Instance.Blocksensor.LocalEndPoint.ToIpEp(), nic, blockSensor, "BlockSensor");
                     _deviceObjectsTable[cubeSetup.CubeNumber].Add(new PerDeviceObjects("BlockSensor", -1, cubeSetup.CubeNumber));
                     _deviceObjectsTable[cubeSetup.CubeNumber].Last().Update(blockSensor, ureader, -1);
+                    blockSensor.OpenDevice();
+                    ureader.Start();
                 }
             }
 
@@ -308,11 +310,6 @@ namespace UeiBridge
                 {
                     inDev = (InputDevice)Activator.CreateInstance(devType, uWriter, deviceSetup, deviceObjectsTable[cubeSetup.CubeNumber][realSlot].SerialSession);
                 }
-                //else if ((null != blockSensor) && (devType.Name.StartsWith("DIO403In"))) // special treatment for block sensor
-                //{
-                //    TeeObject tee = new TeeObject(blockSensor, uWriter);
-                //    inDev = (InputDevice)Activator.CreateInstance(devType, tee, deviceSetup);
-                //}
                 else
                 {
                     inDev = (InputDevice)Activator.CreateInstance(devType, uWriter, deviceSetup);
@@ -471,19 +468,19 @@ namespace UeiBridge
                     UdpClient udpClient = new UdpClient();
                     System.Threading.Thread.Sleep(100);
 
-                    for (int i = 0; i < 1; i++)
+                    for (int i = 0; i < 10; i++)
                     {
                         // digital out
                         {
                             IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[5].LocalEndPoint?.ToIpEp();
                             byte[] e403 = StaticMethods.Make_DIO403Down_Message();
-                            udpClient.Send(e403, e403.Length, destEp);
+                            //udpClient.Send(e403, e403.Length, destEp);
                         }
                         // analog out
                         {
                             IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[0].LocalEndPoint.ToIpEp();
                             byte[] e308 = StaticMethods.Make_A308Down_message();
-                            udpClient.Send(e308, e308.Length, destEp);
+                            //udpClient.Send(e308, e308.Length, destEp);
                         }
 #if dontremove
                         byte[] e430 = StaticMethods.Make_DIO430Down_Message();
@@ -496,7 +493,7 @@ namespace UeiBridge
                         foreach (byte[] msg in e508)
                         {
                             IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[3].LocalEndPoint.ToIpEp();
-                            udpClient.Send(msg, msg.Length, destEp);
+                            //udpClient.Send(msg, msg.Length, destEp);
                             System.Threading.Thread.Sleep(10);
                         }
 
@@ -507,7 +504,14 @@ namespace UeiBridge
                             //udpClient.Send(e470, e470.Length, destEp);
                         }
 
-                        Thread.Sleep(100);
+                        // block sensor
+                        {
+                            IPEndPoint destEp = Config2.Instance.Blocksensor.LocalEndPoint.ToIpEp();
+                            byte[] bs = StaticMethods.Make_BlockSensor_downstream_message();
+                            udpClient.Send(bs, bs.Length, destEp);
+                        }
+
+                        Thread.Sleep(1000);
 
                     }
                     _logger.Info("Downward message simulation end");

@@ -200,6 +200,15 @@ namespace UeiBridge
 
             return msg.GetByteArray(MessageDirection.downstream);
         }
+
+        public static byte[] Make_BlockSensor_downstream_message()
+        {
+            byte[] payload = new byte[14 * 2];
+            var m = EthernetMessage.CreateMessage(32, -1, 0, payload);
+            return m.GetByteArray(MessageDirection.downstream);
+        }
+
+
         public static byte[] Make_DIO470_Down_Message()
         {
             EthernetMessage msg = EthernetMessage.CreateEmpty(6, 3);

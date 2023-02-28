@@ -27,12 +27,14 @@ namespace UeiBridge
         IAnalogWrite _analogWriter;
         int _subaddress;
         double[] _analogScan;
+        BlockSensorSetup _thisDeviceSetup;
         #endregion
 
         public BlockSensorManager(DeviceSetup deviceSetup, IAnalogWrite writer) : base(deviceSetup)
         {
             System.Diagnostics.Debug.Assert(writer != null);
-            _deviceSetup = deviceSetup;
+            _thisDeviceSetup = deviceSetup as BlockSensorSetup;
+            System.Diagnostics.Debug.Assert(null != _thisDeviceSetup);
             _analogWriter = writer;
 
             _blockSensorTable.Add(new BlockSensorEntry("ps1", 4, 0));
@@ -68,7 +70,7 @@ namespace UeiBridge
 
         public override bool OpenDevice()
         {
-            _logger.Info($"Init success: {InstanceName} . Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}");
+            _logger.Info($"Init success: {InstanceName} . Listening on { _thisDeviceSetup.LocalEndPoint.ToIpEp()}");
             // device shall be opened upon first setup message (from simulator)
             return true;
         }
@@ -102,6 +104,8 @@ namespace UeiBridge
                 {
                     _logger.Warn($"BlockSensor: {ex.Message}");
                 }
+
+                return;
             }
 
             // downstream message aimed to block sensor
@@ -111,10 +115,14 @@ namespace UeiBridge
                 foreach (var entry in selectedEntries)
                 {
                     int line = entry.chan_ain;
-                    UInt16 a = byteMessage[line];
-                    var at = (IConvert)Activator.CreateInstance( typeof( AO308Convert), null);
+                    EthernetMessage msg = EthernetMessage.CreateFromByteArray(byteMessage, MessageDirection.downstream);
+                    DeviceSetup ds = Config2.Instance.GetSetupEntryForDevice(0, "AO-308");
+                    var converter = (IConvert)Activator.CreateInstance(typeof( AO308Convert), ds);
+                    double [] scan = converter.EthToDevice(msg.PayloadBytes) as double[];
+                    System.Diagnostics.Debug.Assert(scan != null);
+                    _analogScan[line] = scan[line];
                     // emit to analog card
-                    _analogWriter.WriteSingleScan(null);
+                    _analogWriter.WriteSingleScan(_analogScan);
                 }
             }
         }

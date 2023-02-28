@@ -14,7 +14,7 @@ namespace UeiBridge
         string _lastError { get; set; }
         string IConvert.LastErrorMessage => _lastError;
 
-        const int _numberOfChannels = 8;
+        //const int _numberOfChannels = 8;
         readonly double  _peekToPeekVoltage;
         readonly double _conversionFactor;
 
@@ -38,14 +38,14 @@ namespace UeiBridge
         /// </summary>
         public object EthToDevice(byte[] messagePayload)
         {
-            if ((messagePayload.Length) < _numberOfChannels * sizeof(UInt16))
-            {
-                _lastError = $"analog-out message too short. {messagePayload.Length} ";
-                return null;
-            }
+            //if ((messagePayload.Length) < _numberOfChannels * sizeof(UInt16))
+            //{
+            //    _lastError = $"analog-out message too short. {messagePayload.Length} ";
+            //    return null;
+            //}
 
-            double[] resultVector = new double[_numberOfChannels];
-            for (int chNum = 0; chNum < _numberOfChannels; chNum++)
+            double[] resultVector = new double[messagePayload.Length/sizeof(UInt16)];
+            for (int chNum = 0; chNum < resultVector.Length; chNum++)
             {
                 Int16 ival = BitConverter.ToInt16(messagePayload, 2 * chNum);
                 resultVector[chNum] = ival * _conversionFactor;
