@@ -7,7 +7,7 @@ using UeiBridge.Library;
 
 namespace UeiBridge
 {
-    public class AnalogWriteAdapter: IAnalogWrite
+    public class AnalogWriteAdapter: IAnalogWriter
     {
         AnalogScaledWriter _ueiAnalogWriter;
         //string _deviceUrl;
@@ -44,7 +44,7 @@ namespace UeiBridge
         // publics
         public override string DeviceName => "AO-308";
         public override string InstanceName { get; }
-        public IAnalogWrite AnalogWriter => _writer;
+        public IAnalogWriter AnalogWriter => _writer;
         // privates
         //AnalogScaledWriter _writer;
         AnalogWriteAdapter _writer;

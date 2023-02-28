@@ -13,7 +13,7 @@ namespace UeiBridge
     /// It gets a udp message which define series of voltage values.
     /// According to input from digital card, it decide into which analog output is should emit this values.
     /// </summary>
-    class BlockSensorManager : OutputDevice, ISend<SendObject>
+    public class BlockSensorManager : OutputDevice, ISend<SendObject>
     {
         #region === publics ====
         public override string DeviceName => "BlockSensor";
@@ -24,13 +24,13 @@ namespace UeiBridge
         log4net.ILog _logger = StaticMethods.GetLogger();
         List<BlockSensorEntry> _blockSensorTable = new List<BlockSensorEntry>();
         DIO403Convert _digitalConverter = new DIO403Convert( null);
-        IAnalogWrite _analogWriter;
+        IAnalogWriter _analogWriter;
         int _subaddress;
         double[] _analogScan;
         BlockSensorSetup _thisDeviceSetup;
         #endregion
 
-        public BlockSensorManager(DeviceSetup deviceSetup, IAnalogWrite writer) : base(deviceSetup)
+        public BlockSensorManager(DeviceSetup deviceSetup, IAnalogWriter writer) : base(deviceSetup)
         {
             System.Diagnostics.Debug.Assert(writer != null);
             _thisDeviceSetup = deviceSetup as BlockSensorSetup;

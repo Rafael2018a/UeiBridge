@@ -10,10 +10,10 @@ namespace UeiBridge.Library
     {
 
     }
-    public interface IAnalogWrite
+    public interface IAnalogWriter
     {
         void WriteSingleScan(double[] scen);
-        int NumberOfChannels { get; set; }
+        int NumberOfChannels { get; }
     }
     public interface DigitalWrite
     {
