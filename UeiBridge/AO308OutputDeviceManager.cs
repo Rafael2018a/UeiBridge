@@ -75,8 +75,8 @@ namespace UeiBridge
                 string cubeUrl = $"{_deviceSetup.CubeUrl}Dev{_deviceSetup.SlotNumber}/{_channelsString}";
 
                 _deviceSession = new Session();
-                var c = _deviceSession.CreateAOChannel(cubeUrl, -_thisDeviceSetup.PeekVoltage_Out, _thisDeviceSetup.PeekVoltage_Out);
-                System.Diagnostics.Debug.Assert(c.GetMaximum() == _thisDeviceSetup.PeekVoltage_Out);
+                var c = _deviceSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
+                System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
                 _deviceSession.ConfigureTimingForSimpleIO();
                 _writer = new AnalogWriteAdapter( new AnalogScaledWriter(_deviceSession.GetDataStream()), _deviceSession.GetNumberOfChannels());
 

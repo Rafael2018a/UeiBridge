@@ -31,7 +31,6 @@ namespace UeiBridge.Types
     {
         object DownstreamConvert(byte[] messagePayload);
         byte[] UpstreamConvert(object dt);
-        string DeviceName { get; }
     }
     /// <summary>
     /// (Immutable)

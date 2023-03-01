@@ -53,7 +53,7 @@ namespace UeiBridge
                 //ScanResult dr = new ScanResult(_lastScan, this);
                 byte[] payload = _attachedConverter.DeviceToEth(_lastScan);
                 EthernetMessage em = StaticMethods.BuildEthernetMessageFromDevice(payload, this._thisDeviceSetup);
-                SendObject so = new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), em.GetByteArray( MessageDirection.upstream));
+                SendObject so = new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), em.GetByteArray( MessageWay.upstream));
                 _targetConsumer.Send(so);
             }
             catch (Exception ex)
@@ -64,7 +64,7 @@ namespace UeiBridge
 
         public override void OpenDevice()
         {
-            double peek = _thisDeviceSetup.PeekVoltage_In;
+            double peek = AI201100Setup.PeekVoltage_upstream;
             try
             {
                 string url1 = $"{_thisDeviceSetup.CubeUrl}Dev{_thisDeviceSetup.SlotNumber}/{_channelsString}";

@@ -25,7 +25,7 @@ namespace UeiBridge
         List<BlockSensorEntry> _blockSensorTable = new List<BlockSensorEntry>();
         DIO403Convert _digitalConverter = new DIO403Convert( null);
         IAnalogWriter _analogWriter;
-        int _subaddress;
+        int _subaddress = -1;
         double[] _analogScan;
         BlockSensorSetup _thisDeviceSetup;
         #endregion
@@ -37,20 +37,21 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert(null != _thisDeviceSetup);
             _analogWriter = writer;
 
-            _blockSensorTable.Add(new BlockSensorEntry("ps1", 4, 0));
-            _blockSensorTable.Add(new BlockSensorEntry("ps2", 6, 1));
-            _blockSensorTable.Add(new BlockSensorEntry("ps3", 5, 2));
-            _blockSensorTable.Add(new BlockSensorEntry("pd1", 1, 0));
-            _blockSensorTable.Add(new BlockSensorEntry("pd2", 1, 1));
-            _blockSensorTable.Add(new BlockSensorEntry("pd3", 1, 2));
-            _blockSensorTable.Add(new BlockSensorEntry("t1",  2, 0));
-            _blockSensorTable.Add(new BlockSensorEntry("t2",  2, 1));
-            _blockSensorTable.Add(new BlockSensorEntry("t3",  4, 2));
-            _blockSensorTable.Add(new BlockSensorEntry("vref1", 5, 0));
-            _blockSensorTable.Add(new BlockSensorEntry("vref2", 5, 1));
-            _blockSensorTable.Add(new BlockSensorEntry("vref3", 7, 2));
-            _blockSensorTable.Add(new BlockSensorEntry("vref4", 0, 3));
-            _blockSensorTable.Add(new BlockSensorEntry("p5v3", 1, 3));
+            int serial = 0;
+            _blockSensorTable.Add(new BlockSensorEntry(serial++, "ps1", 4, 0));
+            _blockSensorTable.Add(new BlockSensorEntry(serial++, "ps2", 6, 1));
+            _blockSensorTable.Add(new BlockSensorEntry(serial++, "ps3", 5, 2));
+            _blockSensorTable.Add(new BlockSensorEntry(serial++, "pd1", 1, 0));
+            _blockSensorTable.Add(new BlockSensorEntry(serial++, "pd2", 1, 1));
+            _blockSensorTable.Add(new BlockSensorEntry(serial++, "pd3", 1, 2));
+            _blockSensorTable.Add(new BlockSensorEntry(serial++, "t1",  2, 0));
+            _blockSensorTable.Add(new BlockSensorEntry(serial++, "t2",  2, 1));
+            _blockSensorTable.Add(new BlockSensorEntry(serial++, "t3",  4, 2));
+            _blockSensorTable.Add(new BlockSensorEntry(serial++, "vref1", 5, 0));
+            _blockSensorTable.Add(new BlockSensorEntry(serial++, "vref2", 5, 1));
+            _blockSensorTable.Add(new BlockSensorEntry(serial++, "vref3", 7, 2));
+            _blockSensorTable.Add(new BlockSensorEntry(serial++, "vref4", 0, 3));
+            _blockSensorTable.Add(new BlockSensorEntry(serial++, "p5v3", 1, 3));
 
             _analogScan = new double[writer.NumberOfChannels];
             Array.Clear(_analogScan, 0, _analogScan.Length);
@@ -93,8 +94,8 @@ namespace UeiBridge
                 // convert
                 try
                 {
-                    EthernetMessage msg = EthernetMessage.CreateFromByteArray(byteMessage, MessageDirection.upstream);
-                    System.Diagnostics.Debug.Assert(null != msg);
+                    EthernetMessage msg = EthernetMessage.CreateFromByteArray(byteMessage, MessageWay.upstream);
+                    if (null == msg) throw new ArgumentNullException();
                     //byte[] digitalVector = _digitalConverter.EthToDevice(msg.PayloadBytes) as byte[];
                     //System.Diagnostics.Debug.Assert(null != digitalVector);
 
@@ -104,23 +105,24 @@ namespace UeiBridge
                 {
                     _logger.Warn($"BlockSensor: {ex.Message}");
                 }
-
                 return;
             }
 
             // downstream message aimed to block sensor
             if (byteMessage[EthernetMessage._cardTypeOffset] == StaticMethods.GetCardIdFromCardName("BlockSensor"))
             {
+                if (_subaddress < 0)
+                {
+                    return;
+                }
                 var selectedEntries = _blockSensorTable.Where(ent => ent.Subaddress == this._subaddress);
+                EthernetMessage downsteramMessage = EthernetMessage.CreateFromByteArray(byteMessage, MessageWay.downstream);
+                var converter = new AnalogConverter(AI201100Setup.PeekVoltage_upstream, AO308Setup.PeekVoltage_downstream);
+                double[] scan = converter.DownstreamConvert(downsteramMessage.PayloadBytes) as double[];
                 foreach (var entry in selectedEntries)
                 {
-                    int line = entry.chan_ain;
-                    EthernetMessage msg = EthernetMessage.CreateFromByteArray(byteMessage, MessageDirection.downstream);
-                    DeviceSetup ds = Config2.Instance.GetSetupEntryForDevice(0, "AO-308");
-                    var converter = (IConvert)Activator.CreateInstance(typeof( AO308Convert), ds);
-                    double [] scan = converter.EthToDevice(msg.PayloadBytes) as double[];
-                    System.Diagnostics.Debug.Assert(scan != null);
-                    _analogScan[line] = scan[line];
+                    //int line = ;
+                    _analogScan[entry.chan_ain] = scan[entry.EntrySerial];
                     // emit to analog card
                     _analogWriter.WriteSingleScan(_analogScan);
                 }
@@ -138,15 +140,17 @@ namespace UeiBridge
     }
     class BlockSensorEntry
     {
+        public int EntrySerial { get; private set; }
         public string SignalName { get; private set; }
         public int chan_ain { get; private set; }
         public int Subaddress { get; private set; }
 
-        public BlockSensorEntry(string signalName, int chan_ain, int subaddress)
+        public BlockSensorEntry(int entrySerial, string signalName, int subaddress, int chan_ain )
         {
-            SignalName = signalName;
+            this.EntrySerial = entrySerial;
+            this.SignalName = signalName;
+            this.Subaddress = subaddress;
             this.chan_ain = chan_ain;
-            Subaddress = subaddress;
         }
     }
 }

@@ -507,8 +507,8 @@ namespace UeiBridge
                         // block sensor
                         {
                             IPEndPoint destEp = Config2.Instance.Blocksensor.LocalEndPoint.ToIpEp();
-                            byte[] bs = StaticMethods.Make_BlockSensor_downstream_message();
-                            udpClient.Send(bs, bs.Length, destEp);
+                            EthernetMessage em = StaticMethods.Make_BlockSensor_downstream_message(new UInt16[]{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 });
+                            udpClient.Send(em.GetByteArray( MessageWay.downstream), em.GetByteArray(MessageWay.downstream).Length, destEp);
                         }
 
                         Thread.Sleep(1000);

@@ -9,7 +9,7 @@ using UeiBridge.Library;
 
 namespace UeiBridge
 {
-    static class StaticMethods
+    public static class StaticMethods
     {
         static string _lastErrorMessage;
         public static string LastErrorMessage { get => _lastErrorMessage; }
@@ -188,7 +188,7 @@ namespace UeiBridge
             {
                 msg.PayloadBytes[i] = (byte)(i);
             }
-            return msg.GetByteArray( MessageDirection.downstream);
+            return msg.GetByteArray( MessageWay.downstream);
         }
         public static byte[] Make_DIO403Down_Message()
         {
@@ -198,14 +198,28 @@ namespace UeiBridge
             msg.PayloadBytes[2] = 0x56;
             msg.SlotNumber = 5;
 
-            return msg.GetByteArray(MessageDirection.downstream);
+            return msg.GetByteArray(MessageWay.downstream);
+        }
+        public static byte[] Make_Dio403_upstream_message()
+        {
+            int id = GetCardIdFromCardName("DIO-403");
+            var b = EthernetMessage.CreateMessage(id, 0, 0, new byte[] { 0x5, 0, 0 });
+            return b.GetByteArray(MessageWay.upstream);
         }
 
-        public static byte[] Make_BlockSensor_downstream_message()
+        public static EthernetMessage Make_BlockSensor_downstream_message(UInt16 [] payload)
         {
-            byte[] payload = new byte[14 * 2];
-            var m = EthernetMessage.CreateMessage(32, -1, 0, payload);
-            return m.GetByteArray(MessageDirection.downstream);
+            if (payload.Length != 14) throw new ArgumentException();
+
+            byte[] result = new byte[payload.Length * 2];
+            for (int i=0; i<payload.Length; i++)
+            {
+                byte[] two = BitConverter.GetBytes(payload[i]);
+                result[i*2] = two[0];
+                result[i*2+1] = two[1];
+            }
+
+            return EthernetMessage.CreateMessage(32, -1, 0, result);
         }
 
 
@@ -217,12 +231,12 @@ namespace UeiBridge
             msg.PayloadBytes[2] = 0x56;
             msg.SlotNumber = 4;
 
-            return msg.GetByteArray( MessageDirection.downstream);
+            return msg.GetByteArray( MessageWay.downstream);
         }
         public static byte[] Make_DIO430Down_Message()
         {
             EthernetMessage msg = EthernetMessage.CreateEmpty(6, 16);
-            return msg.GetByteArray(MessageDirection.downstream);
+            return msg.GetByteArray(MessageWay.downstream);
         }
         public static List<byte[]> Make_SL508Down_Messages( int seed)
         {
@@ -240,7 +254,7 @@ namespace UeiBridge
                 msg.PayloadBytes = System.Text.Encoding.ASCII.GetBytes(m);
                 msg.SerialChannelNumber = ch;
                 msg.SlotNumber = 3;
-                msgs.Add(msg.GetByteArray( MessageDirection.downstream));
+                msgs.Add(msg.GetByteArray( MessageWay.downstream));
             }
             return msgs;
         }

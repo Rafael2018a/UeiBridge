@@ -103,7 +103,7 @@ namespace UeiBridge
                 EthernetMessage em = StaticMethods.BuildEthernetMessageFromDevice(payload, this._thisDevieSetup, channel);
                 // forward to consumer (send by udp)
                 //ScanResult sr = new ScanResult(receiveBuffer, this);
-                _targetConsumer.Send(new SendObject(_targetEp, em.GetByteArray( MessageDirection.upstream)));
+                _targetConsumer.Send(new SendObject(_targetEp, em.GetByteArray( MessageWay.upstream)));
 
                 // restart reader
                 readerIAsyncResult = _serialReaderList[channel].BeginRead(minLen, this.ReaderCallback, channel);

@@ -70,7 +70,7 @@ namespace UeiBridge
             //string errorString;
             try
             {
-                EthernetMessage em = EthernetMessage.CreateFromByteArray(m, MessageDirection.downstream);
+                EthernetMessage em = EthernetMessage.CreateFromByteArray(m, MessageWay.downstream);
                 System.Diagnostics.Debug.Assert(em != null);
                 if (!_dataItemsQueue2.IsCompleted)
                 {

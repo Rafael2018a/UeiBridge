@@ -114,8 +114,8 @@ namespace UeiBridge
     }
     public class AO308Setup : DeviceSetup
     {
-        public double PeekVoltage_Out => 10.0;
-        
+        [XmlIgnore]
+        public static double PeekVoltage_downstream => 10.0;
 
         public AO308Setup()
         {
@@ -136,7 +136,7 @@ namespace UeiBridge
     public class AI201100Setup : DeviceSetup
     {
         [XmlIgnore]
-        public double PeekVoltage_In => 12.0;
+        public static double PeekVoltage_upstream => 12.0;
         public AI201100Setup( EndPoint destEndPoint, Device device) : base( null, destEndPoint, device)
         {
         }

@@ -24,7 +24,7 @@ namespace UeiBridge
             if (null == ao308)
                 return;
             
-            _peekToPeekVoltage = ao308.PeekVoltage_Out * 2;  //Analog_Out_PeekVoltage * 2;
+            _peekToPeekVoltage = AO308Setup.PeekVoltage_downstream * 2;  //Analog_Out_PeekVoltage * 2;
             _conversionFactor = _peekToPeekVoltage / UInt16.MaxValue;
             //_numberOfChannels = Config.Instance.MaxAnalogOutputChannels;
         }
@@ -196,9 +196,9 @@ namespace UeiBridge
             {
                 double clippedVal = (val > 12.0) ? 12.0 : val;
                 clippedVal = (clippedVal < -12.0) ? -12.0 : clippedVal;
-                double p2p = _thisDeviceSsetup.PeekVoltage_In * 2.0;
+                double p2p = AI201100Setup.PeekVoltage_upstream * 2.0;
 
-                double zVal = clippedVal + _thisDeviceSsetup.PeekVoltage_In; // make zero based
+                double zVal = clippedVal + AI201100Setup.PeekVoltage_upstream; // make zero based
                 System.Diagnostics.Debug.Assert(zVal >= 0.0);
                 //zVal = (zVal >= p2p) ? p2p : zVal; // protect from high voltage
                 double normVal = zVal / p2p; 
@@ -245,5 +245,55 @@ namespace UeiBridge
             //return newpayload;
         }
     }
-    //
+
+    public class AnalogConverter : IConvert2
+    {
+        //readonly double _peekToPeekVoltage;
+        //readonly double _conversionFactor;
+        double _peekVoltage_upstream;
+        double _peekVoltage_downstream;
+
+        public AnalogConverter( double peekVoltage_upstream, double peekVoltage_downstream)
+        {
+            _peekVoltage_upstream = peekVoltage_upstream;
+            _peekVoltage_downstream = peekVoltage_downstream;
+        }
+        /// <summary>
+        /// Convert from UInt16 to double
+        /// </summary>
+        public object DownstreamConvert(byte[] messagePayload)
+        {
+            double[] resultVector = new double[messagePayload.Length / sizeof(UInt16)];
+            for (int chNum = 0; chNum < resultVector.Length; chNum++)
+            {
+                UInt16 intval = BitConverter.ToUInt16(messagePayload, 2 * chNum);
+                resultVector[chNum] = Uint16ToPlusMinusVoltage(_peekVoltage_downstream, intval);
+            }
+            return resultVector;
+        }
+
+        public byte[] UpstreamConvert(object dt)
+        {
+            throw new NotImplementedException();
+        }
+
+        public static UInt16 PlusMinusVoltageToUInt16( double peekVoltage, double valueToConvert)
+        {
+            double v1 = (valueToConvert > peekVoltage) ? peekVoltage : valueToConvert;
+            double v2 = (v1 < -peekVoltage) ? -peekVoltage : v1;
+
+            double v3 = (v2 + peekVoltage)/peekVoltage/2.0;
+            double max = Convert.ToDouble(UInt16.MaxValue);
+            UInt16 result = Convert.ToUInt16( v3 * max);
+            return result;
+        }
+
+        public static double Uint16ToPlusMinusVoltage(double peekVoltage, UInt16 u16)
+        {
+            double d16 = Convert.ToDouble(u16);
+            double dmax = Convert.ToDouble(UInt16.MaxValue);
+            double r = ( d16 / dmax * peekVoltage * 2.0);
+            return( r - peekVoltage);
+        }
+    }
 }

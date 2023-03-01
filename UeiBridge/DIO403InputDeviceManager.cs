@@ -107,7 +107,7 @@ namespace UeiBridge
                 byte[] payload = this.AttachedConverter.DeviceToEth(_lastScan);
                 var em = StaticMethods.BuildEthernetMessageFromDevice( payload, _thisDeviceSetup);
 
-                _targetConsumer.Send(new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), em.GetByteArray( MessageDirection.upstream)));
+                _targetConsumer.Send(new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), em.GetByteArray( MessageWay.upstream)));
             }
             catch (Exception ex)
             {

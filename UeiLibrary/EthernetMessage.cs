@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace UeiBridge.Library
 {
-    public enum MessageDirection { upstream, downstream}
+    public enum MessageWay { upstream, downstream}
     /// <summary>
     /// This class represents an icd dedicated datagram 
     /// that might be received or sent by this application
@@ -61,13 +61,13 @@ namespace UeiBridge.Library
         /// Convert to current instance byte array (for sending through ethernet)
         /// Might return null.
         /// </summary>
-        public byte[] GetByteArray( MessageDirection way)
+        public byte[] GetByteArray( MessageWay way)
         {
             var result = ToByteArray();
             if (result == null)
                 return result;
 
-            if (way == MessageDirection.upstream)
+            if (way == MessageWay.upstream)
             {
                 result[0] = 0x55;
                 result[1] = 0xAA;
@@ -106,7 +106,7 @@ namespace UeiBridge.Library
         /// <summary>
         /// Create EthernetMessage from byte array
         /// </summary>
-        public static EthernetMessage CreateFromByteArray(byte[] byteMessage, MessageDirection way)
+        public static EthernetMessage CreateFromByteArray(byte[] byteMessage, MessageWay way)
         {
             EthernetMessage resutlMessage = null;
             string errMsg;
@@ -132,7 +132,7 @@ namespace UeiBridge.Library
             return resutlMessage;
         }
 
-        private static bool CheckByteArrayValidity(byte[] byteMessage, MessageDirection way, out string errorString)
+        private static bool CheckByteArrayValidity(byte[] byteMessage, MessageWay way, out string errorString)
         {
             errorString  = null;
             bool rc = false;
@@ -143,7 +143,7 @@ namespace UeiBridge.Library
                 goto exit;
             }
             // preamble
-            if (way == MessageDirection.downstream)
+            if (way == MessageWay.downstream)
             {
                 if (byteMessage[0] != 0xAA || byteMessage[1] != 0x55)
                 {
@@ -215,8 +215,10 @@ namespace UeiBridge.Library
         public static EthernetMessage CreateMessage(int cardId, int slotNumber, int unitId, byte[] payload)
         {
             EthernetMessage msg = new EthernetMessage();
-            msg.PayloadBytes = new byte[payload.Length];
+            msg.PayloadBytes = payload;
             msg.CardType = cardId;
+            msg.SlotNumber = slotNumber;
+            msg.UnitId = unitId;
             return msg;
         }
 
