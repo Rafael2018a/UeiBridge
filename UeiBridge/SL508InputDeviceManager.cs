@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 using UeiDaq;
-using UeiBridgeTypes;
+using UeiBridge.Types;
+using UeiBridge.Library;
 
 namespace UeiBridge
 {
@@ -21,7 +22,7 @@ namespace UeiBridge
         bool _InDisposeState = false;
         List<ViewerItem<byte[]>> _lastScanList;
         readonly System.Net.IPEndPoint _targetEp;
-        readonly SL508892Setup _thisDevieSetup;
+        readonly SL508892Setup _thisDeviceSetup;
 
         public override IConvert AttachedConverter => _attachedConverter;
         //public List<SerialWriter> SerialWriterList => _serialWriterList;
@@ -38,12 +39,12 @@ namespace UeiBridge
             _attachedConverter = StaticMethods.CreateConverterInstance(setup);
             _lastScanList = new List<ViewerItem<byte[]>>();
             
-            
+           
             _serialSession = serialSession;
             InstanceName = $"{DeviceName}/Slot{setup.SlotNumber}/Input";
             _targetEp = setup.DestEndPoint.ToIpEp();
 
-            _thisDevieSetup = setup as SL508892Setup;
+            _thisDeviceSetup = setup as SL508892Setup;
 
             System.Diagnostics.Debug.Assert(null != serialSession);
             System.Diagnostics.Debug.Assert(null != setup);
@@ -99,10 +100,10 @@ namespace UeiBridge
                 _lastScanList[channel] = new ViewerItem<byte[]>(receiveBuffer, timeToLiveMs: 5000);
                 //_logger.Debug($"read from serial port. ch {channel}");
                 byte [] payload = this.AttachedConverter.DeviceToEth(receiveBuffer);
-                EthernetMessage em = EthernetMessage.CreateFromDevice(payload, this._thisDevieSetup, channel);
+                EthernetMessage em = StaticMethods.BuildEthernetMessageFromDevice(payload, this._thisDeviceSetup, channel);
                 // forward to consumer (send by udp)
                 //ScanResult sr = new ScanResult(receiveBuffer, this);
-                _targetConsumer.Send(new SendObject(_targetEp, em.ToByteArrayUp()));
+                _targetConsumer.Send(new SendObject(_targetEp, em.GetByteArray( MessageWay.upstream)));
 
                 // restart reader
                 readerIAsyncResult = _serialReaderList[channel].BeginRead(minLen, this.ReaderCallback, channel);
@@ -119,7 +120,7 @@ namespace UeiBridge
                     }
                     else
                     {
-                        _logger.Debug($"{InstanceName} stopped listening on ch{channel}");
+                        //_logger.Debug($"{InstanceName} stopped listening on ch{channel}");
                     }
                 }
                 else
@@ -178,6 +179,7 @@ namespace UeiBridge
             {
                 //_serialReaderList[i].Dispose();
             }
+            _logger.Debug($"Disposing {this.DeviceName}/Input, slot {_thisDeviceSetup.SlotNumber}");
             //if (_serialSession.IsRunning())
             //{
             //    _deviceSession?.Stop();

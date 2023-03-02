@@ -76,7 +76,7 @@ namespace UeiBridge
         public EndPoint DestEndPoint;
         [XmlIgnore]
         public int SamplingInterval => 100; // ms
-        
+
         public DeviceSetup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDaq.Device device)
         {
             LocalEndPoint = localEndPoint;
@@ -84,16 +84,38 @@ namespace UeiBridge
             DeviceName = device.GetDeviceName();
             SlotNumber = device.GetIndex();
         }
+        /// <summary>
+        /// This c-tor for block sensor which does not have a 'uei device'
+        /// </summary>
+        /// <param name="localEndPoint"></param>
+        /// <param name="destEndPoint"></param>
+        public DeviceSetup(EndPoint localEndPoint, EndPoint destEndPoint, string deviceName)
+        {
+            LocalEndPoint = localEndPoint;
+            DestEndPoint = destEndPoint;
+            DeviceName = deviceName;
+        }
         protected DeviceSetup()
         {
         }
         private string cubeUrl;
         public string CubeUrl { get => cubeUrl; set => cubeUrl = value; }
     }
+    public class BlockSensorSetup : DeviceSetup
+    {
+        public bool IsActive { get; set; }
+        public BlockSensorSetup(EndPoint localEndPoint, string deviceName) : base(localEndPoint, null, deviceName)
+        {
+        }
+
+        protected BlockSensorSetup()
+        {
+        }
+    }
     public class AO308Setup : DeviceSetup
     {
-        public double PeekVoltage_Out => 10.0;
-        
+        [XmlIgnore]
+        public static double PeekVoltage_downstream => 10.0;
 
         public AO308Setup()
         {
@@ -102,10 +124,19 @@ namespace UeiBridge
         {
         }
     }
+    public class SimuAO16Setup : DeviceSetup
+    {
+        public SimuAO16Setup()
+        {
+        }
+        public SimuAO16Setup(EndPoint localEndPoint, UeiDaq.Device device) : base(localEndPoint, null, device)
+        {
+        }
+    }
     public class AI201100Setup : DeviceSetup
     {
         [XmlIgnore]
-        public double PeekVoltage_In => 12.0;
+        public static double PeekVoltage_upstream => 12.0;
         public AI201100Setup( EndPoint destEndPoint, Device device) : base( null, destEndPoint, device)
         {
         }
@@ -122,27 +153,16 @@ namespace UeiBridge
 
         public DIO403Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDaq.Device device) : base(localEndPoint, destEndPoint, device)
         {
-            //BitOctets = new Direction[4];
-            //BitOctets[0] = Direction.input;
-            //BitOctets[1] = Direction.input;
-            //BitOctets[2] = Direction.output;
-            //BitOctets[3] = Direction.output;
         }
     }
     public class DIO470Setup : DeviceSetup
     {
-        //public Direction[] BitOctets;
         public DIO470Setup()
         {
         }
 
         public DIO470Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDaq.Device device) : base(localEndPoint, destEndPoint, device)
         {
-            //BitOctets = new Direction[4];
-            //BitOctets[0] = Direction.input;
-            //BitOctets[1] = Direction.input;
-            //BitOctets[2] = Direction.output;
-            //BitOctets[3] = Direction.output;
         }
     }
     public class SL508892Setup: DeviceSetup
@@ -156,10 +176,6 @@ namespace UeiBridge
         public SL508892Setup(EndPoint localEndPoint, EndPoint destEndPoint, Device device) : base(localEndPoint, destEndPoint, device)
         {
             Channels = new SerialChannel[8];
-            //Channels[0] = new SerialChannel("Com0", SerialPortSpeed.BitsPerSecond19200);
-            //Channels[1] = new SerialChannel("Com1", SerialPortSpeed.BitsPerSecond19200);
-            //Channels[2] = new SerialChannel("Com2", SerialPortSpeed.BitsPerSecond14400);
-            //Channels[3] = new SerialChannel("Com3", SerialPortSpeed.BitsPerSecond14400);
 
             for (int ch = 0; ch < Channels.Length; ch++)
             {
@@ -171,26 +187,32 @@ namespace UeiBridge
     public static class ConfigFactory
     {
         static int portNumber=50035;
+        public static string LocalIP => "227.3.1.10";
+        public static string RemoteIp => "227.2.1.10";
+
         public static DeviceSetup DeviceSetupFactory( Device ueiDevice)
         {
             DeviceSetup result=null;
-            
+
             switch (ueiDevice.GetDeviceName())
             {
                 case "AO-308":
-                    result = new AO308Setup( new EndPoint("227.3.1.10", portNumber++), ueiDevice);
+                    result = new AO308Setup( new EndPoint( LocalIP, portNumber++), ueiDevice);
                     break;
                 case "DIO-403":
-                    result = new DIO403Setup(new EndPoint("227.3.1.10", portNumber++), new EndPoint("227.2.1.10", portNumber++), ueiDevice);
+                    result = new DIO403Setup(new EndPoint( LocalIP, portNumber++), new EndPoint(RemoteIp, portNumber++), ueiDevice);
                     break;
                 case "DIO-470":
-                    result = new DIO470Setup(new EndPoint("227.3.1.10", portNumber++), new EndPoint("227.2.1.10", portNumber++), ueiDevice);
+                    result = new DIO470Setup(new EndPoint( LocalIP, portNumber++), new EndPoint(RemoteIp, portNumber++), ueiDevice);
                     break;
                 case "AI-201-100":
-                    result = new AI201100Setup(new EndPoint("227.2.1.10", portNumber++), ueiDevice);
+                    result = new AI201100Setup(new EndPoint( RemoteIp, portNumber++), ueiDevice);
                     break;
                 case "SL-508-892":
-                    result = new SL508892Setup(new EndPoint("227.3.1.10", portNumber++), new EndPoint("227.2.1.10", portNumber++), ueiDevice);
+                    result = new SL508892Setup(new EndPoint( LocalIP, portNumber++), new EndPoint(RemoteIp, portNumber++), ueiDevice);
+                    break;
+                case "Simu-AO16":
+                    result = new SimuAO16Setup(new EndPoint(LocalIP, portNumber++), ueiDevice);
                     break;
                 default:
                     Console.WriteLine($"Config: Missing setup-class for device {ueiDevice.GetDeviceName()}");
@@ -215,6 +237,9 @@ namespace UeiBridge
         public CubeSetup()
         {
         }
+        /// <summary>
+        /// Build DeviceSetupList
+        /// </summary>
         public CubeSetup(string cubeUrl, int cubeNumber)
         {
             CubeUrl = cubeUrl;
@@ -240,7 +265,9 @@ namespace UeiBridge
     [XmlInclude(typeof(DIO470Setup))]
     [XmlInclude(typeof(AI201100Setup))]
     [XmlInclude(typeof(SL508892Setup))]
+    [XmlInclude(typeof(BlockSensorSetup))]
     [XmlInclude(typeof(ValidValuesClass))]
+    [XmlInclude(typeof(SimuAO16Setup))]
     public class Config2
     {
         private static Config2 _instance;
@@ -249,6 +276,7 @@ namespace UeiBridge
         public AppSetup AppSetup;
         public string[] CubeUrlList = new string[1];
         public CubeSetup[] UeiCubes = new CubeSetup[1];
+        public BlockSensorSetup Blocksensor = new BlockSensorSetup(new EndPoint(ConfigFactory.LocalIP, 50105), "BlockSensor");
         public ValidValuesClass ValidValues = new ValidValuesClass();
 
         private Config2()
@@ -300,6 +328,7 @@ namespace UeiBridge
             {
                 // make fresh config and write it to file
                 resultConfig = new Config2("pdna://192.168.100.2/"); // default);
+                //resultConfig = new Config2("simu://"); // default);
                 using (var writer = new StreamWriter(filename))
                 {
                     serializer.Serialize(writer, resultConfig);
@@ -309,6 +338,13 @@ namespace UeiBridge
 
             return resultConfig;
         }
+
+        public DeviceSetup GetSetupEntryForDevice(int cubeId, string deviceName)
+        {
+            var ds = this.UeiCubes[0].DeviceSetupList.Where(i => i.DeviceName == deviceName);
+            return ds.FirstOrDefault();
+        }
+
     }
     public class ValidValuesClass
     {

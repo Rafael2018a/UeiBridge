@@ -60,6 +60,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EthernetMessage.cs" />
+<<<<<<< HEAD
+=======
+    <Compile Include="ProjectInterfaces.cs" />
+>>>>>>> origin/master
     <Compile Include="JsonStatusClass.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

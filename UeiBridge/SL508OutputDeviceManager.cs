@@ -3,7 +3,8 @@ using System.Text;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using UeiDaq;
-using UeiBridgeTypes;
+using UeiBridge.Types;
+using UeiBridge.Library;
 
 using bytearray = System.Array;
 using System.Timers;
@@ -71,7 +72,7 @@ namespace UeiBridge
                     _logger.Info($"Init success {InstanceName}. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}");
                 }
                 int channleIndex = port.GetIndex();
-                _logger.Info($"CH{channleIndex} {port.GetMode()} {port.GetSpeed()}.");////{c111.GetResourceName()}");
+                //_logger.Info($"CH{channleIndex} {port.GetMode()} {port.GetSpeed()}.");////{c111.GetResourceName()}");
 
             }
 
@@ -111,7 +112,7 @@ namespace UeiBridge
             //    _serialSession?.Stop();
             //}
             //_serialSession.Dispose();
-            _logger.Debug("_serialSession?.Dispose();");
+            //_logger.Debug("_serialSession?.Dispose();");
         }
         public override string [] GetFormattedStatus(TimeSpan interval)
         {

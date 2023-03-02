@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using UeiBridgeTypes;
+using UeiBridge.Types;
 
 namespace UeiBridge
 {
@@ -88,14 +88,17 @@ namespace UeiBridge
         {
             // Get received data
             IPEndPoint sender = new IPEndPoint(0, 0);
-            Byte[] receivedBytes = _udpclient.EndReceive(ar, ref sender);
-            //_logger.Debug($"Datagram received from {sender.Address}, Length={receivedBytes.Length}");
 
-            
-            this._datagramConsumer.Enqueue(receivedBytes);
-
-            
-            _udpclient.BeginReceive(new AsyncCallback(ReceivedCallback), null);// Restart listening 
+            try
+            {
+                Byte[] receivedBytes = _udpclient.EndReceive(ar, ref sender);
+                this._datagramConsumer.Enqueue(receivedBytes);
+                _udpclient.BeginReceive(new AsyncCallback(ReceivedCallback), null);// Restart listening 
+            }
+            catch (ObjectDisposedException ex)
+            {
+                // nothing to do here
+            }
         }
 
         private void SinWave()
@@ -125,6 +128,7 @@ namespace UeiBridge
 
         public void Dispose()
         {
+            _udpclient.Dispose();
         }
     }
 
