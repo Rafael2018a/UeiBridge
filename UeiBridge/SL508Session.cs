@@ -16,6 +16,7 @@ namespace UeiBridge
 
         public SL508Session(SL508892Setup setup)
         {
+            System.Diagnostics.Debug.Assert(null != setup);
             this._thisDeviceSetup = setup;
             this.OpenSession();
         }

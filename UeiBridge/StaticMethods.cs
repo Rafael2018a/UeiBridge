@@ -4,15 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UeiDaq;
-using UeiBridgeTypes;
+using UeiBridge.Types;
+using UeiBridge.Library;
 
 namespace UeiBridge
 {
-    static class StaticMethods
+    public static class StaticMethods
     {
         static string _lastErrorMessage;
         public static string LastErrorMessage { get => _lastErrorMessage; }
-        static Dictionary<int, string> _cardIdMap = new Dictionary<int, string>();
+        static Dictionary<int, string> _cardIdMap = new Dictionary<int, string>(); // card-id vs card name
 
         static StaticMethods()
         {
@@ -21,6 +22,7 @@ namespace UeiBridge
             _cardIdMap.Add(6, "DIO-470");
             _cardIdMap.Add(1, "AI-201-100");
             _cardIdMap.Add(5, "SL-508-892");
+            _cardIdMap.Add(32, "BlockSensor");
         }
         public static int GetCardIdFromCardName(string deviceName)
         {
@@ -184,9 +186,9 @@ namespace UeiBridge
             EthernetMessage msg = EthernetMessage.CreateEmpty(0, 16);
             for(int i=0; i<16; i+=2)
             {
-                msg.PayloadBytes[i] = (byte)(i * 10);
+                msg.PayloadBytes[i] = (byte)(i);
             }
-            return msg.ToByteArrayDown();
+            return msg.GetByteArray( MessageWay.downstream);
         }
         public static byte[] Make_DIO403Down_Message()
         {
@@ -196,8 +198,31 @@ namespace UeiBridge
             msg.PayloadBytes[2] = 0x56;
             msg.SlotNumber = 5;
 
-            return msg.ToByteArrayDown();
+            return msg.GetByteArray(MessageWay.downstream);
         }
+        public static byte[] Make_Dio403_upstream_message()
+        {
+            int id = GetCardIdFromCardName("DIO-403");
+            var b = EthernetMessage.CreateMessage(id, 0, 0, new byte[] { 0x5, 0, 0 });
+            return b.GetByteArray(MessageWay.upstream);
+        }
+
+        public static EthernetMessage Make_BlockSensor_downstream_message(UInt16 [] payload)
+        {
+            if (payload.Length != 14) throw new ArgumentException();
+
+            byte[] result = new byte[payload.Length * 2];
+            for (int i=0; i<payload.Length; i++)
+            {
+                byte[] two = BitConverter.GetBytes(payload[i]);
+                result[i*2] = two[0];
+                result[i*2+1] = two[1];
+            }
+
+            return EthernetMessage.CreateMessage(32, -1, 0, result);
+        }
+
+
         public static byte[] Make_DIO470_Down_Message()
         {
             EthernetMessage msg = EthernetMessage.CreateEmpty(6, 3);
@@ -206,12 +231,12 @@ namespace UeiBridge
             msg.PayloadBytes[2] = 0x56;
             msg.SlotNumber = 4;
 
-            return msg.ToByteArrayDown();
+            return msg.GetByteArray( MessageWay.downstream);
         }
         public static byte[] Make_DIO430Down_Message()
         {
             EthernetMessage msg = EthernetMessage.CreateEmpty(6, 16);
-            return msg.ToByteArrayDown();
+            return msg.GetByteArray(MessageWay.downstream);
         }
         public static List<byte[]> Make_SL508Down_Messages( int seed)
         {
@@ -229,7 +254,7 @@ namespace UeiBridge
                 msg.PayloadBytes = System.Text.Encoding.ASCII.GetBytes(m);
                 msg.SerialChannelNumber = ch;
                 msg.SlotNumber = 3;
-                msgs.Add(msg.ToByteArrayDown());
+                msgs.Add(msg.GetByteArray( MessageWay.downstream));
             }
             return msgs;
         }
@@ -296,6 +321,35 @@ namespace UeiBridge
 
             srSession.Start();
             return srSession;
+        }
+
+        /// <summary>
+        /// Create EthernetMessage from device result.
+        /// Might return null.
+        /// </summary>
+        public static EthernetMessage BuildEthernetMessageFromDevice(byte[] payload, DeviceSetup setup, int serialChannel = 0)
+        {
+            //ILog _logger = log4net.LogManager.GetLogger("Root");
+
+            //int key = //ProjectRegistry.Instance.GetDeviceKeyFromDeviceString(deviceName);
+            int key = StaticMethods.GetCardIdFromCardName(setup.DeviceName);
+
+            System.Diagnostics.Debug.Assert(key >= 0);
+
+            EthernetMessage msg = new EthernetMessage();
+            if (setup.GetType() == typeof(SL508892Setup))
+            {
+                msg.SerialChannelNumber = serialChannel;
+            }
+
+            msg.SlotNumber = setup.SlotNumber;
+            msg.UnitId = 0; // tbd
+            msg.CardType = (byte)key;
+            msg.PayloadBytes = payload;
+
+            System.Diagnostics.Debug.Assert(msg.CheckValid());
+
+            return msg;
         }
 
     }

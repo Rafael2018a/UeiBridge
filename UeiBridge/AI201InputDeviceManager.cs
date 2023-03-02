@@ -4,7 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UeiDaq;
-using UeiBridgeTypes;
+using UeiBridge.Types;
+using UeiBridge.Library;
 
 namespace UeiBridge
 {
@@ -51,8 +52,8 @@ namespace UeiBridge
 
                 //ScanResult dr = new ScanResult(_lastScan, this);
                 byte[] payload = _attachedConverter.DeviceToEth(_lastScan);
-                EthernetMessage em = EthernetMessage.CreateFromDevice(payload, this._thisDeviceSetup);
-                SendObject so = new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), em.ToByteArrayUp());
+                EthernetMessage em = StaticMethods.BuildEthernetMessageFromDevice(payload, this._thisDeviceSetup);
+                SendObject so = new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), em.GetByteArray( MessageWay.upstream));
                 _targetConsumer.Send(so);
             }
             catch (Exception ex)
@@ -63,7 +64,7 @@ namespace UeiBridge
 
         public override void OpenDevice()
         {
-            double peek = _thisDeviceSetup.PeekVoltage_In;
+            double peek = AI201100Setup.PeekVoltage_upstream;
             try
             {
                 string url1 = $"{_thisDeviceSetup.CubeUrl}Dev{_thisDeviceSetup.SlotNumber}/{_channelsString}";
@@ -89,6 +90,7 @@ namespace UeiBridge
             _samplingTimer.Dispose();
             System.Threading.Thread.Sleep(200);
             CloseDevice();
+            _logger.Debug($"Disposing {this.DeviceName}/Input, slot {_thisDeviceSetup.SlotNumber}");
         }
 
         //

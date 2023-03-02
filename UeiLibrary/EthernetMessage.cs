@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace UeiBridge
+namespace UeiBridge.Library
 {
+    public enum MessageWay { upstream, downstream}
     /// <summary>
     /// This class represents an icd dedicated datagram 
     /// that might be received or sent by this application
@@ -21,14 +22,14 @@ namespace UeiBridge
         public int SlotNumber { get; set; }
         public int SerialChannelNumber { get; set; }
         public byte[] PayloadBytes { get; set; }
-        public byte[] HeaderBytes { get; set; }
+        //public byte[] HeaderBytes { get; set; }
         //public int _debugSerial { get; set; } // serial number of message
 
-        private const int _payloadOffset = 16;// _payloadOffset;
+        public const int _payloadOffset = 16;// _payloadOffset;
         public const int _cardTypeOffset = 5;// _cardTypeOffset;
-        private const int _slotNumberOffset = 6;
-        private const int _serailChannelOffset = 7;
-        private const int _lengthOffset = 12;// _lengthOffset;
+        public const int _slotNumberOffset = 6;
+        public const int _serailChannelOffset = 7;
+        public const int _lengthOffset = 12;// _lengthOffset;
 
         /// <summary>
         /// Convert to current instance byte array (for sending through ethernet)
@@ -60,29 +61,23 @@ namespace UeiBridge
         /// Convert to current instance byte array (for sending through ethernet)
         /// Might return null.
         /// </summary>
-        public byte[] ToByteArrayUp()
+        public byte[] GetByteArray( MessageWay way)
         {
             var result = ToByteArray();
             if (result == null)
                 return result;
 
-            result[0] = 0x55;
-            result[1] = 0xAA;
-            return result;
-        }
+            if (way == MessageWay.upstream)
+            {
+                result[0] = 0x55;
+                result[1] = 0xAA;
+            }
+            else
+            {
+                result[0] = 0xAA;
+                result[1] = 0x55;
+            }
 
-        /// <summary>
-        /// Convert to current instance byte array (for sending through ethernet)
-        /// Might return null.
-        /// </summary>
-        public byte[] ToByteArrayDown()
-        {
-            var result = ToByteArray();
-            if (result == null)
-                return result;
-
-            result[0] = 0xAA;
-            result[1] = 0x55;
             return result;
         }
 
@@ -96,8 +91,8 @@ namespace UeiBridge
             //    return false;
 
             // card type exists
-            if (!StaticMethods.DoesCardIdExist(CardType))
-                return false;
+            //if (!StaticMethods.DoesCardIdExist(CardType))
+            //    return false;
 
             //if (!ProjectRegistry.Instance.DeviceKeys.ContainsKey(CardType))
                 //return false;
@@ -111,21 +106,21 @@ namespace UeiBridge
         /// <summary>
         /// Create EthernetMessage from byte array
         /// </summary>
-        public static EthernetMessage CreateFromByteArray(byte[] byteMessage, out string errorString)
+        public static EthernetMessage CreateFromByteArray(byte[] byteMessage, MessageWay way)
         {
-            if (false == CheckByteArrayValidity(byteMessage, out errorString))
+            EthernetMessage resutlMessage = null;
+            string errMsg;
+            if (false == CheckByteArrayValidity(byteMessage, way, out errMsg))
             {
-                return null;
+                throw new ArgumentException(errMsg);
             }
-            return BuildEthernetMessage(byteMessage);
-        }
 
-        public static EthernetMessage BuildEthernetMessage(byte[] byteMessage)
-        {
-            EthernetMessage resutlMessage = new EthernetMessage();
+            // Build message struct
+            // ====================
+            resutlMessage = new EthernetMessage();
             // header & payload
-            resutlMessage.HeaderBytes = new byte[EthernetMessage._payloadOffset];
-            Array.Copy(byteMessage, resutlMessage.HeaderBytes, EthernetMessage._payloadOffset);
+            //resutlMessage.HeaderBytes = new byte[EthernetMessage._payloadOffset];
+            //Array.Copy(byteMessage, resutlMessage.HeaderBytes, EthernetMessage._payloadOffset);
             resutlMessage.PayloadBytes = new byte[byteMessage.Length - EthernetMessage._payloadOffset];
             Array.Copy(byteMessage, EthernetMessage._payloadOffset, resutlMessage.PayloadBytes, 0, byteMessage.Length - EthernetMessage._payloadOffset);
 
@@ -133,10 +128,11 @@ namespace UeiBridge
             resutlMessage.CardType = byteMessage[EthernetMessage._cardTypeOffset];
             resutlMessage.SerialChannelNumber = byteMessage[EthernetMessage._serailChannelOffset];
             resutlMessage.SlotNumber = byteMessage[EthernetMessage._slotNumberOffset];
+
             return resutlMessage;
         }
 
-        private static bool CheckByteArrayValidity(byte[] byteMessage, out string errorString)
+        private static bool CheckByteArrayValidity(byte[] byteMessage, MessageWay way, out string errorString)
         {
             errorString  = null;
             bool rc = false;
@@ -147,10 +143,21 @@ namespace UeiBridge
                 goto exit;
             }
             // preamble
-            if (byteMessage[0] != 0xAA || byteMessage[1] != 0x55)
+            if (way == MessageWay.downstream)
             {
-                errorString = $"Byte message wrong preamble";
-                goto exit;
+                if (byteMessage[0] != 0xAA || byteMessage[1] != 0x55)
+                {
+                    errorString = $"Byte message wrong preamble";
+                    goto exit;
+                }
+            }
+            else // upstream
+            {
+                if (byteMessage[0] != 0x55 || byteMessage[1] != 0xAA)
+                {
+                    errorString = $"Byte message wrong preamble";
+                    goto exit;
+                }
             }
             UInt16 nominalLengh = BitConverter.ToUInt16(byteMessage, EthernetMessage._lengthOffset);
             if (nominalLengh != byteMessage.Length)
@@ -171,37 +178,47 @@ namespace UeiBridge
         /// <param name="payload"></param>
         /// <param name="deviceString"></param>
         //[Obsolete]
-        public static EthernetMessage CreateFromDevice(byte[] payload, DeviceSetup setup, int serialChannel=0)
-        {
-            //ILog _logger = log4net.LogManager.GetLogger("Root");
+        //public static EthernetMessage CreateFromDevice(byte[] payload, DeviceSetup setup, int serialChannel=0)
+        //{
+        //    //ILog _logger = log4net.LogManager.GetLogger("Root");
 
-            //int key = //ProjectRegistry.Instance.GetDeviceKeyFromDeviceString(deviceName);
-            int key = StaticMethods.GetCardIdFromCardName( setup.DeviceName);
+        //    //int key = //ProjectRegistry.Instance.GetDeviceKeyFromDeviceString(deviceName);
+        //    int key = StaticMethods.GetCardIdFromCardName( setup.DeviceName);
 
-            System.Diagnostics.Debug.Assert(key >= 0);
+        //    System.Diagnostics.Debug.Assert(key >= 0);
 
-            EthernetMessage msg = new EthernetMessage();
-            if (setup.GetType() == typeof(SL508892Setup))
-            {
-                msg.SerialChannelNumber = serialChannel;
-            }
-           
-            msg.SlotNumber = setup.SlotNumber;
-            msg.UnitId = 0; // tbd
-            msg.CardType = (byte)key;
-            msg.PayloadBytes = payload;
+        //    EthernetMessage msg = new EthernetMessage();
+        //    if (setup.GetType() == typeof(SL508892Setup))
+        //    {
+        //        msg.SerialChannelNumber = serialChannel;
+        //    }
 
-            System.Diagnostics.Debug.Assert(msg.CheckValid());
+        //    msg.SlotNumber = setup.SlotNumber;
+        //    msg.UnitId = 0; // tbd
+        //    msg.CardType = (byte)key;
+        //    msg.PayloadBytes = payload;
 
-            return msg;
-        }
+        //    System.Diagnostics.Debug.Assert(msg.CheckValid());
+
+        //    return msg;
+        //}
 
         public static EthernetMessage CreateEmpty(int cardType, int payloadLength)
         {
             EthernetMessage msg = new EthernetMessage();
-            msg.HeaderBytes = new byte[EthernetMessage._payloadOffset];
+            //msg.HeaderBytes = new byte[EthernetMessage._payloadOffset];
             msg.PayloadBytes = new byte[payloadLength];
             msg.CardType = cardType;
+            return msg;
+        }
+
+        public static EthernetMessage CreateMessage(int cardId, int slotNumber, int unitId, byte[] payload)
+        {
+            EthernetMessage msg = new EthernetMessage();
+            msg.PayloadBytes = payload;
+            msg.CardType = cardId;
+            msg.SlotNumber = slotNumber;
+            msg.UnitId = unitId;
             return msg;
         }
 

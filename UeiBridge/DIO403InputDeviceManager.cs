@@ -1,6 +1,7 @@
 ﻿using System;
 using UeiDaq;
-using UeiBridgeTypes;
+using UeiBridge.Types;
+using UeiBridge.Library;
 
 
 namespace UeiBridge
@@ -17,7 +18,8 @@ namespace UeiBridge
         IConvert _attachedConverter;
         public override IConvert AttachedConverter => _attachedConverter;
         DIO403Setup _thisDeviceSetup;
-        public override string InstanceName { get; } 
+        public override string InstanceName { get; }
+        public ISend<SendObject> TargetConsumer { get => _targetConsumer; set => _targetConsumer = value; }
 
         //public DIO403InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
         //{
@@ -89,6 +91,7 @@ namespace UeiBridge
 #endif
         public override void Dispose()
         {
+            _logger.Debug($"Disposing {this.DeviceName}/Input, slot {_thisDeviceSetup.SlotNumber}");
             _samplingTimer.Dispose();
             System.Threading.Thread.Sleep(200); // wait for callback to finish
             CloseDevice();
@@ -103,9 +106,9 @@ namespace UeiBridge
                 System.Diagnostics.Debug.Assert(_lastScan != null);
                 System.Diagnostics.Debug.Assert(_lastScan.Length == _deviceSession.GetNumberOfChannels(), "wrong number of channels");
                 byte[] payload = this.AttachedConverter.DeviceToEth(_lastScan);
-                var em = EthernetMessage.CreateFromDevice( payload, _thisDeviceSetup);
+                var em = StaticMethods.BuildEthernetMessageFromDevice( payload, _thisDeviceSetup);
 
-                _targetConsumer.Send(new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), em.ToByteArrayUp()));
+                _targetConsumer.Send(new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), em.GetByteArray( MessageWay.upstream)));
             }
             catch (Exception ex)
             {

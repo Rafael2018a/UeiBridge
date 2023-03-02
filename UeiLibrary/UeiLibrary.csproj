@@ -59,6 +59,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EthernetMessage.cs" />
+    <Compile Include="ProjectInterfaces.cs" />
     <Compile Include="JsonStatusClass.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
