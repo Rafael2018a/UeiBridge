@@ -90,6 +90,7 @@ namespace UeiBridge
             _samplingTimer.Dispose();
             System.Threading.Thread.Sleep(200);
             CloseDevice();
+            _logger.Debug($"Disposing {this.DeviceName}/Input, slot {_thisDeviceSetup.SlotNumber}");
         }
 
         //

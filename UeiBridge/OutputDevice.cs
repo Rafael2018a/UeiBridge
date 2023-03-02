@@ -128,7 +128,7 @@ namespace UeiBridge
                     _logger.Warn($"Device {DeviceName} not ready. message dropped.");
                 }
             }
-            _logger.Debug($"OutputDeviceHandler_Task Fin. {InstanceName}");
+            //_logger.Debug($"OutputDeviceHandler_Task Fin. {InstanceName}");
         }
 
         public virtual void Dispose()
@@ -137,6 +137,8 @@ namespace UeiBridge
             _dataItemsQueue2.Add(null); // end task token
             Thread.Sleep(100);
             _dataItemsQueue2.CompleteAdding();
+            _logger.Debug($"Disposing {_deviceSetup.DeviceName}/Output, slot {_deviceSetup.SlotNumber}");
+            
         }
     }
 }

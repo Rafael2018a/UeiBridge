@@ -53,7 +53,7 @@ namespace UeiBridge
             Console.ReadKey();
 
             _logger.Info("Disposing....");
-            DisposeProgramObjects();
+            DisposeProgramObjects2();
 
             _logger.Info("Any key to exit...");
             Console.ReadKey();
@@ -197,8 +197,11 @@ namespace UeiBridge
             }
         }
 
+        [Obsolete]
         void DisposeProgramObjects()
         {
+            throw new ApplicationException("obsolete");
+
             for (int cubeIndex = 0; cubeIndex < _deviceObjectsTable.Count; cubeIndex++)
             {
                 List<PerDeviceObjects> devList = _deviceObjectsTable[cubeIndex];
@@ -216,6 +219,43 @@ namespace UeiBridge
                     devList[deviceIndex]?.SerialSession?.Dispose();
                 }
             }
+        }
+        void DisposeProgramObjects2()
+        {
+            for (int cubeIndex = 0; cubeIndex < _deviceObjectsTable.Count; cubeIndex++)
+            {
+                // first, shut down all inputs
+                foreach (PerDeviceObjects objs in _deviceObjectsTable[cubeIndex])
+                {
+                    objs.UdpReader?.Dispose();
+                }
+                // next, shut down upstream devices
+                foreach (PerDeviceObjects objs in _deviceObjectsTable[cubeIndex])
+                {
+                    objs.InputDeviceManager?.Dispose();
+                }
+                // finally, downstream objects
+                foreach (PerDeviceObjects objs in _deviceObjectsTable[cubeIndex])
+                {
+                    objs.OutputDeviceManager?.Dispose();
+                    objs.SerialSession?.Dispose();
+                    objs.UdpWriter?.Dispose();
+                }
+            }
+
+                //for (int deviceIndex = 0; deviceIndex < devList.Count; deviceIndex++)
+                //{
+                //    _logger.Debug($"Disposing Slot {deviceIndex}");
+                //    // dispose upward object
+                //    devList[deviceIndex]?.InputDeviceManager?.Dispose();
+                //    // dispose downward object
+                //    devList[deviceIndex]?.UdpReader?.Dispose();
+                //    devList[deviceIndex]?.OutputDeviceManager?.Dispose();
+
+                //    // dispose serial session object
+                //    devList[deviceIndex]?.SerialSession?.Dispose();
+                //}
+            
         }
 
         /// <summary>

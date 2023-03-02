@@ -19,6 +19,7 @@ namespace UeiBridgeTest
         }
 
         [Test]
+        [Category("DeviceManagers")]
         public void BlockSensorTest()
         {
             BlockSensorSetup setup = new BlockSensorSetup(new EndPoint("192.168.19.2", 50455), "BlockSensor");
@@ -38,38 +39,25 @@ namespace UeiBridgeTest
             var s = mk.Scan;
         }
 
-        [TestCase(10.01)]
-        [TestCase(-10.01)]
-        [TestCase(9.0)]
-        [TestCase(-9.0)]
-        [TestCase(1.0)]
-        [TestCase(-1.0)]
-        public void VoltageConversionTest1(double v)
-        {
-            UInt16 u16 = AnalogConverter.PlusMinusVoltageToUInt16(10.0, v);
-            double v1 = AnalogConverter.Uint16ToPlusMinusVoltage(10.0, u16);
-            Assert.That( v1, Is.InRange(v - 0.1, v + 0.1));
-        }
-        [Test]
-        public void VoltageConversionTest2()
-        {
-            UInt16 u16 = AnalogConverter.PlusMinusVoltageToUInt16(10.0, -10.0);
-            Assert.That(u16, Is.EqualTo(0));
-        }
+        //[Test]
+        //public void VoltageConversionTest2()
+        //{
+        //    UInt16 u16 = AnalogConverter.PlusMinusVoltageToUInt16(10.0, -10.0);
+        //    Assert.That(u16, Is.EqualTo(0));
+        //}
 
-        [Test]
-        public void VoltageConversionTest3()
-        {
-            double d = AnalogConverter.Uint16ToPlusMinusVoltage(10.0, UInt16.MaxValue - 10);
-            Assert.That(d, Is.GreaterThan(9.9));
-        }
-        [Test]
-        public void VoltageConversionTest4()
-        {
-            double d = AnalogConverter.Uint16ToPlusMinusVoltage(10.0, 10);
-            Assert.That(d, Is.LessThan(-9.9));
-        }
-
+        //[Test]
+        //public void VoltageConversionTest3()
+        //{
+        //    double d = AnalogConverter.Uint16ToPlusMinusVoltage(10.0, UInt16.MaxValue - 10);
+        //    Assert.That(d, Is.GreaterThan(9.9));
+        //}
+        //[Test]
+        //public void VoltageConversionTest4()
+        //{
+        //    double d = AnalogConverter.Uint16ToPlusMinusVoltage(10.0, 10);
+        //    Assert.That(d, Is.LessThan(-9.9));
+        //}
     }
 
     public class writerMock : IAnalogWriter

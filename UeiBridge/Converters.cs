@@ -246,7 +246,7 @@ namespace UeiBridge
         }
     }
 
-    public class AnalogConverter : IConvert2
+    public class AnalogConverter : IConvert2<double[]>
     {
         //readonly double _peekToPeekVoltage;
         //readonly double _conversionFactor;
@@ -261,7 +261,7 @@ namespace UeiBridge
         /// <summary>
         /// Convert from UInt16 to double
         /// </summary>
-        public object DownstreamConvert(byte[] messagePayload)
+        public double [] DownstreamConvert(byte[] messagePayload)
         {
             double[] resultVector = new double[messagePayload.Length / sizeof(UInt16)];
             for (int chNum = 0; chNum < resultVector.Length; chNum++)
@@ -272,7 +272,7 @@ namespace UeiBridge
             return resultVector;
         }
 
-        public byte[] UpstreamConvert(object dt)
+        public byte[] UpstreamConvert(double [] dt)
         {
             throw new NotImplementedException();
         }

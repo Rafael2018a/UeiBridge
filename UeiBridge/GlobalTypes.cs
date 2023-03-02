@@ -27,10 +27,10 @@ namespace UeiBridge.Types
         string DeviceName { get; }
         string LastErrorMessage { get; }
     }
-    public interface IConvert2
+    public interface IConvert2<SourceType>
     {
-        object DownstreamConvert(byte[] messagePayload);
-        byte[] UpstreamConvert(object dt);
+        SourceType DownstreamConvert(byte[] messagePayload);
+        byte[] UpstreamConvert(SourceType dt);
     }
     /// <summary>
     /// (Immutable)

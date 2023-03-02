@@ -28,6 +28,7 @@ namespace UeiBridge
         int _subaddress = -1;
         double[] _analogScan;
         BlockSensorSetup _thisDeviceSetup;
+        bool _isInDispose = false;
         #endregion
 
         public BlockSensorManager(DeviceSetup deviceSetup, IAnalogWriter writer) : base(deviceSetup)
@@ -88,6 +89,10 @@ namespace UeiBridge
         /// </summary>
         public override void Enqueue(byte[] byteMessage)
         {
+            if (_isInDispose)
+            {
+                return;
+            }
             // upstream message from digital/input card
             if (byteMessage[EthernetMessage._cardTypeOffset] == StaticMethods.GetCardIdFromCardName("DIO-403"))
             {
@@ -96,8 +101,6 @@ namespace UeiBridge
                 {
                     EthernetMessage msg = EthernetMessage.CreateFromByteArray(byteMessage, MessageWay.upstream);
                     if (null == msg) throw new ArgumentNullException();
-                    //byte[] digitalVector = _digitalConverter.EthToDevice(msg.PayloadBytes) as byte[];
-                    //System.Diagnostics.Debug.Assert(null != digitalVector);
 
                     _subaddress = msg.PayloadBytes[0] & 0x7; // get lower 3 bits
                 }
@@ -133,10 +136,14 @@ namespace UeiBridge
         {
             this.Enqueue(obj.ByteMessage);
         }
-        //internal void SetAnalogOuputInterface(AO308OutputDeviceManager ao308)
-        //{
-        //    _ao308Device = ao308;
-        //}
+
+        public override void Dispose()
+        {
+            _isInDispose = true;
+            _analogWriter = null;
+            base.Dispose();
+
+        }
     }
     class BlockSensorEntry
     {

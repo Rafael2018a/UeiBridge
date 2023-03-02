@@ -112,7 +112,7 @@ namespace UeiBridge
             //    _serialSession?.Stop();
             //}
             //_serialSession.Dispose();
-            _logger.Debug("_serialSession?.Dispose();");
+            //_logger.Debug("_serialSession?.Dispose();");
         }
         public override string [] GetFormattedStatus(TimeSpan interval)
         {
