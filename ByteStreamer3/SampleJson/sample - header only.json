@@ -1,0 +1,11 @@
+{
+  "Header": {
+    "EnablePlay": false,
+    "Title": "Uei general card",
+    "ConverterName": null,
+    "NumberOfCycles": 20,
+    "WaitStateMs": 100,
+    "DestIp": "227.10.20.30",
+    "DestPort": 50099
+  }
+}
