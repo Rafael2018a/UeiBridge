@@ -89,8 +89,7 @@
     <Compile Include="ProjMessageModel.cs" />
     <Compile Include="SecondsToTimeConverter.cs" />
     <Compile Include="StatusBaseViewModel.cs" />
-    <Compile Include="StatusCounterViewModel.cs" />
-    <Compile Include="StatusTextViewModel.cs" />
+    <Compile Include="StatusEntryViewModel.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

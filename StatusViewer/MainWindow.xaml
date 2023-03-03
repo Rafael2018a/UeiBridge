@@ -64,45 +64,6 @@
                             </StackPanel>
                         </GroupBox>
                     </DataTemplate>
-                    <DataTemplate DataType="{x:Type local:StatusCounterViewModel}">
-                        <DataTemplate.Resources>
-                            <Style TargetType="TextBlock">
-                                <Setter Property="Padding" Value="3,0"/>
-                            </Style>
-                        </DataTemplate.Resources>
-                        <GroupBox BorderThickness="2" Margin="4">
-                            <GroupBox.BorderBrush>
-                                <SolidColorBrush Color="RoyalBlue"/>
-                            </GroupBox.BorderBrush>
-                            <GroupBox.Header>
-                                <!--<TextBlock Text="{Binding Path=Desc}" Margin="3" TextDecorations="{x:Null}" FontWeight="Bold" Background="Transparent" />-->
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="{Binding Path=Desc}" Margin="3" TextDecorations="{x:Null}" FontWeight="Bold" Background="Transparent" />
-                                    <TextBlock Text=". Updated " Margin="3"/>
-                                    <TextBlock Text="{Binding Path=LastUpdate}" Margin="3"/>
-                                </StackPanel>
-                            </GroupBox.Header>
-                            <StackPanel>
-                                <StackPanel Orientation="Horizontal"  Margin="3">
-                                    <TextBlock  Text="Value: "/>
-                                    <TextBlock Text="{Binding Path=IncomingValue, StringFormat={}{0:n0}}" Background="LightYellow"/>
-                                    <ContentControl Width="10"/>
-
-                                    <TextBlock Name="textBlockSum" Text="Sum" Visibility="{Binding Path=IsSumming, Converter={StaticResource BoolToVisibleConverter}}"/>
-                                    <TextBlock Text="{Binding Path=Sum}" Visibility="{Binding ElementName=textBlockSum, Path=Visibility}" Foreground="Blue"/>
-                                    <ContentControl Width="10"/>
-
-                                    <TextBlock Name="textBlockRate" Text="Rate:" Visibility="{Binding Path=IsRateMeasure, Converter={StaticResource BoolToVisibleConverter}}"/>
-                                    <TextBlock Text="{Binding Path=Rate, StringFormat={}{0:n0}}"  Visibility="{Binding ElementName=textBlockRate, Path=Visibility}" Foreground="Blue" />
-                                    <TextBlock Text="Unit/Sec" Visibility="{Binding ElementName=textBlockRate, Path=Visibility}"/>
-                                    <ContentControl Width="10"/>
-
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal"  Margin="3">
-                                </StackPanel>
-                            </StackPanel>
-                        </GroupBox>
-                    </DataTemplate>
                 </ListBox.Resources>
             </ListBox>
         </Border>
