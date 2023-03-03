@@ -155,7 +155,7 @@ namespace ByteStreamer3
 
                         for (int i = 0; i < item.PlayObject.Header.NumberOfCycles; i++)
                         {
-                            byte[] block = item.EthMessage.GetByteArray(UeiBridge.Library.MessageDirection.downstream);
+                            byte[] block = item.EthMessage.GetByteArray(UeiBridge.Library.MessageWay.downstream);
                             System.Threading.Thread.Sleep(item.PlayObject.Header.WaitStateMs);
                             ++item.PlayedBlockCount;
 

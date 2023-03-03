@@ -6,11 +6,7 @@ using System.Threading.Tasks;
 
 namespace UeiBridge.Library
 {
-<<<<<<< HEAD
-    public enum MessageDirection { upstream, downstream}
-=======
     public enum MessageWay { upstream, downstream}
->>>>>>> origin/master
     /// <summary>
     /// This class represents an icd dedicated datagram 
     /// that might be received or sent by this application
@@ -29,19 +25,11 @@ namespace UeiBridge.Library
         //public byte[] HeaderBytes { get; set; }
         //public int _debugSerial { get; set; } // serial number of message
 
-<<<<<<< HEAD
-        private const int _payloadOffset = 16;// _payloadOffset;
-        private const int _cardTypeOffset = 5;// _cardTypeOffset;
-        private const int _slotNumberOffset = 6;
-        private const int _serailChannelOffset = 7;
-        private const int _lengthOffset = 12;// _lengthOffset;
-=======
         public const int _payloadOffset = 16;// _payloadOffset;
         public const int _cardTypeOffset = 5;// _cardTypeOffset;
         public const int _slotNumberOffset = 6;
         public const int _serailChannelOffset = 7;
         public const int _lengthOffset = 12;// _lengthOffset;
->>>>>>> origin/master
 
         /// <summary>
         /// Convert to current instance byte array (for sending through ethernet)
@@ -73,21 +61,13 @@ namespace UeiBridge.Library
         /// Convert to current instance byte array (for sending through ethernet)
         /// Might return null.
         /// </summary>
-<<<<<<< HEAD
-        public byte[] GetByteArray( MessageDirection way)
-=======
         public byte[] GetByteArray( MessageWay way)
->>>>>>> origin/master
         {
             var result = ToByteArray();
             if (result == null)
                 return result;
 
-<<<<<<< HEAD
-            if (way == MessageDirection.upstream)
-=======
             if (way == MessageWay.upstream)
->>>>>>> origin/master
             {
                 result[0] = 0x55;
                 result[1] = 0xAA;
@@ -126,18 +106,6 @@ namespace UeiBridge.Library
         /// <summary>
         /// Create EthernetMessage from byte array
         /// </summary>
-<<<<<<< HEAD
-        public static EthernetMessage CreateFromByteArray(byte[] byteMessage, out string errorString)
-        {
-            EthernetMessage resutlMessage = null;
-            if (false == CheckByteArrayValidity(byteMessage, out errorString))
-            {
-                return null;
-            }
-
-            // Build message struct
-            // ============
-=======
         public static EthernetMessage CreateFromByteArray(byte[] byteMessage, MessageWay way)
         {
             EthernetMessage resutlMessage = null;
@@ -149,7 +117,6 @@ namespace UeiBridge.Library
 
             // Build message struct
             // ====================
->>>>>>> origin/master
             resutlMessage = new EthernetMessage();
             // header & payload
             //resutlMessage.HeaderBytes = new byte[EthernetMessage._payloadOffset];
@@ -165,11 +132,7 @@ namespace UeiBridge.Library
             return resutlMessage;
         }
 
-<<<<<<< HEAD
-        private static bool CheckByteArrayValidity(byte[] byteMessage, out string errorString)
-=======
         private static bool CheckByteArrayValidity(byte[] byteMessage, MessageWay way, out string errorString)
->>>>>>> origin/master
         {
             errorString  = null;
             bool rc = false;
@@ -180,12 +143,6 @@ namespace UeiBridge.Library
                 goto exit;
             }
             // preamble
-<<<<<<< HEAD
-            if (byteMessage[0] != 0xAA || byteMessage[1] != 0x55)
-            {
-                errorString = $"Byte message wrong preamble";
-                goto exit;
-=======
             if (way == MessageWay.downstream)
             {
                 if (byteMessage[0] != 0xAA || byteMessage[1] != 0x55)
@@ -201,7 +158,6 @@ namespace UeiBridge.Library
                     errorString = $"Byte message wrong preamble";
                     goto exit;
                 }
->>>>>>> origin/master
             }
             UInt16 nominalLengh = BitConverter.ToUInt16(byteMessage, EthernetMessage._lengthOffset);
             if (nominalLengh != byteMessage.Length)
@@ -259,15 +215,10 @@ namespace UeiBridge.Library
         public static EthernetMessage CreateMessage(int cardId, int slotNumber, int unitId, byte[] payload)
         {
             EthernetMessage msg = new EthernetMessage();
-<<<<<<< HEAD
-            msg.PayloadBytes = new byte[payload.Length];
-            msg.CardType = cardId;
-=======
             msg.PayloadBytes = payload;
             msg.CardType = cardId;
             msg.SlotNumber = slotNumber;
             msg.UnitId = unitId;
->>>>>>> origin/master
             return msg;
         }
 
