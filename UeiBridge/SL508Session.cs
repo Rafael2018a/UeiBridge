@@ -7,7 +7,7 @@ using UeiDaq;
 
 namespace UeiBridge
 {
-    class SL508Session : IDisposable
+    public class SL508Session : IDisposable
     {
         private SL508892Setup _thisDeviceSetup;
         private Session _serialSession = new Session();

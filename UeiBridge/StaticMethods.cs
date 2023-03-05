@@ -80,18 +80,18 @@ namespace UeiBridge
         /// Example: input "DO-403", output "Dev0"
         /// return null if device not found
         /// </summary>
-        public static string FindDeviceIndex(string cubeUrl, string deviceName)
-        {
-            List<Device> devList = GetDeviceList( cubeUrl);
-            var x = devList.Find(s => s.GetDeviceName() == deviceName);
-            if (null != x)
-            {
-                string rc = "Dev" + x.GetIndex() + "/";
-                return rc;
-            }
-            else
-                return null;
-        }
+        //public static string FindDeviceIndex(string cubeUrl, string deviceName)
+        //{
+        //    List<DeviceEx> devList = GetDeviceList( cubeUrl);
+        //    var x = devList.Find(s => s.UeiDevice.GetDeviceName() == deviceName);
+        //    if (null != x)
+        //    {
+        //        string rc = "Dev" + x.UeiDevice.GetIndex() + "/";
+        //        return rc;
+        //    }
+        //    else
+        //        return null;
+        //}
 
         public static log4net.ILog GetLogger()
         {
@@ -350,6 +350,22 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert(msg.CheckValid());
 
             return msg;
+        }
+
+        public static List<DeviceEx> GetDeviceList(List<string> cubesUrl)
+        {
+            List<DeviceEx> resultList = new List<DeviceEx>();
+            foreach (string url in cubesUrl)
+            {
+                DeviceCollection devColl = new DeviceCollection(url);
+
+                foreach (Device dev in devColl)
+                {
+                    if (dev != null) throw new ArgumentNullException();
+                    resultList.Add(new DeviceEx(dev, url));
+                }
+            }
+            return resultList;
         }
 
     }
