@@ -368,5 +368,13 @@ namespace UeiBridge
             return resultList;
         }
 
+        public static System.Net.IPAddress IpAddressFromUrl( string url)
+        {
+            //Uri u = new Uri("pdna://192.168.100.2/");
+            Uri u1 = new Uri(url);
+            var a1 = u1.Host;
+            return System.Net.IPAddress.Parse(u1.Host);
+            //var a2 = u.Scheme;
+        }
     }
 }

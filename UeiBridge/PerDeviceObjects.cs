@@ -12,24 +12,24 @@ namespace UeiBridge
         public string DeviceName { get; private set; }
         public int SlotNumber { get; private set; }
         public string CubeUrl { get; private set; }
-        public InputDevice InputDeviceManager { get; private set; }
-        public OutputDevice OutputDeviceManager { get; private set; }
-        public UdpReader UdpReader { get; private set; }
-        public UdpWriter UdpWriter { get; private set; }
-        public SL508Session SerialSession { get; private set; }
+        public InputDevice InputDeviceManager { get;  set; }
+        public OutputDevice OutputDeviceManager { get; set; }
+        public UdpReader UdpReader { get; set; }
+        public UdpWriter UdpWriter { get; set; }
+        public SL508Session SerialSession { get; set; }
         public PerDeviceObjects(string deviceName, int slotNumber, string cubeUrl)
         {
             this.DeviceName = deviceName;
             this.SlotNumber = slotNumber;
             this.CubeUrl = cubeUrl;
         }
-        public PerDeviceObjects( DeviceEx deviceEx, OutputDevice outDevice, UdpReader reader)
+        public PerDeviceObjects( DeviceEx deviceEx)//, OutputDevice outDevice, UdpReader reader)
         {
             this.DeviceName = deviceEx.PhDevice.GetDeviceName();
             this.SlotNumber = deviceEx.PhDevice.GetIndex();
             this.CubeUrl = deviceEx.CubeUrl;
-            this.OutputDeviceManager = outDevice;
-            this.UdpReader = reader;
+            //this.OutputDeviceManager = outDevice;
+            //this.UdpReader = reader;
         }
         public void Update(InputDevice inputDevice, UdpWriter udpWriter, int slotNumber)
         {

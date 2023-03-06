@@ -25,5 +25,19 @@ namespace UeiBridgeTest
 
             Assert.That(programBuilder._deviceManagers.Count, Is.EqualTo(1));
         }
+
+        [Test]
+        public void uriParse()
+        {
+            var ip = StaticMethods.IpAddressFromUrl("pdna://192.168.100.2/");
+            byte[] bytes = ip.GetAddressBytes();
+
+            Assert.Multiple(() => 
+            { 
+                Assert.That(bytes[0], Is.EqualTo(192)); 
+                Assert.That(bytes[3], Is.EqualTo(2)); 
+            });
+           
+        }
     }
 }

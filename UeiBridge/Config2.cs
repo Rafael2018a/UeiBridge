@@ -76,6 +76,9 @@ namespace UeiBridge
         public EndPoint DestEndPoint;
         [XmlIgnore]
         public int SamplingInterval => 100; // ms
+        [XmlIgnore]
+        public string CubeUrl { get; set; } // tbd. this is a patch.
+
 
         public DeviceSetup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDaq.Device device)
         {
@@ -98,8 +101,8 @@ namespace UeiBridge
         protected DeviceSetup()
         {
         }
-        private string cubeUrl;
-        public string CubeUrl { get => cubeUrl; set => cubeUrl = value; }
+        //private string cubeUrl;
+        //public string CubeUrl { get => cubeUrl; set => cubeUrl = value; }
     }
     public class BlockSensorSetup : DeviceSetup
     {
@@ -383,12 +386,15 @@ namespace UeiBridge
             {
                 return null;
             }
-            var cubes = this.UeiCubes.Where(e => e.CubeUrl == cubeUrl);
-            var selectedCube = cubes.FirstOrDefault();
+            var cube = this.UeiCubes.Where(e => e.CubeUrl == cubeUrl);
+            var selectedCube = cube.FirstOrDefault();
+            if (null==selectedCube)
+            {
+                return null;
+            }
             var slots = selectedCube.DeviceSetupList.Where(d => d.SlotNumber == slotNumber);
             return slots.FirstOrDefault();
         }
-
     }
     public class ValidValuesClass
     {

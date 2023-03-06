@@ -36,7 +36,7 @@ namespace UeiBridge
 
                 foreach (Device dev in devColl)
                 {
-                    if (dev == null) throw new ArgumentNullException();
+                    if (dev == null) continue; // this for the last entry, which is null
                     resultList.Add(new DeviceEx(dev, url));
                 }
             }
@@ -67,6 +67,8 @@ namespace UeiBridge
             }
 
             _programBuilder.CreateDeviceManagers(deviceList);
+            _programBuilder.ActivateDownstreamOjects();
+            _programBuilder.ActivateUpstreamObjects();
 
             //BuildProgramObjects();
 
@@ -88,7 +90,7 @@ namespace UeiBridge
 
         private List<string> GetConnectedCubes()
         {
-            string[] list = new string[] { "simu://" };
+            string[] list = new string[] { "simu://" , "pdna://192.168.100.2/", "pdna://192.168.100.3/" };
             List<string> result = new List<string>(list);
             return result;
         }
