@@ -7,20 +7,20 @@ using System.Threading.Tasks;
 
 namespace ByteStreamer3
 {
-    class PlayItemViewModel: INotifyPropertyChanged
+    class PlayFileViewModel: INotifyPropertyChanged
     {
         public event PropertyChangedEventHandler PropertyChanged;
-        public string Name => _playItem.PlayFile.Name + _playItem.PlayedBlockCount.ToString();
+        public string Name => _playItem.PlayFileInfo.Name + _playItem.PlayedBlockCount.ToString();
         public int PlayedBlocksCount => _playItem.PlayedBlockCount;
 
-        PlayItem _playItem;
+        PlayFile _playItem;
         void RaisePropertyChangedEvent(string propName)
         {
             if (PropertyChanged != null)
                 PropertyChanged(this, new PropertyChangedEventArgs(propName));
         }
 
-        public PlayItemViewModel( PlayItem playItem)
+        public PlayFileViewModel( PlayFile playItem)
         {
             _playItem = playItem;
             _playItem.PlayedBlockCountEvent += _playItem_PlayedBlockCountEvent;

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ByteStreamer3.Utilities
 {
-    public class ItemHeader
+    public class JItemHeader
     {
         public bool EnablePlay { get; set; }
         public string Title { get => title; set => title = value; }
@@ -22,27 +22,27 @@ namespace ByteStreamer3.Utilities
         private string destIp = "227.10.20.30";
         private int destPort = 50099;
 
-        public ItemHeader()
+        public JItemHeader()
         {
         }
     }
-    public class ItemBody
+    public class JItemBody
     {
         public int CardId = 5;
         public int SlotNumber = 0;
         public int[] Payload { get; set; }
 
-        public ItemBody(int[] payload)
+        public JItemBody(int[] payload)
         {
             Payload = payload;
         }
     }
-    public class PlayItemJson
+    public class JItem
     {
-        public ItemHeader Header { get; set; }
-        public ItemBody Body { get; set; }
+        public JItemHeader Header { get; set; }
+        public JItemBody Body { get; set; }
 
-        public PlayItemJson(ItemHeader header, ItemBody body)
+        public JItem(JItemHeader header, JItemBody body)
         {
             Header = header;
             Body = body;

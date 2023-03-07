@@ -27,7 +27,7 @@ namespace ByteStreamer3
         #region ==== Prop's =======
         public bool IsPlayOneByOne { get; set; }
         public bool IsRepeat { get; set; }
-        public PacketPlayerViewModel PlayerViewModel { get; private set; }
+        public PacketPlayer2 Player { get; private set; }
         public string PlayFolder 
         {
             get { return _playFolder.FullName; }
@@ -74,7 +74,7 @@ namespace ByteStreamer3
         public RelayCommand BrowseFolderCommand { get => _browseFolderCommand; set => _browseFolderCommand = value; }
         void StartPlay(object obj)
         {
-            PlayerViewModel.StartPlay();
+            Player.StartPlay();
         }
         bool CanStartPlay(object obj)
         {
@@ -93,7 +93,7 @@ namespace ByteStreamer3
             {
                 PlayFolder = dialog.FileName;
                 _settingBag.PlayFolder = PlayFolder;
-                PlayerViewModel.SetPlayFolder(new DirectoryInfo(PlayFolder));
+                Player.SetPlayFolder(new DirectoryInfo(PlayFolder));
                 PlayFolderBoxBorderColor = (_playFolder.Exists) ? "Gray" : "Red";
                 
             }
@@ -119,7 +119,7 @@ namespace ByteStreamer3
 
             PlayFolderBoxBorderColor = (_playFolder.Exists) ? "Gray" : "Red";
             IsPlayOneByOne = true; // tbd
-            PlayerViewModel = new PacketPlayerViewModel(_playFolder, IsRepeat, IsPlayOneByOne);
+            Player = new PacketPlayer2(_playFolder, IsRepeat, IsPlayOneByOne);
 
             //_packetPlayer = new PacketPlayer(_playFolder, _repeatFlag, _playOneByOneFlag);
             //PlayList = new ObservableCollection<PlayItemViewModel>(_packetPlayer.PlayList.Select(i => new PlayItemViewModel(i)));
@@ -163,7 +163,7 @@ namespace ByteStreamer3
                 object o = formatter.Deserialize(fs);
                 sb = o as SettingBag;
             }
-            catch (Exception ex)
+            catch (FileNotFoundException)
             {
                 sb = new SettingBag();
             }

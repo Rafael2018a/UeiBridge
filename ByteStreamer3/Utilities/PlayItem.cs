@@ -10,11 +10,11 @@ namespace ByteStreamer3
     /// Holds all available info on single play item
     /// (json file name, the class that represents file contents...)
     /// </summary>
-    public class PlayItem
+    public class PlayFile
     {
         #region == publics ==
-        public PlayItemJson PlayObject => _playObject; 
-        public FileInfo PlayFile => _playFile;
+        public JItem PlayObject => _playObject; 
+        public FileInfo PlayFileInfo => _playFile;
         //public byte[] BytesBlock => _bytesBlock;
         public int PlayedBlockCount 
         {
@@ -34,18 +34,18 @@ namespace ByteStreamer3
         #endregion
         #region == privates ==
         readonly FileInfo _playFile;
-        PlayItemJson _playObject;
+        JItem _playObject;
         int _playedBlockCount;
         #endregion
 
-        public PlayItem(FileInfo fileToPlay)
+        public PlayFile(FileInfo fileToPlay)
         {
             this._playFile = fileToPlay;
             try
             {
                 using (StreamReader reader = _playFile.OpenText())
                 {
-                    _playObject = JsonConvert.DeserializeObject<PlayItemJson>(reader.ReadToEnd());
+                    _playObject = JsonConvert.DeserializeObject<JItem>(reader.ReadToEnd());
                 }
                 EthMessage = JsonToEtherentMessage(_playObject);
             }
@@ -56,7 +56,7 @@ namespace ByteStreamer3
             }
         }
 
-        private UeiBridge.Library.EthernetMessage JsonToEtherentMessage(PlayItemJson playItem)
+        private UeiBridge.Library.EthernetMessage JsonToEtherentMessage(JItem playItem)
         {
             if (!IsValidItem)
             {

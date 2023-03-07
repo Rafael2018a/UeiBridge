@@ -14,7 +14,7 @@ namespace TestProject
         [Test]
         public void TestPlayItem()
         {
-            PlayItem pi=null;// = new PlayItem();
+            PlayFile pi=null;// = new PlayItem();
             Assert.That(pi, Is.Null);
             //Assert.Pass();
         }

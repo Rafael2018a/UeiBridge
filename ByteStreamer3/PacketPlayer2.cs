@@ -12,20 +12,20 @@ using ByteStreamer3.Utilities;
 
 namespace ByteStreamer3
 {
-    class PacketPlayerViewModel : INotifyPropertyChanged
+    class PacketPlayer2 //: INotifyPropertyChanged
     {
         #region === publics ====
-        public ObservableCollection<PlayItemViewModel> PlayList { get; internal set; }
-        public event PropertyChangedEventHandler PropertyChanged;
+        public ObservableCollection<PlayFileViewModel> PlayList { get; internal set; }
+        //public event PropertyChangedEventHandler PropertyChanged;
         #endregion
         #region === privates ===
         private DirectoryInfo _playFolder;
         private bool _repeatFlag;
         private bool _playOneByOneFlag;
         private PacketPlayer _packetPlayer;
-        private List<PlayItem> _playItemList;
+        private List<PlayFile> _playItemList;
         #endregion
-        public PacketPlayerViewModel(DirectoryInfo playFolder, bool repeatFlag, bool playOneByOneFlag)
+        public PacketPlayer2(DirectoryInfo playFolder, bool repeatFlag, bool playOneByOneFlag)
         {
             this._playFolder = playFolder;
             this._repeatFlag = repeatFlag;
@@ -39,20 +39,20 @@ namespace ByteStreamer3
                 return;
             this._playFolder = playFolder;
             FileInfo[] jsonlist = playFolder.GetFiles("*.json");
-            _playItemList = new List<PlayItem>( jsonlist.Select(i => new PlayItem(i)).Where(i => i.IsValidItem));
-            var vmlist = _playItemList.Select(i => new PlayItemViewModel( i));
-            PlayList = new ObservableCollection<PlayItemViewModel>( vmlist);
+            _playItemList = new List<PlayFile>( jsonlist.Select(i => new PlayFile(i)).Where(i => i.IsValidItem));
+            var vmlist = _playItemList.Select(i => new PlayFileViewModel( i));
+            PlayList = new ObservableCollection<PlayFileViewModel>( vmlist);
         }
-        private List<PlayItem> BuildPlayList(DirectoryInfo playFolder)
+        private List<PlayFile> BuildPlayList(DirectoryInfo playFolder)
         {
             List<FileInfo> l1 = ReadJsonFilesList(playFolder);
             if (null != l1)
             {
-                return new List<PlayItem>(l1.Select(i => new PlayItem(i)));
+                return new List<PlayFile>(l1.Select(i => new PlayFile(i)));
             }
             else
             {
-                return new List<PlayItem>();
+                return new List<PlayFile>();
             }
         }
         /// <summary>
@@ -72,7 +72,7 @@ namespace ByteStreamer3
                 {
                     try
                     {
-                        var js = JsonConvert.DeserializeObject<PlayItemJson>(reader.ReadToEnd());
+                        var js = JsonConvert.DeserializeObject<JItem>(reader.ReadToEnd());
                         if (null != js && null != js.Header)
                         {
                             result.Add(jfile);
@@ -86,11 +86,11 @@ namespace ByteStreamer3
             }
             return result;
         }
-        void RaisePropertyChangedEvent(string propName)
-        {
-            if (PropertyChanged != null)
-                PropertyChanged(this, new PropertyChangedEventArgs(propName));
-        }
+        //void RaisePropertyChangedEvent(string propName)
+        //{
+        //    if (PropertyChanged != null)
+        //        PropertyChanged(this, new PropertyChangedEventArgs(propName));
+        //}
 
         internal void StartPlay()
         {

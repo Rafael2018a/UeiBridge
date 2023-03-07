@@ -44,37 +44,11 @@
     </ShowAsAssociation>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="ByteStreamer3.PacketPlayerViewModel">
-    <Position X="6.25" Y="1.5" Width="2" />
-    <Members>
-      <Field Name="_playFolder" Hidden="true" />
-      <Field Name="_playItemList" Hidden="true" />
-      <Field Name="_playOneByOneFlag" Hidden="true" />
-      <Field Name="_repeatFlag" Hidden="true" />
-      <Method Name="BuildPlayList" Hidden="true" />
-      <Method Name="PacketPlayerViewModel" Hidden="true" />
-      <Method Name="RaisePropertyChangedEvent" Hidden="true" />
-      <Method Name="ReadJsonFilesList" Hidden="true" />
-      <Method Name="SetPlayFolder" Hidden="true" />
-      <Method Name="StartPlay" Hidden="true" />
-    </Members>
-    <TypeIdentifier>
-      <HashCode>EICAACAAIAAAACAQAAAAAIQQgAAAAAAAAAgAAAAAAAA=</HashCode>
-      <FileName>PacketPlayerViewModel.cs</FileName>
-    </TypeIdentifier>
-    <ShowAsAssociation>
-      <Field Name="_packetPlayer" />
-    </ShowAsAssociation>
-    <ShowAsCollectionAssociation>
-      <Property Name="PlayList" />
-    </ShowAsCollectionAssociation>
-    <Lollipop Position="0.2" />
-  </Class>
-  <Class Name="ByteStreamer3.PlayItemViewModel">
+  <Class Name="ByteStreamer3.PlayFileViewModel">
     <Position X="9.25" Y="1.5" Width="1.75" />
     <Members>
       <Method Name="_playItem_PlayedBlockCountEvent" Hidden="true" />
-      <Method Name="PlayItemViewModel" Hidden="true" />
+      <Method Name="PlayFileViewModel" Hidden="true" />
       <Event Name="PropertyChanged" Hidden="true" />
       <Method Name="RaisePropertyChangedEvent" Hidden="true" />
     </Members>
@@ -87,66 +61,74 @@
     </ShowAsAssociation>
     <Lollipop Position="0.2" />
   </Class>
-  <Class Name="ByteStreamer3.PlayItem">
+  <Class Name="ByteStreamer3.PlayFile">
     <Position X="12.75" Y="2.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAgAAAABAAAACAAAAAAAQYABAAQAAAAFAAAAAAAAA=</HashCode>
+      <HashCode>AAAAgAAAABAAAACAAAAAAAQYQBAAAAAAAFAAAAAAAAA=</HashCode>
       <FileName>Utilities\PlayItem.cs</FileName>
     </TypeIdentifier>
     <ShowAsAssociation>
-      <Property Name="EthMessage" />
       <Property Name="PlayObject" />
+      <Property Name="EthMessage" />
     </ShowAsAssociation>
   </Class>
-  <Class Name="ByteStreamer3.PacketPlayer">
-    <Position X="6.5" Y="3.5" Width="1.5" />
+  <Class Name="ByteStreamer3.PacketPlayer2">
+    <Position X="6.75" Y="1.75" Width="1.5" />
     <Members>
-      <Method Name="ConvertPlayItemToBytes" Hidden="true" />
-      <Method Name="JsonFileToMessage" Hidden="true" />
-      <Method Name="PacketPlayer" Hidden="true" />
-      <Method Name="PlayTask" Hidden="true" />
-      <Method Name="PlayTask2" Hidden="true" />
-      <Method Name="SendUdp" Hidden="true" />
       <Method Name="StartPlay" Hidden="true" />
-      <Method Name="StartPlayOneByOne" Hidden="true" />
-      <Method Name="StartPlaySimultaneously" Hidden="true" />
-      <Method Name="Stop" Hidden="true" />
     </Members>
     <TypeIdentifier>
-      <HashCode>kAAAAAAAIAAAAAAAAAAAAIQQCAIAAAAAIAAgCAAAAAA=</HashCode>
-      <FileName>PacketPlayer.cs</FileName>
+      <HashCode>EICAACAAIAAAACAAAAAAAIQQAAAAAAAAAAgAAAAAAAA=</HashCode>
+      <FileName>PacketPlayerViewModel.cs</FileName>
+      <NewMemberFileName>PacketPlayer.cs</NewMemberFileName>
     </TypeIdentifier>
-    <ShowAsCollectionAssociation>
-      <Field Name="_playList" />
-    </ShowAsCollectionAssociation>
   </Class>
   <Class Name="UeiBridge.Library.EthernetMessage" Collapsed="true">
     <Position X="16.5" Y="2.5" Width="1.5" />
     <TypeIdentifier />
   </Class>
-  <Class Name="ByteStreamer3.Utilities.PlayItemJson">
+  <Class Name="ByteStreamer3.Utilities.JItem">
     <Position X="16" Y="4.25" Width="1.5" />
     <TypeIdentifier>
       <HashCode>BAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
       <FileName>Utilities\PlayItemJson.cs</FileName>
     </TypeIdentifier>
+  </Class>
+  <Class Name="ByteStreamer3.MainViewModel2">
+    <Position X="4" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>MainViewModel2.cs</FileName>
+    </TypeIdentifier>
     <ShowAsAssociation>
-      <Property Name="Body" />
-      <Property Name="Header" />
+      <Property Name="PacketPlayer2" />
     </ShowAsAssociation>
   </Class>
-  <Class Name="ByteStreamer3.Utilities.ItemBody" Collapsed="true">
-    <Position X="19" Y="4.25" Width="1.5" />
+  <Class Name="ByteStreamer3.PacketPlayer21">
+    <Position X="6.25" Y="6.75" Width="1.5" />
     <TypeIdentifier>
-      <HashCode>AAAAAAAAAAAAAAAAAAAQAAAAQAAAAAAAAAAAAAgAAAA=</HashCode>
-      <FileName>Utilities\PlayItemJson.cs</FileName>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>PacketPlayer21.cs</FileName>
     </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="PlayFileViewModel2" />
+    </ShowAsAssociation>
   </Class>
-  <Class Name="ByteStreamer3.Utilities.ItemHeader" Collapsed="true">
-    <Position X="18.75" Y="5" Width="1.5" />
+  <Class Name="ByteStreamer3.PlayFileViewModel2">
+    <Position X="8.5" Y="6.75" Width="1.75" />
     <TypeIdentifier>
-      <HashCode>AAAAAEAAQAQEAEAAAAAAAAQAAAAkAgAAIAIABAAAAAA=</HashCode>
-      <FileName>Utilities\PlayItemJson.cs</FileName>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAAAAAAAAAAAA=</HashCode>
+      <FileName>PlayFileViewModel2.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="PlayFile2" />
+    </ShowAsAssociation>
+  </Class>
+  <Class Name="ByteStreamer3.PlayFile2">
+    <Position X="11" Y="6.75" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>PlayFile2.cs</FileName>
     </TypeIdentifier>
   </Class>
   <Font Name="Segoe UI" Size="9" />
