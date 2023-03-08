@@ -54,9 +54,10 @@
                             <Separator/>
                             <StackPanel Orientation="Horizontal">
                                 <Button Content="Start" Command="{Binding StartPlayCommand}" />
-                                <Button Content="Stop" IsEnabled="False"/>
+                                <Button Content="Stop" Command="{Binding StopPlayCommand}"/>
                                 <CheckBox Content="Repeat" VerticalAlignment="Center" />
                                 <CheckBox Content="Play one by one" VerticalAlignment="Center" IsChecked="{Binding IsPlayOneByOne}"/>
+                                <TextBlock Text="{Binding SimpleCounter}" />
                             </StackPanel>
                         </StackPanel>
                     </GroupBox>

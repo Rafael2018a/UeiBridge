@@ -84,8 +84,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="PacketPlayer.cs" />
-    <Compile Include="PacketPlayerViewModel.cs" />
+    <Compile Include="PacketPlayer2.cs" />
     <Compile Include="Utilities\PlayItem.cs" />
     <Compile Include="PlayItemViewModel.cs" />
     <Compile Include="Utilities\Converters.cs" />

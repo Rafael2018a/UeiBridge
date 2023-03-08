@@ -13,7 +13,7 @@ namespace ByteStreamer3
     public class PlayFile
     {
         #region == publics ==
-        public JItem PlayObject => _playObject; 
+        public JItem PlayObject => _jObject; 
         public FileInfo PlayFileInfo => _playFile;
         //public byte[] BytesBlock => _bytesBlock;
         public int PlayedBlockCount 
@@ -30,11 +30,11 @@ namespace ByteStreamer3
         }
         public event Action<int> PlayedBlockCountEvent;
         public UeiBridge.Library.EthernetMessage EthMessage { get; set; }
-        public bool IsValidItem { get { return ((_playObject != null) && (_playObject.Body != null) && (_playObject.Header != null));  } }
+        public bool IsValidItem { get { return ((_jObject != null) && (_jObject.Body != null) && (_jObject.Header != null));  } }
         #endregion
         #region == privates ==
         readonly FileInfo _playFile;
-        JItem _playObject;
+        JItem _jObject;
         int _playedBlockCount;
         #endregion
 
@@ -45,13 +45,13 @@ namespace ByteStreamer3
             {
                 using (StreamReader reader = _playFile.OpenText())
                 {
-                    _playObject = JsonConvert.DeserializeObject<JItem>(reader.ReadToEnd());
+                    _jObject = JsonConvert.DeserializeObject<JItem>(reader.ReadToEnd());
                 }
-                EthMessage = JsonToEtherentMessage(_playObject);
+                EthMessage = JsonToEtherentMessage(_jObject);
             }
             catch(JsonSerializationException)
             {
-                _playObject = null;
+                _jObject = null;
                 EthMessage = null;
             }
         }

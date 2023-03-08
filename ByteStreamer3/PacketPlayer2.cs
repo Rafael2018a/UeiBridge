@@ -16,17 +16,21 @@ namespace ByteStreamer3
     {
         #region === publics ====
         public ObservableCollection<PlayFileViewModel> PlayList { get; internal set; }
-        //public event PropertyChangedEventHandler PropertyChanged;
+        public bool NowPlaying { get; private set; }
         #endregion
+
         #region === privates ===
         private DirectoryInfo _playFolder;
         private bool _repeatFlag;
         private bool _playOneByOneFlag;
-        private PacketPlayer _packetPlayer;
+        //private PacketPlayer _packetPlayer;
         private List<PlayFile> _playItemList;
+        System.Threading.CancellationTokenSource _cts = new System.Threading.CancellationTokenSource();
         #endregion
+
         public PacketPlayer2(DirectoryInfo playFolder, bool repeatFlag, bool playOneByOneFlag)
         {
+            NowPlaying = false;
             this._playFolder = playFolder;
             this._repeatFlag = repeatFlag;
             this._playOneByOneFlag = playOneByOneFlag;
@@ -43,18 +47,7 @@ namespace ByteStreamer3
             var vmlist = _playItemList.Select(i => new PlayFileViewModel( i));
             PlayList = new ObservableCollection<PlayFileViewModel>( vmlist);
         }
-        private List<PlayFile> BuildPlayList(DirectoryInfo playFolder)
-        {
-            List<FileInfo> l1 = ReadJsonFilesList(playFolder);
-            if (null != l1)
-            {
-                return new List<PlayFile>(l1.Select(i => new PlayFile(i)));
-            }
-            else
-            {
-                return new List<PlayFile>();
-            }
-        }
+
         /// <summary>
         /// Get list of json's from current dir.
         /// Only files with compatible json struct
@@ -86,17 +79,89 @@ namespace ByteStreamer3
             }
             return result;
         }
-        //void RaisePropertyChangedEvent(string propName)
-        //{
-        //    if (PropertyChanged != null)
-        //        PropertyChanged(this, new PropertyChangedEventArgs(propName));
-        //}
-
-        internal void StartPlay()
+        internal Task StartPlay()
         {
-            _packetPlayer = new PacketPlayer(_playItemList, _repeatFlag, _playOneByOneFlag);
-            _packetPlayer.StartPlay();
+            
+            //_packetPlayer = new PacketPlayer(_playItemList, _repeatFlag, _playOneByOneFlag);
+            //_packetPlayer.StartPlay();
+            if (_playOneByOneFlag)
+            {
+                return StartPlayOneByOne(_playItemList);
+            }
+            //else
+            //{
+            //    StartPlaySimultaneously();
+            //}
 
+            return null;
+        }
+        public void StopPlay()
+        {
+            _cts.Cancel();
+        }
+        private Task StartPlayOneByOne( List<PlayFile> playList )
+        {
+            Task t = Task.Factory.StartNew( () =>
+            {
+               
+                try
+                {
+                    do
+                    {
+
+                        // for each file
+                        foreach (PlayFile item in playList)
+                        {
+                            if (!item.IsValidItem)
+                                continue;
+
+                            for (int i = 0; i < item.PlayObject.Header.NumberOfCycles; i++)
+                            {
+                                byte[] block = item.EthMessage.GetByteArray(UeiBridge.Library.MessageWay.downstream);
+                                System.Threading.Thread.Sleep(item.PlayObject.Header.WaitStateMs);
+                                ++item.PlayedBlockCount;
+
+                                _cts.Token.ThrowIfCancellationRequested();
+                            }
+                        }
+                    } while (_repeatFlag && (false == _cts.Token.IsCancellationRequested));
+                }
+                finally
+                {
+                    NowPlaying = false;
+                }
+            }, _cts.Token);
+
+            return t;
+        }
+
+        /// <summary>
+        /// Play all items at once
+        /// </summary>
+        private void StartPlaySimultaneously()
+        {
+            //Task.Factory.StartNew(() =>
+            //{
+            //    do
+            //    {
+            //        foreach (PlayItemInfo jm in _playItemList)
+            //        {
+            //            byte[] block = JsonToBlock(jm);
+            //            System.Threading.Thread.Sleep(jm.Header.WaitStateMs);
+            //            IPAddress ip = IPAddress.Parse(jm.Header.DestIp);
+            //            if (null != ip)
+            //            {
+            //                IPEndPoint ep = new IPEndPoint(ip, jm.Header.DestPort);
+            //                SendUdp(block, ep);
+            //            }
+
+            //            if (_cts.Token.IsCancellationRequested)
+            //            {
+            //                break;
+            //            }
+            //        }
+            //    } while (repeatFlag && (false == _cts.Token.IsCancellationRequested));
+            //});
         }
     }
 }

@@ -30,7 +30,7 @@ namespace ByteStreamer3
                 //items.Add(new User() { Name = "Sammy Doe", Age = 13 });
                 //lvDataBinding.ItemsSource = items;
             }
-            DataContext = new MainViewModel();
+            DataContext = new MainViewModel( this);
         }
     }
 }

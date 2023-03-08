@@ -18,12 +18,15 @@ namespace ByteStreamer3
 
         #region === privates ======
         DirectoryInfo _playFolder;
-        bool _nowPlayingFlag;
         string _filesToPlayMessage;
         string _playFolderBoxBorderColor;
         string _settingsFilename = "bytestreamer3.setting.bin";
         SettingBag _settingBag;
+        int _simpleCounter;
+        System.Windows.Threading.DispatcherTimer _guiUpdateTimer = new System.Windows.Threading.DispatcherTimer();
+        bool _nowPlaying = false;
         #endregion
+
         #region ==== Prop's =======
         public bool IsPlayOneByOne { get; set; }
         public bool IsRepeat { get; set; }
@@ -35,15 +38,6 @@ namespace ByteStreamer3
             { 
                 _playFolder = new DirectoryInfo(value);
                 RaisePropertyChangedEvent("PlayFolder");
-            }
-        }
-        public bool NowPlayingFlag
-        {
-            get => _nowPlayingFlag;
-            set
-            {
-                _nowPlayingFlag = value;
-                RaisePropertyChangedEvent("NowPlayingFlag");
             }
         }
         public string FilesToPlayMessage 
@@ -64,7 +58,18 @@ namespace ByteStreamer3
                 RaisePropertyChangedEvent("PlayFolderBoxBorderColor");
             }
         }
+        public int SimpleCounter
+        {
+            get => _simpleCounter;
+            set
+            {
+                _simpleCounter = value;
+                RaisePropertyChangedEvent("SimpleCounter");
+            }
+        }
+
         #endregion
+
         #region ==== Commands =====
         RelayCommand _startPlayCommand;
         public Utilities.RelayCommand StartPlayCommand { get => _startPlayCommand; set => _startPlayCommand = value; }
@@ -74,13 +79,40 @@ namespace ByteStreamer3
         public RelayCommand BrowseFolderCommand { get => _browseFolderCommand; set => _browseFolderCommand = value; }
         void StartPlay(object obj)
         {
-            Player.StartPlay();
-        }
-        bool CanStartPlay(object obj)
-        {
-            return (NowPlayingFlag == false);
+            _guiUpdateTimer.Interval = TimeSpan.FromMilliseconds(1000);
+            _guiUpdateTimer.Tick += OnGuiUpdateTimeTick;
+            _guiUpdateTimer.Start();
+
+            _nowPlaying = true;
+            Player.StartPlay().ContinueWith(t => { _nowPlaying = false; _mw.Dispatcher.Invoke(() => StartPlayCommand.OnCanExecuteChanged()); });
+            //Task.Factory.StartNew(() =>
+            //{
+            //    _nowPlaying = true;
+            //    System.Threading.Thread.Sleep(2000);
+            //    _nowPlaying = false;
+
+
+            //}).ContinueWith(t => { _mw.Dispatcher.Invoke(() => StartPlayCommand.OnCanExecuteChanged()); });
         }
 
+        private void StartPlayCommand_CanExecuteChanged(object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        bool CanStartPlay(object obj)
+        {
+            return (_nowPlaying == false);
+            //return ((Player==null) || (Player.NowPlaying == false));
+        }
+        void StopPlay(object obj)
+        {
+            Player.StopPlay();
+        }
+        bool CanStopPlay(object obj)
+        {
+            return (Player?.NowPlaying==true);
+        }
         void SelectPlayFolder(object obj)
         {
             var dialog = new CommonOpenFileDialog();
@@ -95,7 +127,6 @@ namespace ByteStreamer3
                 _settingBag.PlayFolder = PlayFolder;
                 Player.SetPlayFolder(new DirectoryInfo(PlayFolder));
                 PlayFolderBoxBorderColor = (_playFolder.Exists) ? "Gray" : "Red";
-                
             }
         }
         bool CanSelectPlayFolder(object obj)
@@ -104,23 +135,22 @@ namespace ByteStreamer3
         }
         #endregion
 
-        //PacketPlayerViewModel _playerViewModel;
-        public MainViewModel()
+        MainWindow _mw;
+
+        public MainViewModel( MainWindow mw)
         {
             LoadCommands();
             _settingBag = LoadSetting();
 
+            _mw = mw;
+
             _playFolder = new DirectoryInfo(_settingBag.PlayFolder);
             // start update gui task
-            System.Windows.Threading.DispatcherTimer timer = new System.Windows.Threading.DispatcherTimer();
-            timer.Interval = TimeSpan.FromSeconds(3);
-            timer.Tick += UpateGui_timeCallback;
-            timer.Start();
-
+            
             PlayFolderBoxBorderColor = (_playFolder.Exists) ? "Gray" : "Red";
             IsPlayOneByOne = true; // tbd
-            Player = new PacketPlayer2(_playFolder, IsRepeat, IsPlayOneByOne);
 
+            Player = new PacketPlayer2(_playFolder, IsRepeat, IsPlayOneByOne);
             //_packetPlayer = new PacketPlayer(_playFolder, _repeatFlag, _playOneByOneFlag);
             //PlayList = new ObservableCollection<PlayItemViewModel>(_packetPlayer.PlayList.Select(i => new PlayItemViewModel(i)));
         }
@@ -129,9 +159,9 @@ namespace ByteStreamer3
             SaveSetting(_settingBag);
         }
 
-        private void UpateGui_timeCallback(object sender, EventArgs e)
+        private void OnGuiUpdateTimeTick(object sender, EventArgs e)
         {
-            
+            ++SimpleCounter;
         }
 
         void RaisePropertyChangedEvent(string propName)
@@ -141,8 +171,8 @@ namespace ByteStreamer3
         }
         private void LoadCommands()
         {
-            StartPlayCommand = new Utilities.RelayCommand(StartPlay, CanStartPlay);
-            //StopPlayCommand = new Utilities.RelayCommand(StopPlay, CanStopPlay);
+            StartPlayCommand = new RelayCommand(StartPlay, CanStartPlay);
+            StopPlayCommand = new Utilities.RelayCommand(StopPlay, CanStopPlay);
             BrowseFolderCommand = new RelayCommand(SelectPlayFolder, CanSelectPlayFolder);
         }
         private int _radBtnId = 1;
