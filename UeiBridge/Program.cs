@@ -17,7 +17,8 @@ namespace UeiBridge
     public class Program
     {
         ILog _logger = StaticMethods.GetLogger();
-        List<InputDevice> _inputDevices = new List<InputDevice>();
+        //List<InputDevice> _inputDevices = new List<InputDevice>();
+        ProgramObjectsBuilder _programBuilder = new ProgramObjectsBuilder();
 
         static void Main(string[] args)
         {
@@ -43,7 +44,7 @@ namespace UeiBridge
             return resultList;
         }
 
-        ProgramObjectsBuilder _programBuilder = new ProgramObjectsBuilder();
+        
 
         private void Run()
         {
@@ -69,14 +70,16 @@ namespace UeiBridge
             _programBuilder.CreateDeviceManagers(deviceList);
             _programBuilder.ActivateDownstreamOjects();
             _programBuilder.ActivateUpstreamObjects();
+            _programBuilder.CreateBlockSensorManager(deviceList);
+
 
             //BuildProgramObjects();
-
+           
             // publish status to StatusViewer
-            //Task.Factory.StartNew(() => PublishStatus_Task());
+            Task.Factory.StartNew(() => PublishStatus_Task(_programBuilder.DeviceManagers));
 
             // self tests
-            //StartDownwardsTest();
+            StartDownwardsTest();
 
             _logger.Info("Any key to exit...");
             Console.ReadKey();
@@ -488,34 +491,34 @@ namespace UeiBridge
             }
         }
 
-        void PublishStatus_Task()
+        void PublishStatus_Task( List<PerDeviceObjects> deviceList)
         {
             const int intervalMs = 100;
             IPEndPoint destEP = Config2.Instance.AppSetup.StatusViewerEP.ToIpEp();
             UdpWriter uw = new UdpWriter("To-StatusViewer", destEP, Config2.Instance.AppSetup.SelectedNicForMCast);
             TimeSpan interval = TimeSpan.FromMilliseconds(intervalMs);
-            _logger.Info($"StatusViewer dest ep: {destEP.ToString()}");
+            _logger.Info($"StatusViewer dest ep: {destEP.ToString()} (Local NIC {Config2.Instance.AppSetup.SelectedNicForMCast})");
 
-            List<IDeviceManager> deviceList = new List<IDeviceManager>();
+            List<IDeviceManager> deviceListScan = new List<IDeviceManager>();
 
             // prepare list
-            foreach (PerDeviceObjects deviceObjects in _deviceObjectsTable[0]) //ProjectRegistry.Instance.OutputDevicesMap)
+            foreach (PerDeviceObjects deviceObjects in deviceList) //ProjectRegistry.Instance.OutputDevicesMap)
             {
-                if (deviceObjects?.InputDeviceManager != null)
+                if (deviceObjects.InputDeviceManager != null)
                 {
-                    deviceList.Add(deviceObjects.InputDeviceManager);
+                    deviceListScan.Add(deviceObjects.InputDeviceManager);
                 }
 
                 if (deviceObjects?.OutputDeviceManager != null)
                 {
-                    deviceList.Add(deviceObjects.OutputDeviceManager);
+                    deviceListScan.Add(deviceObjects.OutputDeviceManager);
                 }
             }
 
             // get formatted string for each device in list
             while (true)
             {
-                foreach (IDeviceManager dm in deviceList)
+                foreach (IDeviceManager dm in deviceListScan)
                 {
                     string desc = $"{dm.InstanceName}";
                     StatusTrait tr = StatusTrait.IsRegular;
@@ -578,14 +581,14 @@ namespace UeiBridge
                     {
                         // digital out
                         {
-                            IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[5].LocalEndPoint?.ToIpEp();
-                            byte[] e403 = StaticMethods.Make_DIO403Down_Message();
+                            //IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[5].LocalEndPoint?.ToIpEp();
+                            //byte[] e403 = StaticMethods.Make_DIO403Down_Message();
                             //udpClient.Send(e403, e403.Length, destEp);
                         }
                         // analog out
                         {
-                            IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[0].LocalEndPoint.ToIpEp();
-                            byte[] e308 = StaticMethods.Make_A308Down_message();
+                            //IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[0].LocalEndPoint.ToIpEp();
+                            //byte[] e308 = StaticMethods.Make_A308Down_message();
                             //udpClient.Send(e308, e308.Length, destEp);
                         }
 #if dontremove
@@ -598,9 +601,9 @@ namespace UeiBridge
                         List<byte[]> e508 = StaticMethods.Make_SL508Down_Messages(i);
                         foreach (byte[] msg in e508)
                         {
-                            IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[3].LocalEndPoint.ToIpEp();
+                            //IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[3].LocalEndPoint.ToIpEp();
                             //udpClient.Send(msg, msg.Length, destEp);
-                            System.Threading.Thread.Sleep(10);
+                            //System.Threading.Thread.Sleep(10);
                         }
 
                         // relays
