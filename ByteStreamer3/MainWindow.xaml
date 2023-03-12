@@ -49,40 +49,34 @@
                                 <TextBlock Text="Folder" Margin="5"/>
                                 <TextBox MinWidth="300" Margin="5" Text="{Binding PlayFolder}" IsReadOnly="True" BorderBrush="{Binding PlayFolderBoxBorderColor}"/>
                                 <Button Content="..." Margin="5" Command="{Binding BrowseFolderCommand}"/>
-                                <TextBlock Text="{Binding FilesToPlayMessage}" Margin="5"/>
+                                <!--<TextBlock Text="{Binding FilesToPlayMessage}" Margin="5"/>-->
                             </StackPanel>
                             <Separator/>
                             <StackPanel Orientation="Horizontal">
                                 <Button Content="Start" Command="{Binding StartPlayCommand}" />
                                 <Button Content="Stop" Command="{Binding StopPlayCommand}"/>
-                                <CheckBox Content="Repeat" VerticalAlignment="Center" />
+                                <CheckBox Content="Repeat" VerticalAlignment="Center" IsChecked="{Binding IsRepeat}"/>
                                 <CheckBox Content="Play one by one" VerticalAlignment="Center" IsChecked="{Binding IsPlayOneByOne}"/>
                                 <TextBlock Text="{Binding SimpleCounter}" />
                             </StackPanel>
                         </StackPanel>
                     </GroupBox>
                     <GroupBox x:Name="Playlist" Grid.Row="1" BorderBrush="Gray" Margin="5,0,5,0" BorderThickness="1" Header="Play list" >
-                        <ListView x:Name="NowPlayingListView" ItemsSource="{Binding Path=Player.PlayList}" BorderThickness="0">
-                                <ListView.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <CheckBox/>
-                                            <!--<TextBlock Text="File: />-->
-                                            <TextBlock Text="{Binding Name}" FontWeight="Bold" VerticalAlignment="Center" />
-                                            <!--<TextBlock Text="Played blocks: "/>-->
-                                            <!--<TextBlock Text="{Binding PlayedBlocks}" FontWeight="Bold"/>-->
-                                            <!--<TextBlock Text=" (" />
-                                            <TextBlock Text="{Binding Mail}" TextDecorations="Underline" Foreground="Blue" Cursor="Hand" />
-                                            <TextBlock Text=")" />-->
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ListView.ItemTemplate>
-                                
-                            </ListView>
-                        
+                        <ListView x:Name="NowPlayingListView" ItemsSource="{Binding Path=PlayList}" BorderThickness="0">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <CheckBox IsChecked="{Binding IsItemChecked}"/>
+                                        <TextBlock Text="{Binding Filename}" FontWeight="Bold" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding FixedDesc}" VerticalAlignment="Center" />
+                                        <ContentControl Width="20"/>
+                                        <TextBlock Text="{Binding VarDesc}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
                     </GroupBox>
                 </Grid>
-
             </TabItem>
             <TabItem Header="Play multiple files">
                 <!--<Label Content="Content goes here..." />-->
@@ -140,7 +134,7 @@
                                 </StackPanel>
                                 <StackPanel  Margin="0,8,0,8">
                                     <TextBlock Text="Destination adderss" />
-                                    <TextBox MinWidth="100" Text="{Binding DestinationAddress}"/>
+                                    <!--<TextBox MinWidth="100" Text="{Binding DestinationAddress}"/>-->
                                     <TextBlock Text="Port" Width="auto"/>
                                     <TextBox Width="50"/>
                                 </StackPanel>

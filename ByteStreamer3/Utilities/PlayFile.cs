@@ -13,31 +13,26 @@ namespace ByteStreamer3
     public class PlayFile
     {
         #region == publics ==
-        public JItem PlayObject => _jObject; 
+        public JFileClass JFileObject => _jFileObject; 
         public FileInfo PlayFileInfo => _playFile;
-        //public byte[] BytesBlock => _bytesBlock;
-        public int PlayedBlockCount 
-        {
-            get { return _playedBlockCount; }
-            set
-            {
-                _playedBlockCount = value;
-                if (PlayedBlockCountEvent!=null)
-                {
-                    PlayedBlockCountEvent(PlayedBlockCount);
-                }
-            }
-        }
-        public event Action<int> PlayedBlockCountEvent;
         public UeiBridge.Library.EthernetMessage EthMessage { get; set; }
-        public bool IsValidItem { get { return ((_jObject != null) && (_jObject.Body != null) && (_jObject.Header != null));  } }
-        #endregion
-        #region == privates ==
-        readonly FileInfo _playFile;
-        JItem _jObject;
-        int _playedBlockCount;
+        public bool IsValidItem { get { return ((_jFileObject != null) && (_jFileObject.Body != null) && (_jFileObject.Header != null));  } }
+        public System.Net.IPEndPoint DestEndPoint => _destEp;
+        //{ get { return new System.Net.IPEndPoint(System.Net.IPAddress.Parse(_jFileObject.Header.DestIp), _jFileObject.Header.DestPort); } }
         #endregion
 
+        #region == privates ==
+        readonly FileInfo _playFile;
+        JFileClass _jFileObject;
+        UdpWriter _udpWriter;
+        System.Net.IPEndPoint _destEp;
+        //int _playedBlockCount;
+        #endregion
+
+        public void SendBlockByUdp()
+        {
+            _udpWriter.Send(EthMessage.GetByteArray( UeiBridge.Library.MessageWay.downstream));
+        }
         public PlayFile(FileInfo fileToPlay)
         {
             this._playFile = fileToPlay;
@@ -45,18 +40,20 @@ namespace ByteStreamer3
             {
                 using (StreamReader reader = _playFile.OpenText())
                 {
-                    _jObject = JsonConvert.DeserializeObject<JItem>(reader.ReadToEnd());
+                    _jFileObject = JsonConvert.DeserializeObject<JFileClass>(reader.ReadToEnd());
+                    _destEp = new System.Net.IPEndPoint(System.Net.IPAddress.Parse(_jFileObject.Header.DestIp), _jFileObject.Header.DestPort);
+                    _udpWriter = new UdpWriter(_destEp);
                 }
-                EthMessage = JsonToEtherentMessage(_jObject);
+                EthMessage = JsonToEtherentMessage(_jFileObject);
             }
-            catch(JsonSerializationException)
+            catch(Exception ex) when (ex is JsonReaderException || ex is JsonSerializationException)
             {
-                _jObject = null;
+                _jFileObject = null;
                 EthMessage = null;
             }
         }
 
-        private UeiBridge.Library.EthernetMessage JsonToEtherentMessage(JItem playItem)
+        private UeiBridge.Library.EthernetMessage JsonToEtherentMessage(JFileClass playItem)
         {
             if (!IsValidItem)
             {

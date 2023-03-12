@@ -77,6 +77,10 @@
       <Project>{0475416b-5715-4bd8-a379-83bd444a8401}</Project>
       <Name>ByteStreamer3</Name>
     </ProjectReference>
+    <ProjectReference Include="..\UeiBridge\UeiBridge.csproj">
+      <Project>{086a67bb-d92f-4fc5-a91e-39913abc6328}</Project>
+      <Name>UeiBridge</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
