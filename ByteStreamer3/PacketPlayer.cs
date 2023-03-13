@@ -20,17 +20,17 @@ namespace ByteStreamer3
     class PacketPlayer
     {
         #region === publics ===
-        internal List<PlayItem> PlayList => _playList;
+        internal List<PlayFile> PlayList => _playList;
         #endregion
         #region === privates ====
-        List<PlayItem> _playList;
+        List<PlayFile> _playList;
         System.Threading.CancellationTokenSource _cts = new System.Threading.CancellationTokenSource();
         bool _repeatFlag;
         bool _playOneByOneFlag;
         //DirectoryInfo _playFolder;
         #endregion
 
-        public PacketPlayer(List<PlayItem> playList, bool repeatFlag, bool playOneByOneFlag)
+        public PacketPlayer(List<PlayFile> playList, bool repeatFlag, bool playOneByOneFlag)
         {
             //_playFolder = playFolder;
             _playList = playList;
@@ -45,7 +45,7 @@ namespace ByteStreamer3
                 string fullname = "example.json";
                 using (StreamWriter file = File.CreateText( fullname))
                 {
-                    var jm = new PlayItemJson(new ItemHeader(), new ItemBody(new int[] { 0, 1, 2, 3 }));
+                    var jm = new JItem(new JItemHeader(), new JItemBody(new int[] { 0, 1, 2, 3 }));
                     var s = JsonConvert.SerializeObject(jm, Newtonsoft.Json.Formatting.Indented);
                     file.Write(s);
                 }
@@ -53,12 +53,12 @@ namespace ByteStreamer3
         }
 
 
-        private byte[] ConvertPlayItemToBytes(PlayItemJson jsonItem)
+        private byte[] ConvertPlayItemToBytes(JItem jsonItem)
         {
             throw new NotImplementedException();
         }
 
-        private PlayItemJson JsonFileToMessage(FileInfo fi)
+        private JItem JsonFileToMessage(FileInfo fi)
         {
             return null;
         }
@@ -113,7 +113,7 @@ namespace ByteStreamer3
         {
             
         }
-        PlayItemJson PlayTask2(object o, object o2)
+        JItem PlayTask2(object o, object o2)
         {
             return null;
         }
@@ -148,7 +148,7 @@ namespace ByteStreamer3
                 do
                 {
                     // for each file
-                    foreach (PlayItem item in _playList)
+                    foreach (PlayFile item in _playList)
                     {
                         if (!item.IsValidItem)
                             continue;
