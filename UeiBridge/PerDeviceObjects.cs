@@ -1,4 +1,5 @@
 ﻿using UeiDaq;
+using UeiBridge.Types;
 namespace UeiBridge
 {
     /// <summary>
@@ -6,21 +7,29 @@ namespace UeiBridge
     /// A card might have input or output manager or both
     /// reference to udp-reader or udp-writer is also included, (even thought each device manager have its own reference)
     /// </summary>
-    class PerDeviceObjects
+    public class PerDeviceObjects
     {
         public string DeviceName { get; private set; }
         public int SlotNumber { get; private set; }
-        public int CubeId { get; private set; }
-        public InputDevice InputDeviceManager { get; private set; }
-        public OutputDevice OutputDeviceManager { get; private set; }
-        public UdpReader UdpReader { get; private set; }
-        public UdpWriter UdpWriter { get; private set; }
-        public SL508Session SerialSession { get; private set; }
-        public PerDeviceObjects(string deviceName, int slotNumber, int cubeId)
+        public string CubeUrl { get; private set; }
+        public InputDevice InputDeviceManager { get;  set; }
+        public OutputDevice OutputDeviceManager { get; set; }
+        public UdpReader UdpReader { get; set; }
+        public UdpWriter UdpWriter { get; set; }
+        public SL508Session SerialSession { get; set; }
+        public PerDeviceObjects(string deviceName, int slotNumber, string cubeUrl)
         {
             this.DeviceName = deviceName;
             this.SlotNumber = slotNumber;
-            this.CubeId = cubeId;
+            this.CubeUrl = cubeUrl;
+        }
+        public PerDeviceObjects( DeviceEx deviceEx)//, OutputDevice outDevice, UdpReader reader)
+        {
+            this.DeviceName = deviceEx.PhDevice.GetDeviceName();
+            this.SlotNumber = deviceEx.PhDevice.GetIndex();
+            this.CubeUrl = deviceEx.CubeUrl;
+            //this.OutputDeviceManager = outDevice;
+            //this.UdpReader = reader;
         }
         public void Update(InputDevice inputDevice, UdpWriter udpWriter, int slotNumber)
         {

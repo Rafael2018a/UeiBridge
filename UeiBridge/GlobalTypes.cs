@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using UeiDaq;
 
 /// <summary>
 /// All files in project might refer to this file.
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 namespace UeiBridge.Types
 {
     /// <summary>
-    /// Send items that should be pushed to q (return immediatly)
+    /// Send items that should be pushed to q (return immediately)
     /// </summary>
     public interface IEnqueue<Item>
     {
@@ -109,4 +110,17 @@ namespace UeiBridge.Types
             send2.Send(obj);
         }
     }
+
+    public struct DeviceEx
+    {
+        public UeiDaq.Device PhDevice { get; private set; }
+        public string CubeUrl { get; private set; }
+
+        public DeviceEx(Device device, string cubeUrl)
+        {
+            PhDevice = device;
+            CubeUrl = cubeUrl;
+        }
+    }
+
 }

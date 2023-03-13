@@ -84,6 +84,7 @@
     <Compile Include="BlockSensorManager.cs" />
     <Compile Include="Config2.cs" />
     <Compile Include="Converters.cs" />
+    <Compile Include="CubeSeeker.cs" />
     <Compile Include="DIO403InputDeviceManager.cs" />
     <Compile Include="DIO403OutputDeviceManager.cs" />
     <Compile Include="DIO470OutputDeviceManager.cs" />
@@ -93,6 +94,7 @@
     <Compile Include="GlobalTypes.cs" />
     <Compile Include="Mediator.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="ProgramObjectsBuilder.cs" />
     <Compile Include="ProgramObjectsFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SL508InputDeviceManager.cs" />

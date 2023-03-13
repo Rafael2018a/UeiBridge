@@ -10,12 +10,6 @@ namespace UeiBridge
     public class AnalogWriteAdapter: IAnalogWriter
     {
         AnalogScaledWriter _ueiAnalogWriter;
-        //string _deviceUrl;
-
-        //public AnalogWriteAdapter(string deviceUrl)
-        //{
-        //    _deviceUrl = deviceUrl;
-        //}
 
         public AnalogWriteAdapter(AnalogScaledWriter analogWriter, int numberOfChannels)
         {
@@ -24,11 +18,6 @@ namespace UeiBridge
         }
 
         public int NumberOfChannels { get; set; }
-
-        //public bool WriteScan(double[] scen)
-        //{
-        //    throw new NotImplementedException();
-        //}
 
         public void WriteSingleScan( double [] scan)
         {
@@ -41,12 +30,13 @@ namespace UeiBridge
     /// </summary>
     internal class AO308OutputDeviceManager : OutputDevice
     {
-        // publics
+        #region === publics ====
         public override string DeviceName => "AO-308";
         public override string InstanceName { get; }
         public IAnalogWriter AnalogWriter => _writer;
-        // privates
-        //AnalogScaledWriter _writer;
+        #endregion
+
+        #region === privates ===
         AnalogWriteAdapter _writer;
         log4net.ILog _logger = StaticMethods.GetLogger();
         const string _channelsString = "Ao0:7";
@@ -54,17 +44,16 @@ namespace UeiBridge
         System.Collections.Generic.List<ViewerItem<double>> _lastScanList;
         AO308Setup _thisDeviceSetup;
         bool _inDisposeState = false;
-
         private IConvert _attachedConverter;
+        #endregion
+
         public AO308OutputDeviceManager(AO308Setup deviceSetup) : base(deviceSetup)
         {
             InstanceName = $"{DeviceName}/Slot{deviceSetup.SlotNumber}/Output";
             _thisDeviceSetup = deviceSetup;
         }
 
-        public AO308OutputDeviceManager() : base(null)
-        {
-        }
+        public AO308OutputDeviceManager() : base(null) {}
 
         public override bool OpenDevice()
         {

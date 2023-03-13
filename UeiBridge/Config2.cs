@@ -76,6 +76,9 @@ namespace UeiBridge
         public EndPoint DestEndPoint;
         [XmlIgnore]
         public int SamplingInterval => 100; // ms
+        [XmlIgnore]
+        public string CubeUrl { get; set; } // tbd. this is a patch.
+
 
         public DeviceSetup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDaq.Device device)
         {
@@ -98,8 +101,8 @@ namespace UeiBridge
         protected DeviceSetup()
         {
         }
-        private string cubeUrl;
-        public string CubeUrl { get => cubeUrl; set => cubeUrl = value; }
+        //private string cubeUrl;
+        //public string CubeUrl { get => cubeUrl; set => cubeUrl = value; }
     }
     public class BlockSensorSetup : DeviceSetup
     {
@@ -229,7 +232,8 @@ namespace UeiBridge
         //const int tbd = 7;
         [XmlAttribute("Url")]
         public string CubeUrl { get; set; }
-        public int CubeNumber;
+        [XmlIgnore]
+        public int CubeNumber=0;
         public List<DeviceSetup> DeviceSetupList = new List<DeviceSetup>();
 
         //private List<Device> _ueiDeviceList;
@@ -240,10 +244,10 @@ namespace UeiBridge
         /// <summary>
         /// Build DeviceSetupList
         /// </summary>
-        public CubeSetup(string cubeUrl, int cubeNumber)
+        public CubeSetup(string cubeUrl)
         {
             CubeUrl = cubeUrl;
-            CubeNumber = cubeNumber;
+            //CubeNumber = cubeNumber;
             //_ueiDeviceList = StaticMethods.GetDeviceList();
             DeviceCollection devColl = new DeviceCollection(cubeUrl);
             //DeviceSetupList = new DeviceSetup[devColl.Count];
@@ -274,19 +278,23 @@ namespace UeiBridge
         private static object lockObject = new object();
 
         public AppSetup AppSetup;
-        public string[] CubeUrlList = new string[1];
-        public CubeSetup[] UeiCubes = new CubeSetup[1];
+        //public string[] CubeUrlList = new string[1];
+        public CubeSetup[] UeiCubes;
         public BlockSensorSetup Blocksensor = new BlockSensorSetup(new EndPoint(ConfigFactory.LocalIP, 50105), "BlockSensor");
         public ValidValuesClass ValidValues = new ValidValuesClass();
-
+        public static string SettingsFilename => "UeiSettings2.config";
+        string[] _cubeUrls;
         private Config2()
         {
         }
-        private Config2(string cubeUrl)
+        private Config2(string [] cubeUrls)
         {
             AppSetup = new AppSetup();
-            UeiCubes[0] = new CubeSetup(cubeUrl, 0);
-            CubeUrlList[0] = cubeUrl;
+            UeiCubes = new CubeSetup[cubeUrls.Length];
+            for (int i = 0; i < cubeUrls.Length; i++)
+            {
+                UeiCubes[i] = new CubeSetup(cubeUrls[i]);
+            }
         }
         public static Config2 Instance
         {
@@ -303,38 +311,66 @@ namespace UeiBridge
                 return _instance;
             }
         }
+        public static bool IsConfigFileExist()
+        {
+            return System.IO.File.Exists(SettingsFilename);
+        }
+        public static void Reset()
+        {
+            _instance = null;
+        }
+        public void BuildNewConfig(string [] urls)
+        {
+            _cubeUrls = urls;
+
+            var resultConfig = new Config2(urls); // default);
+
+            //resultConfig = new Config2("simu://"); // default);
+            var serializer = new XmlSerializer(typeof(Config2));
+            using (var writer = new StreamWriter(SettingsFilename))
+            {
+                serializer.Serialize(writer, resultConfig);
+                Console.WriteLine($"New default settings file created. {SettingsFilename}");
+            }
+
+            _instance = resultConfig;
+        }
         private static Config2 LoadConfig()
         {
-            string filename = "UeiSettings2.config";
+            
             var serializer = new XmlSerializer(typeof(Config2));
             Config2 resultConfig = null;
-            if (System.IO.File.Exists(filename))
+            if (System.IO.File.Exists( SettingsFilename))
             {
                 try
                 {
-                    using (StreamReader sr = File.OpenText(filename))
+                    using (StreamReader sr = File.OpenText( SettingsFilename))
                     {
                         resultConfig = serializer.Deserialize(sr) as Config2;
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Failed to read settings file {filename}. {ex.Message}");
+                    Console.WriteLine($"Failed to read settings file {SettingsFilename}. {ex.Message}");
                     Console.WriteLine($"Using default settings");
-                    Console.WriteLine("For auto-create of default settings file, delete exising file and run program.");
+                    Console.WriteLine("For auto-create of default settings file, delete existing file and run program.");
                 }
             }
             else
             {
-                // make fresh config and write it to file
-                resultConfig = new Config2("pdna://192.168.100.2/"); // default);
-                //resultConfig = new Config2("simu://"); // default);
-                using (var writer = new StreamWriter(filename))
-                {
-                    serializer.Serialize(writer, resultConfig);
-                    Console.WriteLine($"New default settings file created. {filename}");
-                }
+                return new Config2();
             }
+            //{
+            //    throw new NotImplementedException();
+            //    // make fresh config and write it to file
+            //    resultConfig = new Config2("pdna://192.168.100.2/"); // default);
+            //    //resultConfig = new Config2("simu://"); // default);
+            //    using (var writer = new StreamWriter(filename))
+            //    {
+            //        serializer.Serialize(writer, resultConfig);
+            //        Console.WriteLine($"New default settings file created. {filename}");
+            //    }
+            //}
 
             return resultConfig;
         }
@@ -344,7 +380,21 @@ namespace UeiBridge
             var ds = this.UeiCubes[0].DeviceSetupList.Where(i => i.DeviceName == deviceName);
             return ds.FirstOrDefault();
         }
-
+        public DeviceSetup GetSetupEntryForDevice(string cubeUrl, int slotNumber)
+        {
+            if (this.UeiCubes == null)
+            {
+                return null;
+            }
+            var cube = this.UeiCubes.Where(e => e.CubeUrl == cubeUrl);
+            var selectedCube = cube.FirstOrDefault();
+            if (null==selectedCube)
+            {
+                return null;
+            }
+            var slots = selectedCube.DeviceSetupList.Where(d => d.SlotNumber == slotNumber);
+            return slots.FirstOrDefault();
+        }
     }
     public class ValidValuesClass
     {

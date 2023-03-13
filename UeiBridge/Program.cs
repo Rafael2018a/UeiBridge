@@ -14,10 +14,11 @@ using UeiBridge.Library;
 
 namespace UeiBridge
 {
-    class Program
+    public class Program
     {
         ILog _logger = StaticMethods.GetLogger();
-        List<InputDevice> _inputDevices = new List<InputDevice>();
+        //List<InputDevice> _inputDevices = new List<InputDevice>();
+        ProgramObjectsBuilder _programBuilder = new ProgramObjectsBuilder();
 
         static void Main(string[] args)
         {
@@ -27,13 +28,38 @@ namespace UeiBridge
             System.Threading.Thread.Sleep(1000);
         }
 
+        public static List<DeviceEx> BuildDeviceList(List<string> cubesUrl)
+        {
+            List<DeviceEx> resultList = new List<DeviceEx>();
+            foreach (string url in cubesUrl)
+            {
+                DeviceCollection devColl = new DeviceCollection(url);
+
+                foreach (Device dev in devColl)
+                {
+                    if (dev == null) continue; // this for the last entry, which is null
+                    resultList.Add(new DeviceEx(dev, url));
+                }
+            }
+            return resultList;
+        }
+
+        
+
         private void Run()
         {
             // print current version
             var v = System.Reflection.Assembly.GetEntryAssembly().GetName().Version.ToString();
-            _logger.Info($"UEI Bridge. Version {v} Device URL: {Config2.Instance.CubeUrlList[0]}");
+            _logger.Info($"UEI Bridge. Version {v}.");
 
-            bool ok = DisplayDeviceList();
+            List<string> cubesUrl = GetConnectedCubes();
+            if (!Config2.IsConfigFileExist())
+            {
+                Config2.Instance.BuildNewConfig(cubesUrl.ToArray());
+            }
+            List<DeviceEx> deviceList = BuildDeviceList( cubesUrl);
+
+            bool ok = DisplayDeviceList( deviceList);
             if (!ok)
             {
                 _logger.Info("Any key to exit...");
@@ -41,10 +67,16 @@ namespace UeiBridge
                 return;
             }
 
-            BuildProgramObjects();
+            _programBuilder.CreateDeviceManagers(deviceList);
+            _programBuilder.ActivateDownstreamOjects();
+            _programBuilder.ActivateUpstreamObjects();
+            _programBuilder.CreateBlockSensorManager(deviceList);
 
+
+            //BuildProgramObjects();
+           
             // publish status to StatusViewer
-            Task.Factory.StartNew(() => PublishStatus_Task());
+            Task.Factory.StartNew(() => PublishStatus_Task(_programBuilder.DeviceManagers));
 
             // self tests
             StartDownwardsTest();
@@ -53,26 +85,33 @@ namespace UeiBridge
             Console.ReadKey();
 
             _logger.Info("Disposing....");
-            DisposeProgramObjects2();
+            //DisposeProgramObjects2();
 
             _logger.Info("Any key to exit...");
             Console.ReadKey();
         }
 
-        private void DisposeProgramObjest_old()
+        private List<string> GetConnectedCubes()
         {
-            for (int cubeIndex = 0; cubeIndex < _deviceObjectsTable.Count; cubeIndex++)
-            {
-                var dl = _deviceObjectsTable[cubeIndex];
-                for (int slot = 0; slot < dl.Count; slot++)
-                {
-                    if (null != dl[slot])
-                    {
-                        dl[slot].OutputDeviceManager.Dispose();
-                    }
-                }
-            }
+            string[] list = new string[] { "simu://" , "pdna://192.168.100.2/", "pdna://192.168.100.3/" };
+            List<string> result = new List<string>(list);
+            return result;
         }
+
+        //private void DisposeProgramObjest_old()
+        //{
+        //    for (int cubeIndex = 0; cubeIndex < _deviceObjectsTable.Count; cubeIndex++)
+        //    {
+        //        var dl = _deviceObjectsTable[cubeIndex];
+        //        for (int slot = 0; slot < dl.Count; slot++)
+        //        {
+        //            if (null != dl[slot])
+        //            {
+        //                dl[slot].OutputDeviceManager.Dispose();
+        //            }
+        //        }
+        //    }
+        //}
 
         /// <summary>
         /// Display devices in all cubes
@@ -81,7 +120,7 @@ namespace UeiBridge
         private bool DisplayDeviceList() // tbd: show for ALL cubes
         {
             // prepare device list
-            List<Device> deviceList = StaticMethods.GetDeviceList(Config2.Instance.CubeUrlList[0]);
+            List<Device> deviceList = StaticMethods.GetDeviceList("TBD");
             if (null == deviceList)
             {
                 _logger.Error(StaticMethods.LastErrorMessage);
@@ -105,6 +144,26 @@ namespace UeiBridge
             return true;
         }
 
+        private bool DisplayDeviceList( List<DeviceEx> devList) // tbd: show for ALL cubes
+        {
+            // prepare device list
+            if (null == devList) throw new ArgumentNullException();
+
+            IEnumerable<IGrouping<string, DeviceEx>> GroupByUrl = devList.GroupBy(s => s.CubeUrl);
+
+            foreach (IGrouping<string, DeviceEx> group in GroupByUrl)
+            {
+                _logger.Info($" === Cube {group.Key}:");
+                foreach (DeviceEx dev in group)
+                {
+                    _logger.Info($"Device {dev.PhDevice.GetDeviceName()} on slot {dev.PhDevice.GetIndex()}");
+                }
+                _logger.Info(" *** End device list:");
+            }
+
+            return true;
+        }
+
         //List<List<OutputDevice>> _outputDeviceList;
         List<List<PerDeviceObjects>> _deviceObjectsTable;
         /// <summary>
@@ -113,7 +172,7 @@ namespace UeiBridge
         private void BuildProgramObjects()
         {
             // prepare lists
-            int noOfCubes = Config2.Instance.CubeUrlList.Length;
+            int noOfCubes = 1;// Config2.Instance.CubeUrlList.Length;
             _deviceObjectsTable = new List<List<PerDeviceObjects>>(new List<PerDeviceObjects>[noOfCubes]);
 
             System.Diagnostics.Debug.Assert(Config2.Instance.UeiCubes.Length == 1); // only one cube handled!
@@ -127,7 +186,7 @@ namespace UeiBridge
                 foreach ( UeiDaq.Device dev in realDeviceList) 
                 {
                     System.Diagnostics.Debug.Assert(slot == dev.GetIndex());
-                    _deviceObjectsTable[cubeSetup.CubeNumber].Add(new PerDeviceObjects(dev.GetDeviceName(), dev.GetIndex(), cubeSetup.CubeNumber));
+                    _deviceObjectsTable[cubeSetup.CubeNumber].Add(new PerDeviceObjects(dev.GetDeviceName(), dev.GetIndex(), ""));
                     ++slot;
                 }
 
@@ -151,7 +210,7 @@ namespace UeiBridge
 
                     var nic = IPAddress.Parse(Config2.Instance.AppSetup.SelectedNicForMCast);
                     UdpReader ureader = new UdpReader(Config2.Instance.Blocksensor.LocalEndPoint.ToIpEp(), nic, blockSensor, "BlockSensor");
-                    _deviceObjectsTable[cubeSetup.CubeNumber].Add(new PerDeviceObjects("BlockSensor", -1, cubeSetup.CubeNumber));
+                    _deviceObjectsTable[cubeSetup.CubeNumber].Add(new PerDeviceObjects("BlockSensor", -1, ""));
                     _deviceObjectsTable[cubeSetup.CubeNumber].Last().Update(blockSensor, ureader, -1);
                     blockSensor.OpenDevice();
                     ureader.Start();
@@ -388,6 +447,16 @@ namespace UeiBridge
             return result;
         }
 
+        void CreateSerialSession2( List<DeviceEx> realDeviceList)
+        {
+            var serials = realDeviceList.Where(i => i.PhDevice.GetDeviceName().StartsWith("SL508"));
+        }
+
+        /// <summary>
+        /// Create serial session and assign it to appropriate entry 
+        /// </summary>
+        /// <param name="cubeSetup"></param>
+        /// <param name="deviceObjectsTable"></param>
         private void CreateSerialSessions(CubeSetup cubeSetup, List<List<PerDeviceObjects>> deviceObjectsTable)
         {
             List<UeiDaq.Device> realDeviceList = StaticMethods.GetDeviceList(cubeSetup.CubeUrl);
@@ -422,34 +491,34 @@ namespace UeiBridge
             }
         }
 
-        void PublishStatus_Task()
+        void PublishStatus_Task( List<PerDeviceObjects> deviceList)
         {
             const int intervalMs = 100;
             IPEndPoint destEP = Config2.Instance.AppSetup.StatusViewerEP.ToIpEp();
             UdpWriter uw = new UdpWriter("To-StatusViewer", destEP, Config2.Instance.AppSetup.SelectedNicForMCast);
             TimeSpan interval = TimeSpan.FromMilliseconds(intervalMs);
-            _logger.Info($"StatusViewer dest ep: {destEP.ToString()}");
+            _logger.Info($"StatusViewer dest ep: {destEP.ToString()} (Local NIC {Config2.Instance.AppSetup.SelectedNicForMCast})");
 
-            List<IDeviceManager> deviceList = new List<IDeviceManager>();
+            List<IDeviceManager> deviceListScan = new List<IDeviceManager>();
 
             // prepare list
-            foreach (PerDeviceObjects deviceObjects in _deviceObjectsTable[0]) //ProjectRegistry.Instance.OutputDevicesMap)
+            foreach (PerDeviceObjects deviceObjects in deviceList) //ProjectRegistry.Instance.OutputDevicesMap)
             {
-                if (deviceObjects?.InputDeviceManager != null)
+                if (deviceObjects.InputDeviceManager != null)
                 {
-                    deviceList.Add(deviceObjects.InputDeviceManager);
+                    deviceListScan.Add(deviceObjects.InputDeviceManager);
                 }
 
                 if (deviceObjects?.OutputDeviceManager != null)
                 {
-                    deviceList.Add(deviceObjects.OutputDeviceManager);
+                    deviceListScan.Add(deviceObjects.OutputDeviceManager);
                 }
             }
 
             // get formatted string for each device in list
             while (true)
             {
-                foreach (IDeviceManager dm in deviceList)
+                foreach (IDeviceManager dm in deviceListScan)
                 {
                     string desc = $"{dm.InstanceName}";
                     StatusTrait tr = StatusTrait.IsRegular;
@@ -512,14 +581,14 @@ namespace UeiBridge
                     {
                         // digital out
                         {
-                            IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[5].LocalEndPoint?.ToIpEp();
-                            byte[] e403 = StaticMethods.Make_DIO403Down_Message();
+                            //IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[5].LocalEndPoint?.ToIpEp();
+                            //byte[] e403 = StaticMethods.Make_DIO403Down_Message();
                             //udpClient.Send(e403, e403.Length, destEp);
                         }
                         // analog out
                         {
-                            IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[0].LocalEndPoint.ToIpEp();
-                            byte[] e308 = StaticMethods.Make_A308Down_message();
+                            //IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[0].LocalEndPoint.ToIpEp();
+                            //byte[] e308 = StaticMethods.Make_A308Down_message();
                             //udpClient.Send(e308, e308.Length, destEp);
                         }
 #if dontremove
@@ -532,9 +601,9 @@ namespace UeiBridge
                         List<byte[]> e508 = StaticMethods.Make_SL508Down_Messages(i);
                         foreach (byte[] msg in e508)
                         {
-                            IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[3].LocalEndPoint.ToIpEp();
+                            //IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[3].LocalEndPoint.ToIpEp();
                             //udpClient.Send(msg, msg.Length, destEp);
-                            System.Threading.Thread.Sleep(10);
+                            //System.Threading.Thread.Sleep(10);
                         }
 
                         // relays

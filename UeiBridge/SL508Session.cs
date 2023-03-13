@@ -7,12 +7,14 @@ using UeiDaq;
 
 namespace UeiBridge
 {
-    class SL508Session : IDisposable
+    public class SL508Session : IDisposable
     {
         private SL508892Setup _thisDeviceSetup;
         private Session _serialSession = new Session();
 
-        public Session SerialSession => _serialSession; 
+        public Session SerialSession => _serialSession;
+
+        public int SlotNumber { get { return _thisDeviceSetup.SlotNumber; } }
 
         public SL508Session(SL508892Setup setup)
         {
@@ -52,7 +54,7 @@ namespace UeiBridge
                 foreach (Channel c in _serialSession.GetChannels())
                 {
                     SerialPort sp1 = c as SerialPort;
-                    _logger.Debug($"CH{sp1.GetIndex() }, Speed{sp1.GetSpeed()}");
+                    _logger.Debug($"Cube {_thisDeviceSetup.CubeUrl}, Slot {this.SlotNumber}, CH{sp1.GetIndex()}, Speed{sp1.GetSpeed()}");
                 }
             }
             catch(UeiDaqException ex)

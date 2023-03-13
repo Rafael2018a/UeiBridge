@@ -80,18 +80,18 @@ namespace UeiBridge
         /// Example: input "DO-403", output "Dev0"
         /// return null if device not found
         /// </summary>
-        public static string FindDeviceIndex(string cubeUrl, string deviceName)
-        {
-            List<Device> devList = GetDeviceList( cubeUrl);
-            var x = devList.Find(s => s.GetDeviceName() == deviceName);
-            if (null != x)
-            {
-                string rc = "Dev" + x.GetIndex() + "/";
-                return rc;
-            }
-            else
-                return null;
-        }
+        //public static string FindDeviceIndex(string cubeUrl, string deviceName)
+        //{
+        //    List<DeviceEx> devList = GetDeviceList( cubeUrl);
+        //    var x = devList.Find(s => s.UeiDevice.GetDeviceName() == deviceName);
+        //    if (null != x)
+        //    {
+        //        string rc = "Dev" + x.UeiDevice.GetIndex() + "/";
+        //        return rc;
+        //    }
+        //    else
+        //        return null;
+        //}
 
         public static log4net.ILog GetLogger()
         {
@@ -352,5 +352,29 @@ namespace UeiBridge
             return msg;
         }
 
+        public static List<DeviceEx> GetDeviceList(List<string> cubesUrl)
+        {
+            List<DeviceEx> resultList = new List<DeviceEx>();
+            foreach (string url in cubesUrl)
+            {
+                DeviceCollection devColl = new DeviceCollection(url);
+
+                foreach (Device dev in devColl)
+                {
+                    if (dev != null) throw new ArgumentNullException();
+                    resultList.Add(new DeviceEx(dev, url));
+                }
+            }
+            return resultList;
+        }
+
+        public static System.Net.IPAddress IpAddressFromUrl( string url)
+        {
+            //Uri u = new Uri("pdna://192.168.100.2/");
+            Uri u1 = new Uri(url);
+            var a1 = u1.Host;
+            return System.Net.IPAddress.Parse(u1.Host);
+            //var a2 = u.Scheme;
+        }
     }
 }
