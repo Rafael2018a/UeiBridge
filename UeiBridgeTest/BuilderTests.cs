@@ -38,5 +38,13 @@ namespace UeiBridgeTest
                 Assert.That(bytes[3], Is.EqualTo(2)); 
             });
         }
+
+        [Test]
+        public void buildtime()
+        {
+            var v = System.Reflection.Assembly.GetExecutingAssembly();
+            System.IO.FileInfo fi = new System.IO.FileInfo(v.Location);
+            var dt = fi.CreationTime;
+        }
     }
 }

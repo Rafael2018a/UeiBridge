@@ -51,10 +51,11 @@ namespace UeiBridge
 
                 _serialSession.Start();
 
+                _logger.Info( $" == Serial channels for cube {_thisDeviceSetup.CubeUrl}, slot {this.SlotNumber}");
                 foreach (Channel c in _serialSession.GetChannels())
                 {
                     SerialPort sp1 = c as SerialPort;
-                    _logger.Debug($"Cube {_thisDeviceSetup.CubeUrl}, Slot {this.SlotNumber}, CH{sp1.GetIndex()}, Speed{sp1.GetSpeed()}");
+                    _logger.Debug($"CH:{sp1.GetIndex()}, Speed:{sp1.GetSpeed()}, Mode: {sp1.GetMode()}");
                 }
             }
             catch(UeiDaqException ex)

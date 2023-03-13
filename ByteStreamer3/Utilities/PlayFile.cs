@@ -38,6 +38,7 @@ namespace ByteStreamer3
             this._playFile = fileToPlay;
             try
             {
+
                 using (StreamReader reader = _playFile.OpenText())
                 {
                     _jFileObject = JsonConvert.DeserializeObject<JFileClass>(reader.ReadToEnd());
@@ -61,6 +62,10 @@ namespace ByteStreamer3
             }
             byte[] block = new byte[playItem.Body.Payload.Length];
             Buffer.BlockCopy(playItem.Body.Payload, 0, block, 0, block.Length);
+            for(int i=0; i< playItem.Body.Payload.Length; i++)
+            {
+                block[i] = Convert.ToByte(playItem.Body.Payload[i]);
+            }
             UeiBridge.Library.EthernetMessage resultMessage = UeiBridge.Library.EthernetMessage.CreateMessage(playItem.Body.CardId, playItem.Body.SlotNumber, 0, block);
             return resultMessage;
         }

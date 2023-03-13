@@ -26,13 +26,14 @@ namespace UeiBridgeTest
         }
 
         [Test]
-        public void AnalogConverterTest()
+        public void AnalogConverterDownstreamTest()
         {
-            var c = new AnalogConverter(10, 12);
-            UInt16 u16 = UInt16.MaxValue / 2;
-            byte[] two = new byte[2];
-            Array.Copy(BitConverter.GetBytes(u16), two, 2);
-            double[] d = c.DownstreamConvert(two);
+            var c = new AnalogConverter(AI201100Setup.PeekVoltage_upstream, AO308Setup.PeekVoltage_downstream);
+            UInt16 d1v_ds = Convert.ToUInt16(UInt16.MaxValue / AO308Setup.PeekVoltage_downstream / 2.0);
+            UInt16 zero_v = Convert.ToUInt16(d1v_ds * AO308Setup.PeekVoltage_downstream);
+            byte[] a = new byte[2];
+            Array.Copy(BitConverter.GetBytes(zero_v), a, 2);
+            double[] d = c.DownstreamConvert(a);
 
             Assert.That(d[0], Is.InRange(-0.1, 0.1));
 

@@ -7,7 +7,7 @@ using UeiBridge.Library;
 
 namespace UeiBridge
 {
-    public class AnalogWriteAdapter: IAnalogWriter
+    public class AnalogWriteAdapter : IAnalogWriter
     {
         AnalogScaledWriter _ueiAnalogWriter;
 
@@ -19,7 +19,7 @@ namespace UeiBridge
 
         public int NumberOfChannels { get; set; }
 
-        public void WriteSingleScan( double [] scan)
+        public void WriteSingleScan(double[] scan)
         {
             _ueiAnalogWriter.WriteSingleScan(scan);
         }
@@ -44,7 +44,7 @@ namespace UeiBridge
         System.Collections.Generic.List<ViewerItem<double>> _lastScanList;
         AO308Setup _thisDeviceSetup;
         bool _inDisposeState = false;
-        private IConvert _attachedConverter;
+        private IConvert2<double[]> _attachedConverter;
         #endregion
 
         public AO308OutputDeviceManager(AO308Setup deviceSetup) : base(deviceSetup)
@@ -53,13 +53,14 @@ namespace UeiBridge
             _thisDeviceSetup = deviceSetup;
         }
 
-        public AO308OutputDeviceManager() : base(null) {}
+        public AO308OutputDeviceManager() : base(null) { }
 
         public override bool OpenDevice()
         {
             try
             {
-                _attachedConverter = StaticMethods.CreateConverterInstance(_deviceSetup);
+                //_attachedConverter = StaticMethods.CreateConverterInstance(_deviceSetup);
+                _attachedConverter = new AnalogConverter(AI201100Setup.PeekVoltage_upstream, AO308Setup.PeekVoltage_downstream);
 
                 string cubeUrl = $"{_deviceSetup.CubeUrl}Dev{_deviceSetup.SlotNumber}/{_channelsString}";
 
@@ -67,7 +68,7 @@ namespace UeiBridge
                 var c = _deviceSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
                 System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
                 _deviceSession.ConfigureTimingForSimpleIO();
-                _writer = new AnalogWriteAdapter( new AnalogScaledWriter(_deviceSession.GetDataStream()), _deviceSession.GetNumberOfChannels());
+                _writer = new AnalogWriteAdapter(new AnalogScaledWriter(_deviceSession.GetDataStream()), _deviceSession.GetNumberOfChannels());
 
                 _lastScanList = new System.Collections.Generic.List<ViewerItem<double>>(new ViewerItem<double>[_deviceSession.GetNumberOfChannels()]);
 
@@ -95,11 +96,11 @@ namespace UeiBridge
             }
             // write to device
             // ===============
-            var p = _attachedConverter.EthToDevice(em.PayloadBytes);
-            double [] scan = p as double[];
+            var p = _attachedConverter.DownstreamConvert(em.PayloadBytes);
+            double[] scan = p as double[];
             System.Diagnostics.Debug.Assert(scan != null);
-            
-            _writer.WriteSingleScan( scan);
+
+            _writer.WriteSingleScan(scan);
             lock (_lastScanList)
             {
                 for (int ch = 0; ch < scan.Length; ch++)
@@ -108,30 +109,44 @@ namespace UeiBridge
                 }
             }
         }
-        
-        public override string [] GetFormattedStatus( TimeSpan interval)
+
+        public override string[] GetFormattedStatus(TimeSpan interval)
         {
             // tbd: must lock. collection modified outside ......
             System.Text.StringBuilder formattedString = new System.Text.StringBuilder("Output voltage: ");
             lock (_lastScanList)
             {
-                if (_lastScanList[0]?.timeToLive.Ticks > 0)
+                //if (_lastScanList[0]?.timeToLive.Ticks > 0)
+
+                //_lastScanList[0].timeToLive -= interval;
+                //if (null != _lastScanList)
+
+                for (int entryIndex=0; entryIndex<_lastScanList.Count; entryIndex++)
                 {
-                    _lastScanList[0].timeToLive -= interval;
-                    if (null != _lastScanList)
+                    formattedString.Append("  ");
+                    if ( _lastScanList[entryIndex] == null)
                     {
-                        foreach (var vi in _lastScanList)
+                        formattedString.Append("-.-");
+                    }
+                    else
+                    {
+                        if (_lastScanList[entryIndex].timeToLive.Ticks > 0)
                         {
-                            formattedString.Append("  ");
-                            formattedString.Append(vi.readValue.ToString("0.0"));
+                            _lastScanList[entryIndex].timeToLive -= interval;
+                            formattedString.Append(_lastScanList[entryIndex].readValue.ToString("0.0"));
+                        }
+                        else
+                        {
+                            _lastScanList[entryIndex] = null;
                         }
                     }
                 }
 
-                else
-                {
-                    formattedString.Append("- - -");
-                }
+
+                //else
+                //{
+                //    formattedString.Append("- - -");
+                //}
             }
             return new string[] { formattedString.ToString() };
         }

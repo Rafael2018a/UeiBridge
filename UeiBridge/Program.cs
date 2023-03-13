@@ -49,8 +49,9 @@ namespace UeiBridge
         private void Run()
         {
             // print current version
-            var v = System.Reflection.Assembly.GetEntryAssembly().GetName().Version.ToString();
-            _logger.Info($"UEI Bridge. Version {v}.");
+            var EntAsm = System.Reflection.Assembly.GetEntryAssembly();//.GetName().Version;
+            System.IO.FileInfo fi = new System.IO.FileInfo(EntAsm.Location);
+            _logger.Info($"UEI Bridge. Version {EntAsm.GetName().Version.ToString(3)}. Build time: {fi.LastWriteTime.ToString()}");
 
             List<string> cubesUrl = GetConnectedCubes();
             if (!Config2.IsConfigFileExist())
@@ -79,7 +80,7 @@ namespace UeiBridge
             Task.Factory.StartNew(() => PublishStatus_Task(_programBuilder.DeviceManagers));
 
             // self tests
-            StartDownwardsTest();
+            //StartDownwardsTest();
 
             _logger.Info("Any key to exit...");
             Console.ReadKey();
@@ -153,12 +154,12 @@ namespace UeiBridge
 
             foreach (IGrouping<string, DeviceEx> group in GroupByUrl)
             {
-                _logger.Info($" === Cube {group.Key}:");
+                _logger.Info($" ====== Device list for cube {group.Key}:");
                 foreach (DeviceEx dev in group)
                 {
-                    _logger.Info($"Device {dev.PhDevice.GetDeviceName()} on slot {dev.PhDevice.GetIndex()}");
+                    _logger.Info($"{dev.PhDevice.GetDeviceName()} on slot {dev.PhDevice.GetIndex()}");
                 }
-                _logger.Info(" *** End device list:");
+                //_logger.Info(" *** End device list:");
             }
 
             return true;

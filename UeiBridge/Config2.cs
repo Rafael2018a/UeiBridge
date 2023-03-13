@@ -218,7 +218,7 @@ namespace UeiBridge
                     result = new SimuAO16Setup(new EndPoint(LocalIP, portNumber++), ueiDevice);
                     break;
                 default:
-                    Console.WriteLine($"Config: Missing setup-class for device {ueiDevice.GetDeviceName()}");
+                    Console.WriteLine($"Config: Device {ueiDevice.GetDeviceName()} not supported.");
                     result = new DeviceSetup(null, null, ueiDevice);
                     break;
             }

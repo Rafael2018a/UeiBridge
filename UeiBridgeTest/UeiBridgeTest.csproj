@@ -71,6 +71,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BuilderTests.cs" />
+    <Compile Include="ByteStreamerTest.cs" />
     <Compile Include="ConfigTests.cs" />
     <Compile Include="ConvertersTest.cs" />
     <Compile Include="Program.cs" />
@@ -81,6 +82,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ByteStreamer3\ByteStreamer3.csproj">
+      <Project>{0475416b-5715-4bd8-a379-83bd444a8401}</Project>
+      <Name>ByteStreamer3</Name>
+    </ProjectReference>
     <ProjectReference Include="..\UeiBridge\UeiBridge.csproj">
       <Project>{086a67bb-d92f-4fc5-a91e-39913abc6328}</Project>
       <Name>UeiBridge</Name>
