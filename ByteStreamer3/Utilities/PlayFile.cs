@@ -46,7 +46,7 @@ namespace ByteStreamer3
                 }
                 EthMessage = JsonToEtherentMessage(_jFileObject);
             }
-            catch(Exception ex) when (ex is JsonReaderException || ex is JsonSerializationException)
+            catch(Exception ex) when (ex is JsonReaderException || ex is JsonSerializationException || ex is NullReferenceException)
             {
                 _jFileObject = null;
                 EthMessage = null;

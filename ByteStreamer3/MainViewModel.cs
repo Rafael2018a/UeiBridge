@@ -189,7 +189,8 @@ namespace ByteStreamer3
             IsPlayOneByOne = true;
             IsRepeat = false;
 
-            parentWindow.Title = "ByteStreamer 3.01";
+            var v = System.Reflection.Assembly.GetEntryAssembly().GetName().Version;
+            parentWindow.Title = "ByteStreamer " + v.ToString(3);
         }
         ~MainViewModel()
         {

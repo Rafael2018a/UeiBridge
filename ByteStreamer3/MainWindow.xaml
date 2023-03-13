@@ -57,7 +57,6 @@
                                 <Button Content="Stop" Command="{Binding StopPlayCommand}"/>
                                 <CheckBox Content="Repeat" VerticalAlignment="Center" IsChecked="{Binding IsRepeat}"/>
                                 <CheckBox Content="Play one by one" VerticalAlignment="Center" IsChecked="{Binding IsPlayOneByOne}"/>
-                                <TextBlock Text="{Binding SimpleCounter}" />
                             </StackPanel>
                         </StackPanel>
                     </GroupBox>
