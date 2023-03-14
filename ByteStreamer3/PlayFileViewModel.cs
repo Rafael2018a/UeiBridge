@@ -19,7 +19,7 @@ namespace ByteStreamer3
             set
             {
                 _playedBlocksCount = value;
-                VarDesc = "Played blocks count: " + value.ToString();
+                RaisePropertyChangedEvent("PlayedBlocksCount");
             }
         }
         public string Filename { get; set; }
@@ -33,6 +33,7 @@ namespace ByteStreamer3
                 RaisePropertyChangedEvent("VarDesc");
             }
         }
+        public int NoOfCycles => _playFile.JFileObject.Header.NumberOfCycles;
         #endregion
 
         #region === privates ===
@@ -42,6 +43,10 @@ namespace ByteStreamer3
         PlayFile _playFile;
         #endregion
 
+        public void SetPlayedBlocksCount(int n)
+        {
+            PlayedBlocksCount = n;
+        }
         void RaisePropertyChangedEvent(string propName)
         {
             if (PropertyChanged != null)
@@ -52,7 +57,8 @@ namespace ByteStreamer3
         {
             this._playFile = playFile;
             Filename = _playFile.PlayFileInfo.Name;
-             _fixedDesc =  " Dest: " + _playFile.DestEndPoint.ToString();
+            _fixedDesc = $"Dest: {_playFile.DestEndPoint}";
         }
+
     }
 }

@@ -3,7 +3,7 @@
     "EnablePlay": false,
     "Title": "Uei general card",
     "ConverterName": null,
-    "NumberOfCycles": 1,
+    "NumberOfCycles": 20,
     "WaitStateMs": 100,
     "DestIp": "227.3.1.10",
     "DestPort": 50036

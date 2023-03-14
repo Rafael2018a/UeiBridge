@@ -34,11 +34,11 @@ namespace ByteStreamer3
         public bool IsPlayOneByOne { get; set; }
         public bool IsRepeat { get; set; }
         //public FilePlayer2 Player { get; private set; }
-        public string PlayFolder 
+        public string PlayFolder
         {
             get { return _playFolder.FullName; }
-            set 
-            { 
+            set
+            {
                 _playFolder = new DirectoryInfo(value);
                 RaisePropertyChangedEvent("PlayFolder");
             }
@@ -70,11 +70,11 @@ namespace ByteStreamer3
                 RaisePropertyChangedEvent("SimpleCounter");
             }
         }
-        public bool NowPlaying 
-        { 
+        public bool NowPlaying
+        {
             get => _nowPlaying;
-            set 
-            { 
+            set
+            {
                 _nowPlaying = value;
                 _parentWindow.Dispatcher.Invoke(() =>
                 {
@@ -97,9 +97,9 @@ namespace ByteStreamer3
         #endregion
 
         #region ==== Commands =====
-        public RelayCommand StartPlayCommand { get; set; } 
-        public RelayCommand StopPlayCommand { get; set; } 
-        public RelayCommand BrowseFolderCommand { get; set; } 
+        public RelayCommand StartPlayCommand { get; set; }
+        public RelayCommand StopPlayCommand { get; set; }
+        public RelayCommand BrowseFolderCommand { get; set; }
         void StartPlay(object obj)
         {
             _guiUpdateTimer.Interval = TimeSpan.FromMilliseconds(1000);
@@ -109,7 +109,11 @@ namespace ByteStreamer3
             NowPlaying = true;
             if (IsPlayOneByOne)
             {
-                StartPlayOneByOne( _playList.ToList());
+                StartPlayOneByOne(_playList.ToList());
+            }
+            else
+            {
+                StartPlaySimultaneously(_playList.ToList());
             }
         }
         bool CanStartPlay(object obj)
@@ -146,7 +150,7 @@ namespace ByteStreamer3
         }
         bool CanSelectPlayFolder(object obj)
         {
-            return _nowPlaying==false;
+            return _nowPlaying == false;
         }
         private void LoadCommands()
         {
@@ -162,14 +166,14 @@ namespace ByteStreamer3
                 return;
             this._playFolder = playFolder;
             FileInfo[] jsonlist = playFolder.GetFiles("*.json");
-            var onlyValids = new List<PlayFile>(jsonlist.Select(i => new PlayFile(i)).Where(i => i.IsValidItem));
+            var onlyValids = new List<PlayFile>(jsonlist.Select(i => new PlayFile(i)).Where(i => i.IsValidItem()));
             var vmlist = onlyValids.Select(i => new PlayFileViewModel(i));
             PlayList = new ObservableCollection<PlayFileViewModel>(vmlist);
 
             // create sample file
-            if (onlyValids.Count==0)
+            if (onlyValids.Count == 0)
             {
-                JFileClass jclass = new JFileClass(new JFileHeader(), new JFileBody(new int[] { 01, 02, 03}));
+                JFileClass jclass = new JFileClass(new JFileHeader(), new JFileBody(new int[] { 01, 02, 03 }));
                 string s = Newtonsoft.Json.JsonConvert.SerializeObject(jclass, Formatting.Indented);
                 using (StreamWriter fs = new StreamWriter("sample.json"))
                 {
@@ -220,7 +224,7 @@ namespace ByteStreamer3
             set
             { _radBtnId = value; }
         }
-        
+
         private SettingBag LoadSetting()
         {
             System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
@@ -249,21 +253,21 @@ namespace ByteStreamer3
                     {
                         foreach (PlayFileViewModel playfileVM in playList)
                         {
-                            if ((!playfileVM.PlayFile.IsValidItem)||(false == playfileVM.IsItemChecked))
+                            if ((!playfileVM.PlayFile.IsValidItem()) || (false == playfileVM.IsItemChecked))
                                 continue;
-                            
-                            playfileVM.PlayedBlocksCount = 0;
+
+                            playfileVM.SetPlayedBlocksCount(0);
                             for (int i = 0; i < playfileVM.PlayFile.JFileObject.Header.NumberOfCycles; i++)
                             {
                                 // -- send block ....
                                 playfileVM.PlayFile.SendBlockByUdp();
                                 System.Threading.Thread.Sleep(playfileVM.PlayFile.JFileObject.Header.WaitStateMs);
-                                ++playfileVM.PlayedBlocksCount;
+                                playfileVM.SetPlayedBlocksCount(1 + playfileVM.PlayedBlocksCount);
 
                                 _playCancelSource.Token.ThrowIfCancellationRequested();
                             }
                         }
-                    } while ( IsRepeat && (false == _playCancelSource.Token.IsCancellationRequested));
+                    } while (IsRepeat && (false == _playCancelSource.Token.IsCancellationRequested));
                 }
                 finally
                 {
@@ -273,6 +277,39 @@ namespace ByteStreamer3
             }, _playCancelSource.Token);
 
             return t;
+        }
+        /// <summary>
+        /// Start Play Simultaneously
+        /// </summary>
+        private Task StartPlaySimultaneously(List<PlayFileViewModel> playList)
+        {
+            NowPlaying = true;
+            _playCancelSource = new System.Threading.CancellationTokenSource();
+            List<Task> playTaskList = new List<Task>();
+
+                foreach (PlayFileViewModel playfileVM in playList)
+                {
+                    if ((!playfileVM.PlayFile.IsValidItem()) || (false == playfileVM.IsItemChecked))
+                        continue;
+
+                    Task t = Task.Run(() =>
+                       {
+                           playfileVM.SetPlayedBlocksCount(0);
+                           for (int i = 0; i < playfileVM.PlayFile.JFileObject.Header.NumberOfCycles; i++)
+                           {
+                               playfileVM.PlayFile.SendBlockByUdp();
+                               System.Threading.Thread.Sleep(playfileVM.PlayFile.JFileObject.Header.WaitStateMs);
+                               playfileVM.SetPlayedBlocksCount(1 + playfileVM.PlayedBlocksCount);
+
+                               _playCancelSource.Token.ThrowIfCancellationRequested();
+                           }
+                       }, _playCancelSource.Token);
+                    playTaskList.Add(t);
+                }
+            
+
+            Task result = Task.Factory.ContinueWhenAll(playTaskList.ToArray(), z => NowPlaying = false);
+            return result;
         }
     }
 }

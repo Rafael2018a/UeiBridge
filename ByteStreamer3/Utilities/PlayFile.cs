@@ -16,7 +16,6 @@ namespace ByteStreamer3
         public JFileClass JFileObject => _jFileObject; 
         public FileInfo PlayFileInfo => _playFile;
         public UeiBridge.Library.EthernetMessage EthMessage { get; set; }
-        public bool IsValidItem { get { return ((_jFileObject != null) && (_jFileObject.Body != null) && (_jFileObject.Header != null));  } }
         public System.Net.IPEndPoint DestEndPoint => _destEp;
         //{ get { return new System.Net.IPEndPoint(System.Net.IPAddress.Parse(_jFileObject.Header.DestIp), _jFileObject.Header.DestPort); } }
         #endregion
@@ -29,6 +28,11 @@ namespace ByteStreamer3
         //int _playedBlockCount;
         #endregion
 
+        public bool IsValidItem()
+        { 
+            return ((_jFileObject != null) && (_jFileObject.Body != null) && (_jFileObject.Header != null)); 
+        } 
+
         public void SendBlockByUdp()
         {
             _udpWriter.Send(EthMessage.GetByteArray( UeiBridge.Library.MessageWay.downstream));
@@ -38,14 +42,16 @@ namespace ByteStreamer3
             this._playFile = fileToPlay;
             try
             {
-
                 using (StreamReader reader = _playFile.OpenText())
                 {
                     _jFileObject = JsonConvert.DeserializeObject<JFileClass>(reader.ReadToEnd());
+                }
+                if (this.IsValidItem())
+                {
                     _destEp = new System.Net.IPEndPoint(System.Net.IPAddress.Parse(_jFileObject.Header.DestIp), _jFileObject.Header.DestPort);
                     _udpWriter = new UdpWriter(_destEp);
+                    EthMessage = JsonToEtherentMessage(_jFileObject);
                 }
-                EthMessage = JsonToEtherentMessage(_jFileObject);
             }
             catch(Exception ex) when (ex is JsonReaderException || ex is JsonSerializationException || ex is NullReferenceException)
             {
@@ -56,7 +62,7 @@ namespace ByteStreamer3
 
         private UeiBridge.Library.EthernetMessage JsonToEtherentMessage(JFileClass playItem)
         {
-            if (!IsValidItem)
+            if (!IsValidItem())
             {
                 return null;
             }

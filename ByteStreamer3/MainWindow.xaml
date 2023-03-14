@@ -67,9 +67,15 @@
                                     <StackPanel Orientation="Horizontal">
                                         <CheckBox IsChecked="{Binding IsItemChecked}"/>
                                         <TextBlock Text="{Binding Filename}" FontWeight="Bold" VerticalAlignment="Center" />
+                                        <ContentControl Width="10"/>
                                         <TextBlock Text="{Binding FixedDesc}" VerticalAlignment="Center" />
                                         <ContentControl Width="20"/>
                                         <TextBlock Text="{Binding VarDesc}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="0" VerticalAlignment="Center"/>
+                                        <ContentControl Width="2"/>
+                                        <ProgressBar Minimum="0" Maximum="{Binding NoOfCycles}" Value="{Binding PlayedBlocksCount}" Width="100" Height="5" VerticalAlignment="Center"/>
+                                        <ContentControl Width="2"/>
+                                        <TextBlock Text="{Binding NoOfCycles}" VerticalAlignment="Center"/>
                                     </StackPanel>
                                 </DataTemplate>
                             </ListView.ItemTemplate>
