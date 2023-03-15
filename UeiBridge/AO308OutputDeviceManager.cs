@@ -32,7 +32,6 @@ namespace UeiBridge
     {
         #region === publics ====
         public override string DeviceName => "AO-308";
-        public override string InstanceName { get; }
         public IAnalogWriter AnalogWriter => _writer;
         #endregion
 
@@ -42,15 +41,14 @@ namespace UeiBridge
         const string _channelsString = "Ao0:7";
         Session _deviceSession;
         System.Collections.Generic.List<ViewerItem<double>> _lastScanList;
-        AO308Setup _thisDeviceSetup;
         bool _inDisposeState = false;
         private IConvert2<double[]> _attachedConverter;
         #endregion
 
+        public AO308Setup ThisDeviceSetup => _deviceSetup as AO308Setup;
+
         public AO308OutputDeviceManager(AO308Setup deviceSetup) : base(deviceSetup)
         {
-            InstanceName = $"{DeviceName}/Slot{deviceSetup.SlotNumber}/Output";
-            _thisDeviceSetup = deviceSetup;
         }
 
         public AO308OutputDeviceManager() : base(null) { }
@@ -183,12 +181,10 @@ namespace UeiBridge
     internal class SimuAO16 : OutputDevice
     {
         public override string DeviceName => "Simu-AO16";
-        public override string InstanceName { get; }
         log4net.ILog _logger = StaticMethods.GetLogger();
 
         public SimuAO16(DeviceSetup deviceSetup) : base(deviceSetup as AO308Setup)
         {
-            InstanceName = $"{DeviceName}/Slot{deviceSetup.SlotNumber}/Output";
         }
         public SimuAO16() : base(null) { }
 

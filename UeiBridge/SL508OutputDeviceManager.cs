@@ -14,7 +14,6 @@ namespace UeiBridge
     class SL508OutputDeviceManager : OutputDevice
     {
         // publics
-        public override string InstanceName { get; } //=> _instanceName;
         public override string DeviceName => "SL-508-892";
         // privates
         log4net.ILog _logger = StaticMethods.GetLogger();
@@ -31,7 +30,6 @@ namespace UeiBridge
         {
             System.Diagnostics.Debug.Assert(null != serialSession);
             _serialSession = serialSession;
-            InstanceName = $"{DeviceName}/Slot{ setup.SlotNumber}/Output";
             _attachedConverter = StaticMethods.CreateConverterInstance(setup);
             System.Diagnostics.Debug.Assert(null != serialSession);
 

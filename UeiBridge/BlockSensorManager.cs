@@ -17,7 +17,7 @@ namespace UeiBridge
     {
         #region === publics ====
         public override string DeviceName => "BlockSensor";
-        public override string InstanceName => "BlockSensorManager";
+        //public string InstanceName => "BlockSensorManager";
         #endregion
         #region === privates ===
         //AO308OutputDeviceManager _ao308Device;
@@ -27,15 +27,15 @@ namespace UeiBridge
         IAnalogWriter _analogWriter;
         int _subaddress = -1;
         double[] _analogScan;
-        BlockSensorSetup _thisDeviceSetup;
+        BlockSensorSetup ThisDeviceSetup => _deviceSetup as BlockSensorSetup;
+        
         bool _isInDispose = false;
         #endregion
 
         public BlockSensorManager(DeviceSetup deviceSetup, IAnalogWriter writer) : base(deviceSetup)
         {
             System.Diagnostics.Debug.Assert(writer != null);
-            _thisDeviceSetup = deviceSetup as BlockSensorSetup;
-            System.Diagnostics.Debug.Assert(null != _thisDeviceSetup);
+            System.Diagnostics.Debug.Assert(null != ThisDeviceSetup);
             _analogWriter = writer;
 
             int serial = 0;
@@ -72,7 +72,7 @@ namespace UeiBridge
 
         public override bool OpenDevice()
         {
-            _logger.Info($"Init success: {InstanceName} . Listening on { _thisDeviceSetup.LocalEndPoint.ToIpEp()}");
+            _logger.Info($"Init success: {InstanceName} . Listening on { ThisDeviceSetup.LocalEndPoint.ToIpEp()}");
             // device shall be opened upon first setup message (from simulator)
             return true;
         }

@@ -116,10 +116,10 @@ namespace StatusViewer
 
             Task.Factory.StartNew(() =>
             {
-                for (int i = 0; i < 1000; i++)
+                for (int i = 0; i < 10; i++)
                 {
                     UdpClient udpClient = new UdpClient();
-                    System.Threading.Thread.Sleep(100);
+                    System.Threading.Thread.Sleep(200);
 
                     string[] slist = new string[2];
                     slist[0]=  $"Regular message {i}";

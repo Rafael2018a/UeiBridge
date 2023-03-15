@@ -20,22 +20,21 @@ namespace UeiBridge
         public override string DeviceName => "AI-201-100"; // 
         IConvert _attachedConverter;
         public override IConvert AttachedConverter => _attachedConverter;
-        public override string InstanceName { get; }//=> _instanceName;
         //ISend<SendObject> _targetConsumer;
         AI201100Setup _thisDeviceSetup;
         double[] _lastScan;
 
-        public AI201InputDeviceManager(ISend<SendObject> targetConsumer, AI201100Setup setup) : base(targetConsumer)
+        public AI201InputDeviceManager(ISend<SendObject> targetConsumer, AI201100Setup setup) : base(targetConsumer, setup)
         {
             _channelsString = "Ai0:23";
             _attachedConverter = StaticMethods.CreateConverterInstance( setup);
-            InstanceName = $"{DeviceName}/Slot{setup.SlotNumber}/Input";
+            
             _targetConsumer = targetConsumer;
             _thisDeviceSetup = setup;
             System.Diagnostics.Debug.Assert(this.DeviceName.Equals(setup.DeviceName));
         }
 
-        public AI201InputDeviceManager() : base(null) // must have default const.
+        public AI201InputDeviceManager() : base(null,null) // must have default const.
         {
         }
 

@@ -29,7 +29,7 @@ namespace UeiBridgeTest
         [Test]
         public void UrlParse()
         {
-            var ip = StaticMethods.IpAddressFromUrl("pdna://192.168.100.2/");
+            var ip = StaticMethods.GetIpAddressFromUrl("pdna://192.168.100.2/");
             byte[] bytes = ip.GetAddressBytes();
 
             Assert.Multiple(() => 

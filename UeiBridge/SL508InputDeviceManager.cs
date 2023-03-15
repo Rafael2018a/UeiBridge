@@ -28,10 +28,8 @@ namespace UeiBridge
         //public List<SerialWriter> SerialWriterList => _serialWriterList;
         public bool InDisposeState => _InDisposeState;
 
-        public override string InstanceName { get; }
-
         private SL508Session _serialSession;
-        public SL508InputDeviceManager(ISend<SendObject> targetConsumer, DeviceSetup setup, SL508Session serialSession) : base(targetConsumer)
+        public SL508InputDeviceManager(ISend<SendObject> targetConsumer, DeviceSetup setup, SL508Session serialSession) : base(targetConsumer, setup)
         {
             _serialPorts = new List<SerialPort>();
             _serialReaderList = new List<SerialReader>();
@@ -41,7 +39,6 @@ namespace UeiBridge
             
            
             _serialSession = serialSession;
-            InstanceName = $"{DeviceName}/Slot{setup.SlotNumber}/Input";
             _targetEp = setup.DestEndPoint.ToIpEp();
 
             _thisDeviceSetup = setup as SL508892Setup;
@@ -51,7 +48,7 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert(this.DeviceName.Equals(setup.DeviceName));
         }
 
-        public SL508InputDeviceManager() : base(null)
+        public SL508InputDeviceManager() : base(null,null)
         {
         }
 

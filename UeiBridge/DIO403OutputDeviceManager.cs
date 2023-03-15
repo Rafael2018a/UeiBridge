@@ -14,7 +14,6 @@ namespace UeiBridge
     class DIO403OutputDeviceManager : OutputDevice //DioOutputDeviceManager
     {
         public override string DeviceName => "DIO-403";
-        public override string InstanceName { get; }
 
         //privates
         log4net.ILog _logger = StaticMethods.GetLogger();
@@ -26,7 +25,6 @@ namespace UeiBridge
 
         public DIO403OutputDeviceManager(DeviceSetup setup) : base(setup)
         {
-            InstanceName = $"{DeviceName}/Slot{ setup.SlotNumber}/Output";
         }
         public DIO403OutputDeviceManager() : base(null) // must have default c-tor
         {

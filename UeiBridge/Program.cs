@@ -113,7 +113,7 @@ namespace UeiBridge
         //        }
         //    }
         //}
-
+#if dont
         /// <summary>
         /// Display devices in all cubes
         /// </summary>
@@ -144,7 +144,7 @@ namespace UeiBridge
 
             return true;
         }
-
+#endif
         private bool DisplayDeviceList( List<DeviceEx> devList) // tbd: show for ALL cubes
         {
             // prepare device list
@@ -164,12 +164,13 @@ namespace UeiBridge
 
             return true;
         }
-
+#if old
         //List<List<OutputDevice>> _outputDeviceList;
         List<List<PerDeviceObjects>> _deviceObjectsTable;
         /// <summary>
         /// 
         /// </summary>
+
         private void BuildProgramObjects()
         {
             // prepare lists
@@ -225,7 +226,7 @@ namespace UeiBridge
             //    ActivateUpwardObjects(cubeSetup);
             //}
         }
-
+#endif
         private static void ActivateDownwardOjects(List<PerDeviceObjects> deviceObjectsList)
         {
             // activate downward (output) objects
@@ -256,7 +257,7 @@ namespace UeiBridge
                 // (no need to activate udpWriter)
             }
         }
-
+#if dont
         [Obsolete]
         void DisposeProgramObjects()
         {
@@ -491,7 +492,7 @@ namespace UeiBridge
                 }
             }
         }
-
+#endif
         void PublishStatus_Task( List<PerDeviceObjects> deviceList)
         {
             const int intervalMs = 100;
@@ -633,7 +634,7 @@ namespace UeiBridge
                 }
             });
         }
-
+#if dont
         private byte[] Make_AO308_Message_old()
         {
             byte[] eth = new byte[32];
@@ -663,5 +664,7 @@ namespace UeiBridge
             {
             }
         }
+#endif
+
     }
 }

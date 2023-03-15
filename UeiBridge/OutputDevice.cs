@@ -28,12 +28,13 @@ namespace UeiBridge
     {
         #region abstracts properties
         public abstract string DeviceName { get; }
-        public abstract string InstanceName { get; }
+        public string InstanceName { get; private set; }
         #endregion
         #region abstract methods
         public abstract bool OpenDevice();
         protected abstract void HandleRequest(EthernetMessage request);
         public abstract string [] GetFormattedStatus( TimeSpan interval);
+        //public abstract object ThisDeviceSetup { get; set; }
         #endregion
         #region protected fields
         protected string _caseUrl; // remove?
@@ -50,7 +51,16 @@ namespace UeiBridge
 
         protected OutputDevice(DeviceSetup deviceSetup)
         {
-            _deviceSetup = deviceSetup;
+            if (null != deviceSetup)
+            {
+                _deviceSetup = deviceSetup;
+                InstanceName = $"{DeviceName}/Cube{deviceSetup.CubeId}/Slot{deviceSetup.SlotNumber}/Output";
+            }
+            else
+            {
+                InstanceName = "<undefiend output device>";
+            }
+            //deviceSetup.CubeUrl;
             //_resetLastScanTimer.Elapsed += resetLastScanTimer_Elapsed;
             //_resetLastScanTimer.AutoReset = true;
             //_resetLastScanTimer.Enabled = true;

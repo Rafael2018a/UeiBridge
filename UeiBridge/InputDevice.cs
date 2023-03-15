@@ -16,7 +16,7 @@ namespace UeiBridge
         public abstract string [] GetFormattedStatus( TimeSpan interval);
         public abstract void OpenDevice();
         public abstract string DeviceName { get; }
-        public abstract string InstanceName { get; }
+        public string InstanceName { get; }
 
         // protected
         protected Session _deviceSession;
@@ -34,9 +34,17 @@ namespace UeiBridge
         //    _samplingInterval = samplingInterval;
         //    _cubeUrl = cubeUrl;
         //}
-        protected InputDevice(ISend<SendObject> targetConsumer)//, DeviceSetup setup)
+        protected InputDevice(ISend<SendObject> targetConsumer, DeviceSetup setup)
         {
             _targetConsumer = targetConsumer;
+            if (null != setup)
+            {
+                InstanceName = $"{DeviceName}/Cube{setup.CubeId}/Slot{setup.SlotNumber}/Input";
+            }
+            else
+            {
+                InstanceName = "<undefined input device>";
+            }
             //_deviceSetup = setup;
         }
         public virtual void CloseDevice()

@@ -18,30 +18,19 @@ namespace UeiBridge
         IConvert _attachedConverter;
         public override IConvert AttachedConverter => _attachedConverter;
         DIO403Setup _thisDeviceSetup;
-        public override string InstanceName { get; }
         public ISend<SendObject> TargetConsumer { get => _targetConsumer; set => _targetConsumer = value; }
+        UInt16[] _lastScan;
 
-        //public DIO403InputDeviceManager(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string caseUrl) : base(targetConsumer, samplingInterval, caseUrl)
-        //{
-        //    _channelsString = "Di3:5";
-        //    _attachedConverter = StaticMethods.CreateConverterInstance(DeviceName);
-        //}
-
-        public DIO403InputDeviceManager( ISend<SendObject> targetConsumer, DeviceSetup setup): base(targetConsumer)
+        public DIO403InputDeviceManager( ISend<SendObject> targetConsumer, DeviceSetup setup): base(targetConsumer, setup)
         {
             _channelsString = "Di3:5";
             _attachedConverter = StaticMethods.CreateConverterInstance( setup);
-            InstanceName = $"{DeviceName}/Slot{setup.SlotNumber}/Input";
             _thisDeviceSetup = setup as DIO403Setup;
 
             System.Diagnostics.Debug.Assert(null != setup);
             System.Diagnostics.Debug.Assert(DeviceName.Equals(setup.DeviceName));
         }
-        public DIO403InputDeviceManager():base(null) // must have default const.
-        {
-
-        }
-        // todo: add Dispose/d-tor
+        public DIO403InputDeviceManager() : base(null, null) { }// must have default c-tor.
         public override void OpenDevice()
         {
             string deviceUrl = $"{_thisDeviceSetup.CubeUrl}Dev{_thisDeviceSetup.SlotNumber}/{_channelsString}";
@@ -50,7 +39,6 @@ namespace UeiBridge
             {
                 _deviceSession = new Session();
                 _deviceSession.CreateDIChannel(deviceUrl);
-                //_numberOfChannels = _deviceSession.GetNumberOfChannels();
                 _deviceSession.ConfigureTimingForSimpleIO();
                 _reader = new DigitalReader(_deviceSession.GetDataStream());
 
@@ -65,7 +53,6 @@ namespace UeiBridge
             {
                 _logger.Error(ex.Message);
                 _deviceSession = null;
-                //return false;
             }
         }
 #if dont
@@ -116,7 +103,7 @@ namespace UeiBridge
             }
         }
 
-        UInt16[] _lastScan;
+        
         public override string [] GetFormattedStatus( TimeSpan interval)
         {
             System.Text.StringBuilder sb = new System.Text.StringBuilder("Input bits: ");

@@ -78,7 +78,8 @@ namespace UeiBridge
         public int SamplingInterval => 100; // ms
         [XmlIgnore]
         public string CubeUrl { get; set; } // tbd. this is a patch.
-
+        [XmlIgnore]
+        public int CubeId { get; set; } // lsb of cube address
 
         public DeviceSetup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDaq.Device device)
         {
@@ -392,8 +393,11 @@ namespace UeiBridge
             {
                 return null;
             }
-            var slots = selectedCube.DeviceSetupList.Where(d => d.SlotNumber == slotNumber);
-            return slots.FirstOrDefault();
+            var theSetups = selectedCube.DeviceSetupList.Where(d => d.SlotNumber == slotNumber);
+            DeviceSetup result = theSetups.FirstOrDefault();
+            result.CubeUrl = selectedCube.CubeUrl;
+            result.CubeId = StaticMethods.GetIpAddressFromUrl(selectedCube.CubeUrl).GetAddressBytes()[3];
+            return result;
         }
     }
     public class ValidValuesClass
