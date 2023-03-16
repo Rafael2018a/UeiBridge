@@ -44,7 +44,23 @@ namespace UeiBridgeTest
             double[] d = c.DownstreamConvert(a);
 
             Assert.That(d[0], Is.InRange(-0.1, 0.1));
+        }
 
+        [Test]
+        public void AnalogConverter2wayTest()
+        {
+            var c = new AnalogConverter(10, 10);
+            double[] d1 = new double[] { -6, -3, 0, 3, 6 };
+            byte [] bytes = c.UpstreamConvert(d1);
+            double [] d2 = c.DownstreamConvert(bytes);
+
+            Assert.Multiple(() =>
+            {
+                for(int i=0; i<d1.Length; i++)
+                {
+                    Assert.That(d1[i] - d2[i], Is.InRange(-0.1, 01));
+                }
+            });
         }
 
     }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UeiDaq;
 
 namespace UeiBridge.Library
 {
@@ -13,7 +14,8 @@ namespace UeiBridge.Library
     public interface IWriterAdapter<T>
     {
         void WriteSingleScan(T scen);
-        int NumberOfChannels { get; }
+        //int NumberOfChannels { get; }
+        UeiDaq.Session OriginSession { get; }
     }
     //public interface IDigitalWriter
     //{

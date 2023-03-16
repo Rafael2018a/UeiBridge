@@ -54,7 +54,7 @@ namespace UeiBridge
             _blockSensorTable.Add(new BlockSensorEntry(serial++, "vref4", 0, 3));
             _blockSensorTable.Add(new BlockSensorEntry(serial++, "p5v3", 1, 3));
 
-            _analogScan = new double[writer.NumberOfChannels];
+            _analogScan = new double[writer.OriginSession.GetNumberOfChannels()];
             Array.Clear(_analogScan, 0, _analogScan.Length);
         }
         public BlockSensorManager() : base(null) // empty c-tor for Activator.CreateInstance()
@@ -63,7 +63,6 @@ namespace UeiBridge
 
         public void Start()
         {
-
         }
         public override string[] GetFormattedStatus(TimeSpan interval)
         {

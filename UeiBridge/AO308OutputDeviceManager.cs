@@ -10,14 +10,15 @@ namespace UeiBridge
     public class AnalogWriteAdapter : IWriterAdapter<double[]>
     {
         AnalogScaledWriter _ueiAnalogWriter;
+        Session _originSession;
 
-        public AnalogWriteAdapter(AnalogScaledWriter analogWriter, int numberOfChannels)
+        public AnalogWriteAdapter(AnalogScaledWriter analogWriter, Session originSession)
         {
             this._ueiAnalogWriter = analogWriter;
-            this.NumberOfChannels = numberOfChannels;
+            _originSession = originSession;
         }
 
-        public int NumberOfChannels { get; set; }
+        public Session OriginSession => _originSession;
 
         public void WriteSingleScan(double[] scan)
         {
@@ -28,27 +29,28 @@ namespace UeiBridge
     /// from the manual:
     /// ** 8-Channel, 16-bit, ±10V Analog Output Board **
     /// </summary>
-    internal class AO308OutputDeviceManager : OutputDevice
+    public class AO308OutputDeviceManager : OutputDevice
     {
         #region === publics ====
         public override string DeviceName => "AO-308";
-        public IWriterAdapter<double[]> AnalogWriter => _writer;
+        public IWriterAdapter<double[]> AnalogWriter => _analogWriter;
         #endregion
 
         #region === privates ===
-        AnalogWriteAdapter _writer;
+        IWriterAdapter<double[]> _analogWriter;
         log4net.ILog _logger = StaticMethods.GetLogger();
-        const string _channelsString = "Ao0:7";
-        Session _deviceSession;
+        //const string _channelsString = "Ao0:7";
+        //Session _deviceSession;
         System.Collections.Generic.List<ViewerItem<double>> _lastScanList;
         bool _inDisposeState = false;
         private IConvert2<double[]> _attachedConverter;
         #endregion
 
-        public AO308Setup ThisDeviceSetup => _deviceSetup as AO308Setup;
+        AO308Setup ThisDeviceSetup => _deviceSetup as AO308Setup;
 
-        public AO308OutputDeviceManager(AO308Setup deviceSetup) : base(deviceSetup)
+        public AO308OutputDeviceManager(AO308Setup deviceSetup, IWriterAdapter<double[]> analogWriter) : base(deviceSetup)
         {
+            _analogWriter = analogWriter;
         }
 
         public AO308OutputDeviceManager() : base(null) { }
@@ -60,27 +62,34 @@ namespace UeiBridge
                 //_attachedConverter = StaticMethods.CreateConverterInstance(_deviceSetup);
                 _attachedConverter = new AnalogConverter(AI201100Setup.PeekVoltage_upstream, AO308Setup.PeekVoltage_downstream);
 
-                string cubeUrl = $"{_deviceSetup.CubeUrl}Dev{_deviceSetup.SlotNumber}/{_channelsString}";
+                //string cubeUrl = $"{_deviceSetup.CubeUrl}Dev{_deviceSetup.SlotNumber}/{_channelsString}";
 
-                _deviceSession = new Session();
-                var c = _deviceSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
-                System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
-                _deviceSession.ConfigureTimingForSimpleIO();
-                _writer = new AnalogWriteAdapter(new AnalogScaledWriter(_deviceSession.GetDataStream()), _deviceSession.GetNumberOfChannels());
-
-                _lastScanList = new System.Collections.Generic.List<ViewerItem<double>>(new ViewerItem<double>[_deviceSession.GetNumberOfChannels()]);
+                //_deviceSession = new Session();
+                //var c = _deviceSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
+                //System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
+                //_deviceSession.ConfigureTimingForSimpleIO();
+                //_writer = new AnalogWriteAdapter(new AnalogScaledWriter(_deviceSession.GetDataStream()), _deviceSession.GetNumberOfChannels());
+                int numOfCh = _analogWriter.OriginSession.GetNumberOfChannels();
+                System.Diagnostics.Debug.Assert(numOfCh == 8);
+                _lastScanList = new System.Collections.Generic.List<ViewerItem<double>>(new ViewerItem<double>[ numOfCh]);
 
                 Task.Factory.StartNew(() => OutputDeviceHandler_Task());
 
-                var range = _deviceSession.GetDevice().GetAORanges();
-                _logger.Info($"Init success: {InstanceName} . { _deviceSession.GetNumberOfChannels()} channels. Range {range[0].minimum},{range[0].maximum}V. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}");
+                var range = _analogWriter.OriginSession.GetDevice().GetAORanges();
+                if (Config2.Instance.Blocksensor.IsActive)
+                {
+                    _logger.Info($"Init success: {InstanceName} . { numOfCh} channels. Range {range[0].minimum},{range[0].maximum}V. Listening on BlockSensor");
+                }
+                else
+                {
+                    _logger.Info($"Init success: {InstanceName} . { numOfCh} channels. Range {range[0].minimum},{range[0].maximum}V. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}");
+                }
 
                 _isDeviceReady = true;
             }
             catch (Exception ex)
             {
                 _logger.Error(ex.Message);
-                _deviceSession = null;
                 return false;
             }
             return true;
@@ -98,7 +107,7 @@ namespace UeiBridge
             double[] scan = p as double[];
             System.Diagnostics.Debug.Assert(scan != null);
 
-            _writer.WriteSingleScan(scan);
+            _analogWriter.WriteSingleScan(scan);
             lock (_lastScanList)
             {
                 for (int ch = 0; ch < scan.Length; ch++)
@@ -158,24 +167,12 @@ namespace UeiBridge
             //{
             //    _writer.Dispose();
             //}
-            if (null != _deviceSession)
+            if (null != _analogWriter.OriginSession)
             {
-                _deviceSession.Stop();
-                _deviceSession.Dispose();
+                _analogWriter.OriginSession.Stop();
+                _analogWriter.OriginSession.Dispose();
             }
         }
-        public virtual void Dispose1()
-        {
-            _deviceSession = null;
-        }
-
-        //protected override void resetLastScanTimer_Elapsed(object sender, ElapsedEventArgs e)
-        //{
-        //    if (0 == e.SignalTime.Second % 10)
-        //    {
-        //        //_lastScanList = null;
-        //    }
-        //}
     }
 
     internal class SimuAO16 : OutputDevice

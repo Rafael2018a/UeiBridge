@@ -261,20 +261,27 @@ namespace UeiBridge
         /// <summary>
         /// Convert from UInt16 to double
         /// </summary>
-        public double [] DownstreamConvert(byte[] messagePayload)
+        public double [] DownstreamConvert(byte[] byteMessage)
         {
-            double[] resultVector = new double[messagePayload.Length / sizeof(UInt16)];
+            double[] resultVector = new double[byteMessage.Length / sizeof(UInt16)];
             for (int chNum = 0; chNum < resultVector.Length; chNum++)
             {
-                UInt16 intval = BitConverter.ToUInt16(messagePayload, 2 * chNum);
+                UInt16 intval = BitConverter.ToUInt16(byteMessage, 2 * chNum);
                 resultVector[chNum] = Uint16ToPlusMinusVoltage(_peekVoltage_downstream, intval);
             }
             return resultVector;
         }
 
-        public byte[] UpstreamConvert(double [] dt)
+        public byte[] UpstreamConvert(double [] dVector)
         {
-            throw new NotImplementedException();
+            byte[] resultVector = new byte[dVector.Length * 2];
+            for (int chNum = 0; chNum < dVector.Length; chNum++)
+            {
+                UInt16 u16 = PlusMinusVoltageToUInt16( _peekVoltage_upstream, dVector[chNum]);
+                byte[] bytes = BitConverter.GetBytes(u16);
+                Array.Copy(bytes, 0, resultVector, 2*chNum, bytes.Length);
+            }
+            return resultVector;
         }
 
         public static UInt16 PlusMinusVoltageToUInt16( double peekVoltage, double valueToConvert)

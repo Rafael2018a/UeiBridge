@@ -57,6 +57,10 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="UeiDaqDNet, Version=2.5.0.58033, Culture=neutral, PublicKeyToken=ea46001077e283ec, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\3rdParty\x64\UeiDaqDNet.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EthernetMessage.cs" />
