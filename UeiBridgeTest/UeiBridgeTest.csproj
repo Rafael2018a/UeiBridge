@@ -74,6 +74,7 @@
     <Compile Include="ByteStreamerTest.cs" />
     <Compile Include="ConfigTests.cs" />
     <Compile Include="ConvertersTest.cs" />
+    <Compile Include="DeviceManagersTests.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

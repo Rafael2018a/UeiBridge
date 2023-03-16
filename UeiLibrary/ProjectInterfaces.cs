@@ -10,13 +10,13 @@ namespace UeiBridge.Library
     {
 
     }
-    public interface IAnalogWriter
+    public interface IWriterAdapter<T>
     {
-        void WriteSingleScan(double[] scen);
+        void WriteSingleScan(T scen);
         int NumberOfChannels { get; }
     }
-    public interface DigitalWrite
-    {
-        bool WriteScan(UInt16[] scan);
-    }
+    //public interface IDigitalWriter
+    //{
+    //    bool WriteScan(UInt16[] scan);
+    //}
 }

@@ -13,7 +13,7 @@ namespace UeiBridgeTest
     class BuilderTests
     {
         [Test]
-        public void BuildSimuObjectTest()
+        public void BuildSimuDeviceList()
         {
             ProgramObjectsBuilder programBuilder = new ProgramObjectsBuilder();
             if (!Config2.IsConfigFileExist())
@@ -27,15 +27,18 @@ namespace UeiBridgeTest
         }
 
         [Test]
-        public void UrlParse()
+        public void ParseDevieUrl()
         {
-            var ip = StaticMethods.GetIpAddressFromUrl("pdna://192.168.100.2/");
-            byte[] bytes = ip.GetAddressBytes();
+            var ip1 = StaticMethods.GetIpAddressFromUrl("pdna://192.168.100.2/");
+            byte[] bytes1 = ip1.GetAddressBytes();
+            var ip2 = StaticMethods.GetIpAddressFromUrl("simu://");
+            byte[] bytes2 = ip2.GetAddressBytes();
 
             Assert.Multiple(() => 
             { 
-                Assert.That(bytes[0], Is.EqualTo(192)); 
-                Assert.That(bytes[3], Is.EqualTo(2)); 
+                Assert.That(bytes1[0], Is.EqualTo(192)); 
+                Assert.That(bytes1[3], Is.EqualTo(2)); 
+                Assert.That(bytes2[2], Is.EqualTo(255));
             });
         }
 

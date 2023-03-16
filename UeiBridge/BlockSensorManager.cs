@@ -24,7 +24,7 @@ namespace UeiBridge
         log4net.ILog _logger = StaticMethods.GetLogger();
         List<BlockSensorEntry> _blockSensorTable = new List<BlockSensorEntry>();
         DIO403Convert _digitalConverter = new DIO403Convert( null);
-        IAnalogWriter _analogWriter;
+        IWriterAdapter<double[]> _analogWriter;
         int _subaddress = -1;
         double[] _analogScan;
         BlockSensorSetup ThisDeviceSetup => _deviceSetup as BlockSensorSetup;
@@ -32,7 +32,7 @@ namespace UeiBridge
         bool _isInDispose = false;
         #endregion
 
-        public BlockSensorManager(DeviceSetup deviceSetup, IAnalogWriter writer) : base(deviceSetup)
+        public BlockSensorManager(DeviceSetup deviceSetup, IWriterAdapter<double[]> writer) : base(deviceSetup)
         {
             System.Diagnostics.Debug.Assert(writer != null);
             System.Diagnostics.Debug.Assert(null != ThisDeviceSetup);

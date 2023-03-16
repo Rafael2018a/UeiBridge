@@ -18,11 +18,19 @@ namespace UeiBridgeTest
         [TestCase(-9.0)]
         [TestCase(1.0)]
         [TestCase(-1.0)]
-        public void VoltageConversionTest1(double v)
+        public void TestValidVoltageConversion(double v)
         {
             UInt16 u16 = AnalogConverter.PlusMinusVoltageToUInt16(10.0, v);
             double v1 = AnalogConverter.Uint16ToPlusMinusVoltage(10.0, u16);
             Assert.That(v1 - v, Is.InRange(-0.1, 0.1));
+        }
+        [TestCase(20.0)]
+        public void TestInvalidVoltageConversion(double v)
+        {
+            double peek = 10;
+            UInt16 u16 = AnalogConverter.PlusMinusVoltageToUInt16(peek, v);
+            double v1 = AnalogConverter.Uint16ToPlusMinusVoltage(peek, u16);
+            Assert.That(v1 - peek, Is.InRange(-0.1, 0.1));
         }
 
         [Test]

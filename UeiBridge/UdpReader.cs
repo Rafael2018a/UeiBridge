@@ -27,7 +27,7 @@ namespace UeiBridge
             this._datagramConsumer = consumer;
             this._instanceName = instanceName;
             this._msListeningiEp = listeninigEp;
-            this._localNIC = localNIC;
+            this._localNIC = (localNIC==null)? IPAddress.Any : localNIC;
             System.Diagnostics.Debug.Assert(instanceName.Length > 1);
         }
 

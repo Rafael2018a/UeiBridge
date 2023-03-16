@@ -7,7 +7,7 @@ using System.Net;
 using NUnit.Framework;
 using ByteStreamer3;
 
-namespace TestProject
+namespace UeiBridgeTest
 {
     [TestFixture]
     public class ByteStreamerTest
@@ -28,10 +28,10 @@ namespace TestProject
                 receivedMessage = i;
             }
         }
-        // [Test]
+        [Test]
         public void TestMCastClientServer()
         {
-            IPAddress localNic = IPAddress.Parse("192.168.1.154");
+            IPAddress localNic = null;// IPAddress.Parse("192.168.1.154");
             IPEndPoint mcEndpoint = new IPEndPoint( IPAddress.Parse("231.168.19.10"), 7094);
             Consumner consumer = new Consumner();
             UeiBridge.UdpReader mcReader = new UeiBridge.UdpReader(mcEndpoint, localNic, consumer, "abcd");

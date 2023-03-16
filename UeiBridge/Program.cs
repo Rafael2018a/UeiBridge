@@ -226,7 +226,7 @@ namespace UeiBridge
             //    ActivateUpwardObjects(cubeSetup);
             //}
         }
-#endif
+
         private static void ActivateDownwardOjects(List<PerDeviceObjects> deviceObjectsList)
         {
             // activate downward (output) objects
@@ -257,7 +257,7 @@ namespace UeiBridge
                 // (no need to activate udpWriter)
             }
         }
-#if dont
+
         [Obsolete]
         void DisposeProgramObjects()
         {

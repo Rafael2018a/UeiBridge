@@ -126,16 +126,17 @@ namespace UeiBridge
 
         private List<PerDeviceObjects> Build_AO308(DeviceEx realDevice, DeviceSetup setup)
         {
-            AO308OutputDeviceManager od = new AO308OutputDeviceManager(setup as AO308Setup);
+            AO308OutputDeviceManager ao308 = new AO308OutputDeviceManager(setup as AO308Setup);
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
 
             if (Config2.Instance.Blocksensor.IsActive == false)
             {
+                // set ao308 as consumer of udp-reader
                 var nic = IPAddress.Parse(Config2.Instance.AppSetup.SelectedNicForMCast);
-                UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, od, od.InstanceName);
+                UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, ao308, ao308.InstanceName);
                 pd.UdpReader = ureader;
             }
-            pd.OutputDeviceManager = od;
+            pd.OutputDeviceManager = ao308;
 
             return new List<PerDeviceObjects>() { pd };
         }
