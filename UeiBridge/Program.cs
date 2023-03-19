@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
+using System.IO;
 using log4net;
 using UeiDaq;
 using UeiBridge.Types;
@@ -94,8 +95,32 @@ namespace UeiBridge
 
         private List<string> GetConnectedCubes()
         {
-            string[] list = new string[] { "simu://" , "pdna://192.168.100.2/", "pdna://192.168.100.3/" };
-            List<string> result = new List<string>(list);
+            FileInfo cubelistFile = new FileInfo("cubelist.txt");
+            List<string> result = new List<string>();
+
+            if (cubelistFile.Exists)
+            {
+                using (StreamReader fs = new StreamReader(cubelistFile.OpenRead()))
+                {
+                    while (true)
+                    {
+                        var l = fs.ReadLine();
+                        if (null == l)
+                        {
+                            break;
+                        }
+                        result.Add(l);
+                    }
+                }
+            }
+            else
+            {
+                List<IPAddress> iplist = CubeSeeker.FindCubesInRange(IPAddress.Parse("192.168.100.2"), 100);
+                foreach (IPAddress ip in iplist)
+                {
+                    result.Add( $"pdna://{ip.ToString()}/");
+                }
+            }
             return result;
         }
 

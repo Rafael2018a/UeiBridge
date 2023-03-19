@@ -53,8 +53,23 @@
                             </StackPanel>
                             <Separator/>
                             <StackPanel Orientation="Horizontal">
-                                <Button Content="Start" Command="{Binding StartPlayCommand}" />
-                                <Button Content="Stop" Command="{Binding StopPlayCommand}"/>
+                                <Button Command="{Binding StartPlayCommand}">
+                                    <Button.Content>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Image Source="/Images/icons8-play-48.png" Height="20" />
+                                            <TextBlock Text="Play" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button.Content>
+                                </Button>
+                                <Button Command="{Binding StopPlayCommand}">
+                                    <Button.Content>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Image Source="/Images/icons8-stop-48.png" Height="20"/>
+
+                                            <TextBlock Text="Stop" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button.Content>
+                                </Button>
                                 <CheckBox Content="Repeat" VerticalAlignment="Center" IsChecked="{Binding IsRepeat}"/>
                                 <CheckBox Content="Play one by one" VerticalAlignment="Center" IsChecked="{Binding IsPlayOneByOne}"/>
                             </StackPanel>

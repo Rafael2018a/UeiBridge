@@ -147,5 +147,13 @@
   <ItemGroup>
     <Resource Include="connect_toNetwork.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\icons8-play-48.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\icons8-end-48.png" />
+    <Resource Include="Images\icons8-pause-48.png" />
+    <Resource Include="Images\icons8-stop-48.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
