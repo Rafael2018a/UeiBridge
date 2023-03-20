@@ -107,6 +107,10 @@ namespace ByteStreamer3
             _guiUpdateTimer.Start();
 
             NowPlaying = true;
+            foreach(var i in _playList)
+            {
+                i.PlayedBlocksCount = 0;
+            }
             if (IsPlayOneByOne)
             {
                 StartPlayOneByOne(_playList.ToList());

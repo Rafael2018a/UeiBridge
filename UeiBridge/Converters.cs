@@ -8,82 +8,20 @@ using UeiBridge.Types;
 
 namespace UeiBridge
 {
-    class AO308Convert : IConvert
-    {
-        public string DeviceName => "AO-308";
-        string _lastError { get; set; }
-        string IConvert.LastErrorMessage => _lastError;
-
-        //const int _numberOfChannels = 8;
-        readonly double  _peekToPeekVoltage;
-        readonly double _conversionFactor;
-
-        public AO308Convert(DeviceSetup setup)
-        {
-            AO308Setup ao308 = setup as AO308Setup;
-            if (null == ao308)
-                return;
-            
-            _peekToPeekVoltage = AO308Setup.PeekVoltage_downstream * 2;  //Analog_Out_PeekVoltage * 2;
-            _conversionFactor = _peekToPeekVoltage / UInt16.MaxValue;
-            //_numberOfChannels = Config.Instance.MaxAnalogOutputChannels;
-        }
-
-        public byte[] DeviceToEth(object dt)
-        {
-            throw new NotImplementedException();
-        }
-        /// <summary>
-        /// Convert from UInt16 to double
-        /// </summary>
-        public object EthToDevice(byte[] messagePayload)
-        {
-            //if ((messagePayload.Length) < _numberOfChannels * sizeof(UInt16))
-            //{
-            //    _lastError = $"analog-out message too short. {messagePayload.Length} ";
-            //    return null;
-            //}
-
-            double[] resultVector = new double[messagePayload.Length/sizeof(UInt16)];
-            for (int chNum = 0; chNum < resultVector.Length; chNum++)
-            {
-                Int16 ival = BitConverter.ToInt16(messagePayload, 2 * chNum);
-                resultVector[chNum] = ival * _conversionFactor;
-            }
-
-            return resultVector;
-        }
-    }
-#if Obsolete
-    class DIO430Convert : IConvert
-    {
-        public string DeviceName => "DIO-430";
-        string _lastError { get; set; }
-        string IConvert.LastErrorMessage => _lastError;
-
-        public byte[] DeviceToEth(object dt)
-        {
-            throw new NotImplementedException();
-        }
-
-        public object EthToDevice(byte[] messagePayload)
-        {
-		
-            throw new NotImplementedException();
-            //UInt32[] result = { 1 };
-            //return result;
-        }
-    }
-#endif
     class DIO403Convert : IConvert
     {
         public string DeviceName => "DIO-403";
         string _lastError = null;
         readonly int _numberOfOutChannels;
 
+        [Obsolete]
         public DIO403Convert(DeviceSetup setup)
         {
             _numberOfOutChannels = 3;// Config.Instance.MaxDigital403OutputChannels;
+        }
+        public DIO403Convert( int numberOfChannels)
+        {
+            _numberOfOutChannels = numberOfChannels;
         }
 
         string IConvert.LastErrorMessage => _lastError;
@@ -103,11 +41,6 @@ namespace UeiBridge
         }
         public object EthToDevice(byte[] messagePayload)
         {
-            if (messagePayload.Length < _numberOfOutChannels)
-            {
-                _lastError = $"digital-out message too short. {messagePayload.Length} ";
-                return null;
-            }
             // convert int8 vector to int16 vector
             // ================================
             UInt16[] resultVector = new UInt16[messagePayload.Length];

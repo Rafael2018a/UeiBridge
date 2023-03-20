@@ -129,7 +129,7 @@ namespace UeiBridge
             //AnalogWriteAdapter analogWriter = new AnalogWriteAdapter();
 
             Session theSession = new Session();
-            string cubeUrl = $"{ setup.CubeUrl}Dev{ setup.SlotNumber}/Ao0:7";
+            string cubeUrl = $"{setup.CubeUrl}Dev{ setup.SlotNumber}/Ao0:7";
             var c = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
             System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
             theSession.ConfigureTimingForSimpleIO();
@@ -200,8 +200,14 @@ namespace UeiBridge
 
         private List<PerDeviceObjects> Build_DIO403(DeviceEx realDevice, DeviceSetup setup)
         {
+            string cubeUrl = $"{setup.CubeUrl}Dev{ setup.SlotNumber}/Do0:2";// Do0:2 - 3*8 first bits as 'out'
+            Session theSession = new UeiDaq.Session();
+            theSession.CreateDOChannel(cubeUrl);
+            theSession.ConfigureTimingForSimpleIO();
+            DigitalWriterAdapter aWriter = new DigitalWriterAdapter(new UeiDaq.DigitalWriter(theSession.GetDataStream()), theSession);
+
             // output
-            DIO403OutputDeviceManager od = new DIO403OutputDeviceManager(setup);
+            DIO403OutputDeviceManager od = new DIO403OutputDeviceManager(setup, aWriter);
             var nic = IPAddress.Parse(Config2.Instance.AppSetup.SelectedNicForMCast);
             UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, od, od.InstanceName);
 

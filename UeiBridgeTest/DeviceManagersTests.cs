@@ -20,7 +20,7 @@ namespace UeiBridgeTest
 
             Session s = new Session();
             s.CreateAOChannel("simu://Dev1/AO0:7", -10, +10);
-            writerMock mk = new writerMock();
+            analogWriterMock mk = new analogWriterMock();
             mk.OriginSession = s;
 
             BlockSensorSetup setup = new BlockSensorSetup(new EndPoint("192.168.19.2", 50455), "BlockSensor");
@@ -52,10 +52,10 @@ namespace UeiBridgeTest
         {
             Session s = new Session();
             s.CreateAOChannel("simu://Dev1/AO0:7", -10, +10);
-            writerMock mk = new writerMock();
+            analogWriterMock mk = new analogWriterMock();
             mk.OriginSession = s;
-            var list = UeiBridge.Program.BuildDeviceList(new List<string>() { "simu://" });
-            var ao = list.Where(i => i.PhDevice.GetDeviceName().StartsWith("Simu-AO16")).FirstOrDefault();
+            var devicelist = UeiBridge.Program.BuildDeviceList(new List<string>() { "simu://" });
+            var ao = devicelist.Where(i => i.PhDevice.GetDeviceName().StartsWith("Simu-AO16")).FirstOrDefault();
             AO308Setup setup = new AO308Setup(new EndPoint("8.8.8.8", 5000), ao.PhDevice);
 
             AO308OutputDeviceManager ao308 = new AO308OutputDeviceManager(setup, mk);
@@ -69,7 +69,7 @@ namespace UeiBridgeTest
             //s.Stop();
             s.Dispose();
 
-            Assert.Multiple(() => 
+            Assert.Multiple(() =>
             {
                 for (int i = 0; i < mk.Scan.Length; i++)
                 {
@@ -77,9 +77,37 @@ namespace UeiBridgeTest
                 }
             });
         }
-    }
 
-    public class writerMock : IWriterAdapter<double[]>
+        [Test]
+        public void DIO403OutDeviceMangerTest()
+        {
+            Session s = new Session();
+            s.CreateDOChannel("simu://Dev2/Do0:2");
+            digitalWriterMock mk1 = new digitalWriterMock();
+            mk1.OriginSession = s;
+            var devicelist = UeiBridge.Program.BuildDeviceList(new List<string>() { "simu://" });
+            var ao = devicelist.Where(i => i.PhDevice.GetDeviceName().StartsWith("Simu-DIO64")).FirstOrDefault();
+
+            DIO403Setup setup = new DIO403Setup(new EndPoint("8.8.8.8", 5000), null, ao.PhDevice);
+
+            DIO403OutputDeviceManager dio403 = new DIO403OutputDeviceManager(setup, mk1);
+            dio403.OpenDevice();
+
+            var m = EthernetMessage.CreateMessage(4, 2, 0, new byte[] { 0xac, 0x13 });
+
+            dio403.Enqueue(m.GetByteArray( MessageWay.downstream));
+
+            System.Threading.Thread.Sleep(100);
+
+            Assert.Multiple(() => 
+            {
+                Assert.That(mk1.Scan[0], Is.EqualTo(0xac));
+                Assert.That(mk1.Scan[1], Is.EqualTo(0x13));
+            });
+                
+        }
+    }
+    public class analogWriterMock : IWriterAdapter<double[]>
     {
         //public int NumberOfChannels => 8;
 
@@ -89,6 +117,20 @@ namespace UeiBridgeTest
         public Session OriginSession { get; set; }
 
         public void WriteSingleScan(double[] scan)
+        {
+            Scan = scan;
+        }
+    }
+    public class digitalWriterMock : IWriterAdapter<UInt16[]>
+    {
+        //public int NumberOfChannels => 8;
+
+        //int IAnalogWrite.NumberOfChannels { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public UInt16[] Scan { get; set; }
+
+        public Session OriginSession { get; set; }
+
+        public void WriteSingleScan(UInt16[] scan)
         {
             Scan = scan;
         }

@@ -173,12 +173,6 @@ namespace UeiBridge
             }
             return null;
         }
-        public static void f()
-        {
-            List<Type> lt = new List<Type>(System.Reflection.Assembly.GetExecutingAssembly().GetTypes());
-            var sub = lt.Where(item => item == typeof(AO308Convert));
-            Console.WriteLine(sub);
-        }
 
 
         public static byte[] Make_A308Down_message()

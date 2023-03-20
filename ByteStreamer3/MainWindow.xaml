@@ -13,16 +13,11 @@
 
     <Grid>
         <TabControl Margin="5">
-            <TabItem Header="Play single file" >
+            <TabItem Header="Play single file">
                 <Grid ShowGridLines="False">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="3*"></RowDefinition>
-                        <RowDefinition Height="7*"></RowDefinition>
-                    </Grid.RowDefinitions>
                     <Grid.Resources>
                         <Style TargetType="TextBlock">
                             <Setter Property="Margin" Value="5"/>
-                            <!--<Setter Property="Width" Value="100"/>-->
                         </Style>
                         <Style TargetType="TextBox">
                             <Setter Property="Height" Value="22"/>
@@ -32,28 +27,26 @@
                             <Setter Property="Margin" Value="5"/>
                             <Setter Property="Padding" Value="10,0,10,0"/>
                             <Setter Property="Height" Value="22"/>
-                            <!--<Setter Property="Background" Value="LightYellow"/>-->
                         </Style>
                         <Style TargetType="CheckBox">
                             <Setter Property="Margin" Value="5"/>
-                        </Style>
-                        <Style TargetType="StackPanel">
-                            <!--<Setter Property="Orientation" Value="Horizontal"/>-->
+                            <Setter Property="VerticalAlignment" Value="Center"/>
                         </Style>
                     </Grid.Resources>
-                    <Grid.ColumnDefinitions>
-                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="3*"></RowDefinition>
+                        <RowDefinition Height="7*"></RowDefinition>
+                    </Grid.RowDefinitions>
                     <GroupBox BorderBrush="Gray" Margin="5" BorderThickness="1" Header="Control" Grid.ColumnSpan="2">
                         <StackPanel Grid.Column="1" Orientation="Vertical">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="Folder" Margin="5"/>
                                 <TextBox MinWidth="300" Margin="5" Text="{Binding PlayFolder}" IsReadOnly="True" BorderBrush="{Binding PlayFolderBoxBorderColor}"/>
                                 <Button Content="..." Margin="5" Command="{Binding BrowseFolderCommand}"/>
-                                <!--<TextBlock Text="{Binding FilesToPlayMessage}" Margin="5"/>-->
                             </StackPanel>
                             <Separator/>
                             <StackPanel Orientation="Horizontal">
-                                <Button Command="{Binding StartPlayCommand}">
+                                <Button Command="{Binding StartPlayCommand}" Height="25">
                                     <Button.Content>
                                         <StackPanel Orientation="Horizontal">
                                             <Image Source="/Images/icons8-play-48.png" Height="20" />
@@ -61,17 +54,16 @@
                                         </StackPanel>
                                     </Button.Content>
                                 </Button>
-                                <Button Command="{Binding StopPlayCommand}">
+                                <Button Command="{Binding StopPlayCommand}" Height="25">
                                     <Button.Content>
                                         <StackPanel Orientation="Horizontal">
                                             <Image Source="/Images/icons8-stop-48.png" Height="20"/>
-
                                             <TextBlock Text="Stop" VerticalAlignment="Center"/>
                                         </StackPanel>
                                     </Button.Content>
                                 </Button>
-                                <CheckBox Content="Repeat" VerticalAlignment="Center" IsChecked="{Binding IsRepeat}"/>
-                                <CheckBox Content="Play one by one" VerticalAlignment="Center" IsChecked="{Binding IsPlayOneByOne}"/>
+                                <CheckBox Content="Repeat"  IsChecked="{Binding IsRepeat}"/>
+                                <CheckBox Content="Play one by one" IsChecked="{Binding IsPlayOneByOne}"/>
                             </StackPanel>
                         </StackPanel>
                     </GroupBox>
@@ -198,8 +190,7 @@
 
                 <!--</Border>-->
             </TabItem>
-
-            <TabItem Header="Play random block" >
+            <TabItem Header="Play random block"  IsEnabled="False">
             </TabItem>
         </TabControl>
         <!--</Border>-->
