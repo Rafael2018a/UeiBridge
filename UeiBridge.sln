@@ -15,6 +15,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ByteStreamer3", "ByteStream
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UeiBridgeTest", "UeiBridgeTest\UeiBridgeTest.csproj", "{8A6BDC8F-8A3A-43F4-B27F-D0E1A86DF3C1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BridgeSetup", "BridgeSetup\BridgeSetup.csproj", "{DD040862-09FF-4FAC-A335-E2DAC14C026E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -95,6 +97,18 @@ Global
 		{8A6BDC8F-8A3A-43F4-B27F-D0E1A86DF3C1}.Release|x64.Build.0 = Release|x64
 		{8A6BDC8F-8A3A-43F4-B27F-D0E1A86DF3C1}.Release|x86.ActiveCfg = Release|Any CPU
 		{8A6BDC8F-8A3A-43F4-B27F-D0E1A86DF3C1}.Release|x86.Build.0 = Release|Any CPU
+		{DD040862-09FF-4FAC-A335-E2DAC14C026E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD040862-09FF-4FAC-A335-E2DAC14C026E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD040862-09FF-4FAC-A335-E2DAC14C026E}.Debug|x64.ActiveCfg = Debug|x64
+		{DD040862-09FF-4FAC-A335-E2DAC14C026E}.Debug|x64.Build.0 = Debug|x64
+		{DD040862-09FF-4FAC-A335-E2DAC14C026E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DD040862-09FF-4FAC-A335-E2DAC14C026E}.Debug|x86.Build.0 = Debug|Any CPU
+		{DD040862-09FF-4FAC-A335-E2DAC14C026E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD040862-09FF-4FAC-A335-E2DAC14C026E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD040862-09FF-4FAC-A335-E2DAC14C026E}.Release|x64.ActiveCfg = Release|Any CPU
+		{DD040862-09FF-4FAC-A335-E2DAC14C026E}.Release|x64.Build.0 = Release|Any CPU
+		{DD040862-09FF-4FAC-A335-E2DAC14C026E}.Release|x86.ActiveCfg = Release|Any CPU
+		{DD040862-09FF-4FAC-A335-E2DAC14C026E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
