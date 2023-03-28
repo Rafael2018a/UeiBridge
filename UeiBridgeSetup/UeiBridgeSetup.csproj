@@ -77,11 +77,16 @@
     </ApplicationDefinition>
     <Compile Include="Utilities\Converters.cs" />
     <Compile Include="ViewModels\DeviceSetupViewModel.cs" />
+    <Compile Include="ViewModels\EndPointViewModel.cs" />
+    <Compile Include="ViewModels\MainViewModel.cs" />
     <Compile Include="ViewModels\UeiCube.cs" />
     <Compile Include="ViewModels\UeiDevice.cs" />
     <Compile Include="ViewModels\UeiSlot.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
-    <Page Include="DeviceSetupView.xaml">
+    <Compile Include="Views\EndPointView.xaml.cs">
+      <DependentUpon>EndPointView.xaml</DependentUpon>
+    </Compile>
+    <Page Include="Views\DeviceSetupView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -93,13 +98,17 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="DeviceSetupView.xaml.cs">
+    <Compile Include="Views\DeviceSetupView.xaml.cs">
       <DependentUpon>DeviceSetupView.xaml</DependentUpon>
     </Compile>
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Views\EndPointView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs">

@@ -6,8 +6,13 @@ namespace UeiBridgeSetup.ViewModels
     {
         public IPAddress CubeAddress { get; }
         public bool IsCubeConnected { get; }
-        //public string CubeName => CubeAddress.ToString();
-
+        public bool IsCubeNotConnected 
+        { 
+            get 
+            { 
+                return !IsCubeConnected; 
+            } 
+        }
         public UeiCube(IPAddress cubeAddress, bool isCubeConnected)
         {
             CubeAddress = cubeAddress;

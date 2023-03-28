@@ -14,7 +14,7 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using UeiBridgeSetup.ViewModels;
 
-namespace UeiBridgeSetup
+namespace UeiBridgeSetup.Views
 {
     /// <summary>
     /// Interaction logic for DeviceSetupView.xaml
@@ -26,8 +26,13 @@ namespace UeiBridgeSetup
         public DeviceSetupView()
         {
             InitializeComponent();
+
             _viewModel = new DeviceSetupViewModel();
             DataContext = _viewModel;
+
+            destEndPoint.DataContext = new EndPointViewModel( EndPointLocation.Dest);
+            localEndPoint.DataContext = new EndPointViewModel( EndPointLocation.Local);
+             
         }
     }
 }
