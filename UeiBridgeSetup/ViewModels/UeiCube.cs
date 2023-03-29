@@ -13,10 +13,15 @@ namespace UeiBridgeSetup.ViewModels
                 return !IsCubeConnected; 
             } 
         }
+        public bool IsSimulationCube { get; } = false;
         public UeiCube(IPAddress cubeAddress, bool isCubeConnected)
         {
             CubeAddress = cubeAddress;
             IsCubeConnected = isCubeConnected;
+        }
+        public UeiCube()
+        {
+            IsSimulationCube = true;
         }
     }
 }

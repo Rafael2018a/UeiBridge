@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using UeiBridge.Library;
 
 namespace UeiBridgeSetup.ViewModels
 {
@@ -34,8 +35,23 @@ namespace UeiBridgeSetup.ViewModels
         }
         public DeviceSetupViewModel()
         {
-            CubeList.Add(new UeiCube(IPAddress.Parse("192.168.100.22"), true));
-            CubeList.Add(new UeiCube(IPAddress.Parse("192.168.100.32"), false));
+            if (!Config2.IsConfigFileExist())
+            {
+                return;
+            }
+
+            foreach (CubeSetup cube in Config2.Instance.UeiCubes)
+            {
+                string uri = cube.CubeUrl;
+                if (uri.ToLower().StartsWith("simu"))
+                {
+                    CubeList.Add(new UeiCube());
+                }
+                else
+                {
+                    CubeList.Add(new UeiCube(StaticMethods.GetIpAddressFromUrl(uri), false));
+                }
+            }
             SelectedCube = CubeList[0];
         }
 
@@ -53,14 +69,14 @@ namespace UeiBridgeSetup.ViewModels
         private void LoadDeviceList(UeiCube selectedCube)
         {
             _slotList.Clear();
-            if (selectedCube.CubeAddress.Equals(IPAddress.Parse("192.168.100.22")))
-            {
-                _slotList.Add(new UeiSlot( selectedCube.CubeAddress, 0, new UeiDevice("AO-308", "analog out")));
-            }
-            if (selectedCube.CubeAddress.Equals(IPAddress.Parse("192.168.100.32")))
-            {
-                _slotList.Add(new UeiSlot(selectedCube.CubeAddress, 0, new UeiDevice("DIO-403", "digital in/out")));
-            }
+            //if (selectedCube.CubeAddress.Equals(IPAddress.Parse("192.168.100.22")))
+            //{
+            //    _slotList.Add(new UeiSlot( selectedCube.CubeAddress, 0, new UeiDevice("AO-308", "analog out")));
+            //}
+            //if (selectedCube.CubeAddress.Equals(IPAddress.Parse("192.168.100.32")))
+            //{
+            //    _slotList.Add(new UeiSlot(selectedCube.CubeAddress, 0, new UeiDevice("DIO-403", "digital in/out")));
+            //}
         }
     }
 }
