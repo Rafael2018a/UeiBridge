@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using UeiBridge;
 using UeiBridge.Types;
+using UeiBridge.Library;
 
 namespace UeiBridgeTest
 {
@@ -29,9 +30,9 @@ namespace UeiBridgeTest
         [Test]
         public void ParseDevieUrl()
         {
-            var ip1 = StaticMethods.GetIpAddressFromUrl("pdna://192.168.100.2/");
+            var ip1 = UeiBridge.Library.StaticMethods.GetIpAddressFromUrl("pdna://192.168.100.2/");
             byte[] bytes1 = ip1.GetAddressBytes();
-            var ip2 = StaticMethods.GetIpAddressFromUrl("simu://");
+            var ip2 = UeiBridge.Library.StaticMethods.GetIpAddressFromUrl("simu://");
             byte[] bytes2 = ip2.GetAddressBytes();
 
             Assert.Multiple(() => 

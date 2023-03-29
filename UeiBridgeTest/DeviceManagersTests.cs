@@ -25,7 +25,7 @@ namespace UeiBridgeTest
 
             BlockSensorSetup setup = new BlockSensorSetup(new EndPoint("192.168.19.2", 50455), "BlockSensor");
             BlockSensorManager blocksensor = new BlockSensorManager(setup, mk);
-            byte[] d403 = StaticMethods.Make_Dio403_upstream_message();
+            byte[] d403 = UeiBridge.Library.StaticMethods.Make_Dio403_upstream_message();
             blocksensor.Enqueue(d403);
             //double factor = AO308Setup.PeekVoltage_downstream / (Int16.MaxValue+1);
             UInt16[] payload = new ushort[14];
@@ -33,7 +33,7 @@ namespace UeiBridgeTest
             payload[2] = AnalogConverter.PlusMinusVoltageToUInt16(10.0, 5.0);
             payload[9] = AnalogConverter.PlusMinusVoltageToUInt16(10.0, 6.0);
             payload[10] = AnalogConverter.PlusMinusVoltageToUInt16(10.0, 7.0);
-            EthernetMessage em = StaticMethods.Make_BlockSensor_downstream_message(payload);
+            EthernetMessage em = UeiBridge.Library.StaticMethods.Make_BlockSensor_downstream_message(payload);
             blocksensor.Enqueue(em.GetByteArray(MessageWay.downstream));
             //s.Stop();
             s.Dispose();

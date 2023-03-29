@@ -271,7 +271,7 @@ namespace UeiBridge
                 ureader.Start();
 
 #if blocksim
-                byte[] d403 = StaticMethods.Make_Dio403_upstream_message();
+                byte[] d403 = Library.StaticMethods.Make_Dio403_upstream_message();
                 blockSensor.Enqueue(d403);
 #endif
                 _deviceManagers.Add(pd);

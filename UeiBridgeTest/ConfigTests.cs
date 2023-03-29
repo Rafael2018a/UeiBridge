@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UeiBridge;
+using UeiBridge.Library;
 using NUnit.Framework;
 
 namespace UeiBridgeTest

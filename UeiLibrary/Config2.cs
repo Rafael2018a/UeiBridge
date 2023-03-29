@@ -11,7 +11,7 @@ using UeiDaq;
 /// <summary>
 /// All classes in this file MUST NOT depend on any other module in the project
 /// </summary>
-namespace UeiBridge
+namespace UeiBridge.Library
 {
     public class EndPoint
     {
@@ -409,10 +409,10 @@ namespace UeiBridge
 
         public ValidValuesClass()
         {
-            ValidSerialModes = StaticMethods.GetEnumValues<SerialPortMode>();
-            ValidBaudRates = StaticMethods.GetEnumValues<SerialPortSpeed>();
-            ValidStopBitsValues = StaticMethods.GetEnumValues<SerialPortStopBits>();
-            ValidParityValues = StaticMethods.GetEnumValues<SerialPortParity>();
+            ValidSerialModes = UeiBridge.Library.StaticMethods.GetEnumValues<SerialPortMode>();
+            ValidBaudRates = UeiBridge.Library.StaticMethods.GetEnumValues<SerialPortSpeed>();
+            ValidStopBitsValues = UeiBridge.Library.StaticMethods.GetEnumValues<SerialPortStopBits>();
+            ValidParityValues = UeiBridge.Library.StaticMethods.GetEnumValues<SerialPortParity>();
         }
     }
 }

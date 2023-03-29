@@ -93,7 +93,7 @@ namespace UeiBridge
                 return;
             }
             // upstream message from digital/input card
-            if (byteMessage[EthernetMessage._cardTypeOffset] == StaticMethods.GetCardIdFromCardName("DIO-403"))
+            if (byteMessage[EthernetMessage._cardTypeOffset] == DeviceMap.GetCardIdFromCardName("DIO-403"))
             {
                 // convert
                 try
@@ -111,7 +111,7 @@ namespace UeiBridge
             }
 
             // downstream message aimed to block sensor
-            if (byteMessage[EthernetMessage._cardTypeOffset] == StaticMethods.GetCardIdFromCardName("BlockSensor"))
+            if (byteMessage[EthernetMessage._cardTypeOffset] == DeviceMap.GetCardIdFromCardName("BlockSensor"))
             {
                 if (_subaddress < 0)
                 {

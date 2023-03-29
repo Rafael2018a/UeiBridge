@@ -625,7 +625,7 @@ namespace UeiBridge
 
 
                         // serial out
-                        List<byte[]> e508 = StaticMethods.Make_SL508Down_Messages(i);
+                        List<byte[]> e508 = Library.StaticMethods.Make_SL508Down_Messages(i);
                         foreach (byte[] msg in e508)
                         {
                             //IPEndPoint destEp = Config2.Instance.UeiCubes[0].DeviceSetupList[3].LocalEndPoint.ToIpEp();
@@ -643,7 +643,7 @@ namespace UeiBridge
                         // block sensor
                         {
                             IPEndPoint destEp = Config2.Instance.Blocksensor.LocalEndPoint.ToIpEp();
-                            EthernetMessage em = StaticMethods.Make_BlockSensor_downstream_message(new UInt16[]{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 });
+                            EthernetMessage em = Library.StaticMethods.Make_BlockSensor_downstream_message(new UInt16[]{ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 });
                             udpClient.Send(em.GetByteArray( MessageWay.downstream), em.GetByteArray(MessageWay.downstream).Length, destEp);
                         }
 

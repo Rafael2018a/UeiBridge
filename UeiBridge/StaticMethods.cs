@@ -13,85 +13,11 @@ namespace UeiBridge
     {
         static string _lastErrorMessage;
         public static string LastErrorMessage { get => _lastErrorMessage; }
-        static Dictionary<int, string> _cardIdMap = new Dictionary<int, string>(); // card-id vs card name
+        
 
         static StaticMethods()
         {
-            _cardIdMap.Add(0, "AO-308");
-            _cardIdMap.Add(4, "DIO-403");
-            _cardIdMap.Add(6, "DIO-470");
-            _cardIdMap.Add(1, "AI-201-100");
-            _cardIdMap.Add(5, "SL-508-892");
-            _cardIdMap.Add(32, "BlockSensor");
         }
-        public static int GetCardIdFromCardName(string deviceName)
-        {
-            try
-            {
-                var p = _cardIdMap.ToList().Single(pair => pair.Value == deviceName);
-                return p.Key;
-            }
-            catch (System.InvalidOperationException)
-            {
-                return -1;
-            }
-        }
-
-        public static bool  DoesCardIdExist(int cardId)
-        {
-            return _cardIdMap.ContainsKey(cardId);
-        }
-
-        public static List<Device> GetDeviceList( string cubeUrl)
-        {
-            DeviceCollection devColl = new DeviceCollection(cubeUrl);
-            List<Device> resultList = new List<Device>();
-            foreach (Device dev in devColl)
-            {
-                if (dev != null)
-                {
-                    resultList.Add(dev);
-                }
-            }
-            return resultList;
-        }
-        public static List<Device> GetDeviceList_notInUse( string deviceUrl)
-        {
-            DeviceCollection devColl = new DeviceCollection(deviceUrl);
-            List<Device> resultList = new List<Device>();
-            try
-            {
-                foreach (Device dev in devColl)
-                {
-                    if (dev != null)
-                    {
-                        resultList.Add(dev);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _lastErrorMessage = ex.Message;
-                return null;
-            }
-            return resultList;
-        }
-        /// <summary>
-        /// Example: input "DO-403", output "Dev0"
-        /// return null if device not found
-        /// </summary>
-        //public static string FindDeviceIndex(string cubeUrl, string deviceName)
-        //{
-        //    List<DeviceEx> devList = GetDeviceList( cubeUrl);
-        //    var x = devList.Find(s => s.UeiDevice.GetDeviceName() == deviceName);
-        //    if (null != x)
-        //    {
-        //        string rc = "Dev" + x.UeiDevice.GetIndex() + "/";
-        //        return rc;
-        //    }
-        //    else
-        //        return null;
-        //}
 
         public static log4net.ILog GetLogger()
         {
@@ -110,7 +36,7 @@ namespace UeiBridge
         }
 
         /// <summary>
-        /// Find and instantiate suitalble converter
+        /// Find and instantiate suitable converter
         /// </summary>
         /// <returns></returns>
         public static IConvert CreateConverterInstance( DeviceSetup setup) // tbd. deviceName not needed
@@ -135,26 +61,6 @@ namespace UeiBridge
             return attachedConverter;
         }
 
-        [Obsolete]
-        public static OutputDevice CreateOutputDeviceManager(DeviceSetup deviceSetup)
-        {
-            //Config2.Instance.UeiCubes[0].SlotList
-            foreach (Type theType in System.Reflection.Assembly.GetExecutingAssembly().GetTypes())
-            {
-                if (theType.IsInterface || theType.IsAbstract)
-                    continue;
-
-                // if theType is an OutputDevice class
-                if (typeof(OutputDevice).IsAssignableFrom(theType))
-                {
-                    OutputDevice oIinstnace = (OutputDevice)Activator.CreateInstance(theType, deviceSetup);
-                    System.Diagnostics.Debug.Assert(oIinstnace.DeviceName.Length > 1);
-                    if (oIinstnace.DeviceName == deviceSetup.DeviceName)
-                        return oIinstnace;
-                }
-            }
-            return null;
-        }
         public static Type GetDeviceManagerType<ParentType>( string deviceName) where ParentType : IDeviceManager
         {
             foreach (Type theType in System.Reflection.Assembly.GetExecutingAssembly().GetTypes())
@@ -174,149 +80,6 @@ namespace UeiBridge
             return null;
         }
 
-
-        public static byte[] Make_A308Down_message()
-        {
-            EthernetMessage msg = EthernetMessage.CreateEmpty(0, 16);
-            for(int i=0; i<16; i+=2)
-            {
-                msg.PayloadBytes[i] = (byte)(i);
-            }
-            return msg.GetByteArray( MessageWay.downstream);
-        }
-        public static byte[] Make_DIO403Down_Message()
-        {
-            EthernetMessage msg = EthernetMessage.CreateEmpty(4, 3);
-            msg.PayloadBytes[0] = 0x12;
-            msg.PayloadBytes[1] = 0x34;
-            msg.PayloadBytes[2] = 0x56;
-            msg.SlotNumber = 5;
-
-            return msg.GetByteArray(MessageWay.downstream);
-        }
-        public static byte[] Make_Dio403_upstream_message()
-        {
-            int id = GetCardIdFromCardName("DIO-403");
-            var b = EthernetMessage.CreateMessage(id, 0, 0, new byte[] { 0x5, 0, 0 });
-            return b.GetByteArray(MessageWay.upstream);
-        }
-
-        public static EthernetMessage Make_BlockSensor_downstream_message(UInt16 [] payload)
-        {
-            if (payload.Length != 14) throw new ArgumentException();
-
-            byte[] result = new byte[payload.Length * 2];
-            for (int i=0; i<payload.Length; i++)
-            {
-                byte[] two = BitConverter.GetBytes(payload[i]);
-                result[i*2] = two[0];
-                result[i*2+1] = two[1];
-            }
-
-            return EthernetMessage.CreateMessage(32, -1, 0, result);
-        }
-
-
-        public static byte[] Make_DIO470_Down_Message()
-        {
-            EthernetMessage msg = EthernetMessage.CreateEmpty(6, 3);
-            msg.PayloadBytes[0] = 0x12;
-            msg.PayloadBytes[1] = 0x34;
-            msg.PayloadBytes[2] = 0x56;
-            msg.SlotNumber = 4;
-
-            return msg.GetByteArray( MessageWay.downstream);
-        }
-        public static byte[] Make_DIO430Down_Message()
-        {
-            EthernetMessage msg = EthernetMessage.CreateEmpty(6, 16);
-            return msg.GetByteArray(MessageWay.downstream);
-        }
-        public static List<byte[]> Make_SL508Down_Messages( int seed)
-        {
-            List<byte[]> msgs = new List<byte[]>();
-
-            // build 8 messages, one per channel
-            for (int ch = 0; ch < 8; ch++)
-            {
-                string m = $"hello ch{ch} seed {seed} ------------ ";
-
-                // string to ascii
-
-                // ascii to string System.Text.Encoding.ASCII.GetString(recvBytes)
-                EthernetMessage msg = EthernetMessage.CreateEmpty( cardType:5, payloadLength:16);
-                msg.PayloadBytes = System.Text.Encoding.ASCII.GetBytes(m);
-                msg.SerialChannelNumber = ch;
-                msg.SlotNumber = 3;
-                msgs.Add(msg.GetByteArray( MessageWay.downstream));
-            }
-            return msgs;
-        }
-        public static string GetEnumValues<T>()
-        {
-            T[] v1 = Enum.GetValues(typeof(T)) as T[];
-            StringBuilder sb = new StringBuilder("\n");
-            foreach (var item in v1)
-            {
-                sb.Append(item);
-                sb.Append("\n");
-            }
-            //v1.ToList<SerialPortMode>().ForEach(item => { sb.Append(item); sb.Append("\n"); });
-            return sb.ToString();
-        }
-
-        [Obsolete]
-        public static Session CreateSerialSession( SL508892Setup deviceSetup)
-        {
-            System.Diagnostics.Debug.Assert(null != deviceSetup);
-            Session serialSession = new Session();
-            
-            foreach (var channel in deviceSetup.Channels)
-            {
-                string finalUrl = $"{deviceSetup.CubeUrl}Dev{deviceSetup.SlotNumber}/{channel.portname}";
-                var port = serialSession.CreateSerialPort(finalUrl,
-                                    channel.mode,
-                                    channel.Baudrate,
-                                    SerialPortDataBits.DataBits8,
-                                    channel.parity,
-                                    channel.stopbits,
-                                    "");
-            }
-
-            int numberOfChannels = serialSession.GetNumberOfChannels();
-            //System.Diagnostics.Debug.Assert(numberOfChannels == Config.Instance.SerialChannels.Length);
-
-            serialSession.ConfigureTimingForMessagingIO(1000, 100.0);
-            serialSession.GetTiming().SetTimeout(5000); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
-
-            //serialSession.ConfigureTimingForSimpleIO();
-
-            serialSession.Start();
-            return serialSession;
-        }
-        [Obsolete]
-        public static Session CreateSerialSession2(SL508892Setup deviceSetup)
-        {
-            Session srSession = new Session();
-            string finalUrl = $"{deviceSetup.CubeUrl}Dev{deviceSetup.SlotNumber}/com0:7";
-
-            srSession.CreateSerialPort(finalUrl,
-                SerialPortMode.RS485FullDuplex,
-                SerialPortSpeed.BitsPerSecond57600,
-                SerialPortDataBits.DataBits8,
-                SerialPortParity.None,
-                SerialPortStopBits.StopBits1,
-                "");
-
-            srSession.ConfigureTimingForMessagingIO(100, 10.0);
-            srSession.GetTiming().SetTimeout(5);
-
-            System.Diagnostics.Debug.Assert(8 == srSession.GetNumberOfChannels());
-
-            srSession.Start();
-            return srSession;
-        }
-
         /// <summary>
         /// Create EthernetMessage from device result.
         /// Might return null.
@@ -326,7 +89,7 @@ namespace UeiBridge
             //ILog _logger = log4net.LogManager.GetLogger("Root");
 
             //int key = //ProjectRegistry.Instance.GetDeviceKeyFromDeviceString(deviceName);
-            int key = StaticMethods.GetCardIdFromCardName(setup.DeviceName);
+            int key = DeviceMap.GetCardIdFromCardName(setup.DeviceName);
 
             System.Diagnostics.Debug.Assert(key >= 0);
 
@@ -346,37 +109,5 @@ namespace UeiBridge
             return msg;
         }
 
-        public static List<DeviceEx> GetDeviceList(List<string> cubesUrl)
-        {
-            List<DeviceEx> resultList = new List<DeviceEx>();
-            foreach (string url in cubesUrl)
-            {
-                DeviceCollection devColl = new DeviceCollection(url);
-
-                foreach (Device dev in devColl)
-                {
-                    if (dev != null) throw new ArgumentNullException();
-                    resultList.Add(new DeviceEx(dev, url));
-                }
-            }
-            return resultList;
-        }
-
-        public static System.Net.IPAddress GetIpAddressFromUrl( string url)
-        {
-            //Uri u = new Uri("pdna://192.168.100.2/");
-            Uri u1 = new Uri(url);
-            var a1 = u1.Host;
-            System.Net.IPAddress result;
-            try
-            {
-                result = System.Net.IPAddress.Parse(u1.Host);
-            }
-            catch(FormatException ex)
-            {
-                result = System.Net.IPAddress.None;
-            }
-            return result;
-        }
     }
 }

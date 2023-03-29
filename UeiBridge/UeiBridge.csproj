@@ -82,7 +82,6 @@
     <Compile Include="AI201InputDeviceManager.cs" />
     <Compile Include="AO308OutputDeviceManager.cs" />
     <Compile Include="BlockSensorManager.cs" />
-    <Compile Include="Config2.cs" />
     <Compile Include="Converters.cs" />
     <Compile Include="CubeSeeker.cs" />
     <Compile Include="DIO403InputDeviceManager.cs" />
@@ -92,7 +91,6 @@
     <Compile Include="OutputDevice.cs" />
     <Compile Include="PerDeviceObjects.cs" />
     <Compile Include="GlobalTypes.cs" />
-    <Compile Include="Mediator.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ProgramObjectsBuilder.cs" />
     <Compile Include="ProgramObjectsFactory.cs" />
