@@ -60,12 +60,12 @@
             <Button Content="Remove"/>
         </StackPanel>
         <!--<TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding SelectedCube.CubeAddress}"/>-->
-        <ListView x:Name="Devices" Grid.Row="1" Grid.Column="1" Margin="5 0 5 5" ItemsSource="{Binding SlotList}">
+        <ListView x:Name="Devices" Grid.Row="1" Grid.Column="1" Margin="5 0 5 5" ItemsSource="{Binding SlotList}" SelectedItem="{Binding SelectedSlot, Mode=TwoWay}">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
                         <!--<TextBlock Text="Slot "/>-->
-                        <TextBlock Text="{Binding SlotString}" FontSize="16" FontWeight="Bold" Margin="5"/>
+                        <TextBlock Text="{Binding SlotNumberString}" FontSize="16" FontWeight="Bold" Margin="5"/>
                         <Image Source="/Images/icons8-network-interface-card-68.png" Height="32"/>
                         <TextBlock Text="{Binding DeviceInSlot.DeviceName}" FontSize="16" Margin="5"/>
                         <TextBlock Text="#" FontSize="16" Margin="5"/>
@@ -78,16 +78,24 @@
         <Border Grid.Row="1" Grid.Column="2" Margin="5 0 5 5" Background="#FFCFC8C0">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition/>
-                    <RowDefinition/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
                 </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition/>
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
-
-                <views:EndPointView Grid.Column="0" Margin="10" x:Name="localEndPoint"/>
-                <views:EndPointView Grid.Column="1" Margin="10" x:Name="destEndPoint"/>
+                <StackPanel Orientation="Horizontal" Margin="10" Grid.ColumnSpan="2">
+                    <TextBlock Text="{Binding SelectedSlot.CubeIPAddress, StringFormat={}Cube {0}}" FontSize="18" FontWeight="DemiBold"/>
+                    <ContentControl Width="50"/>
+                    <TextBlock Text="{Binding SelectedSlot.SlotNumber, StringFormat={}Slot {0} }" FontSize="18" FontWeight="DemiBold"/>
+                    <ContentControl Width="50"/>
+                    <TextBlock Text="{Binding SelectedSlot.DeviceInSlot.DeviceName, StringFormat={}Device {0}}" FontSize="18" FontWeight="DemiBold"/>
+                </StackPanel>
+                <Separator Grid.Row="1" Grid.ColumnSpan="2"/>
+                <views:EndPointView Grid.Row="2" Grid.Column="0" Margin="10" x:Name="localEndPoint"/>
+                <views:EndPointView Grid.Row="2" Grid.Column="1" Margin="10" x:Name="destEndPoint"/>
 
             </Grid>
         </Border>

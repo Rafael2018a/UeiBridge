@@ -6,21 +6,25 @@
              xmlns:local="clr-namespace:UeiBridgeSetup.Views"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Grid Background="White">
+    <GroupBox>
+        <GroupBox.Header>
+            <TextBlock Grid.Row="0" Text="{Binding EndpointHeader}" FontSize="16" FontWeight="Bold"/>
+        </GroupBox.Header>
+    <Grid >
         <Grid.RowDefinitions>
             <RowDefinition Height="auto"/>
             <RowDefinition Height="auto"/>
-            <RowDefinition Height="auto"/>
+            <!--<RowDefinition Height="auto"/>-->
         </Grid.RowDefinitions>
-        <TextBlock Grid.Row="0" Text="{Binding BoxHeader}" TextDecorations="Underline" Margin="5" FontSize="16" FontWeight="Bold"/>
-        <StackPanel Grid.Row="1" Orientation="Horizontal">
+        <!--<TextBlock Grid.Row="0" Text="{Binding EndpointHeader}" Margin="5" FontSize="16" FontWeight="Bold"/>-->
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
             <TextBlock Text="IPAddress" Margin="5" FontSize="16"/>
             <TextBox Width="100" Margin="5"/>
         </StackPanel>
-        <StackPanel Grid.Row="2" Orientation="Horizontal">
+        <StackPanel Grid.Row="1" Orientation="Horizontal">
             <TextBlock Text="Port" Margin="5" FontSize="16"/>
             <TextBox Width="50" Margin="5"/>
         </StackPanel>
     </Grid>
-
+    </GroupBox>
 </UserControl>

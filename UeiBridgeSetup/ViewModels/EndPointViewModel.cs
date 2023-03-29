@@ -11,7 +11,7 @@ namespace UeiBridgeSetup.ViewModels
     {
         EndPointLocation _epLocation;
 
-        public string BoxHeader 
+        public string EndpointHeader
         { 
             get 
             {

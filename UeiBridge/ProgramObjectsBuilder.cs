@@ -1,4 +1,5 @@
-﻿using System;
+﻿#define blocksim
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -252,12 +253,13 @@ namespace UeiBridge
             BlockSensorManager blockSensor = CreateBlockSensorObject(realDeviceList);
             if (null != blockSensor)
             {
+#if !blocksim
                 // redirect dio430/input to blocksensor
                 var outDevs = _deviceManagers.Where(i => i.InputDeviceManager != null);
                 var dio = outDevs.Where(i => i.InputDeviceManager.DeviceName.StartsWith("DIO-4")).Select(i => i.InputDeviceManager).FirstOrDefault();
                 DIO403InputDeviceManager di403 = dio as DIO403InputDeviceManager;
                 di403.TargetConsumer = blockSensor;
-
+#endif
                 // define udp-reader for block sensor
                 var nic = IPAddress.Parse(Config2.Instance.AppSetup.SelectedNicForMCast);
                 UdpReader ureader = new UdpReader(Config2.Instance.Blocksensor.LocalEndPoint.ToIpEp(), nic, blockSensor, "BlockSensor");
@@ -268,6 +270,10 @@ namespace UeiBridge
                 blockSensor.OpenDevice();
                 ureader.Start();
 
+#if blocksim
+                byte[] d403 = StaticMethods.Make_Dio403_upstream_message();
+                blockSensor.Enqueue(d403);
+#endif
                 _deviceManagers.Add(pd);
             }
             
