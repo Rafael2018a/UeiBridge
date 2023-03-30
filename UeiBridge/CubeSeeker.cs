@@ -7,7 +7,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.IO;
 
-namespace UeiBridge
+namespace UeiBridge.Library
 {
     class CubeSeeker
     {
@@ -89,7 +89,7 @@ namespace UeiBridge
                 else
                     return null;
             }
-            catch (SocketException ex)
+            catch (SocketException )
             {
                 //Console.WriteLine(ex.ToString());
                 return null;

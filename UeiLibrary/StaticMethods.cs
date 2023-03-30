@@ -9,7 +9,7 @@ namespace UeiBridge.Library
     // Methods in the class SHOULD NOT depend on any other project class
     public class StaticMethods
     {
-        public static System.Net.IPAddress GetIpAddressFromUrl(string url)
+        public static System.Net.IPAddress CubeUriToIpAddress(string url)
         {
             Uri u1 = new Uri(url);
             var a1 = u1.Host;
@@ -18,7 +18,7 @@ namespace UeiBridge.Library
             {
                 result = System.Net.IPAddress.Parse(u1.Host);
             }
-            catch (FormatException ex)
+            catch (FormatException)
             {
                 result = System.Net.IPAddress.None;
             }

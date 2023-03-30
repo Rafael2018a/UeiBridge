@@ -30,9 +30,9 @@ namespace UeiBridgeTest
         [Test]
         public void ParseDevieUrl()
         {
-            var ip1 = UeiBridge.Library.StaticMethods.GetIpAddressFromUrl("pdna://192.168.100.2/");
+            var ip1 = UeiBridge.Library.StaticMethods.CubeUriToIpAddress("pdna://192.168.100.2/");
             byte[] bytes1 = ip1.GetAddressBytes();
-            var ip2 = UeiBridge.Library.StaticMethods.GetIpAddressFromUrl("simu://");
+            var ip2 = UeiBridge.Library.StaticMethods.CubeUriToIpAddress("simu://");
             byte[] bytes2 = ip2.GetAddressBytes();
 
             Assert.Multiple(() => 

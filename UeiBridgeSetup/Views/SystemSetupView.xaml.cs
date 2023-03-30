@@ -17,22 +17,24 @@ using UeiBridgeSetup.ViewModels;
 namespace UeiBridgeSetup.Views
 {
     /// <summary>
-    /// Interaction logic for DeviceSetupView.xaml
+    /// Interaction logic for SystemSetupView.xaml
     /// </summary>
-    public partial class DeviceSetupView : UserControl
+    public partial class SystemSetupView : UserControl
     {
         private SystemSetupViewModel _viewModel;
 
-        public DeviceSetupView()
+        public SystemSetupView()
         {
             InitializeComponent();
 
             _viewModel = new SystemSetupViewModel();
             DataContext = _viewModel;
 
-            destEndPoint.DataContext = new EndPointViewModel( EndPointLocation.Dest);
-            localEndPoint.DataContext = new EndPointViewModel( EndPointLocation.Local);
-             
+            destEndPoint.DataContext = _viewModel.DestinationEndPointViewModel;
+            localEndPoint.DataContext = _viewModel.LocalEndPointViewModel;
+
         }
     }
+    public class CustomersViewModel { }
+
 }

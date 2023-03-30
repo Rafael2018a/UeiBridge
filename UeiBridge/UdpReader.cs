@@ -95,7 +95,7 @@ namespace UeiBridge
                 this._datagramConsumer.Enqueue(receivedBytes);
                 _udpclient.BeginReceive(new AsyncCallback(ReceivedCallback), null);// Restart listening 
             }
-            catch (ObjectDisposedException ex)
+            catch (ObjectDisposedException)
             {
                 // nothing to do here
             }

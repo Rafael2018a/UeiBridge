@@ -280,7 +280,7 @@ namespace UeiBridge.Library
 
         public AppSetup AppSetup;
         //public string[] CubeUrlList = new string[1];
-        public CubeSetup[] UeiCubes;
+        public List<CubeSetup> UeiCubes;
         public BlockSensorSetup Blocksensor = new BlockSensorSetup(new EndPoint(ConfigFactory.LocalIP, 50105), "BlockSensor");
         public ValidValuesClass ValidValues = new ValidValuesClass();
         public static string SettingsFilename => "UeiSettings2.config";
@@ -291,7 +291,7 @@ namespace UeiBridge.Library
         private Config2(string [] cubeUrls)
         {
             AppSetup = new AppSetup();
-            UeiCubes = new CubeSetup[cubeUrls.Length];
+            UeiCubes = new List<CubeSetup>( new CubeSetup[cubeUrls.Length]);
             for (int i = 0; i < cubeUrls.Length; i++)
             {
                 UeiCubes[i] = new CubeSetup(cubeUrls[i]);
@@ -396,7 +396,7 @@ namespace UeiBridge.Library
             var theSetups = selectedCube.DeviceSetupList.Where(d => d.SlotNumber == slotNumber);
             DeviceSetup result = theSetups.FirstOrDefault();
             result.CubeUrl = selectedCube.CubeUrl;
-            result.CubeId = StaticMethods.GetIpAddressFromUrl(selectedCube.CubeUrl).GetAddressBytes()[3];
+            result.CubeId = StaticMethods.CubeUriToIpAddress(selectedCube.CubeUrl).GetAddressBytes()[3];
             return result;
         }
     }

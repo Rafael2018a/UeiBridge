@@ -34,7 +34,7 @@
             <StatusBarItem FontSize="18" Content="Flags: "/>
         </StatusBar>
 
-        <views:DeviceSetupView Grid.Row="3" x:Name="deviceSetupView1"/>
+        <views:SystemSetupView Grid.Row="3" x:Name="deviceSetupView1"/>
 
         <StatusBar Grid.Row="4">
             <StatusBarItem FontSize="18" Content=" (c) Wired Brain Coffee"/>

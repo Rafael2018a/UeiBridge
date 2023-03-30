@@ -11,8 +11,8 @@ namespace UeiBridge
 {
     public static class StaticMethods
     {
-        static string _lastErrorMessage;
-        public static string LastErrorMessage { get => _lastErrorMessage; }
+        //static string _lastErrorMessage;
+        //public static string LastErrorMessage { get => _lastErrorMessage; }
         
 
         static StaticMethods()
