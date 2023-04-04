@@ -20,7 +20,7 @@ namespace UeiBridge.Library
             }
             catch (FormatException)
             {
-                result = System.Net.IPAddress.None;
+                result = null;// System.Net.IPAddress.None;
             }
             return result;
         }

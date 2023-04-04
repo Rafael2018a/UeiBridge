@@ -44,7 +44,7 @@
         </Grid.RowDefinitions>
 
         <StackPanel x:Name="CubeButtons" Grid.Row="0" Margin="5 0 5 0" Orientation="Horizontal">
-            <Button>
+            <Button Command="{Binding AddCubeCommand}">
                 <StackPanel Orientation="Horizontal">
                     <Image Source="/Images/icons8-plus-math-48.png" Height="18"/>
                     <TextBlock Text="Add" VerticalAlignment="Center" Margin="3"/>
@@ -111,8 +111,8 @@
                     <TextBlock Text="{Binding SelectedSlot.DeviceName, StringFormat={}Device {0}}" FontSize="18" FontWeight="DemiBold"/>
                 </StackPanel>
                 <Separator Grid.Row="1" Grid.ColumnSpan="2"/>
-                <local:EndPointView Grid.Row="2" Grid.Column="0" Margin="10" x:Name="localEndPoint"/>
-                <local:EndPointView Grid.Row="2" Grid.Column="1" Margin="10" x:Name="destEndPoint"/>
+                <local:EndPointView Grid.Row="2" Grid.Column="0" Margin="10" x:Name="localEndPoint" DataContext="{Binding LocalEndPointViewModel}"/>
+                <local:EndPointView Grid.Row="2" Grid.Column="1" Margin="10" x:Name="destEndPoint" DataContext="{Binding DestinationEndPointViewModel}"/>
 
                 <ContentControl Grid.Row="3" Grid.ColumnSpan="2" Content="{Binding SelectedViewModel}" Margin="10"/>
             </Grid>

@@ -10,29 +10,28 @@ namespace UeiBridgeSetup.ViewModels
     public enum EndPointLocation { Local, Dest}
     public class EndPointViewModel : ViewModelBase
     {
+        readonly EndPointLocation _epLocation;
+        //private string _ipString;
+        //private int _ipPort;
 
-        EndPointLocation _epLocation;
-        private string _ipString;
-        private int _ipPort;
-
-        IPEndPoint EndPoint { get; set; }
+        private IPEndPoint EndPoint { get; set; }
         public string IpString
         {
-            get => _ipString;
-            set
-            {
-                _ipString = value;
-                RaisePropertyChanged();
-            }
+            get => this.EndPoint.Address.ToString();// _ipString;
+            //set
+            //{
+            //    _ipString = value;
+                //RaisePropertyChanged();
+            //}
         }
         public int IpPort 
-        { 
-            get => _ipPort;
-            set 
-            { 
-                _ipPort = value;
-                RaisePropertyChanged();
-            }
+        {
+            get => this.EndPoint.Port;// _ipPort;
+            //private set 
+            //{ 
+                //_ipPort = value;
+                //RaisePropertyChanged();
+            //}
         }
 
         //public string ip { get; set; }
@@ -44,24 +43,17 @@ namespace UeiBridgeSetup.ViewModels
                 return h;
             }
         }
-        public EndPointViewModel(EndPointLocation epLocation)
+        public EndPointViewModel(EndPointLocation epLocation, IPEndPoint endPoint = null)
         {
             _epLocation = epLocation;
-            //this.EndPoint = new IPEndPoint(IPAddress.Parse("5.5.5.5"), 555);
-        }
-
-        internal void SetEndPoint(IPEndPoint endPoint)
-        {
-            this.EndPoint = endPoint;
-            if (EndPoint != null)
+            //SetEndPoint(endPoint);
+            if (null == endPoint)
             {
-                this.IpString = EndPoint.Address.ToString();
-                this.IpPort = EndPoint.Port;
+                this.EndPoint = new IPEndPoint(IPAddress.Any, 0);
             }
             else
             {
-                this.IpString = null;
-                this.IpPort = 0;
+                this.EndPoint = endPoint;
             }
         }
     }

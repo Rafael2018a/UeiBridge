@@ -29,6 +29,10 @@ namespace UeiBridge
             System.Threading.Thread.Sleep(1000);
         }
 
+        /// <summary>
+        /// Build linear device list.
+        /// This method assumes that the indicates cubes exists.
+        /// </summary>
         public static List<DeviceEx> BuildDeviceList(List<string> cubesUrl)
         {
             List<DeviceEx> resultList = new List<DeviceEx>();
@@ -54,20 +58,33 @@ namespace UeiBridge
             System.IO.FileInfo fi = new System.IO.FileInfo(EntAsm.Location);
             _logger.Info($"UEI Bridge. Version {EntAsm.GetName().Version.ToString(3)}. Build time: {fi.LastWriteTime.ToString()}");
 
+            // verify connected cubes
             List<string> cubesUrl = GetConnectedCubes();
-            if (!Config2.IsConfigFileExist())
+            if (cubesUrl.Count==0)
             {
-                Config2.Instance.BuildNewConfig(cubesUrl.ToArray());
-            }
-            List<DeviceEx> deviceList = BuildDeviceList( cubesUrl);
-
-            bool ok = DisplayDeviceList( deviceList);
-            if (!ok)
-            {
-                _logger.Info("Any key to exit...");
+                _logger.Warn("No connected cube found. Any key to abort....");
                 Console.ReadKey();
                 return;
             }
+            
+            // open or create settings fils
+            if (!File.Exists( Config2.DafaultSettingsFilename))
+            {
+                // build default config
+                List<CubeSetup> csetup = new List<CubeSetup>();
+                foreach( var url in cubesUrl)
+                {
+                    csetup.Add( new CubeSetup(url));
+                }
+
+                // save default config to file
+                Config2 c2 = new Config2(csetup);
+                c2.SaveAs(Config2.DafaultSettingsFilename);
+                Console.WriteLine($"New default settings file created. {Config2.DafaultSettingsFilename}. {csetup.Count} cubes.");
+            }
+
+            List<DeviceEx> deviceList = BuildDeviceList( cubesUrl);
+            DisplayDeviceList( deviceList);
 
             _programBuilder.CreateDeviceManagers(deviceList);
             _programBuilder.ActivateDownstreamOjects();
@@ -93,6 +110,11 @@ namespace UeiBridge
             Console.ReadKey();
         }
 
+        /// <summary>
+        /// if cubelist.txt file found, get url's from there 
+        /// (this might include simu://)
+        /// otherwise, search ip's in range
+        /// </summary>
         private List<string> GetConnectedCubes()
         {
             FileInfo cubelistFile = new FileInfo("cubelist.txt");
@@ -170,7 +192,7 @@ namespace UeiBridge
             return true;
         }
 #endif
-        private bool DisplayDeviceList( List<DeviceEx> devList) // tbd: show for ALL cubes
+        private void DisplayDeviceList( List<DeviceEx> devList)
         {
             // prepare device list
             if (null == devList) throw new ArgumentNullException();
@@ -187,7 +209,6 @@ namespace UeiBridge
                 //_logger.Info(" *** End device list:");
             }
 
-            return true;
         }
 #if old
         //List<List<OutputDevice>> _outputDeviceList;

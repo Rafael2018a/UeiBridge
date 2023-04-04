@@ -10,28 +10,23 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
-using UeiBridgeSetup.ViewModels;
 
 namespace UeiBridgeSetup.Views
 {
     /// <summary>
-    /// Interaction logic for SystemSetupView.xaml
+    /// Interaction logic for Dialog1.xaml
     /// </summary>
-    public partial class SystemSetupView : UserControl
+    public partial class Dialog1 : Window
     {
-        private SystemSetupViewModel _viewModel;
-
-        public SystemSetupView()
+        public Dialog1()
         {
             InitializeComponent();
+        }
 
-            _viewModel = new SystemSetupViewModel();
-            DataContext = _viewModel;
-
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            this.DialogResult = true;
         }
     }
-    public class CustomersViewModel { }
-
 }

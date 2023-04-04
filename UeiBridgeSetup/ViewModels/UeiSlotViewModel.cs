@@ -3,7 +3,10 @@ using UeiBridge.Library;
 
 namespace UeiBridgeSetup.ViewModels
 {
-    public class UeiSlotViewModel
+    /// <summary>
+    /// This view-model represents a uei-devices which is laid in a specific cube-slot.
+    /// </summary>
+    public class UeiSlotViewModel // tbd. maybe the name should be UeiDeviceViewModel
     {
         private IPAddress _cubeIPAddress;
         private DeviceSetup _deviceSetup;

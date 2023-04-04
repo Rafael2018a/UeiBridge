@@ -23,7 +23,7 @@ namespace UeiBridgeSetup
         public MainWindow()
         {
             InitializeComponent();
-
+            this.DataContext = new UeiBridgeSetup.ViewModels.MainViewModel();
             //deviceSetupView1.DataContext
         }
     }
