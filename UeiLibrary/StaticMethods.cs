@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UeiDaq;
 
 namespace UeiBridge.Library
 {
@@ -114,5 +116,31 @@ namespace UeiBridge.Library
             return msgs;
         }
 
+    }
+
+    public static class ExtMethods
+    {
+        /// <summary>
+        /// Build default config from cube-url-list
+        /// </summary>
+        public static Config2 BuildDefaultConfig( this Config2 c2, List<string> cubeUrlList)
+        {
+            List<CubeSetup> csetupList = new List<CubeSetup>();
+            foreach (var url in cubeUrlList)
+            {
+                DeviceCollection devColl = new DeviceCollection(url);
+                List<UeiDeviceAdapter> rl = new List<UeiDeviceAdapter>();
+                foreach (Device dev in devColl)
+                {
+                    if (dev == null) continue; // this for the last entry, which is null
+                    rl.Add(new UeiDeviceAdapter(dev.GetDeviceName(), dev.GetIndex()));
+                }
+                csetupList.Add(new CubeSetup(rl, url));
+            }
+
+            Config2 res = new Config2(csetupList);
+            return res;
+
+        }
     }
 }
