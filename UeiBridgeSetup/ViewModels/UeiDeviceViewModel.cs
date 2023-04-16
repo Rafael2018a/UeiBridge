@@ -1,14 +1,14 @@
 ﻿namespace UeiBridgeSetup.ViewModels
 {
-    public class UeiDevice
+    public class UeiDeviceViewModel
     {
         public string DeviceName { get; set; }
         public string DeviceDesc { get; set; }
 
-        public UeiDevice(string deviceName, string deviceDesc)
+        public UeiDeviceViewModel(string deviceName)
         {
             DeviceName = deviceName;
-            DeviceDesc = deviceDesc;
+            //DeviceDesc = deviceDesc;
         }
     }
 }

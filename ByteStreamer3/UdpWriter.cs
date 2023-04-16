@@ -11,7 +11,7 @@ namespace ByteStreamer3
     public class UdpWriter 
     {
         Socket _sendSocket;
-        string _instanceName;
+        //string _instanceName;
         public UdpWriter( IPEndPoint destEp, IPAddress localBindAddress = null )
         {
             try
@@ -29,7 +29,7 @@ namespace ByteStreamer3
                     {
                         _sendSocket.Bind(localEP);
                     }
-                    catch(Exception ex)
+                    catch(Exception )
                     {
                         System.Diagnostics.Debug.Assert(false);
                     }
@@ -38,7 +38,7 @@ namespace ByteStreamer3
                 _sendSocket.Connect( destEp);
                 
             }
-            catch (SocketException ex)
+            catch (SocketException )
             {
                 System.Diagnostics.Debug.Assert(false);
             }

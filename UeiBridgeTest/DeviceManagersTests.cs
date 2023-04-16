@@ -56,7 +56,7 @@ namespace UeiBridgeTest
             mk.OriginSession = s;
             var devicelist = UeiBridge.Program.BuildDeviceList(new List<string>() { "simu://" });
             var ao = devicelist.Where(i => i.PhDevice.GetDeviceName().StartsWith("Simu-AO16")).FirstOrDefault();
-            AO308Setup setup = new AO308Setup(new EndPoint("8.8.8.8", 5000), ao.PhDevice);
+            AO308Setup setup = new AO308Setup(new EndPoint("8.8.8.8", 5000), new UeiDeviceAdapter( ao.PhDevice));
 
             AO308OutputDeviceManager ao308 = new AO308OutputDeviceManager(setup, mk);
             ao308.OpenDevice();
@@ -88,7 +88,7 @@ namespace UeiBridgeTest
             var devicelist = UeiBridge.Program.BuildDeviceList(new List<string>() { "simu://" });
             var ao = devicelist.Where(i => i.PhDevice.GetDeviceName().StartsWith("Simu-DIO64")).FirstOrDefault();
 
-            DIO403Setup setup = new DIO403Setup(new EndPoint("8.8.8.8", 5000), null, ao.PhDevice);
+            DIO403Setup setup = new DIO403Setup(new EndPoint("8.8.8.8", 5000), null, new UeiDeviceAdapter( ao.PhDevice));
 
             DIO403OutputDeviceManager dio403 = new DIO403OutputDeviceManager(setup, mk1);
             dio403.OpenDevice();

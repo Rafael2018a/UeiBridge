@@ -81,6 +81,7 @@
     <Compile Include="DeviceManagersTests.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ViewModelTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -90,6 +91,10 @@
     <ProjectReference Include="..\ByteStreamer3\ByteStreamer3.csproj">
       <Project>{0475416b-5715-4bd8-a379-83bd444a8401}</Project>
       <Name>ByteStreamer3</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\UeiBridgeSetup\UeiBridgeSetup.csproj">
+      <Project>{05d73f32-5fb8-49fe-be5b-af065d07c0c1}</Project>
+      <Name>UeiBridgeSetup</Name>
     </ProjectReference>
     <ProjectReference Include="..\UeiBridge\UeiBridge.csproj">
       <Project>{086a67bb-d92f-4fc5-a91e-39913abc6328}</Project>

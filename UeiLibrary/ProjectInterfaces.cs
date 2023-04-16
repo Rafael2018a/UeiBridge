@@ -11,12 +11,6 @@ namespace UeiBridge.Library
     {
 
     }
-    public interface IWriterAdapter<T>
-    {
-        void WriteSingleScan(T scan);
-        //int NumberOfChannels { get; }
-        UeiDaq.Session OriginSession { get; }
-    }
     //public interface IDigitalWriter
     //{
     //    bool WriteScan(UInt16[] scan);

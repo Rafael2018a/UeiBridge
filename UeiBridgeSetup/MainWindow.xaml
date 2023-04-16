@@ -17,9 +17,11 @@
         </Grid.RowDefinitions>
 
         <Menu Grid.Row="0" FontSize="18">
-            <MenuItem Header="_View">
-                <MenuItem Header="_Customers"/>
-                <MenuItem Header="_Products"/>
+            <MenuItem Header="_File">
+                <MenuItem Header="Open file"/>
+                <MenuItem Header="Open default file" Command="{Binding AddCommand}" CommandParameter="param"/>
+                <MenuItem Header="Save current setup"/>
+                <MenuItem Header="Close"/>
             </MenuItem>
         </Menu>
 
@@ -34,7 +36,7 @@
             <StatusBarItem FontSize="18" Content="Flags: "/>
         </StatusBar>
 
-        <views:DeviceSetupView Grid.Row="3" x:Name="deviceSetupView1"/>
+        <views:SystemSetupView Grid.Row="3" x:Name="deviceSetupView1"/>
 
         <StatusBar Grid.Row="4">
             <StatusBarItem FontSize="18" Content=" (c) Wired Brain Coffee"/>

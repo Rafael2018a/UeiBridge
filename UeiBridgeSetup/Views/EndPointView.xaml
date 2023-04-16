@@ -18,12 +18,12 @@
         </Grid.RowDefinitions>
         <!--<TextBlock Grid.Row="0" Text="{Binding EndpointHeader}" Margin="5" FontSize="16" FontWeight="Bold"/>-->
         <StackPanel Grid.Row="0" Orientation="Horizontal">
-            <TextBlock Text="IPAddress" Margin="5" FontSize="16"/>
-            <TextBox Width="100" Margin="5"/>
+            <TextBlock Text="IPAddress" Margin="7" FontSize="16"/>
+            <TextBox Width="100" Height="20" Margin="7" Text="{Binding IpString, Mode=OneWay}"/>
         </StackPanel>
         <StackPanel Grid.Row="1" Orientation="Horizontal">
-            <TextBlock Text="Port" Margin="5" FontSize="16"/>
-            <TextBox Width="50" Margin="5"/>
+            <TextBlock Text="Port" Margin="7" FontSize="16"/>
+                <TextBox Width="50" Height="20" Margin="7" Text="{Binding IpPort, Mode=OneWay}"/>
         </StackPanel>
     </Grid>
     </GroupBox>

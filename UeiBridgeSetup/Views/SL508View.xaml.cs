@@ -12,27 +12,17 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using UeiBridgeSetup.ViewModels;
 
 namespace UeiBridgeSetup.Views
 {
     /// <summary>
-    /// Interaction logic for DeviceSetupView.xaml
+    /// Interaction logic for SL508View.xaml
     /// </summary>
-    public partial class DeviceSetupView : UserControl
+    public partial class SL508View : UserControl
     {
-        private SystemSetupViewModel _viewModel;
-
-        public DeviceSetupView()
+        public SL508View()
         {
             InitializeComponent();
-
-            _viewModel = new SystemSetupViewModel();
-            DataContext = _viewModel;
-
-            destEndPoint.DataContext = new EndPointViewModel( EndPointLocation.Dest);
-            localEndPoint.DataContext = new EndPointViewModel( EndPointLocation.Local);
-             
         }
     }
 }

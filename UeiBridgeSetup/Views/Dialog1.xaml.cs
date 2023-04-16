@@ -10,21 +10,23 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-namespace UeiBridgeSetup
+namespace UeiBridgeSetup.Views
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Interaction logic for Dialog1.xaml
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class Dialog1 : Window
     {
-        public MainWindow()
+        public Dialog1()
         {
             InitializeComponent();
-            this.DataContext = new UeiBridgeSetup.ViewModels.MainViewModel();
-            //deviceSetupView1.DataContext
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            this.DialogResult = true;
         }
     }
 }

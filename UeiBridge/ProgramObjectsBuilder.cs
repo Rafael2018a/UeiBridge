@@ -32,23 +32,28 @@ namespace UeiBridge
             {
                 // prologue
                 // =========
-                var t = StaticMethods.GetDeviceManagerType<IDeviceManager>(realDevice.PhDevice.GetDeviceName()); // it type exists
+                // it type exists
+                var t = StaticMethods.GetDeviceManagerType<IDeviceManager>(realDevice.PhDevice.GetDeviceName()); 
                 if (null == t)
                 {
                     _logger.Debug($"Device {realDevice.PhDevice.GetDeviceName()} not supported");
                     continue;
                 }
-                DeviceSetup setup = Config2.Instance.GetSetupEntryForDevice(realDevice.CubeUrl, realDevice.PhDevice.GetIndex()); // if config entry exists
+                // if config entry exists
+                DeviceSetup setup = Config2.Instance.GetSetupEntryForDevice(realDevice.CubeUrl, realDevice.PhDevice.GetIndex()); 
                 if (null == setup)
                 {
                     _logger.Warn($"No config entry for {realDevice.CubeUrl},  {realDevice.PhDevice.GetDeviceName()}, Slot {realDevice.PhDevice.GetIndex()}");
                     continue;
                 }
-                if (setup.DeviceName != realDevice.PhDevice.GetDeviceName()) // if config entry match
+                // if config entry match
+                if (setup.DeviceName != realDevice.PhDevice.GetDeviceName()) 
                 {
                     _logger.Warn($"Config entry at slot {realDevice.PhDevice.GetIndex()}/ Cube {realDevice.CubeUrl} does not match physical device {realDevice.PhDevice.GetDeviceName()}");
                     continue;
                 }
+
+                // build manager(s)
                 setup.CubeUrl = realDevice.CubeUrl;
                 List<PerDeviceObjects> objs = BuildObjectsForDevice(realDevice, setup);
                 _deviceManagers.AddRange(objs);

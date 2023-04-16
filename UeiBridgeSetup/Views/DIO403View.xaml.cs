@@ -12,27 +12,17 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using UeiBridgeSetup.ViewModels;
 
 namespace UeiBridgeSetup.Views
 {
     /// <summary>
-    /// Interaction logic for DeviceSetupView.xaml
+    /// Interaction logic for DIO403View.xaml
     /// </summary>
-    public partial class DeviceSetupView : UserControl
+    public partial class DIO403View : UserControl
     {
-        private SystemSetupViewModel _viewModel;
-
-        public DeviceSetupView()
+        public DIO403View()
         {
             InitializeComponent();
-
-            _viewModel = new SystemSetupViewModel();
-            DataContext = _viewModel;
-
-            destEndPoint.DataContext = new EndPointViewModel( EndPointLocation.Dest);
-            localEndPoint.DataContext = new EndPointViewModel( EndPointLocation.Local);
-             
         }
     }
 }

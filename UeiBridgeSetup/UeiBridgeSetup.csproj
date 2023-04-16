@@ -76,20 +76,42 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Utilities\Converters.cs" />
-    <Compile Include="ViewModels\DeviceSetupViewModel.cs" />
+    <Compile Include="Utilities\DelegateCommand.cs" />
+    <Compile Include="ViewModels\AI201ViewModel.cs" />
+    <Compile Include="ViewModels\AO308ViewModel.cs" />
+    <Compile Include="ViewModels\DIO403ViewModel.cs" />
+    <Compile Include="ViewModels\DIO470ViewModel.cs" />
+    <Compile Include="ViewModels\SL508ViewModel.cs" />
+    <Compile Include="ViewModels\SystemSetupViewModel.cs" />
     <Compile Include="ViewModels\EndPointViewModel.cs" />
     <Compile Include="ViewModels\MainViewModel.cs" />
-    <Compile Include="ViewModels\UeiCube.cs" />
-    <Compile Include="ViewModels\UeiDevice.cs" />
-    <Compile Include="ViewModels\UeiSlot.cs" />
+    <Compile Include="ViewModels\CubeSetupViewModel.cs" />
+    <Compile Include="ViewModels\UeiSlotViewModel.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
+    <Compile Include="Views\AI201View.xaml.cs">
+      <DependentUpon>AI201View.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\AO308View.xaml.cs">
+      <DependentUpon>AO308View.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\Dialog1.xaml.cs">
+      <DependentUpon>Dialog1.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\DIO403View.xaml.cs">
+      <DependentUpon>DIO403View.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\DIO470View.xaml.cs">
+      <DependentUpon>DIO470View.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\EndPointView.xaml.cs">
       <DependentUpon>EndPointView.xaml</DependentUpon>
     </Compile>
-    <Page Include="Views\DeviceSetupView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
+    <Compile Include="Views\SL508View.xaml.cs">
+      <DependentUpon>SL508View.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SystemSetupView.xaml.cs">
+      <DependentUpon>SystemSetupView.xaml</DependentUpon>
+    </Compile>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -98,14 +120,39 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Views\DeviceSetupView.xaml.cs">
-      <DependentUpon>DeviceSetupView.xaml</DependentUpon>
-    </Compile>
     <Compile Include="MainWindow.xaml.cs">
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Views\AI201View.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\AO308View.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\Dialog1.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\DIO403View.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\DIO470View.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\EndPointView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\SL508View.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\SystemSetupView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -156,6 +203,35 @@
       <Project>{73ac748f-67f0-4adc-a6cb-0e497f51e6ab}</Project>
       <Name>UeiLibrary</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\uei_product_io_dna_sl_508.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\uei_product_io_dna_ao_308.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\uei_product_chassis_dna_ppc8_1g.jpg" />
+    <Resource Include="Images\uei_product_chassis_dna_ppc8_1g.png" />
+    <Resource Include="Images\uei_product_io_dna_ai_201_100.jpg" />
+    <Resource Include="Images\uei_product_io_dna_ai_201_100.orig.jpg" />
+    <Resource Include="Images\uei_product_io_dna_ao_308.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\uei_product_io_dna_dio_403.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\uei_product_io_dna_dio_470.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\uei_product_io_dna_dio_470.orig.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\uei_product_io_dna_sl_508.orig.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\uei_product_io_dna_ao_308.orig.png" />
+    <Resource Include="Images\uei_product_io_dna_dio_403.orig.jpg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,9 +1,11 @@
 ﻿using System.Net;
+using UeiBridge.Library;
 
 namespace UeiBridgeSetup.ViewModels
 {
-    public class UeiCube
+    public class CubeSetupViewModel
     {
+        public CubeSetup CubeSetup { get; }
         public IPAddress CubeAddress { get; }
         public bool IsCubeConnected { get; }
         public bool IsCubeNotConnected 
@@ -14,14 +16,11 @@ namespace UeiBridgeSetup.ViewModels
             } 
         }
         public bool IsSimulationCube { get; } = false;
-        public UeiCube(IPAddress cubeAddress, bool isCubeConnected)
+        public CubeSetupViewModel(CubeSetup cubesetup, bool isCubeConnected)
         {
-            CubeAddress = cubeAddress;
+            CubeSetup = cubesetup;
             IsCubeConnected = isCubeConnected;
-        }
-        public UeiCube()
-        {
-            IsSimulationCube = true;
+            CubeAddress = StaticMethods.CubeUriToIpAddress(CubeSetup.CubeUrl);
         }
     }
 }
