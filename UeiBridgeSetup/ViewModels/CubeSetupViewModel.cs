@@ -18,9 +18,9 @@ namespace UeiBridgeSetup.ViewModels
         public bool IsSimulationCube { get; } = false;
         public CubeSetupViewModel(CubeSetup cubesetup, bool isCubeConnected)
         {
-            CubeSetup = cubesetup;
-            IsCubeConnected = isCubeConnected;
-            CubeAddress = StaticMethods.CubeUriToIpAddress(CubeSetup.CubeUrl);
+            this.CubeSetup = cubesetup;
+            this.IsCubeConnected = isCubeConnected;
+            this.CubeAddress = StaticMethods.CubeUriToIpAddress(CubeSetup.CubeUrl);
         }
     }
 }

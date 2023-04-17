@@ -88,14 +88,14 @@
     <Compile Include="ViewModels\CubeSetupViewModel.cs" />
     <Compile Include="ViewModels\UeiSlotViewModel.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
+    <Compile Include="Views\AddCubeDialog.xaml.cs">
+      <DependentUpon>AddCubeDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Views\AI201View.xaml.cs">
       <DependentUpon>AI201View.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\AO308View.xaml.cs">
       <DependentUpon>AO308View.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Views\Dialog1.xaml.cs">
-      <DependentUpon>Dialog1.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\DIO403View.xaml.cs">
       <DependentUpon>DIO403View.xaml</DependentUpon>
@@ -124,15 +124,15 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="Views\AddCubeDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="Views\AI201View.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\AO308View.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\Dialog1.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

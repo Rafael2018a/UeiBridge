@@ -1,0 +1,24 @@
+﻿<Window x:Class="UeiBridgeSetup.Views.AddCubeDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:UeiBridgeSetup.Views"
+        mc:Ignorable="d"
+        Title="AddCubeDialog" Height="200" Width="324" ResizeMode="NoResize">
+    <Grid>
+        <Border BorderBrush="Red" Margin="10" BorderThickness="1" CornerRadius="3">
+            <StackPanel Margin="10">
+                <TextBlock Text="Select cube address:"/>
+                <RadioButton x:Name="defineNewCube" Content="Define new address"/>
+                <TextBox Width="200" IsEnabled="{Binding ElementName=defineNewCube, Path=IsChecked}"/>
+                <RadioButton x:Name="selectConnectedCube" Content="Select from connected cubes"/>
+                <ComboBox IsEnabled="{Binding ElementName=selectConnectedCube, Path=IsChecked}">
+                    <ComboBoxItem Content="192.001.100.101" IsSelected="True"/>
+                    <ComboBoxItem Content="192.101.101.100"/>
+                </ComboBox>
+                <Button Content="Add cube" Click="Button_Click" Width="200"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

@@ -293,12 +293,9 @@ namespace StatusViewer
         private void StartMulticast()
         {
             IPAddress mcAddress = null;
-            //int mcPort = -1;
-
-            
-            string mcIp = ConfigurationSettings.AppSettings["multicastIp"];
+            string mcIp = ConfigurationManager.AppSettings["multicastIp"];
             mcAddress = (mcIp != null) ? IPAddress.Parse(mcIp) : IPAddress.Parse("239.10.10.17"); // get from config or use default
-            string mcPort1 = ConfigurationSettings.AppSettings["multicastPort"];
+            string mcPort1 = ConfigurationManager.AppSettings["multicastPort"];
             mcPort = (mcPort1 != null) ? Int32.Parse(mcPort1) : 5093; // get from config or use default
             AppServices.WriteToTrace(string.Format("Multicast EP: {0}:{1}", mcAddress, mcPort));
 

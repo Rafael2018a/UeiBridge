@@ -109,7 +109,7 @@ namespace UeiBridgeSetup.ViewModels
             {
                 SelectedCube = CubeList[0];
             }
-            SelectedViewModel = new SL508ViewModel();
+            //SelectedViewModel = new SL508ViewModel();
 
             // load commands
             AddCubeCommand = new DelegateCommand(new Action<object>(AddCubeCmd), new Func<object, bool>(CanAddCubeCmd));
@@ -124,7 +124,7 @@ namespace UeiBridgeSetup.ViewModels
         private void AddCubeCmd(object obj)
         {
             //throw new NotImplementedException();
-            Views.Dialog1 d1 = new Views.Dialog1();
+            Views.AddCubeDialog d1 = new Views.AddCubeDialog();
             if (true == d1.ShowDialog())
             {
 
@@ -144,11 +144,13 @@ namespace UeiBridgeSetup.ViewModels
         {
             if (System.IO.File.Exists(Config2.DafaultSettingsFilename))
             {
+                Config2.Instance = Config2.LoadConfigFromFile(Config2.DafaultSettingsFilename);
+
                 foreach (CubeSetup cubesetup in Config2.Instance.UeiCubes)
                 {
                     if (!cubesetup.CubeUrl.ToLower().StartsWith("simu"))
                     {
-                        CubeList.Add(new CubeSetupViewModel(cubesetup, false));
+                        CubeList.Add(new CubeSetupViewModel(cubesetup, true));
                     }
                 }
             }

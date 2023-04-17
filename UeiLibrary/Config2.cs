@@ -309,8 +309,8 @@ namespace UeiBridge.Library
     [XmlInclude(typeof(SimuAO16Setup))]
     public class Config2
     {
-        private static Config2 _instance;
-        private static object lockObject = new object();
+        //private static Config2 _instance;
+        //private static object lockObject = new object();
 
         public AppSetup AppSetup;
         //public string[] CubeUrlList = new string[1];
@@ -324,11 +324,6 @@ namespace UeiBridge.Library
 
         public Config2() // this is for serialization. 
         {
-        }
-        public Config2(string configFilename)
-        {
-            SettingsFilename = configFilename;
-            LoadConfigFromFile( configFilename);
         }
 #if        Obsolete
         private Config2(string [] cubeUrls)

@@ -40,8 +40,8 @@ namespace UeiBridgeTest
         [Test]
         public void NoConfigFile()
         {
-            Config2 c2 = new Config2("nofile.config");
-            Assert.That(c2.UeiCubes.Count, Is.EqualTo(0));
+            var c2 = Config2.LoadConfigFromFile("nofile.config");
+            Assert.That( c2, Is.Null);
         }
         [Test]
         public void BuildNewConfigFile()
@@ -53,6 +53,9 @@ namespace UeiBridgeTest
             c2.SaveAs("newfile.config");
         }
 
+        /// <summary>
+        /// Verify that CubeSetup does not generate device-setup for an unknown device.
+        /// </summary>
         [Test]
         public void CubeSetupTest1()
         {
@@ -61,6 +64,9 @@ namespace UeiBridgeTest
             CubeSetup cs = new CubeSetup(devList, "<unknown-url>");
             Assert.That( cs.DeviceSetupList.Count, Is.EqualTo(0));
         }
+        /// <summary>
+        /// Verify that CubeSetup does generate device-setup for a known device.
+        /// </summary>
         [Test]
         public void CubeSetupTest2()
         {
@@ -72,7 +78,7 @@ namespace UeiBridgeTest
         }
 
         [Test]
-        public void ExtMethodTest()
+        public void BuildDefaultSimuConfigTest()
         {
             Config2 c2 = new Config2();
             Config2.Instance = c2.BuildDefaultConfig(new List<string>{ "simu://" });
