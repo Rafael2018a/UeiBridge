@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using UeiBridge;
 using UeiBridge.Library;
+using UeiBridge.Types;
 using UeiDaq;
 
 namespace UeiBridgeTest
@@ -47,16 +48,32 @@ namespace UeiBridgeTest
             });
         }
 
+
+        [SetUp]
+        public void Setup()
+        {
+            string url = "simu://";
+            List<CubeSetup> csetupList = new List<CubeSetup>();
+            List<DeviceEx> devList = UeiBridge.Program.BuildDeviceList(url);
+            var resList = devList.Select(d => new UeiDeviceAdapter(d.PhDevice.GetDeviceName(), d.PhDevice.GetIndex()));// as List<UeiDeviceAdapter>;
+            List<UeiDeviceAdapter> l = new List<UeiDeviceAdapter>(resList);
+            csetupList.Add(new CubeSetup(l, url));
+
+            // save default config to file
+            Config2.Instance = new Config2(csetupList);
+        }
+
         [Test]
         public void AO308DeviceManagerTest()
         {
+
             Session s = new Session();
             s.CreateAOChannel("simu://Dev1/AO0:7", -10, +10);
             analogWriterMock mk = new analogWriterMock();
             mk.OriginSession = s;
             var devicelist = UeiBridge.Program.BuildDeviceList(new List<string>() { "simu://" });
             var ao = devicelist.Where(i => i.PhDevice.GetDeviceName().StartsWith("Simu-AO16")).FirstOrDefault();
-            AO308Setup setup = new AO308Setup(new EndPoint("8.8.8.8", 5000), new UeiDeviceAdapter( ao.PhDevice));
+            AO308Setup setup = new AO308Setup(new EndPoint("8.8.8.8", 5000), new UeiDeviceAdapter(ao.PhDevice));
 
             AO308OutputDeviceManager ao308 = new AO308OutputDeviceManager(setup, mk);
             ao308.OpenDevice();
@@ -88,23 +105,23 @@ namespace UeiBridgeTest
             var devicelist = UeiBridge.Program.BuildDeviceList(new List<string>() { "simu://" });
             var ao = devicelist.Where(i => i.PhDevice.GetDeviceName().StartsWith("Simu-DIO64")).FirstOrDefault();
 
-            DIO403Setup setup = new DIO403Setup(new EndPoint("8.8.8.8", 5000), null, new UeiDeviceAdapter( ao.PhDevice));
+            DIO403Setup setup = new DIO403Setup(new EndPoint("8.8.8.8", 5000), null, new UeiDeviceAdapter(ao.PhDevice));
 
             DIO403OutputDeviceManager dio403 = new DIO403OutputDeviceManager(setup, mk1);
             dio403.OpenDevice();
 
             var m = EthernetMessage.CreateMessage(4, 2, 0, new byte[] { 0xac, 0x13 });
 
-            dio403.Enqueue(m.GetByteArray( MessageWay.downstream));
+            dio403.Enqueue(m.GetByteArray(MessageWay.downstream));
 
             System.Threading.Thread.Sleep(100);
 
-            Assert.Multiple(() => 
+            Assert.Multiple(() =>
             {
                 Assert.That(mk1.Scan[0], Is.EqualTo(0xac));
                 Assert.That(mk1.Scan[1], Is.EqualTo(0x13));
             });
-                
+
         }
     }
     public class analogWriterMock : IWriterAdapter<double[]>

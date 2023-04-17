@@ -1,5 +1,6 @@
 ﻿using UeiDaq;
-using UeiBridge.Types;
+using UeiBridge.Library;
+
 namespace UeiBridge
 {
     /// <summary>

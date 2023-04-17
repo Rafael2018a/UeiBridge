@@ -35,4 +35,16 @@ namespace UeiBridge.Library
         UeiDaq.Session OriginSession { get; }
     }
 
+    public struct DeviceEx
+    {
+        public UeiDaq.Device PhDevice { get; private set; }
+        public string CubeUrl { get; private set; }
+        public DeviceEx(Device device, string cubeUrl)
+        {
+            PhDevice = device;
+            CubeUrl = cubeUrl;
+        }
+    }
+
+
 }

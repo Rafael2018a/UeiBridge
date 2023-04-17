@@ -134,7 +134,7 @@ namespace UeiBridgeSetup.ViewModels
         void AddCube(IPAddress cubeIp)
         {
             string uri = $"pdna://{cubeIp.ToString()}";
-            var cs = new CubeSetup(uri);
+            var cs = new CubeSetup( new List<UeiDeviceAdapter>(), uri);
             Config2.Instance.UeiCubes.Add(cs);
 
             CubeList.Add(new CubeSetupViewModel(cs, false));

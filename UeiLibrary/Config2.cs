@@ -265,7 +265,7 @@ namespace UeiBridge.Library
         /// <summary>
         /// Build DeviceSetupList
         /// </summary>
-        [Obsolete]
+#if Obsolete
         public CubeSetup(string cubeUrl)
         {
             CubeUrl = cubeUrl;
@@ -296,7 +296,9 @@ namespace UeiBridge.Library
                 throw;
             }
         }
+#endif
     }
+
     [XmlInclude(typeof(AO308Setup))]
     [XmlInclude(typeof(DIO403Setup))]
     [XmlInclude(typeof(DIO470Setup))]
@@ -328,7 +330,7 @@ namespace UeiBridge.Library
             SettingsFilename = configFilename;
             LoadConfigFromFile( configFilename);
         }
-        [Obsolete]
+#if        Obsolete
         private Config2(string [] cubeUrls)
         {
             AppSetup = new AppSetup();
@@ -338,32 +340,33 @@ namespace UeiBridge.Library
                 UeiCubes[i] = new CubeSetup(cubeUrls[i]);
             }
         }
-
+#endif
         public Config2(List<CubeSetup> cubeSetups)
         {
             AppSetup = new AppSetup();
             this.UeiCubes.AddRange(cubeSetups);
         }
 
-        public static Config2 Instance
-        {
-            get
-            {
-                if (_instance == null)
-                {
-                    lock (lockObject)
-                    {
-                        if (_instance == null)
-                            _instance = LoadConfigFromFile(SettingsFilename);
-                    }
-                }
-                return _instance;
-            }
-        }
+        public static Config2 Instance { get; set; }
+        //{
+        //get
+        //{
+        //    if (_instance == null)
+        //    {
+        //        lock (lockObject)
+        //        {
+        //            if (_instance == null)
+        //                _instance = LoadConfigFromFile(SettingsFilename);
+        //        }
+        //    }
+        //    return _instance;
+        //}
+        //}
         //public static bool IsConfigFileExist()
         //{
         //    return System.IO.File.Exists(SettingsFilename);
         //}
+#if old
         public static void Reset()
         {
             _instance = null;
@@ -383,11 +386,12 @@ namespace UeiBridge.Library
 
             _instance = resultConfig;
         }
+#endif
         /// <summary>
         /// Load config from file
         /// </summary>
         /// <returns></returns>
-        private static Config2 LoadConfigFromFile( string configfilename)
+        public static Config2 LoadConfigFromFile( string configfilename)
         {
             var serializer = new XmlSerializer(typeof(Config2));
             Config2 resultConfig = null;
@@ -406,25 +410,11 @@ namespace UeiBridge.Library
                     Console.WriteLine($"Failed to read settings file {configfilename}. {ex.Message}");
                     Console.WriteLine($"Using default settings");
                     Console.WriteLine("For auto-create of default settings file, delete existing file and run program.");
-                    return new Config2();
+                    return null;
                 }
             }
-            else
-            {
-                return new Config2();
-            }
-            //{
-            //    throw new NotImplementedException();
-            //    // make fresh config and write it to file
-            //    resultConfig = new Config2("pdna://192.168.100.2/"); // default);
-            //    //resultConfig = new Config2("simu://"); // default);
-            //    using (var writer = new StreamWriter(filename))
-            //    {
-            //        serializer.Serialize(writer, resultConfig);
-            //        Console.WriteLine($"New default settings file created. {filename}");
-            //    }
-            //}
 
+            return null;
             
         }
 

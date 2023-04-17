@@ -44,11 +44,11 @@ namespace UeiBridgeTest
             Assert.That(c2.UeiCubes.Count, Is.EqualTo(0));
         }
         [Test]
-        public void BuiildNewConfigFile()
+        public void BuildNewConfigFile()
         {
             System.IO.File.Delete("newfile.config");
             string url = "simu://";
-            CubeSetup cs = new CubeSetup(url);
+            CubeSetup cs = new CubeSetup( new List<UeiDeviceAdapter>(), url);
             Config2 c2 = new Config2(new List<CubeSetup> { cs });
             c2.SaveAs("newfile.config");
         }
@@ -71,6 +71,13 @@ namespace UeiBridgeTest
             Assert.That(cs.DeviceSetupList[0], Is.Not.Null);
         }
 
-        // 
+        [Test]
+        public void ExtMethodTest()
+        {
+            Config2 c2 = new Config2();
+            Config2.Instance = c2.BuildDefaultConfig(new List<string>{ "simu://" });
+            Assert.That(Config2.Instance.AppSetup.StatusViewerEP, Is.Not.Null);
+            Assert.That(Config2.Instance.UeiCubes[0].DeviceSetupList.Count, Is.EqualTo(1)); // only one simulation device setup is defined.
+        }
     }
 }
