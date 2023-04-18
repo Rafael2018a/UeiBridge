@@ -12,18 +12,18 @@ namespace UeiBridgeSetup.ViewModels
     {
         #region === privates ===
         private CubeSetupViewModel _selectedCube;
-        private ObservableCollection<UeiSlotViewModel> _slotList = new ObservableCollection<UeiSlotViewModel>();
-        private UeiSlotViewModel _selectedSlot;
+        private ObservableCollection<SlotDeviceModel> _slotList = new ObservableCollection<SlotDeviceModel>();
+        private SlotDeviceModel _selectedSlot;
         private ViewModelBase _selectedViewModel;
         private EndPointViewModel _destinationEndPointViewModel;
         private EndPointViewModel _localEndPointViewModel;
         #endregion
         #region === publics ===
-        public EndPointViewModel LocalEndPointViewModel 
-        { 
+        public EndPointViewModel LocalEndPointViewModel
+        {
             get => _localEndPointViewModel;
-            set 
-            { 
+            set
+            {
                 _localEndPointViewModel = value;
                 RaisePropertyChanged();
             }
@@ -38,7 +38,7 @@ namespace UeiBridgeSetup.ViewModels
             }
         }// = new EndPointViewModel(EndPointLocation.Local);
         public List<CubeSetupViewModel> CubeList { get; set; } = new List<CubeSetupViewModel>();
-        public ObservableCollection<UeiSlotViewModel> SlotList
+        public ObservableCollection<SlotDeviceModel> SlotList
         {
             get => _slotList;
             set
@@ -47,7 +47,7 @@ namespace UeiBridgeSetup.ViewModels
                 RaisePropertyChanged();
             }
         }
-        public UeiSlotViewModel SelectedSlot
+        public SlotDeviceModel SelectedSlot
         {
             get => _selectedSlot;
             set
@@ -56,14 +56,14 @@ namespace UeiBridgeSetup.ViewModels
                 RaisePropertyChanged();
                 if (_selectedSlot != null)
                 {
-                    LocalEndPointViewModel = new EndPointViewModel(EndPointLocation.Local, _selectedSlot.ThisDeviceSetup.LocalEndPoint?.ToIpEp());
-                    DestinationEndPointViewModel = new EndPointViewModel(EndPointLocation.Dest, _selectedSlot.ThisDeviceSetup.DestEndPoint?.ToIpEp());
-                    SelectedViewModel = getViewModelBySlot(_selectedSlot);
+                    LocalEndPointViewModel = new EndPointViewModel(EndPointLocation.Local, _selectedSlot.ThisDeviceSetup.LocalEndPoint);
+                    DestinationEndPointViewModel = new EndPointViewModel(EndPointLocation.Dest, _selectedSlot.ThisDeviceSetup.DestEndPoint);
+                    SelectedViewModel = GetViewModelBySlot(_selectedSlot);
                 }
             }
         }
 
-        private ViewModelBase getViewModelBySlot(UeiSlotViewModel selectedSlot)
+        private ViewModelBase GetViewModelBySlot(SlotDeviceModel selectedSlot)
         {
             string devicename = _selectedSlot.DeviceName.ToLower();
             if (devicename.StartsWith("sl-508"))
@@ -102,9 +102,17 @@ namespace UeiBridgeSetup.ViewModels
         #region === commands ===
         public DelegateCommand AddCubeCommand { get; }
         #endregion
+
         public SystemSetupViewModel()
         {
-            LoadCubeList();
+            Config2 _mainConfig = null; // tbd. what if config file not exists?
+
+            if (System.IO.File.Exists(Config2.DafaultSettingsFilename))
+            {
+                _mainConfig = Config2.LoadConfigFromFile(Config2.DafaultSettingsFilename);
+            }
+            //_mainConfig = cfg;
+            LoadCubeList(_mainConfig);
             if (CubeList.Count > 0)
             {
                 SelectedCube = CubeList[0];
@@ -133,25 +141,22 @@ namespace UeiBridgeSetup.ViewModels
 
         void AddCube(IPAddress cubeIp)
         {
+            throw new NotImplementedException();
+
             string uri = $"pdna://{cubeIp.ToString()}";
-            var cs = new CubeSetup( new List<UeiDeviceAdapter>(), uri);
-            Config2.Instance.UeiCubes.Add(cs);
+            var cs = new CubeSetup(new List<UeiDeviceAdapter>(), uri);
+            //_mainConfig.UeiCubes.Add(cs);
 
             CubeList.Add(new CubeSetupViewModel(cs, false));
         }
 
-        private void LoadCubeList()
+        private void LoadCubeList(Config2 mainConfig)
         {
-            if (System.IO.File.Exists(Config2.DafaultSettingsFilename))
+            foreach (CubeSetup cubesetup in mainConfig.UeiCubes)
             {
-                Config2.Instance = Config2.LoadConfigFromFile(Config2.DafaultSettingsFilename);
-
-                foreach (CubeSetup cubesetup in Config2.Instance.UeiCubes)
+                if (!cubesetup.CubeUrl.ToLower().StartsWith("simu"))
                 {
-                    if (!cubesetup.CubeUrl.ToLower().StartsWith("simu"))
-                    {
-                        CubeList.Add(new CubeSetupViewModel(cubesetup, true));
-                    }
+                    CubeList.Add(new CubeSetupViewModel(cubesetup, true));
                 }
             }
         }
@@ -171,7 +176,7 @@ namespace UeiBridgeSetup.ViewModels
             _slotList.Clear();
             foreach (var dev in selectedCube.CubeSetup.DeviceSetupList)
             {
-                _slotList.Add(new UeiSlotViewModel(selectedCube.CubeAddress, dev));
+                _slotList.Add(new SlotDeviceModel(selectedCube.CubeAddress, dev));
             }
 
             if (selectedCube.CubeSetup.DeviceSetupList.Count > 0)

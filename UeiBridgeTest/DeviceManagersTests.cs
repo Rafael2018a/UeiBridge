@@ -60,7 +60,7 @@ namespace UeiBridgeTest
             csetupList.Add(new CubeSetup(l, url));
 
             // save default config to file
-            Config2.Instance = new Config2(csetupList);
+            //Config2.Instance = new Config2(csetupList);
         }
 
         [Test]

@@ -81,9 +81,9 @@ namespace UeiBridgeTest
         public void BuildDefaultSimuConfigTest()
         {
             Config2 c2 = new Config2();
-            Config2.Instance = c2.BuildDefaultConfig(new List<string>{ "simu://" });
-            Assert.That(Config2.Instance.AppSetup.StatusViewerEP, Is.Not.Null);
-            Assert.That(Config2.Instance.UeiCubes[0].DeviceSetupList.Count, Is.EqualTo(1)); // only one simulation device setup is defined.
+            Config2 c3 = Config2.BuildDefaultConfig(new List<string>{ "simu://" });
+            Assert.That( c3.AppSetup.StatusViewerEP, Is.Not.Null);
+            Assert.That( c3.UeiCubes[0].DeviceSetupList.Count, Is.EqualTo(1)); // only one simulation device setup is defined.
         }
     }
 }

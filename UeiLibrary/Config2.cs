@@ -54,7 +54,6 @@ namespace UeiBridge.Library
         public SerialChannel(string portname, UeiDaq.SerialPortSpeed speed)
         {
             this.portname = portname;
-            //Baudrate = SerialPortSpeed.BitsPerSecond115200;
             Baudrate = speed;
         }
         public SerialChannel()
@@ -81,6 +80,8 @@ namespace UeiBridge.Library
         public string CubeUrl { get; set; } // tbd. this is a patch.
         [XmlIgnore]
         public int CubeId { get; set; } // lsb of cube address
+        [XmlIgnore]
+        public bool IsBlockSensorActive { get; set; }
 
         public DeviceSetup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceAdapter device)
         {
@@ -342,7 +343,7 @@ namespace UeiBridge.Library
             this.UeiCubes.AddRange(cubeSetups);
         }
 
-        public static Config2 Instance { get; set; }
+        //public static Config2 Instance { get; set; }
         //{
         //get
         //{
@@ -411,6 +412,25 @@ namespace UeiBridge.Library
 
             return null;
             
+        }
+        public static Config2 BuildDefaultConfig( List<string> cubeUrlList) 
+        {
+            List<CubeSetup> csetupList = new List<CubeSetup>();
+            foreach (var url in cubeUrlList)
+            {
+                UeiDaq.DeviceCollection devColl = new UeiDaq.DeviceCollection(url);
+                List<UeiDeviceAdapter> rl = new List<UeiDeviceAdapter>();
+                foreach (UeiDaq.Device dev in devColl)
+                {
+                    if (dev == null) continue; // this for the last entry, which is null
+                    rl.Add(new UeiDeviceAdapter(dev.GetDeviceName(), dev.GetIndex()));
+                }
+                csetupList.Add(new CubeSetup(rl, url));
+            }
+
+            Config2 res = new Config2(csetupList);
+            return res;
+
         }
 
         public DeviceSetup GetSetupEntryForDevice(int cubeId, string deviceName)

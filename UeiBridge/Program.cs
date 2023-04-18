@@ -18,7 +18,8 @@ namespace UeiBridge
     public class Program
     {
         ILog _logger = StaticMethods.GetLogger();
-        ProgramObjectsBuilder _programBuilder = new ProgramObjectsBuilder();
+        ProgramObjectsBuilder _programBuilder;
+        Config2 _mainConfig;
 
         static void Main(string[] args)
         {
@@ -80,7 +81,7 @@ namespace UeiBridge
                 var c = Config2.LoadConfigFromFile(Config2.DafaultSettingsFilename);
                 if (null != c)
                 {
-                    Config2.Instance = c;
+                    _mainConfig = c;
                 }
                 else
                 {
@@ -92,11 +93,13 @@ namespace UeiBridge
             else // => file not exists
             {
                 // build default config
-                Config2 c2 = new Config2();
-                Config2.Instance = c2.BuildDefaultConfig(cubeUrlList);
-                Config2.Instance.SaveAs(Config2.DafaultSettingsFilename);
+                //Config2 c2 = new Config2();
+                _mainConfig = Config2.BuildDefaultConfig(cubeUrlList);
+                _mainConfig.SaveAs(Config2.DafaultSettingsFilename);
                 Console.WriteLine($"New default settings file created. {Config2.DafaultSettingsFilename}.");
             }
+            //_mainConfig.
+            _programBuilder =new ProgramObjectsBuilder( _mainConfig);
 
             List<DeviceEx> deviceList = BuildDeviceList(cubeUrlList);
             DisplayDeviceList(deviceList);
@@ -179,10 +182,10 @@ namespace UeiBridge
         void PublishStatus_Task(List<PerDeviceObjects> deviceList)
         {
             const int intervalMs = 100;
-            IPEndPoint destEP = Config2.Instance.AppSetup.StatusViewerEP.ToIpEp();
-            UdpWriter uw = new UdpWriter("To-StatusViewer", destEP, Config2.Instance.AppSetup.SelectedNicForMCast);
+            IPEndPoint destEP = _mainConfig.AppSetup.StatusViewerEP.ToIpEp();
+            UdpWriter uw = new UdpWriter("To-StatusViewer", destEP, _mainConfig.AppSetup.SelectedNicForMCast);
             TimeSpan interval = TimeSpan.FromMilliseconds(intervalMs);
-            _logger.Info($"StatusViewer dest ep: {destEP.ToString()} (Local NIC {Config2.Instance.AppSetup.SelectedNicForMCast})");
+            _logger.Info($"StatusViewer dest ep: {destEP.ToString()} (Local NIC {_mainConfig.AppSetup.SelectedNicForMCast})");
 
             List<IDeviceManager> deviceListScan = new List<IDeviceManager>();
 
@@ -268,7 +271,7 @@ namespace UeiBridge
 
                         // block sensor
                         {
-                            IPEndPoint destEp = Config2.Instance.Blocksensor.LocalEndPoint.ToIpEp();
+                            IPEndPoint destEp = _mainConfig.Blocksensor.LocalEndPoint.ToIpEp();
                             EthernetMessage em = Library.StaticMethods.Make_BlockSensor_downstream_message(new UInt16[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 });
                             udpClient.Send(em.GetByteArray(MessageWay.downstream), em.GetByteArray(MessageWay.downstream).Length, destEp);
                         }

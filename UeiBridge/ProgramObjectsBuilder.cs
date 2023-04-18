@@ -17,8 +17,12 @@ namespace UeiBridge
         ILog _logger = StaticMethods.GetLogger();
         List<PerDeviceObjects> _deviceManagers;
         public List<PerDeviceObjects> DeviceManagers => _deviceManagers;
+        Config2 _mainConfig;
 
-        
+        public ProgramObjectsBuilder(Config2 mainConfig)
+        {
+            _mainConfig = mainConfig;
+        }
 
         public void CreateDeviceManagers(List<DeviceEx> realDeviceList)
         {
@@ -40,7 +44,7 @@ namespace UeiBridge
                     continue;
                 }
                 // if config entry exists
-                DeviceSetup setup = Config2.Instance.GetSetupEntryForDevice(realDevice.CubeUrl, realDevice.PhDevice.GetIndex()); 
+                DeviceSetup setup = _mainConfig.GetSetupEntryForDevice(realDevice.CubeUrl, realDevice.PhDevice.GetIndex()); 
                 if (null == setup)
                 {
                     _logger.Warn($"No config entry for {realDevice.CubeUrl},  {realDevice.PhDevice.GetDeviceName()}, Slot {realDevice.PhDevice.GetIndex()}");
@@ -55,6 +59,7 @@ namespace UeiBridge
 
                 // build manager(s)
                 setup.CubeUrl = realDevice.CubeUrl;
+                setup.IsBlockSensorActive = _mainConfig.Blocksensor.IsActive;
                 List<PerDeviceObjects> objs = BuildObjectsForDevice(realDevice, setup);
                 _deviceManagers.AddRange(objs);
             }
@@ -145,9 +150,9 @@ namespace UeiBridge
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
 
             // set ao308 as consumer of udp-reader
-            if (Config2.Instance.Blocksensor.IsActive == false)
+            if (_mainConfig.Blocksensor.IsActive == false)
             {
-                var nic = IPAddress.Parse(Config2.Instance.AppSetup.SelectedNicForMCast);
+                var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
                 UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, ao308, ao308.InstanceName);
                 pd.UdpReader = ureader;
             }
@@ -162,11 +167,11 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert(null != serialSession);
 
             string instanceName = $"{realDevice.PhDevice.GetDeviceName()}/Slot{realDevice.PhDevice.GetIndex()}";
-            UdpWriter uWriter = new UdpWriter(instanceName, setup.DestEndPoint.ToIpEp(), Config2.Instance.AppSetup.SelectedNicForMCast);
+            UdpWriter uWriter = new UdpWriter(instanceName, setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMCast);
             SL508InputDeviceManager id = new SL508InputDeviceManager(uWriter, setup, serialSession);
 
             SL508OutputDeviceManager od = new SL508OutputDeviceManager(setup, serialSession);
-            var nic = IPAddress.Parse(Config2.Instance.AppSetup.SelectedNicForMCast);
+            var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
             UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, od, od.InstanceName);
 
             var pd = new PerDeviceObjects(realDevice);
@@ -182,7 +187,7 @@ namespace UeiBridge
         private List<PerDeviceObjects> Build_AI201(DeviceEx realDevice, DeviceSetup setup)
         {
             string instanceName = $"{realDevice.PhDevice.GetDeviceName()}/Slot{realDevice.PhDevice.GetIndex()}";
-            UdpWriter uWriter = new UdpWriter(instanceName, setup.DestEndPoint.ToIpEp(), Config2.Instance.AppSetup.SelectedNicForMCast);
+            UdpWriter uWriter = new UdpWriter(instanceName, setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMCast);
             AI201InputDeviceManager id = new AI201InputDeviceManager(uWriter, setup as AI201100Setup);
 
             var pd = new PerDeviceObjects(realDevice);
@@ -195,7 +200,7 @@ namespace UeiBridge
         private List<PerDeviceObjects> Build_DIO470(DeviceEx realDevice, DeviceSetup setup)
         {
             DIO470OutputDeviceManager od = new DIO470OutputDeviceManager(setup);
-            var nic = IPAddress.Parse(Config2.Instance.AppSetup.SelectedNicForMCast);
+            var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
             UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, od, od.InstanceName);
 
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
@@ -214,12 +219,12 @@ namespace UeiBridge
 
             // output
             DIO403OutputDeviceManager od = new DIO403OutputDeviceManager(setup, aWriter);
-            var nic = IPAddress.Parse(Config2.Instance.AppSetup.SelectedNicForMCast);
+            var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
             UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, od, od.InstanceName);
 
             // input
             string instanceName = $"{realDevice.PhDevice.GetDeviceName()}/Slot{realDevice.PhDevice.GetIndex()}";
-            UdpWriter uWriter = new UdpWriter(instanceName, setup.DestEndPoint.ToIpEp(), Config2.Instance.AppSetup.SelectedNicForMCast);
+            UdpWriter uWriter = new UdpWriter(instanceName, setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMCast);
 
             DIO403InputDeviceManager id = new DIO403InputDeviceManager(uWriter, setup);
 
@@ -243,7 +248,7 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert(null != deviceSetup.LocalEndPoint);
 
             // create udp reader for this device
-            var nic = IPAddress.Parse(Config2.Instance.AppSetup.SelectedNicForMCast);
+            var nic = IPAddress.Parse( _mainConfig.AppSetup.SelectedNicForMCast);
             UdpReader ureader = new UdpReader(deviceSetup.LocalEndPoint.ToIpEp(), nic, outDev, outDev.InstanceName);
 
             var pdo = new PerDeviceObjects(realDevice);
@@ -266,8 +271,8 @@ namespace UeiBridge
                 di403.TargetConsumer = blockSensor;
 #endif
                 // define udp-reader for block sensor
-                var nic = IPAddress.Parse(Config2.Instance.AppSetup.SelectedNicForMCast);
-                UdpReader ureader = new UdpReader(Config2.Instance.Blocksensor.LocalEndPoint.ToIpEp(), nic, blockSensor, "BlockSensor");
+                var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
+                UdpReader ureader = new UdpReader(_mainConfig.Blocksensor.LocalEndPoint.ToIpEp(), nic, blockSensor, "BlockSensor");
 
                 // add block sensor to device list
                 PerDeviceObjects pd = new PerDeviceObjects(blockSensor.DeviceName, -1, "no_cube");
@@ -289,7 +294,7 @@ namespace UeiBridge
         /// </summary>
         private BlockSensorManager CreateBlockSensorObject(List<DeviceEx> realDeviceList)
         {
-            if (false == Config2.Instance.Blocksensor.IsActive)
+            if (false == _mainConfig.Blocksensor.IsActive)
             {
                 _logger.Debug("Block sensor disabled.");
                 return null;
@@ -302,7 +307,7 @@ namespace UeiBridge
                 bool digitalExist = realDeviceList.Any(d => d.PhDevice.GetDeviceName().StartsWith("DIO-403"));
                 if (digitalExist && ao308 != null)
                 {
-                    result = new BlockSensorManager(Config2.Instance.Blocksensor, ao308.AnalogWriter);
+                    result = new BlockSensorManager(_mainConfig.Blocksensor, ao308.AnalogWriter);
                 }
                 else
                 {

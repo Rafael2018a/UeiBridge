@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using UeiBridge.Library;
 
 namespace UeiBridgeSetup.ViewModels
 {
@@ -11,30 +12,22 @@ namespace UeiBridgeSetup.ViewModels
     public class EndPointViewModel : ViewModelBase
     {
         readonly EndPointLocation _epLocation;
-        //private string _ipString;
-        //private int _ipPort;
 
-        private IPEndPoint EndPoint { get; set; }
+        private UeiBridge.Library.EndPoint EndPoint { get; set; }
         public string IpString
         {
             get => this.EndPoint.Address.ToString();// _ipString;
-            //set
-            //{
-            //    _ipString = value;
-                //RaisePropertyChanged();
-            //}
         }
         public int IpPort 
         {
-            get => this.EndPoint.Port;// _ipPort;
-            //private set 
-            //{ 
-                //_ipPort = value;
-                //RaisePropertyChanged();
-            //}
+            get => this.EndPoint.Port;
+            set
+            {
+                this.EndPoint.Port = value;
+                RaisePropertyChanged();
+            }
         }
 
-        //public string ip { get; set; }
         public string EndpointHeader
         {
             get
@@ -43,13 +36,13 @@ namespace UeiBridgeSetup.ViewModels
                 return h;
             }
         }
-        public EndPointViewModel(EndPointLocation epLocation, IPEndPoint endPoint = null)
+        public EndPointViewModel(EndPointLocation epLocation, UeiBridge.Library.EndPoint endPoint)
         {
             _epLocation = epLocation;
-            //SetEndPoint(endPoint);
+
             if (null == endPoint)
             {
-                this.EndPoint = new IPEndPoint(IPAddress.Any, 0);
+                this.EndPoint = new UeiBridge.Library.EndPoint("0.0.0.0", 0);
             }
             else
             {

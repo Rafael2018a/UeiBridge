@@ -123,7 +123,7 @@ namespace UeiBridge.Library
         /// <summary>
         /// Build default config from cube-url-list
         /// </summary>
-        public static Config2 BuildDefaultConfig( this Config2 c2, List<string> cubeUrlList)
+        public static Config2 BuildDefaultConfig2( this Config2 c2, List<string> cubeUrlList) // tbd. should be static, not ext method.
         {
             List<CubeSetup> csetupList = new List<CubeSetup>();
             foreach (var url in cubeUrlList)

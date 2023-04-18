@@ -18,9 +18,10 @@
 
         <Menu Grid.Row="0" FontSize="18">
             <MenuItem Header="_File">
-                <MenuItem Header="Open file"/>
-                <MenuItem Header="Open default file" Command="{Binding AddCommand}" CommandParameter="param"/>
-                <MenuItem Header="Save current setup"/>
+                <MenuItem Header="Open file" Command="{Binding OpenFileCommand}"/>
+                <!--<MenuItem Header="Open default file" Command="{Binding AddCommand}" CommandParameter="param"/>-->
+                <MenuItem Header="Save"/>
+                <MenuItem Header="Save as"/>
                 <MenuItem Header="Close"/>
             </MenuItem>
         </Menu>

@@ -76,7 +76,7 @@ namespace UeiBridge
                 Task.Factory.StartNew(() => OutputDeviceHandler_Task());
 
                 var range = _analogWriter.OriginSession.GetDevice().GetAORanges();
-                if (Config2.Instance.Blocksensor.IsActive)
+                if ( ThisDeviceSetup.IsBlockSensorActive) 
                 {
                     _logger.Info($"Init success: {InstanceName} . { numOfCh} channels. Range {range[0].minimum},{range[0].maximum}V. Listening on BlockSensor");
                 }

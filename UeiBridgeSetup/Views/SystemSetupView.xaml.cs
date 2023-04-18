@@ -32,6 +32,6 @@ namespace UeiBridgeSetup.Views
 
         }
     }
-    public class CustomersViewModel { }
+    //public class CustomersViewModel { }
 
 }

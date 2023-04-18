@@ -14,12 +14,14 @@ namespace UeiBridgeSetup.ViewModels
 
         public DelegateCommand AddCommand { get; }
 
-        //UeiBridge.Library.Config2 c2;
+        
 
         public MainViewModel()
         {
             AddCommand = new DelegateCommand(Add);
-            var bs = Config2.Instance.Blocksensor;
+            //var bs = Config2.Instance.Blocksensor;
+
+            var x = UeiBridge.Library.Config2.DafaultSettingsFilename;
         }
         void LoadSetupFile( string fileFullpath)
         {
