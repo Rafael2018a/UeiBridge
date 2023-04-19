@@ -21,14 +21,14 @@ namespace UeiBridgeSetup.Views
     /// </summary>
     public partial class SystemSetupView : UserControl
     {
-        private SystemSetupViewModel _viewModel;
+        //private SystemSetupViewModel _viewModel;
 
         public SystemSetupView()
         {
             InitializeComponent();
 
-            _viewModel = new SystemSetupViewModel();
-            DataContext = _viewModel;
+            //_viewModel = new SystemSetupViewModel();
+            //DataContext = _viewModel;
 
         }
     }

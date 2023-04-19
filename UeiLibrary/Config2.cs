@@ -387,27 +387,27 @@ namespace UeiBridge.Library
         /// Load config from file
         /// </summary>
         /// <returns></returns>
-        public static Config2 LoadConfigFromFile( string configfilename)
+        public static Config2 LoadConfigFromFile( FileInfo configFile)
         {
             var serializer = new XmlSerializer(typeof(Config2));
             Config2 resultConfig = null;
-            if (System.IO.File.Exists(configfilename))
+
             {
-                try
+                //try
                 {
-                    using (StreamReader sr = File.OpenText(configfilename))
+                    using (StreamReader sr = configFile.OpenText())
                     {
                         resultConfig = serializer.Deserialize(sr) as Config2;
                     }
                     return resultConfig;
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Failed to read settings file {configfilename}. {ex.Message}");
-                    Console.WriteLine($"Using default settings");
-                    Console.WriteLine("For auto-create of default settings file, delete existing file and run program.");
-                    return null;
-                }
+                //catch (Exception ex)
+                //{
+                //    Console.WriteLine($"Failed to read settings file {configFile.FullName}. {ex.Message}");
+                //    Console.WriteLine($"Using default settings");
+                //    Console.WriteLine("For auto-create of default settings file, delete existing file and run program.");
+                //    return null;
+                //}
             }
 
             return null;

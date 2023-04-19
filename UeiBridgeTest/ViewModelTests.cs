@@ -53,18 +53,10 @@ namespace UeiBridgeTest
         {
             if (System.IO.File.Exists(Config2.DafaultSettingsFilename))
             {
-                SystemSetupViewModel sysVM = new SystemSetupViewModel();
+                Config2 c2 = Config2.LoadConfigFromFile( new System.IO.FileInfo( Config2.DafaultSettingsFilename));
+                SystemSetupViewModel sysVM = new SystemSetupViewModel( c2);
                 Assert.That(sysVM.SlotList.Count, Is.GreaterThan(0));
             }
-        }
-        [Test]
-        public void TestCubeSetup1()
-        {
-            //UeiBridge.Library.CubeSetup cs = new UeiBridge.Library.CubeSetup("pnda://192.168.100.4");
-            //UeiBridgeSetup.ViewModels.CubeSetupViewModel cube = new UeiBridgeSetup.ViewModels.CubeSetupViewModel(cs, false);
-            //Assert.That(cube.CubeAddress, Is.EqualTo( System.Net.IPAddress.Parse("192.168.100.4") ));
-
-            //Assert.Throws<UeiDaq.UeiDaqException>(() => {  UeiBridge.Library.CubeSetup cs = new UeiBridge.Library.CubeSetup("fff");});
         }
     }
 }

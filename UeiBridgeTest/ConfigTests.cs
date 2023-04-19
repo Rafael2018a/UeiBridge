@@ -40,9 +40,20 @@ namespace UeiBridgeTest
         [Test]
         public void NoConfigFile()
         {
-            var c2 = Config2.LoadConfigFromFile("nofile.config");
-            Assert.That( c2, Is.Null);
+            Assert.Throws<System.IO.FileNotFoundException>(() => 
+            {
+                var c2 = Config2.LoadConfigFromFile(new System.IO.FileInfo("nofile.config"));
+            });
         }
+        [Test]
+        public void BadConfigTest()
+        {
+            Assert.Throws<System.InvalidOperationException>(() => 
+            { 
+                var c2 = Config2.LoadConfigFromFile(new System.IO.FileInfo("UeiBridgeTest.exe.config"));
+            });
+        }
+
         [Test]
         public void BuildNewConfigFile()
         {

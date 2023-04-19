@@ -76,30 +76,30 @@ namespace UeiBridge
             }
 
             // open or create settings file
-            if (File.Exists(Config2.DafaultSettingsFilename))
+            try
             {
-                var c = Config2.LoadConfigFromFile(Config2.DafaultSettingsFilename);
-                if (null != c)
-                {
-                    _mainConfig = c;
-                }
-                else
-                {
-                    _logger.Warn("Failed to load config from default file. Any key to abort....");
-                    Console.ReadKey();
-                    return;
-                }
+                _mainConfig = Config2.LoadConfigFromFile(new FileInfo(Config2.DafaultSettingsFilename));
             }
-            else // => file not exists
+            catch (FileNotFoundException ex)
             {
-                // build default config
-                //Config2 c2 = new Config2();
                 _mainConfig = Config2.BuildDefaultConfig(cubeUrlList);
                 _mainConfig.SaveAs(Config2.DafaultSettingsFilename);
                 Console.WriteLine($"New default settings file created. {Config2.DafaultSettingsFilename}.");
             }
-            //_mainConfig.
-            _programBuilder =new ProgramObjectsBuilder( _mainConfig);
+            catch (InvalidOperationException ex)
+            {
+                _logger.Warn($"Failed to load configuration. {ex.Message}. Any key to abort....");
+                Console.ReadKey();
+                return;
+            }
+            catch (Exception ex)
+            {
+                _logger.Warn($"Failed to load configuration. {ex.Message}. Any key to abort....");
+                Console.ReadKey();
+                return;
+            }
+
+            _programBuilder = new ProgramObjectsBuilder( _mainConfig);
 
             List<DeviceEx> deviceList = BuildDeviceList(cubeUrlList);
             DisplayDeviceList(deviceList);

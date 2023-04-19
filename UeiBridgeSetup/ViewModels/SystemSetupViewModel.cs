@@ -103,14 +103,8 @@ namespace UeiBridgeSetup.ViewModels
         public DelegateCommand AddCubeCommand { get; }
         #endregion
 
-        public SystemSetupViewModel()
+        public SystemSetupViewModel(Config2 _mainConfig)
         {
-            Config2 _mainConfig = null; // tbd. what if config file not exists?
-
-            if (System.IO.File.Exists(Config2.DafaultSettingsFilename))
-            {
-                _mainConfig = Config2.LoadConfigFromFile(Config2.DafaultSettingsFilename);
-            }
             //_mainConfig = cfg;
             LoadCubeList(_mainConfig);
             if (CubeList.Count > 0)
