@@ -37,21 +37,21 @@ namespace UeiBridge
                 // prologue
                 // =========
                 // it type exists
-                var t = StaticMethods.GetDeviceManagerType<IDeviceManager>(realDevice.PhDevice.GetDeviceName()); 
+                var t = StaticMethods.GetDeviceManagerType<IDeviceManager>(realDevice.PhDevice.GetDeviceName());
                 if (null == t)
                 {
                     _logger.Debug($"Device {realDevice.PhDevice.GetDeviceName()} not supported");
                     continue;
                 }
                 // if config entry exists
-                DeviceSetup setup = _mainConfig.GetSetupEntryForDevice(realDevice.CubeUrl, realDevice.PhDevice.GetIndex()); 
+                DeviceSetup setup = _mainConfig.GetSetupEntryForDevice(realDevice.CubeUrl, realDevice.PhDevice.GetIndex());
                 if (null == setup)
                 {
                     _logger.Warn($"No config entry for {realDevice.CubeUrl},  {realDevice.PhDevice.GetDeviceName()}, Slot {realDevice.PhDevice.GetIndex()}");
                     continue;
                 }
                 // if config entry match
-                if (setup.DeviceName != realDevice.PhDevice.GetDeviceName()) 
+                if (setup.DeviceName != realDevice.PhDevice.GetDeviceName())
                 {
                     _logger.Warn($"Config entry at slot {realDevice.PhDevice.GetIndex()}/ Cube {realDevice.CubeUrl} does not match physical device {realDevice.PhDevice.GetDeviceName()}");
                     continue;
@@ -99,32 +99,26 @@ namespace UeiBridge
             {
                 case "Simu-AO16":
                     {
-                        //_logger.Debug($"Building {realDevice.PhDevice.GetDeviceName()}");
                         return Build_SimuAO16(realDevice, setup);
-
                     }
-                case "AO-308":
+                case DeviceMap2.AO308Literal:
                     {
                         return Build_AO308(realDevice, setup);
                     }
-                case "DIO-403":
+                case DeviceMap2.DIO403Literal:
                     {
-                        //_logger.Info($"Building {realDevice.PhDevice.GetDeviceName()}");
                         return Build_DIO403(realDevice, setup);
                     }
-                case "DIO-470":
+                case DeviceMap2.DIO470Literal:
                     {
-                        //_logger.Info($"Building {realDevice.PhDevice.GetDeviceName()}");
                         return Build_DIO470(realDevice, setup);
                     }
-                case "AI-201-100":
+                case DeviceMap2.AI201Literal:
                     {
-                        //_logger.Info($"Building {realDevice.PhDevice.GetDeviceName()}");
                         return Build_AI201(realDevice, setup);
                     }
-                case "SL-508-892":
+                case DeviceMap2.SL508Literal:
                     {
-                        //_logger.Info($"Building {realDevice.PhDevice.GetDeviceName()}");
                         return Build_SL508(realDevice, setup);
                     }
                 default:
@@ -144,7 +138,7 @@ namespace UeiBridge
             var c = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
             System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
             theSession.ConfigureTimingForSimpleIO();
-            var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter( theSession.GetDataStream()), theSession);
+            var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()), theSession);
 
             AO308OutputDeviceManager ao308 = new AO308OutputDeviceManager(setup as AO308Setup, aWriter);
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
@@ -248,7 +242,7 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert(null != deviceSetup.LocalEndPoint);
 
             // create udp reader for this device
-            var nic = IPAddress.Parse( _mainConfig.AppSetup.SelectedNicForMCast);
+            var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
             UdpReader ureader = new UdpReader(deviceSetup.LocalEndPoint.ToIpEp(), nic, outDev, outDev.InstanceName);
 
             var pdo = new PerDeviceObjects(realDevice);
@@ -286,7 +280,7 @@ namespace UeiBridge
 #endif
                 _deviceManagers.Add(pd);
             }
-            
+
         }
 
         /// <summary>

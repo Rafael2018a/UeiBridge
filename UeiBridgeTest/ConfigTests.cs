@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using UeiBridge;
 using UeiBridge.Library;
 using NUnit.Framework;
+using System.IO;
 
 namespace UeiBridgeTest
 {
@@ -94,7 +95,28 @@ namespace UeiBridgeTest
             Config2 c2 = new Config2();
             Config2 c3 = Config2.BuildDefaultConfig(new List<string>{ "simu://" });
             Assert.That( c3.AppSetup.StatusViewerEP, Is.Not.Null);
-            Assert.That( c3.UeiCubes[0].DeviceSetupList.Count, Is.EqualTo(1)); // only one simulation device setup is defined.
+            Assert.That( c3.CubeSetupList[0].DeviceSetupList.Count, Is.EqualTo(1)); // only one simulation device setup is defined.
+        }
+
+        [Test]
+        public void CompareConfigTest()
+        {
+            Config2 c2 = Config2.LoadConfigFromFile(new FileInfo(Config2.DafaultSettingsFilename));
+            Config2 c3 = Config2.LoadConfigFromFile(new FileInfo(Config2.DafaultSettingsFilename));
+            c2.CubeSetupList.FirstOrDefault().DeviceSetupList.FirstOrDefault().DeviceName = "kkk";
+            Assert.That(c2.Equals(c3), Is.False);
+        }
+    }
+
+    public class Person : IEquatable<Person>
+    {
+        int age;
+        public bool Equals(Person other)
+        {
+            if (this.age == other.age)
+                return true;
+            else
+                return false;
         }
     }
 }

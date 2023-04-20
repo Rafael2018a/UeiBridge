@@ -22,21 +22,17 @@ namespace UeiBridgeSetup
     /// </summary>
     public partial class MainWindow : Window
     {
-        MainViewModel mvm;
+        MainViewModel _mainVM;
         public MainWindow()
         {
             InitializeComponent();
-            mvm = new MainViewModel();
-            this.DataContext = mvm;
-            mvm.newSystemViewModel += SetSystemViewModel;
+            _mainVM = new MainViewModel();
+            this.DataContext = _mainVM;
+            _mainVM.OnNewSystemViewModel += SetSystemViewModel;
 
-            mvm.LoadConfig(new System.IO.FileInfo(Config2.DafaultSettingsFilename));
-
-            
-
+            _mainVM.LoadSetupFile(new System.IO.FileInfo(Config2.DafaultSettingsFilename));
             
         }
-
         private void SetSystemViewModel(SystemSetupViewModel sysVM)
         {
             _systemSetupView.DataContext = sysVM;

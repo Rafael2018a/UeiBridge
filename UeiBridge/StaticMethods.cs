@@ -89,7 +89,7 @@ namespace UeiBridge
             //ILog _logger = log4net.LogManager.GetLogger("Root");
 
             //int key = //ProjectRegistry.Instance.GetDeviceKeyFromDeviceString(deviceName);
-            int key = DeviceMap.GetCardIdFromCardName(setup.DeviceName);
+            int key = DeviceMap2.GetCardIdFromCardName(setup.DeviceName);
 
             System.Diagnostics.Debug.Assert(key >= 0);
 

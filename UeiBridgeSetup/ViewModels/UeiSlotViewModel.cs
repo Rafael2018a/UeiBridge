@@ -20,5 +20,15 @@ namespace UeiBridgeSetup.ViewModels
             this.ThisDeviceSetup = dev;
             this.EnclosingCubeAddress = cubeIp;
         }
+
+        public string DeviceDesc
+        {
+            get
+            {
+                return DeviceMap2.GetDeviceDesc( ThisDeviceSetup.DeviceName);
+            }
+            set { }
+        }
+
     }
 }

@@ -18,10 +18,10 @@
 
         <Menu Grid.Row="0" FontSize="18">
             <MenuItem Header="_File">
-                <MenuItem Header="Open file" Command="{Binding OpenFileCommand}"/>
+                <MenuItem Header="Load setup file" Command="{Binding OpenFileCommand}"/>
                 <!--<MenuItem Header="Open default file" Command="{Binding AddCommand}" CommandParameter="param"/>-->
-                <MenuItem Header="Save"/>
-                <MenuItem Header="Save as"/>
+                <MenuItem Header="{Binding MenuItemHeader_Save}"/>
+                <MenuItem Header="{Binding MenuItemHeader_SaveAs}"/>
                 <MenuItem Header="Close"/>
             </MenuItem>
         </Menu>
@@ -44,10 +44,7 @@
         <views:SystemSetupView Grid.Row="3" x:Name="_systemSetupView"/>
 
         <StatusBar Grid.Row="4">
-            <StatusBarItem FontSize="18" Content=" (c) Wired Brain Coffee"/>
+            <StatusBarItem FontSize="18" Content="(c) IAI Malat. Dept 2288. Rafi Ne'eman."/>
         </StatusBar>
-
-
     </Grid>
-
 </Window>

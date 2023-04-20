@@ -16,7 +16,7 @@ namespace UeiBridge
     public class BlockSensorManager : OutputDevice, ISend<SendObject>
     {
         #region === publics ====
-        public override string DeviceName => "BlockSensor";
+        public override string DeviceName => DeviceMap2.BlocksensorLiteral; //"BlockSensor";
         //public string InstanceName => "BlockSensorManager";
         #endregion
         #region === privates ===
@@ -93,7 +93,7 @@ namespace UeiBridge
                 return;
             }
             // upstream message from digital/input card
-            if (byteMessage[EthernetMessage._cardTypeOffset] == DeviceMap.GetCardIdFromCardName("DIO-403"))
+            if (byteMessage[EthernetMessage._cardTypeOffset] == DeviceMap2.GetCardIdFromCardName(DeviceMap2.DIO403Literal)) //"DIO-403"))
             {
                 // convert
                 try
@@ -111,7 +111,7 @@ namespace UeiBridge
             }
 
             // downstream message aimed to block sensor
-            if (byteMessage[EthernetMessage._cardTypeOffset] == DeviceMap.GetCardIdFromCardName("BlockSensor"))
+            if (byteMessage[EthernetMessage._cardTypeOffset] == DeviceMap2.GetCardIdFromCardName( DeviceMap2.BlocksensorLiteral))
             {
                 if (_subaddress < 0)
                 {

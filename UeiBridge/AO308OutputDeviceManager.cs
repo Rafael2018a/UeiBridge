@@ -32,7 +32,7 @@ namespace UeiBridge
     public class AO308OutputDeviceManager : OutputDevice
     {
         #region === publics ====
-        public override string DeviceName => "AO-308";
+        public override string DeviceName => DeviceMap2.AO308Literal;// "AO-308";
         public IWriterAdapter<double[]> AnalogWriter => _analogWriter;
         #endregion
 

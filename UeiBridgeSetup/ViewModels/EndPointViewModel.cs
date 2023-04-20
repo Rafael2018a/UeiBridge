@@ -28,6 +28,11 @@ namespace UeiBridgeSetup.ViewModels
             }
         }
 
+        public bool IsVisible
+        {
+            get { return this.EndPoint.Port > 0; }
+            set { }
+        }
         public string EndpointHeader
         {
             get

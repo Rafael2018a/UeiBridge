@@ -58,35 +58,53 @@ namespace UeiBridgeSetup.ViewModels
                 {
                     LocalEndPointViewModel = new EndPointViewModel(EndPointLocation.Local, _selectedSlot.ThisDeviceSetup.LocalEndPoint);
                     DestinationEndPointViewModel = new EndPointViewModel(EndPointLocation.Dest, _selectedSlot.ThisDeviceSetup.DestEndPoint);
-                    SelectedViewModel = GetViewModelBySlot(_selectedSlot);
+                    SelectedViewModel = GetViewModelBySlot2(_selectedSlot);
                 }
             }
         }
 
-        private ViewModelBase GetViewModelBySlot(SlotDeviceModel selectedSlot)
+        //private ViewModelBase GetViewModelBySlot(SlotDeviceModel selectedSlot)
+        //{
+        //    string devicename = _selectedSlot.DeviceName.ToLower();
+        //    if (devicename.StartsWith("sl-508"))
+        //    {
+        //        return new SL508ViewModel();
+        //    }
+        //    if (devicename == DeviceMap2.AO308Literal.ToLower())
+        //    {
+        //        return new AO308ViewModel();
+        //    }
+        //    if (devicename.StartsWith("dio-403"))
+        //    {
+        //        return new DIO403ViewModel();
+        //    }
+        //    if (devicename.StartsWith("ai-201"))
+        //    {
+        //        return new AI201ViewModel();
+        //    }
+        //    if (devicename.StartsWith("dio-470"))
+        //    {
+        //        return new DIO470ViewModel();
+        //    }
+        //    return null;
+        //}
+        private ViewModelBase GetViewModelBySlot2(SlotDeviceModel selectedSlot)
         {
-            string devicename = _selectedSlot.DeviceName.ToLower();
-            if (devicename.StartsWith("sl-508"))
+            switch (_selectedSlot.DeviceName)
             {
-                return new SL508ViewModel();
+                case DeviceMap2.SL508Literal:
+                    return new SL508ViewModel();
+                case DeviceMap2.AO308Literal:
+                    return new AO308ViewModel();
+                case DeviceMap2.DIO403Literal:
+                    return new DIO403ViewModel();
+                case DeviceMap2.AI201Literal:
+                    return new AI201ViewModel();
+                case DeviceMap2.DIO470Literal:
+                    return new DIO470ViewModel();
+                default:
+                    return null;
             }
-            if (devicename.StartsWith("ao-308"))
-            {
-                return new AO308ViewModel();
-            }
-            if (devicename.StartsWith("dio-403"))
-            {
-                return new DIO403ViewModel();
-            }
-            if (devicename.StartsWith("ai-201"))
-            {
-                return new AI201ViewModel();
-            }
-            if (devicename.StartsWith("dio-470"))
-            {
-                return new DIO470ViewModel();
-            }
-            return null;
         }
 
         public ViewModelBase SelectedViewModel
@@ -137,16 +155,16 @@ namespace UeiBridgeSetup.ViewModels
         {
             throw new NotImplementedException();
 
-            string uri = $"pdna://{cubeIp.ToString()}";
-            var cs = new CubeSetup(new List<UeiDeviceAdapter>(), uri);
+            //string uri = $"pdna://{cubeIp.ToString()}";
+            //var cs = new CubeSetup(new List<UeiDeviceAdapter>(), uri);
             //_mainConfig.UeiCubes.Add(cs);
 
-            CubeList.Add(new CubeSetupViewModel(cs, false));
+            //CubeList.Add(new CubeSetupViewModel(cs, false));
         }
 
         private void LoadCubeList(Config2 mainConfig)
         {
-            foreach (CubeSetup cubesetup in mainConfig.UeiCubes)
+            foreach (CubeSetup cubesetup in mainConfig.CubeSetupList)
             {
                 if (!cubesetup.CubeUrl.ToLower().StartsWith("simu"))
                 {
