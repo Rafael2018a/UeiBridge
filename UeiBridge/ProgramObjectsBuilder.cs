@@ -12,11 +12,11 @@ using UeiBridge.Types;
 
 namespace UeiBridge
 {
-    public class ProgramObjectsBuilder
+    public class ProgramObjectsBuilder: IDisposable
     {
         ILog _logger = StaticMethods.GetLogger();
-        List<PerDeviceObjects> _deviceManagers;
-        public List<PerDeviceObjects> DeviceManagers => _deviceManagers;
+        List<PerDeviceObjects> _PerDeviceObjectsList;
+        public List<PerDeviceObjects> PerDeviceObjectsList => _PerDeviceObjectsList;
         Config2 _mainConfig;
 
         public ProgramObjectsBuilder(Config2 mainConfig)
@@ -30,7 +30,7 @@ namespace UeiBridge
             {
                 return;
             }
-            _deviceManagers = new List<PerDeviceObjects>();
+            _PerDeviceObjectsList = new List<PerDeviceObjects>();
 
             foreach (DeviceEx realDevice in realDeviceList)
             {
@@ -61,14 +61,14 @@ namespace UeiBridge
                 setup.CubeUrl = realDevice.CubeUrl;
                 setup.IsBlockSensorActive = _mainConfig.Blocksensor.IsActive;
                 List<PerDeviceObjects> objs = BuildObjectsForDevice(realDevice, setup);
-                _deviceManagers.AddRange(objs);
+                _PerDeviceObjectsList.AddRange(objs);
             }
         }
 
         public void ActivateDownstreamOjects()
         {
             // activate downward (output) objects
-            foreach (PerDeviceObjects deviceObjects in _deviceManagers)
+            foreach (PerDeviceObjects deviceObjects in _PerDeviceObjectsList)
             {
                 if (null != deviceObjects)
                 {
@@ -85,7 +85,7 @@ namespace UeiBridge
         public void ActivateUpstreamObjects()
         {
             // activate upward (input) objects
-            foreach (PerDeviceObjects deviceObjects in _deviceManagers)
+            foreach (PerDeviceObjects deviceObjects in _PerDeviceObjectsList)
             {
                 deviceObjects?.InputDeviceManager?.OpenDevice();
                 System.Threading.Thread.Sleep(10);
@@ -99,7 +99,7 @@ namespace UeiBridge
             {
                 case "Simu-AO16":
                     {
-                        return Build_SimuAO16(realDevice, setup);
+                        return Build_SimuAO16_2(realDevice, setup);
                     }
                 case DeviceMap2.AO308Literal:
                     {
@@ -145,6 +145,29 @@ namespace UeiBridge
 
             // set ao308 as consumer of udp-reader
             if (_mainConfig.Blocksensor.IsActive == false)
+            {
+                var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
+                UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, ao308, ao308.InstanceName);
+                pd.UdpReader = ureader;
+            }
+            pd.OutputDeviceManager = ao308;
+
+            return new List<PerDeviceObjects>() { pd };
+        }
+        List<PerDeviceObjects> Build_SimuAO16_2(DeviceEx realDevice, DeviceSetup setup)
+        {
+            Session theSession = new Session();
+            string cubeUrl = $"{setup.CubeUrl}Dev{ setup.SlotNumber}/Ao0:7";
+            var c = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
+            System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
+            theSession.ConfigureTimingForSimpleIO();
+            var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()), theSession);
+
+            AO308OutputDeviceManager ao308 = new AO308OutputDeviceManager(setup as AO308Setup, aWriter);
+            PerDeviceObjects pd = new PerDeviceObjects(realDevice);
+
+            // set ao308 as consumer of udp-reader
+            //if (_mainConfig.Blocksensor.IsActive == false)
             {
                 var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
                 UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, ao308, ao308.InstanceName);
@@ -278,7 +301,7 @@ namespace UeiBridge
                 byte[] d403 = Library.StaticMethods.Make_Dio403_upstream_message();
                 blockSensor.Enqueue(d403);
 #endif
-                _deviceManagers.Add(pd);
+                _PerDeviceObjectsList.Add(pd);
             }
 
         }
@@ -294,7 +317,7 @@ namespace UeiBridge
                 return null;
             }
             BlockSensorManager result = null;
-            var outDevs = _deviceManagers.Where(d => (d.OutputDeviceManager != null) && d.OutputDeviceManager.DeviceName.StartsWith("AO-308")).Select(d => d.OutputDeviceManager);
+            var outDevs = _PerDeviceObjectsList.Where(d => (d.OutputDeviceManager != null) && d.OutputDeviceManager.DeviceName.StartsWith("AO-308")).Select(d => d.OutputDeviceManager);
             if (outDevs.Count() > 0) // if there is a ao308 card
             {
                 AO308OutputDeviceManager ao308 = outDevs.FirstOrDefault() as AO308OutputDeviceManager;
@@ -311,5 +334,20 @@ namespace UeiBridge
             return result;
         }
 
+        public void Dispose()
+        {
+            foreach( var entry in _PerDeviceObjectsList)
+            {
+                entry.UdpReader?.Dispose();
+                System.Threading.Thread.Sleep(50);
+                entry.OutputDeviceManager?.Dispose();
+                System.Threading.Thread.Sleep(50);
+
+                entry.InputDeviceManager?.Dispose();
+                System.Threading.Thread.Sleep(50);
+                entry.UdpWriter?.Dispose();
+
+            }
+        }
     }
 }

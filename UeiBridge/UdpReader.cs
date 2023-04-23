@@ -29,35 +29,15 @@ namespace UeiBridge
             this._msListeningiEp = listeninigEp;
             this._localNIC = (localNIC==null)? IPAddress.Any : localNIC;
             System.Diagnostics.Debug.Assert(instanceName.Length > 1);
+
+            _udpclient = new UdpClient();
         }
 
-        //internal void Start()
-        //{
-        //    //IPAddress mcastAddress;
-        //    //if (IPAddress.TryParse(Config.Instance.ReceiverMulticastAddress, out mcastAddress))
-        //    EstablishMulticastReceiver();
-        //}
-        
         public void Start()
         {
-            //int _port;
-            //IPAddress _multicastIPaddress;
-
-            // Store params
-            //_multicastIPaddress = multicastAddress;
-            //_port = port;
 
             try
             {
-
-                //IPAddress localIP = (localIPaddress == null) ? IPAddress.Any : localIPaddress;
-                //IPAddress localIP = IPAddress.Any;
-
-                // Create endpoints
-                //IPEndPoint _remoteEndPoint = new IPEndPoint(multicastAddress, multicastPort);
-
-                // Create and configure UdpClient
-                _udpclient = new UdpClient();
 
                 // The following three lines allow multiple clients on the same PC
                 _udpclient.ExclusiveAddressUse = false;

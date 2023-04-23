@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using NUnit.Framework;
 using UeiBridge;
-using UeiBridge.Types;
 using UeiBridge.Library;
 
 namespace UeiBridgeTest
@@ -13,19 +8,21 @@ namespace UeiBridgeTest
     [TestFixture]
     class BuilderTests
     {
-        //[Test]
-        //public void BuildSimuDeviceList()
-        //{
-        //    ProgramObjectsBuilder programBuilder = new ProgramObjectsBuilder();
-        //    if (!Config2.IsConfigFileExist())
-        //        Config2.Instance.BuildNewConfig(new string[] { "simu://" });
+        [Test]
+        public void BuildSimuDeviceList()
+        {
+            var c2 = Config2.LoadConfigFromFile(new System.IO.FileInfo("UeiSettings2.simu.config"));
 
-        //    List<DeviceEx> deviceList = UeiBridge.Program.BuildDeviceList(new List<string>( new string[] { "simu://" }));
+            ProgramObjectsBuilder programBuilder = new ProgramObjectsBuilder(c2);
 
-        //    programBuilder.CreateDeviceManagers( deviceList);
+            List<DeviceEx> deviceList = UeiBridge.Program.BuildDeviceList(new List<string>(new string[] { "simu://" }));
 
-        //    Assert.That(programBuilder.DeviceManagers.Count, Is.EqualTo(1));
-        //}
+            programBuilder.CreateDeviceManagers(deviceList);
+
+            Assert.That(programBuilder.PerDeviceObjectsList.Count, Is.EqualTo(1));
+
+            programBuilder.Dispose();
+        }
 
         [Test]
         public void ParseDevieUrl()
@@ -33,7 +30,6 @@ namespace UeiBridgeTest
             var ip1 = UeiBridge.Library.StaticMethods.CubeUriToIpAddress("pdna://192.168.100.2/");
             byte[] bytes1 = ip1.GetAddressBytes();
             var ip2 = UeiBridge.Library.StaticMethods.CubeUriToIpAddress("simu://");
-            //byte[] bytes2 = ip2.GetAddressBytes();
 
             Assert.Multiple(() => 
             { 
@@ -41,14 +37,6 @@ namespace UeiBridgeTest
                 Assert.That(bytes1[3], Is.EqualTo(2)); 
                 Assert.That(ip2, Is.Null);
             });
-        }
-
-        [Test]
-        public void buildtime()
-        {
-            var v = System.Reflection.Assembly.GetExecutingAssembly();
-            System.IO.FileInfo fi = new System.IO.FileInfo(v.Location);
-            var dt = fi.CreationTime;
         }
     }
 }

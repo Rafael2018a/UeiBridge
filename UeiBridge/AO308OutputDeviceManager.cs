@@ -175,15 +175,15 @@ namespace UeiBridge
         }
     }
 
-    internal class SimuAO16 : OutputDevice
+    internal class SimuAO16_notInUse : OutputDevice
     {
         public override string DeviceName => "Simu-AO16";
         log4net.ILog _logger = StaticMethods.GetLogger();
 
-        public SimuAO16(DeviceSetup deviceSetup) : base(deviceSetup as AO308Setup)
+        public SimuAO16_notInUse(DeviceSetup deviceSetup) : base(deviceSetup as AO308Setup)
         {
         }
-        public SimuAO16() : base(null) { }
+        public SimuAO16_notInUse() : base(null) { }
 
         public override bool OpenDevice()
         {

@@ -147,7 +147,10 @@ namespace UeiBridge
             _dataItemsQueue2.Add(null); // end task token
             Thread.Sleep(100);
             _dataItemsQueue2.CompleteAdding();
-            _logger.Debug($"Disposing {_deviceSetup.DeviceName}/Output, slot {_deviceSetup.SlotNumber}");
+            if (null != _deviceSetup)
+            {
+                _logger.Debug($"Disposing {_deviceSetup.DeviceName}/Output, slot {_deviceSetup.SlotNumber}");
+            }
             
         }
     }

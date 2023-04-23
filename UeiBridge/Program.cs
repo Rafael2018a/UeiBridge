@@ -99,18 +99,17 @@ namespace UeiBridge
                 return;
             }
 
-            _programBuilder = new ProgramObjectsBuilder( _mainConfig);
-
             List<DeviceEx> deviceList = BuildDeviceList(cubeUrlList);
             DisplayDeviceList(deviceList);
 
+            _programBuilder = new ProgramObjectsBuilder( _mainConfig);
             _programBuilder.CreateDeviceManagers(deviceList);
             _programBuilder.ActivateDownstreamOjects();
             _programBuilder.ActivateUpstreamObjects();
             _programBuilder.CreateBlockSensorManager(deviceList);
 
             // publish status to StatusViewer
-            Task.Factory.StartNew(() => PublishStatus_Task(_programBuilder.DeviceManagers));
+            Task.Factory.StartNew(() => PublishStatus_Task(_programBuilder.PerDeviceObjectsList));
 
             // self tests
             //StartDownwardsTest();
@@ -119,7 +118,7 @@ namespace UeiBridge
             Console.ReadKey();
 
             _logger.Info("Disposing....");
-            //DisposeProgramObjects2();
+            _programBuilder.Dispose();
 
             _logger.Info("Any key to exit...");
             Console.ReadKey();

@@ -244,7 +244,7 @@ namespace UeiBridge.Library
                     break;
                 default:
                     Console.WriteLine($"Config: Device {ueiDevice.DeviceName} not supported.");
-                    //result = new DeviceSetup(null, null, ueiDevice);
+                    result = new DeviceSetup(null, null, ueiDevice);
                     break;
             }
 
@@ -450,7 +450,8 @@ namespace UeiBridge.Library
                 List<UeiDeviceAdapter> rl = new List<UeiDeviceAdapter>();
                 foreach (UeiDaq.Device dev in devColl)
                 {
-                    if (dev == null) continue; // this for the last entry, which is null
+                    if (dev == null) 
+                        continue; // this for the last entry, which is null
                     rl.Add(new UeiDeviceAdapter(dev.GetDeviceName(), dev.GetIndex()));
                 }
                 csetupList.Add(new CubeSetup(rl, url));

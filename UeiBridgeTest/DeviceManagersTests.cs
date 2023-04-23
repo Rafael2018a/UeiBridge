@@ -15,7 +15,6 @@ namespace UeiBridgeTest
     class DeviceManagersTests
     {
         [Test]
-        //[Category("DeviceManagers")]
         public void BlockSensorTest()
         {
 

@@ -74,7 +74,7 @@ namespace UeiBridgeTest
             List<UeiDeviceAdapter> devList = new List<UeiDeviceAdapter>();
             devList.Add(new UeiDeviceAdapter("devicename1", 51));
             CubeSetup cs = new CubeSetup(devList, "<unknown-url>");
-            Assert.That( cs.DeviceSetupList.Count, Is.EqualTo(0));
+            Assert.That( cs.DeviceSetupList.Count, Is.EqualTo(1));
         }
         /// <summary>
         /// Verify that CubeSetup does generate device-setup for a known device.
@@ -95,7 +95,7 @@ namespace UeiBridgeTest
             Config2 c2 = new Config2();
             Config2 c3 = Config2.BuildDefaultConfig(new List<string>{ "simu://" });
             Assert.That( c3.AppSetup.StatusViewerEP, Is.Not.Null);
-            Assert.That( c3.CubeSetupList[0].DeviceSetupList.Count, Is.EqualTo(1)); // only one simulation device setup is defined.
+            Assert.That( c3.CubeSetupList[0].DeviceSetupList.Count, Is.EqualTo(11)); // only one simulation device setup is defined.
         }
 
         [Test]
