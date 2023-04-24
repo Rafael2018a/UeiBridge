@@ -162,18 +162,18 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
             theSession.ConfigureTimingForSimpleIO();
             var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()), theSession);
-
-            AO308OutputDeviceManager ao308 = new AO308OutputDeviceManager(setup as AO308Setup, aWriter);
+            System.Diagnostics.Debug.Assert(null != (setup as SimuAO16Setup));
+            AO16OutputDeviceManager ao16 = new AO16OutputDeviceManager(setup as SimuAO16Setup, aWriter);
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
 
             // set ao308 as consumer of udp-reader
             //if (_mainConfig.Blocksensor.IsActive == false)
             {
                 var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
-                UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, ao308, ao308.InstanceName);
+                UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, ao16, ao16.InstanceName);
                 pd.UdpReader = ureader;
             }
-            pd.OutputDeviceManager = ao308;
+            pd.OutputDeviceManager = ao16;
 
             return new List<PerDeviceObjects>() { pd };
         }
@@ -293,12 +293,15 @@ namespace UeiBridge
 
                 // add block sensor to device list
                 PerDeviceObjects pd = new PerDeviceObjects(blockSensor.DeviceName, -1, "no_cube");
+                pd.OutputDeviceManager = blockSensor;
+                pd.UdpReader = ureader;
+
 
                 blockSensor.OpenDevice();
                 ureader.Start();
 
 #if blocksim
-                byte[] d403 = Library.StaticMethods.Make_Dio403_upstream_message();
+                byte[] d403 = Library.StaticMethods.Make_Dio403_upstream_message( new byte[] { 0x5, 0, 0 });
                 blockSensor.Enqueue(d403);
 #endif
                 _PerDeviceObjectsList.Add(pd);

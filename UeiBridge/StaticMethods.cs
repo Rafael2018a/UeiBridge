@@ -103,8 +103,9 @@ namespace UeiBridge
             msg.UnitId = 0; // tbd
             msg.CardType = (byte)key;
             msg.PayloadBytes = payload;
+            msg.NominalLength = payload.Length + EthernetMessage._payloadOffset;
 
-            System.Diagnostics.Debug.Assert(msg.CheckValid());
+            System.Diagnostics.Debug.Assert(msg.InternalValidityTest());
 
             return msg;
         }

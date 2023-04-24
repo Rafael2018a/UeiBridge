@@ -109,6 +109,11 @@ namespace UeiBridge
                     break;
                 }
 
+                if (false == incomingMessage.InternalValidityTest())
+                {
+                    _logger.Warn("Invalid message. rejected");
+                    continue;
+                }
                 // verify card type
                 int cardId = DeviceMap2.GetCardIdFromCardName(this.DeviceName);
                 if ( cardId != incomingMessage.CardType)

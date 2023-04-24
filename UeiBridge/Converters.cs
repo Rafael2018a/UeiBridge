@@ -200,8 +200,8 @@ namespace UeiBridge
             double[] resultVector = new double[byteMessage.Length / sizeof(UInt16)];
             for (int chNum = 0; chNum < resultVector.Length; chNum++)
             {
-                UInt16 intval = BitConverter.ToUInt16(byteMessage, 2 * chNum);
-                resultVector[chNum] = Uint16ToPlusMinusVoltage(_peekVoltage_downstream, intval);
+                Int16 intval = BitConverter.ToInt16(byteMessage, 2 * chNum);
+                resultVector[chNum] = Int16ToPlusMinusVoltage(_peekVoltage_downstream, intval);
             }
             return resultVector;
         }
@@ -211,30 +211,72 @@ namespace UeiBridge
             byte[] resultVector = new byte[dVector.Length * 2];
             for (int chNum = 0; chNum < dVector.Length; chNum++)
             {
-                UInt16 u16 = PlusMinusVoltageToUInt16( _peekVoltage_upstream, dVector[chNum]);
-                byte[] bytes = BitConverter.GetBytes(u16);
+                Int16 i16 = PlusMinusVoltageToInt16( _peekVoltage_upstream, dVector[chNum]);
+                byte[] bytes = BitConverter.GetBytes(i16);
                 Array.Copy(bytes, 0, resultVector, 2*chNum, bytes.Length);
             }
             return resultVector;
         }
 
-        public static UInt16 PlusMinusVoltageToUInt16( double peekVoltage, double valueToConvert)
+        public static UInt16 PlusMinusVoltageToUInt16_old(double peekVoltage, double valueToConvert)
         {
             double v1 = (valueToConvert > peekVoltage) ? peekVoltage : valueToConvert;
             double v2 = (v1 < -peekVoltage) ? -peekVoltage : v1;
 
-            double v3 = (v2 + peekVoltage)/peekVoltage/2.0;
+            double v3 = (v2 + peekVoltage) / peekVoltage / 2.0;
             double max = Convert.ToDouble(UInt16.MaxValue);
-            UInt16 result = Convert.ToUInt16( v3 * max);
+            UInt16 result = Convert.ToUInt16(v3 * max);
             return result;
         }
-
-        public static double Uint16ToPlusMinusVoltage(double peekVoltage, UInt16 u16)
+        static double Int16MaxValue = Convert.ToDouble(Int16.MaxValue);
+        static double Int16MinValue = Convert.ToDouble(Int16.MinValue);
+        public static Int16 PlusMinusVoltageToInt16(double peekVoltage, double dVal)
         {
+            if (dVal >= 0)
+            {
+                // clip
+                double v1 = (dVal > peekVoltage) ? peekVoltage : dVal;
+                // norm
+                double v2 = v1 / peekVoltage;
+                // convert
+                Int16 result = Convert.ToInt16(v2 * Int16MaxValue);
+                return result;
+            }
+            else
+            {
+                // clip
+                double v1 = (dVal < -peekVoltage) ? -peekVoltage : dVal;
+                // norm
+                double v2 = v1 / peekVoltage * Int16MinValue;
+                // convert
+                Int16 result = Convert.ToInt16(-v2);
+                return result;
+
+            }
+        }
+
+        public static double Uint16ToPlusMinusVoltage_old(double peekVoltage, UInt16 u16)
+        {
+
             double d16 = Convert.ToDouble(u16);
             double dmax = Convert.ToDouble(UInt16.MaxValue);
-            double r = ( d16 / dmax * peekVoltage * 2.0);
-            return( r - peekVoltage);
+            double r = (d16 / dmax * peekVoltage * 2.0);
+            return (r - peekVoltage);
+        }
+        public static double Int16ToPlusMinusVoltage(double peekVoltage, Int16 i16)
+        {
+            if (i16 >= 0)
+            {
+                double d16 = Convert.ToDouble(i16);
+                double r = (d16 / Int16MaxValue * peekVoltage);
+                return r;
+            }
+            else
+            {
+                double d16 = Convert.ToDouble(i16);
+                double r = (d16 / Int16MinValue * peekVoltage);
+                return -r;
+            }
         }
     }
 }

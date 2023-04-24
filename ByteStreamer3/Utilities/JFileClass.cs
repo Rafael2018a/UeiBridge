@@ -8,15 +8,15 @@ namespace ByteStreamer3.Utilities
 {
     public class JFileHeader
     {
-        public bool EnablePlay { get; set; }
-        public string Title { get => title; set => title = value; }
+        //public bool EnablePlay { get; set; }
+        //public string Title { get => title; set => title = value; }
         public string ConverterName { get; set; } // 
         public int NumberOfCycles { get => numberOfCycles; set => numberOfCycles = value; }
         public int WaitStateMs { get => waitStateMs; set => waitStateMs = value; }
         public string DestIp { get => destIp; set => destIp = value; }
         public int DestPort { get => destPort; set => destPort = value; }
 
-        private string title = "Uei general card";
+        //private string title = "Uei general card";
         private int numberOfCycles = 20;
         private int waitStateMs = 100;
         private string destIp = "227.10.20.30";
@@ -28,8 +28,8 @@ namespace ByteStreamer3.Utilities
     }
     public class JFileBody
     {
-        public int CardId = 5;
-        public int SlotNumber = 0;
+        public int CardId = -1;
+        public int SlotNumber = -1;
         public int[] Payload { get; set; }
 
         public JFileBody(int[] payload)

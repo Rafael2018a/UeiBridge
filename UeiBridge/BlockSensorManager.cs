@@ -26,7 +26,7 @@ namespace UeiBridge
         DIO403Convert _digitalConverter = new DIO403Convert( null);
         IWriterAdapter<double[]> _analogWriter;
         int _subaddress = -1;
-        double[] _analogScan;
+        double[] _scanToEmit;
         BlockSensorSetup ThisDeviceSetup => _deviceSetup as BlockSensorSetup;
         
         bool _isInDispose = false;
@@ -54,8 +54,8 @@ namespace UeiBridge
             _blockSensorTable.Add(new BlockSensorEntry(serial++, "vref4", 0, 3));
             _blockSensorTable.Add(new BlockSensorEntry(serial++, "p5v3", 1, 3));
 
-            _analogScan = new double[writer.OriginSession.GetNumberOfChannels()];
-            Array.Clear(_analogScan, 0, _analogScan.Length);
+            _scanToEmit = new double[writer.OriginSession.GetNumberOfChannels()];
+            
         }
         public BlockSensorManager() : base(null) // empty c-tor for Activator.CreateInstance()
         {
@@ -118,16 +118,20 @@ namespace UeiBridge
                     return;
                 }
                 var selectedEntries = _blockSensorTable.Where(ent => ent.Subaddress == this._subaddress);
-                EthernetMessage downsteramMessage = EthernetMessage.CreateFromByteArray(byteMessage, MessageWay.downstream);
+                EthernetMessage downstreamEthMessage = EthernetMessage.CreateFromByteArray(byteMessage, MessageWay.downstream);
+                System.Diagnostics.Debug.Assert(downstreamEthMessage.InternalValidityTest());
+                System.Diagnostics.Debug.Assert(downstreamEthMessage.PayloadBytes.Length == 28);
                 var converter = new AnalogConverter(AI201100Setup.PeekVoltage_upstream, AO308Setup.PeekVoltage_downstream);
-                double[] scan = converter.DownstreamConvert(downsteramMessage.PayloadBytes) as double[];
+                double[] downstreamPayload = converter.DownstreamConvert(downstreamEthMessage.PayloadBytes) as double[];
+                Array.Clear(_scanToEmit, 0, _scanToEmit.Length);
                 foreach (var entry in selectedEntries)
                 {
-                    //int line = ;
-                    _analogScan[entry.chan_ain] = scan[entry.EntrySerial];
-                    // emit to analog card
-                    _analogWriter.WriteSingleScan(_analogScan);
+                    double voltageToEmit = downstreamPayload[entry.EntrySerial];
+                    int channelToEmit = entry.chan_ain;
+                    _scanToEmit[channelToEmit] = voltageToEmit;
                 }
+                // emit to analog card
+                _analogWriter.WriteSingleScan(_scanToEmit);
             }
         }
 

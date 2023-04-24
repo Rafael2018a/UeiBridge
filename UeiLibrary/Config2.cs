@@ -150,6 +150,7 @@ namespace UeiBridge.Library
         {
         }
     }
+    //public class AO16Setup : AO308Setup { }
     public class SimuAO16Setup : DeviceSetup
     {
         public SimuAO16Setup()

@@ -24,6 +24,7 @@ namespace UeiBridge.Library
         public byte[] PayloadBytes { get; set; }
         //public byte[] HeaderBytes { get; set; }
         //public int _debugSerial { get; set; } // serial number of message
+        public int NominalLength { get; set; }
 
         public const int _payloadOffset = 16;// _payloadOffset;
         public const int _cardTypeOffset = 5;// _cardTypeOffset;
@@ -37,7 +38,7 @@ namespace UeiBridge.Library
         /// </summary>
         byte[] ToByteArray()
         {
-            if (!CheckValid())
+            if (!InternalValidityTest())
                 return null;
 
             byte[] messageBytes = new byte[_payloadOffset + PayloadBytes.Length];
@@ -51,7 +52,7 @@ namespace UeiBridge.Library
             // message length
             byte[] twobytes = BitConverter.GetBytes(messageBytes.Length);
             Array.Copy(twobytes, 0, messageBytes, _lengthOffset, twobytes.Length);
-            
+
             // payload
             Array.Copy(PayloadBytes, 0, messageBytes, _payloadOffset, PayloadBytes.Length);
 
@@ -82,24 +83,19 @@ namespace UeiBridge.Library
         }
 
         /// <summary>
-        /// Message must have valid card type and payload
+        /// Internal Validity Test
         /// </summary>
         /// <returns></returns>
-        public bool CheckValid()
+        public bool InternalValidityTest()
         {
-            //if ((HeaderBytes == null) || (HeaderBytes.Length != _payloadOffset))
-            //    return false;
-
-            // card type exists
-            //if (!StaticMethods.DoesCardIdExist(CardType))
-            //    return false;
-
-            //if (!ProjectRegistry.Instance.DeviceKeys.ContainsKey(CardType))
-                //return false;
-
             // payload 
             if ((PayloadBytes==null) || (PayloadBytes.Length == 0))
                 return false;
+
+            if (PayloadBytes.Length != NominalLength-_payloadOffset)
+            {
+                return false;
+            }
 
             return true;
         }
@@ -128,6 +124,7 @@ namespace UeiBridge.Library
             resutlMessage.CardType = byteMessage[EthernetMessage._cardTypeOffset];
             resutlMessage.SerialChannelNumber = byteMessage[EthernetMessage._serailChannelOffset];
             resutlMessage.SlotNumber = byteMessage[EthernetMessage._slotNumberOffset];
+            resutlMessage.NominalLength = byteMessage.Length; 
 
             return resutlMessage;
         }
@@ -219,6 +216,7 @@ namespace UeiBridge.Library
             msg.CardType = cardId;
             msg.SlotNumber = slotNumber;
             msg.UnitId = unitId;
+            msg.NominalLength = payload.Length + _payloadOffset;
             return msg;
         }
 

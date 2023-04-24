@@ -108,15 +108,4 @@ namespace UeiBridgeTest
         }
     }
 
-    public class Person : IEquatable<Person>
-    {
-        int age;
-        public bool Equals(Person other)
-        {
-            if (this.age == other.age)
-                return true;
-            else
-                return false;
-        }
-    }
 }

@@ -12,38 +12,50 @@ namespace UeiBridgeTest
     [TestFixture]
     class ConvertersTest
     {
-        [TestCase(10.01)]
-        [TestCase(-10.01)]
-        [TestCase(9.0)]
-        [TestCase(-9.0)]
-        [TestCase(1.0)]
-        [TestCase(-1.0)]
-        public void TestValidVoltageConversion(double v)
-        {
-            UInt16 u16 = AnalogConverter.PlusMinusVoltageToUInt16(10.0, v);
-            double v1 = AnalogConverter.Uint16ToPlusMinusVoltage(10.0, u16);
-            Assert.That(v1 - v, Is.InRange(-0.1, 0.1));
-        }
-        [TestCase(20.0)]
-        public void TestInvalidVoltageConversion(double v)
-        {
-            double peek = 10;
-            UInt16 u16 = AnalogConverter.PlusMinusVoltageToUInt16(peek, v);
-            double v1 = AnalogConverter.Uint16ToPlusMinusVoltage(peek, u16);
-            Assert.That(v1 - peek, Is.InRange(-0.1, 0.1));
-        }
+        //[TestCase(10.01)]
+        //[TestCase(-10.01)]
+        //[TestCase(9.0)]
+        //[TestCase(-9.0)]
+        //[TestCase(1.0)]
+        //[TestCase(-1.0)]
+        //public void TestValidVoltageConversion(double v)
+        //{
+        //    UInt16 u16 = AnalogConverter.PlusMinusVoltageToUInt16(10.0, v);
+        //    double v1 = AnalogConverter.Uint16ToPlusMinusVoltage(10.0, u16);
+        //    Assert.That(v1 - v, Is.InRange(-0.1, 0.1));
+        //}
+        //[TestCase(20.0)]
+        //public void TestInvalidVoltageConversion(double v)
+        //{
+        //    double peek = 10;
+        //    UInt16 u16 = AnalogConverter.PlusMinusVoltageToUInt16(peek, v);
+        //    double v1 = AnalogConverter.Uint16ToPlusMinusVoltage(peek, u16);
+        //    Assert.That(v1 - peek, Is.InRange(-0.1, 0.1));
+        //}
 
         [Test]
-        public void AnalogConverterDownstreamTest()
+        public void AnalogConverterDownstreamTest() // short to double
         {
             var c = new AnalogConverter(AI201100Setup.PeekVoltage_upstream, AO308Setup.PeekVoltage_downstream);
-            UInt16 d1v_ds = Convert.ToUInt16(UInt16.MaxValue / AO308Setup.PeekVoltage_downstream / 2.0);
-            UInt16 zero_v = Convert.ToUInt16(d1v_ds * AO308Setup.PeekVoltage_downstream);
-            byte[] a = new byte[2];
-            Array.Copy(BitConverter.GetBytes(zero_v), a, 2);
-            double[] d = c.DownstreamConvert(a);
+            List<Int16> Int16List = new List<short>();
+            for(int val=0; val < Int16.MaxValue; val+= Int16.MaxValue/10)
+            {
+                Int16List.Add(  Convert.ToInt16( val));
+            }
+            byte[] byteArray = new byte[Int16List.Count * 2];
+            for(int i = 0; i<Int16List.Count; i++)
+            {
+                byte[] t = BitConverter.GetBytes(Int16List[i]);
+                Array.Copy(t, 0, byteArray, i * 2, 2);
+            }
+            double[] d = c.DownstreamConvert(byteArray);
 
-            Assert.That(d[0], Is.InRange(-0.1, 0.1));
+            double dval = 0;
+            for (int i = 0; i < Int16List.Count; i++)
+            {
+                Assert.That(d[i], Is.InRange(dval - 0.1, dval + 0.1));
+                dval += 1.0;
+            }
         }
 
         [Test]
@@ -63,5 +75,33 @@ namespace UeiBridgeTest
             });
         }
 
+        [Test]
+        public void VoltageOutputConvertTest()
+        {
+            double dp = AnalogConverter.Int16ToPlusMinusVoltage(10.0, 32767);
+            Assert.That(dp, Is.InRange(9.9, 10.1));
+
+            double dn = AnalogConverter.Int16ToPlusMinusVoltage(10.0, -32767);
+            Assert.That(dn, Is.InRange(-10.1, -9.9));
+
+            double d = AnalogConverter.Int16ToPlusMinusVoltage(10.0, 1);
+            Assert.That(d, Is.InRange(-0.1, 0.1));
+
+        }
+        [Test]
+        public void VoltageinputConvertTest()
+        {
+            Int16 i16 = AnalogConverter.PlusMinusVoltageToInt16(12.0, 12.0);
+            Assert.That(i16, Is.InRange(32760, 32770));
+            // check clipping
+            i16 = AnalogConverter.PlusMinusVoltageToInt16(12.0, 12.01);
+            Assert.That(i16, Is.InRange(32760, 32770));
+
+            i16 = AnalogConverter.PlusMinusVoltageToInt16(12.0, -12.0);
+            Assert.That(i16, Is.InRange(-32770, -32760));
+
+            i16 = AnalogConverter.PlusMinusVoltageToInt16(12.0, -12.01);
+            Assert.That(i16, Is.InRange(-32770, -32760));
+        }
     }
 }

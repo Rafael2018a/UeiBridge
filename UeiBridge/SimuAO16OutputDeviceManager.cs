@@ -7,29 +7,7 @@ using UeiBridge.Library;
 
 namespace UeiBridge
 {
-    public class AnalogWriteAdapter : IWriterAdapter<double[]>
-    {
-        AnalogScaledWriter _ueiAnalogWriter;
-        Session _originSession;
-
-        public AnalogWriteAdapter(AnalogScaledWriter analogWriter, Session originSession)
-        {
-            this._ueiAnalogWriter = analogWriter;
-            _originSession = originSession;
-        }
-
-        public Session OriginSession => _originSession;
-
-        public void WriteSingleScan(double[] scan)
-        {
-            _ueiAnalogWriter.WriteSingleScan(scan);
-        }
-    }
-    /// <summary>
-    /// from the manual:
-    /// ** 8-Channel, 16-bit, ±10V Analog Output Board **
-    /// </summary>
-    public class AO308OutputDeviceManager : OutputDevice
+    public class AO16OutputDeviceManager : OutputDevice
     {
         #region === publics ====
         public override string DeviceName => DeviceMap2.AO308Literal;// "AO-308";
@@ -39,44 +17,39 @@ namespace UeiBridge
         #region === privates ===
         IWriterAdapter<double[]> _analogWriter;
         log4net.ILog _logger = StaticMethods.GetLogger();
-        //const string _channelsString = "Ao0:7";
-        //Session _deviceSession;
         System.Collections.Generic.List<ViewerItem<double>> _lastScanList;
         bool _inDisposeState = false;
         private IConvert2<double[]> _attachedConverter;
         #endregion
 
-        AO308Setup ThisDeviceSetup => _deviceSetup as AO308Setup;
+        SimuAO16Setup ThisDeviceSetup;
 
-        public AO308OutputDeviceManager(AO308Setup deviceSetup, IWriterAdapter<double[]> analogWriter) : base(deviceSetup)
+        public AO16OutputDeviceManager(SimuAO16Setup deviceSetup, IWriterAdapter<double[]> analogWriter) : base(deviceSetup)
         {
             _analogWriter = analogWriter;
+            ThisDeviceSetup = deviceSetup as SimuAO16Setup;
+            if (null == ThisDeviceSetup)
+            {
+                throw new ArgumentNullException();
+            }
         }
 
-        public AO308OutputDeviceManager() : base(null) { }
+        public AO16OutputDeviceManager() : base(null) { }
 
         public override bool OpenDevice()
         {
             try
             {
-                //_attachedConverter = StaticMethods.CreateConverterInstance(_deviceSetup);
                 _attachedConverter = new AnalogConverter(AI201100Setup.PeekVoltage_upstream, AO308Setup.PeekVoltage_downstream);
 
-                //string cubeUrl = $"{_deviceSetup.CubeUrl}Dev{_deviceSetup.SlotNumber}/{_channelsString}";
-
-                //_deviceSession = new Session();
-                //var c = _deviceSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
-                //System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
-                //_deviceSession.ConfigureTimingForSimpleIO();
-                //_writer = new AnalogWriteAdapter(new AnalogScaledWriter(_deviceSession.GetDataStream()), _deviceSession.GetNumberOfChannels());
                 int numOfCh = _analogWriter.OriginSession.GetNumberOfChannels();
                 System.Diagnostics.Debug.Assert(numOfCh == 8);
-                _lastScanList = new System.Collections.Generic.List<ViewerItem<double>>(new ViewerItem<double>[ numOfCh]);
+                _lastScanList = new System.Collections.Generic.List<ViewerItem<double>>(new ViewerItem<double>[numOfCh]);
 
                 Task.Factory.StartNew(() => OutputDeviceHandler_Task());
 
                 var range = _analogWriter.OriginSession.GetDevice().GetAORanges();
-                if ( ThisDeviceSetup.IsBlockSensorActive) 
+                if (ThisDeviceSetup.IsBlockSensorActive)
                 {
                     _logger.Info($"Init success: {InstanceName} . { numOfCh} channels. Range {range[0].minimum},{range[0].maximum}V. Listening on BlockSensor");
                 }
@@ -101,11 +74,6 @@ namespace UeiBridge
             {
                 return;
             }
-            if (em.NominalLength>32)
-            {
-                _logger.Warn($"Incoming message rejected. Payload length too large - {em.NominalLength}");
-                return;
-            }
             // write to device
             // ===============
             var p = _attachedConverter.DownstreamConvert(em.PayloadBytes);
@@ -124,7 +92,7 @@ namespace UeiBridge
 
         public override string[] GetFormattedStatus(TimeSpan interval)
         {
-            
+            // tbd: must lock. collection modified outside ......
             System.Text.StringBuilder formattedString = new System.Text.StringBuilder("Output voltage: ");
             lock (_lastScanList)
             {
@@ -133,10 +101,10 @@ namespace UeiBridge
                 //_lastScanList[0].timeToLive -= interval;
                 //if (null != _lastScanList)
 
-                for (int entryIndex=0; entryIndex<_lastScanList.Count; entryIndex++)
+                for (int entryIndex = 0; entryIndex < _lastScanList.Count; entryIndex++)
                 {
                     formattedString.Append("  ");
-                    if ( _lastScanList[entryIndex] == null)
+                    if (_lastScanList[entryIndex] == null)
                     {
                         formattedString.Append("-.-");
                     }
@@ -168,10 +136,6 @@ namespace UeiBridge
             _inDisposeState = true;
             base.Dispose();
 
-            //if (null != _writer)
-            //{
-            //    _writer.Dispose();
-            //}
             if (null != _analogWriter.OriginSession)
             {
                 if (_analogWriter.OriginSession.IsRunning())
@@ -183,30 +147,4 @@ namespace UeiBridge
         }
     }
 
-    internal class SimuAO16_notInUse : OutputDevice
-    {
-        public override string DeviceName => "Simu-AO16";
-        log4net.ILog _logger = StaticMethods.GetLogger();
-
-        public SimuAO16_notInUse(DeviceSetup deviceSetup) : base(deviceSetup as AO308Setup)
-        {
-        }
-        public SimuAO16_notInUse() : base(null) { }
-
-        public override bool OpenDevice()
-        {
-            _logger.Info($"Init success: {InstanceName}");
-            return true;
-        }
-
-        protected override void HandleRequest(EthernetMessage request)
-        {
-            throw new NotImplementedException();
-        }
-
-        public override string[] GetFormattedStatus(TimeSpan interval)
-        {
-            return new string[] { "Simu-Ao16" };
-        }
-    }
 }

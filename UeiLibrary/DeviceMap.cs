@@ -61,6 +61,7 @@ namespace UeiBridge.Library
         public const string AI201Literal = "AI-201-100";
         public const string SL508Literal = "SL-508-892";
         public const string BlocksensorLiteral = "BlockSensor";
+        public const string AO16Literal = "Simu-AO16";
 
         static List<DeviceItem> _deviceItemList = new List<DeviceItem>();
         static DeviceMap2()

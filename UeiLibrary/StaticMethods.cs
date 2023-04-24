@@ -57,14 +57,14 @@ namespace UeiBridge.Library
 
             return msg.GetByteArray(MessageWay.downstream);
         }
-        public static byte[] Make_Dio403_upstream_message()
+        public static byte[] Make_Dio403_upstream_message( byte [] payload)
         {
             int id = DeviceMap2.GetCardIdFromCardName(DeviceMap2.DIO403Literal);
-            var b = EthernetMessage.CreateMessage(id, 0, 0, new byte[] { 0x5, 0, 0 });
+            var b = EthernetMessage.CreateMessage(id, 0, 0, payload); //new byte[] { 0x5, 0, 0 });
             return b.GetByteArray(MessageWay.upstream);
         }
 
-        public static EthernetMessage Make_BlockSensor_downstream_message(UInt16[] payload)
+        public static EthernetMessage Make_BlockSensor_downstream_message(Int16[] payload)
         {
             if (payload.Length != 14) throw new ArgumentException();
 

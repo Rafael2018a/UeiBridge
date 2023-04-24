@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 using System.Net;
 using NUnit.Framework;
 using ByteStreamer3;
+using System.IO;
+using Newtonsoft.Json;
+using ByteStreamer3.Utilities;
 
 namespace UeiBridgeTest
 {
@@ -46,6 +49,26 @@ namespace UeiBridgeTest
             string theMessage = Encoding.ASCII.GetString(consumer.receivedMessage);
 
             Assert.That(str, Is.EqualTo(theMessage));
+        }
+        [Test]
+        public void DeserializeObjectTest()
+        {
+
+            FileInfo _playFile = new FileInfo(@"c:\Users\Rafi\source\repos\UeiBridge\ByteStreamer3\SampleJson\sample for unit test.json");
+
+            using (StreamReader reader = _playFile.OpenText())
+            {
+                JFileClass jFileObject = JsonConvert.DeserializeObject<JFileClass>(reader.ReadToEnd());
+                Assert.Multiple(() =>
+                { 
+                    Assert.That(jFileObject, Is.Not.Null);
+                    Assert.That(jFileObject.Header, Is.Not.Null);
+                    Assert.That(jFileObject.Header.ConverterName, Is.Not.Null);
+                });
+                    //
+            }
+
+            
         }
     }
 
