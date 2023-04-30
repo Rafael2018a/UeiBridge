@@ -14,7 +14,7 @@ using System.Net;
 /// </summary>
 namespace UeiBridge.Library
 {
-    public class EndPoint: IEquatable<EndPoint>
+    public class EndPoint : IEquatable<EndPoint>
     {
         public string Address;
         public int Port;
@@ -49,8 +49,9 @@ namespace UeiBridge.Library
     {
         [XmlAttribute("Port")]
         public string portname = "ComX";
-        
+
         public UeiDaq.SerialPortMode mode = UeiDaq.SerialPortMode.RS232;
+
         [XmlElement("Baud")]
         public UeiDaq.SerialPortSpeed Baudrate { get; set; }
 
@@ -73,7 +74,7 @@ namespace UeiBridge.Library
         public string SelectedNicForMCast = "221.109.251.103";
         public EndPoint StatusViewerEP = new EndPoint("239.10.10.17", 5093);
     }
-    public class DeviceSetup: IEquatable<DeviceSetup>
+    public class DeviceSetup : IEquatable<DeviceSetup>
     {
         [XmlAttribute("Slot")]
         public int SlotNumber;
@@ -85,7 +86,22 @@ namespace UeiBridge.Library
         [XmlIgnore]
         public string CubeUrl { get; set; } // tbd. this is a patch.
         [XmlIgnore]
-        public int CubeId { get; set; } // lsb of cube address
+        public int CubeId // lsb of cube address
+        {
+            get
+            {
+                int result = -1;
+                if (null != CubeUrl)
+                {
+                    IPAddress ipa = Config2.CubeUriToIpAddress(CubeUrl);
+                    if (null != ipa)
+                    {
+                        result = ipa.GetAddressBytes()[3];
+                    }
+                }
+                return result;
+            }
+        }
         [XmlIgnore]
         public bool IsBlockSensorActive { get; set; }
 
@@ -119,8 +135,8 @@ namespace UeiBridge.Library
             //public EndPoint DestEndPoint;
             bool f1 = this.SlotNumber == other.SlotNumber;
             bool f2 = this.DeviceName == other.DeviceName;
-            bool f3 = (this.LocalEndPoint==null)? true : this.LocalEndPoint.Equals(other.LocalEndPoint);
-            bool f4 = (this.DestEndPoint==null)? true:  this.DestEndPoint.Equals(other.DestEndPoint);
+            bool f3 = (this.LocalEndPoint == null) ? true : this.LocalEndPoint.Equals(other.LocalEndPoint);
+            bool f4 = (this.DestEndPoint == null) ? true : this.DestEndPoint.Equals(other.DestEndPoint);
 
             return f1 && f2 && f3 && f4;
         }
@@ -164,7 +180,7 @@ namespace UeiBridge.Library
     {
         [XmlIgnore]
         public static double PeekVoltage_upstream => 12.0;
-        public AI201100Setup( EndPoint destEndPoint, UeiDeviceAdapter device) : base( null, destEndPoint, device)
+        public AI201100Setup(EndPoint destEndPoint, UeiDeviceAdapter device) : base(null, destEndPoint, device)
         {
         }
         protected AI201100Setup()
@@ -192,53 +208,53 @@ namespace UeiBridge.Library
         {
         }
     }
-    public class SL508892Setup: DeviceSetup
+    public class SL508892Setup : DeviceSetup
     {
-        public SerialChannel[] Channels;
-
+        public List<SerialChannel> Channels;
+        const int _numberOfSerialChannels = 8;
         public SL508892Setup()
         {
         }
 
         public SL508892Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceAdapter device) : base(localEndPoint, destEndPoint, device)
         {
-            Channels = new SerialChannel[8];
+            Channels = new List<SerialChannel>();
 
-            for (int ch = 0; ch < Channels.Length; ch++)
+            for (int ch = 0; ch < _numberOfSerialChannels; ch++)
             {
-                Channels[ch] = new SerialChannel($"Com{ch}", UeiDaq.SerialPortSpeed.BitsPerSecond57600);
+                Channels.Add( new SerialChannel($"Com{ch}", UeiDaq.SerialPortSpeed.BitsPerSecond57600));
             }
         }
     }
 
     public static class ConfigFactory
     {
-        static int portNumber=50035;
+        static int portNumber = 50035;
         public static string LocalIP => "227.3.1.10";
         public static string RemoteIp => "227.2.1.10";
 
-        public static DeviceSetup DeviceSetupFactory( UeiDeviceAdapter ueiDevice)
+        public static DeviceSetup DeviceSetupFactory(UeiDeviceAdapter ueiDevice)
         {
-            DeviceSetup result=null;
+            DeviceSetup result = null;
             if (null == ueiDevice.DeviceName)
                 throw new ArgumentNullException("device name");
 
             switch (ueiDevice.DeviceName)
             {
                 case DeviceMap2.AO308Literal:
-                    result = new AO308Setup( new EndPoint( LocalIP, portNumber++), ueiDevice);
+                    result = new AO308Setup(new EndPoint(LocalIP, portNumber++), ueiDevice);
                     break;
                 case DeviceMap2.DIO403Literal:
-                    result = new DIO403Setup(new EndPoint( LocalIP, portNumber++), new EndPoint(RemoteIp, portNumber++), ueiDevice);
+                    result = new DIO403Setup(new EndPoint(LocalIP, portNumber++), new EndPoint(RemoteIp, portNumber++), ueiDevice);
                     break;
                 case DeviceMap2.DIO470Literal:
-                    result = new DIO470Setup(new EndPoint( LocalIP, portNumber++), ueiDevice);
+                    result = new DIO470Setup(new EndPoint(LocalIP, portNumber++), ueiDevice);
                     break;
                 case DeviceMap2.AI201Literal:
-                    result = new AI201100Setup(new EndPoint( RemoteIp, portNumber++), ueiDevice);
+                    result = new AI201100Setup(new EndPoint(RemoteIp, portNumber++), ueiDevice);
                     break;
                 case DeviceMap2.SL508Literal:
-                    result = new SL508892Setup(new EndPoint( LocalIP, portNumber++), new EndPoint(RemoteIp, portNumber++), ueiDevice);
+                    result = new SL508892Setup(new EndPoint(LocalIP, portNumber++), new EndPoint(RemoteIp, portNumber++), ueiDevice);
                     break;
                 case "Simu-AO16":
                     result = new SimuAO16Setup(new EndPoint(LocalIP, portNumber++), ueiDevice);
@@ -253,13 +269,13 @@ namespace UeiBridge.Library
         }
     }
 
-    public class CubeSetup: IEquatable<CubeSetup>
+    public class CubeSetup : IEquatable<CubeSetup>
     {
         //const int tbd = 7;
         [XmlAttribute("Url")]
         public string CubeUrl { get; set; }
         [XmlIgnore]
-        public int CubeNumber=0;
+        public int CubeNumber = 0;
         public List<DeviceSetup> DeviceSetupList = new List<DeviceSetup>();
 
         //private List<Device> _ueiDeviceList;
@@ -280,14 +296,14 @@ namespace UeiBridge.Library
                 var dv = ConfigFactory.DeviceSetupFactory(dev);
                 if (null != dv)
                 {
-                    DeviceSetupList.Add( dv);
+                    DeviceSetupList.Add(dv);
                 }
             }
         }
 
         public bool Equals(CubeSetup other)
         {
-            bool f1 = this.CubeUrl.Equals( other.CubeUrl);
+            bool f1 = this.CubeUrl.Equals(other.CubeUrl);
             bool f2 = this.DeviceSetupList.SequenceEqual(other.DeviceSetupList);
             return f1 && f2;
         }
@@ -337,7 +353,7 @@ namespace UeiBridge.Library
     [XmlInclude(typeof(BlockSensorSetup))]
     [XmlInclude(typeof(ValidValuesClass))]
     [XmlInclude(typeof(SimuAO16Setup))]
-    public class Config2: IEquatable<Config2>
+    public class Config2 : IEquatable<Config2>
     {
         //private static Config2 _instance;
         //private static object lockObject = new object();
@@ -416,33 +432,29 @@ namespace UeiBridge.Library
         /// Load config from file
         /// </summary>
         /// <returns></returns>
-        public static Config2 LoadConfigFromFile( FileInfo configFile)
+        public static Config2 LoadConfigFromFile(FileInfo configFile)
         {
             var serializer = new XmlSerializer(typeof(Config2));
             Config2 resultConfig = null;
 
+            using (StreamReader sr = configFile.OpenText())
             {
-                //try
+                resultConfig = serializer.Deserialize(sr) as Config2;
+                if (null != resultConfig)
                 {
-                    using (StreamReader sr = configFile.OpenText())
+                    foreach (CubeSetup cube in resultConfig.CubeSetupList)
                     {
-                        resultConfig = serializer.Deserialize(sr) as Config2;
+                        foreach (DeviceSetup device in cube.DeviceSetupList)
+                        {
+                            device.CubeUrl = cube.CubeUrl;
+                            device.IsBlockSensorActive = resultConfig.Blocksensor.IsBlockSensorActive;
+                        }
                     }
-                    return resultConfig;
                 }
-                //catch (Exception ex)
-                //{
-                //    Console.WriteLine($"Failed to read settings file {configFile.FullName}. {ex.Message}");
-                //    Console.WriteLine($"Using default settings");
-                //    Console.WriteLine("For auto-create of default settings file, delete existing file and run program.");
-                //    return null;
-                //}
             }
-
-            return null;
-            
+            return resultConfig;
         }
-        public static Config2 BuildDefaultConfig( List<string> cubeUrlList) 
+        public static Config2 BuildDefaultConfig(List<string> cubeUrlList)
         {
             List<CubeSetup> csetupList = new List<CubeSetup>();
             foreach (var url in cubeUrlList)
@@ -451,7 +463,7 @@ namespace UeiBridge.Library
                 List<UeiDeviceAdapter> rl = new List<UeiDeviceAdapter>();
                 foreach (UeiDaq.Device dev in devColl)
                 {
-                    if (dev == null) 
+                    if (dev == null)
                         continue; // this for the last entry, which is null
                     rl.Add(new UeiDeviceAdapter(dev.GetDeviceName(), dev.GetIndex()));
                 }
@@ -463,11 +475,11 @@ namespace UeiBridge.Library
 
         }
 
-        public DeviceSetup GetSetupEntryForDevice(int cubeId, string deviceName)
-        {
-            var ds = this.CubeSetupList[0].DeviceSetupList.Where(i => i.DeviceName == deviceName);
-            return ds.FirstOrDefault();
-        }
+        //public DeviceSetup GetSetupEntryForDevice(int cubeId, string deviceName)
+        //{
+        //    var ds = this.CubeSetupList[0].DeviceSetupList.Where(i => i.DeviceName == deviceName);
+        //    return ds.FirstOrDefault();
+        //}
         public DeviceSetup GetSetupEntryForDevice(string cubeUrl, int slotNumber)
         {
             if (this.CubeSetupList == null)
@@ -476,25 +488,37 @@ namespace UeiBridge.Library
             }
             var cube = this.CubeSetupList.Where(e => e.CubeUrl == cubeUrl);
             var selectedCube = cube.FirstOrDefault();
-            if (null==selectedCube)
+            if (null == selectedCube)
             {
                 return null;
             }
             var theSetups = selectedCube.DeviceSetupList.Where(d => d.SlotNumber == slotNumber);
             DeviceSetup result = theSetups.FirstOrDefault();
-            result.CubeUrl = selectedCube.CubeUrl;
-            IPAddress ip = StaticMethods.CubeUriToIpAddress(selectedCube.CubeUrl);
-            result.CubeId = (null == ip)? -1: ip.GetAddressBytes()[3];
+            //result.CubeUrl = selectedCube.CubeUrl;
+            //IPAddress ip = CubeUriToIpAddress(selectedCube.CubeUrl);
+            //result.CubeId = (null == ip)? -1: ip.GetAddressBytes()[3];
             return result;
         }
 
-        public void SaveAs(string filename)
+        public void SaveAs( FileInfo fileToSave, bool overwrite)
         {
+            string fn = fileToSave.FullName;
+            if (fileToSave.Exists)
+            {
+                if (overwrite)
+                {
+                    fileToSave.Delete();
+                }
+                else
+                {
+                    return;
+                }
+            }
+            FileInfo newfile = new FileInfo(fn);
             var serializer = new XmlSerializer(typeof(Config2));
-            using (var writer = new StreamWriter(filename))
+            using (var writer = newfile.OpenWrite()) // new StreamWriter(filename))
             {
                 serializer.Serialize(writer, this);
-               
             }
         }
 
@@ -504,6 +528,23 @@ namespace UeiBridge.Library
 
             return CubeSetupList.SequenceEqual(other.CubeSetupList);
         }
+
+        public static System.Net.IPAddress CubeUriToIpAddress(string url)
+        {
+            Uri u1 = new Uri(url);
+            var a1 = u1.Host;
+            System.Net.IPAddress result;
+            try
+            {
+                result = System.Net.IPAddress.Parse(u1.Host);
+            }
+            catch (FormatException)
+            {
+                result = null;// System.Net.IPAddress.None;
+            }
+            return result;
+        }
+
     }
     public class ValidValuesClass
     {

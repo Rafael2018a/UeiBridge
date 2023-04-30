@@ -8,22 +8,37 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <GroupBox>
         <GroupBox.Header>
-            <TextBlock Grid.Row="0" Text="Specific settings" FontSize="16" FontWeight="Bold"/>
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Grid.Row="0" Text="Serial port settings" FontSize="16" FontWeight="Bold"/>
+                <ContentControl Width="10"/>
+                <ComboBox x:Name="ChannelListComboBox" Grid.Row="0" Grid.Column="0" ItemsSource="{Binding ChannelList}" SelectedIndex="{Binding SelectedPortIndex}"/>
+            </StackPanel>
         </GroupBox.Header>
-        <Grid ShowGridLines="True">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+        <Grid ShowGridLines="False">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <!--<ComboBox x:Name="ChannelListComboBox" Grid.Row="0" Grid.Column="0" ItemsSource="{Binding ChannelList}" SelectedIndex="{Binding SelectedPortIndex}"/>-->
+            <StackPanel Grid.Row="1" Grid.Column="0">
+                <TextBlock Text="Mode" FontSize="14"/>
+                <ComboBox x:Name="ModeCombo" SelectedItem="{Binding SerialMode}"/>
+                <TextBlock Text="Baud rate"/>
+                <ComboBox x:Name="BaudCombo" SelectedItem="{Binding Baudrate}"/>
+                <TextBlock Text="Parity"/>
+                <TextBox Text="9600" Width="100"/>
+                <TextBlock Text="Stop bits"/>
+                <TextBox Text="9600" Width="100"/>
+            </StackPanel>
             <!--<TextBlock Grid.Row="0" Grid.Column="0" Text="SL-508" FontSize="18"/>-->
             <!--<TextBlock Grid.Row="1" Grid.Column="1" Text="SL-508" FontSize="18"/>-->
-            <Image Grid.Row="1" Grid.Column="1" Source="/Images/uei_product_io_dna_sl_508.jpg" Height="auto" />
-          
+            <Image Grid.Row="1" Grid.Column="1" Source="/Images/uei_product_io_dna_sl_508.jpg" Height="100" />
 
-    </Grid>
+
+        </Grid>
     </GroupBox>
 </UserControl>

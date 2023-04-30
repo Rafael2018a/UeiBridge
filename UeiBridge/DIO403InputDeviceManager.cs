@@ -15,8 +15,8 @@ namespace UeiBridge
         DigitalReader _reader;
         log4net.ILog _logger = StaticMethods.GetLogger();
         public override string DeviceName => "DIO-403";
-        IConvert _attachedConverter;
-        public override IConvert AttachedConverter => _attachedConverter;
+        IConvert2<UInt16[]> _attachedConverter;
+        //public override IConvert AttachedConverter => _attachedConverter;
         DIO403Setup _thisDeviceSetup;
         public ISend<SendObject> TargetConsumer { get => _targetConsumer; set => _targetConsumer = value; }
         UInt16[] _lastScan;
@@ -24,7 +24,7 @@ namespace UeiBridge
         public DIO403InputDeviceManager( ISend<SendObject> targetConsumer, DeviceSetup setup): base(targetConsumer, setup)
         {
             _channelsString = "Di3:5";
-            _attachedConverter = StaticMethods.CreateConverterInstance( setup);
+            _attachedConverter = new DigitalConverter();// StaticMethods.CreateConverterInstance( setup);
             _thisDeviceSetup = setup as DIO403Setup;
 
             System.Diagnostics.Debug.Assert(null != setup);
@@ -92,7 +92,7 @@ namespace UeiBridge
                 _lastScan = _reader.ReadSingleScanUInt16();
                 System.Diagnostics.Debug.Assert(_lastScan != null);
                 System.Diagnostics.Debug.Assert(_lastScan.Length == _deviceSession.GetNumberOfChannels(), "wrong number of channels");
-                byte[] payload = this.AttachedConverter.DeviceToEth(_lastScan);
+                byte[] payload = _attachedConverter.UpstreamConvert(_lastScan);
                 var em = StaticMethods.BuildEthernetMessageFromDevice( payload, _thisDeviceSetup);
 
                 _targetConsumer.Send(new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), em.GetByteArray( MessageWay.upstream)));

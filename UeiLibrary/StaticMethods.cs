@@ -11,7 +11,7 @@ namespace UeiBridge.Library
     // Methods in the class SHOULD NOT depend on any other project class
     public class StaticMethods
     {
-        public static System.Net.IPAddress CubeUriToIpAddress(string url)
+        public static System.Net.IPAddress CubeUriToIpAddress_moved(string url)
         {
             Uri u1 = new Uri(url);
             var a1 = u1.Host;

@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:UeiBridgeSetup"
         xmlns:views="clr-namespace:UeiBridgeSetup.Views"
         mc:Ignorable="d"
-        Title="MainWindow" Height="700" Width="1134">
+        Title="MainWindow" Height="700" Width="1134" Closing="Window_Closing">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="30"/>
@@ -20,7 +20,7 @@
             <MenuItem Header="_File">
                 <MenuItem Header="Load setup file" Command="{Binding OpenFileCommand}"/>
                 <!--<MenuItem Header="Open default file" Command="{Binding AddCommand}" CommandParameter="param"/>-->
-                <MenuItem Header="{Binding MenuItemHeader_Save}"/>
+                <MenuItem Header="{Binding MenuItemHeader_Save}" Command="{Binding SaveFileCommand}" />
                 <MenuItem Header="{Binding MenuItemHeader_SaveAs}"/>
                 <MenuItem Header="Close"/>
             </MenuItem>

@@ -58,8 +58,8 @@ namespace UeiBridge
                 }
 
                 // build manager(s)
-                setup.CubeUrl = realDevice.CubeUrl;
-                setup.IsBlockSensorActive = _mainConfig.Blocksensor.IsActive;
+                //setup.CubeUrl = realDevice.CubeUrl;
+                //setup.IsBlockSensorActive = _mainConfig.Blocksensor.IsActive;
                 List<PerDeviceObjects> objs = BuildObjectsForDevice(realDevice, setup);
                 _PerDeviceObjectsList.AddRange(objs);
             }
@@ -140,7 +140,7 @@ namespace UeiBridge
             theSession.ConfigureTimingForSimpleIO();
             var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()), theSession);
 
-            AO308OutputDeviceManager ao308 = new AO308OutputDeviceManager(setup as AO308Setup, aWriter);
+            AO308OutputDeviceManager ao308 = new AO308OutputDeviceManager(setup as AO308Setup, aWriter, theSession);
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
 
             // set ao308 as consumer of udp-reader
@@ -163,7 +163,7 @@ namespace UeiBridge
             theSession.ConfigureTimingForSimpleIO();
             var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()), theSession);
             System.Diagnostics.Debug.Assert(null != (setup as SimuAO16Setup));
-            AO16OutputDeviceManager ao16 = new AO16OutputDeviceManager(setup as SimuAO16Setup, aWriter);
+            SimuAO16OutputDeviceManager ao16 = new SimuAO16OutputDeviceManager(setup, aWriter, theSession);
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
 
             // set ao308 as consumer of udp-reader
@@ -235,7 +235,7 @@ namespace UeiBridge
             DigitalWriterAdapter aWriter = new DigitalWriterAdapter(new UeiDaq.DigitalWriter(theSession.GetDataStream()), theSession);
 
             // output
-            DIO403OutputDeviceManager od = new DIO403OutputDeviceManager(setup, aWriter);
+            DIO403OutputDeviceManager od = new DIO403OutputDeviceManager(setup, aWriter, theSession);
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
             UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, od, od.InstanceName);
 
@@ -253,27 +253,27 @@ namespace UeiBridge
             return new List<PerDeviceObjects>() { pd };
         }
 
-        List<PerDeviceObjects> Build_SimuAO16(DeviceEx realDevice, DeviceSetup setup)
-        {
-            //List<PerDeviceObjects> result = new List<PerDeviceObjects>();
+        //List<PerDeviceObjects> Build_SimuAO16(DeviceEx realDevice, DeviceSetup setup)
+        //{
+        //    //List<PerDeviceObjects> result = new List<PerDeviceObjects>();
 
-            DeviceSetup deviceSetup = setup;
-            Type devType = StaticMethods.GetDeviceManagerType<IDeviceManager>(realDevice.PhDevice.GetDeviceName());
-            OutputDevice outDev = (OutputDevice)Activator.CreateInstance(devType, deviceSetup);
+        //    DeviceSetup deviceSetup = setup;
+        //    Type devType = StaticMethods.GetDeviceManagerType<IDeviceManager>(realDevice.PhDevice.GetDeviceName());
+        //    OutputDevice outDev = (OutputDevice)Activator.CreateInstance(devType, deviceSetup);
 
-            System.Diagnostics.Debug.Assert(null != outDev);
-            System.Diagnostics.Debug.Assert(null != deviceSetup.LocalEndPoint);
+        //    System.Diagnostics.Debug.Assert(null != outDev);
+        //    System.Diagnostics.Debug.Assert(null != deviceSetup.LocalEndPoint);
 
-            // create udp reader for this device
-            var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
-            UdpReader ureader = new UdpReader(deviceSetup.LocalEndPoint.ToIpEp(), nic, outDev, outDev.InstanceName);
+        //    // create udp reader for this device
+        //    var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
+        //    UdpReader ureader = new UdpReader(deviceSetup.LocalEndPoint.ToIpEp(), nic, outDev, outDev.InstanceName);
 
-            var pdo = new PerDeviceObjects(realDevice);
-            pdo.OutputDeviceManager = outDev;
-            pdo.UdpReader = ureader;
+        //    var pdo = new PerDeviceObjects(realDevice);
+        //    pdo.OutputDeviceManager = outDev;
+        //    pdo.UdpReader = ureader;
 
-            return new List<PerDeviceObjects>() { pdo };
-        }
+        //    return new List<PerDeviceObjects>() { pdo };
+        //}
 
         public void CreateBlockSensorManager(List<DeviceEx> realDeviceList)
         {
@@ -327,11 +327,11 @@ namespace UeiBridge
                 bool digitalExist = realDeviceList.Any(d => d.PhDevice.GetDeviceName().StartsWith("DIO-403"));
                 if (digitalExist && ao308 != null)
                 {
-                    result = new BlockSensorManager(_mainConfig.Blocksensor, ao308.AnalogWriter);
+                    result = new BlockSensorManager(_mainConfig.Blocksensor, ao308.AnalogWriter, ao308.UeiSession);
                 }
                 else
                 {
-                    _logger.Warn("Failed to create blocksensor object");
+                    _logger.Warn("Failed to create block-sensor object");
                 }
             }
             return result;

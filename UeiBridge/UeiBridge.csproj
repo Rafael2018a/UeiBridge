@@ -80,6 +80,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AI201InputDeviceManager.cs" />
+    <Compile Include="AnalogWriteAdapter.cs" />
     <Compile Include="AO308OutputDeviceManager.cs" />
     <Compile Include="BlockSensorManager.cs" />
     <Compile Include="Converters.cs" />
@@ -102,7 +103,6 @@
     <Compile Include="StaticMethods.cs" />
     <Compile Include="UdpReader.cs" />
     <Compile Include="UdpWriter.cs" />
-    <Compile Include="DeviceToEthernet.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

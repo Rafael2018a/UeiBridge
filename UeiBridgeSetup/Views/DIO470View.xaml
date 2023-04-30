@@ -6,11 +6,16 @@
              xmlns:local="clr-namespace:UeiBridgeSetup.Views"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <GroupBox>
+    <!--<GroupBox>
         <GroupBox.Header>
             <TextBlock Grid.Row="0" FontSize="16" FontWeight="Bold"/>
         </GroupBox.Header>
         <Image Source="/Images/uei_product_io_dna_dio_470.jpg" Height="150" />
+    </GroupBox>-->
+    <Grid>
+        <Border BorderThickness="1" BorderBrush="LightGray" CornerRadius="5">
+            <Image Source="/Images/uei_product_io_dna_dio_470.jpg" Height="220" />
+        </Border>
+    </Grid>
 
-    </GroupBox>
 </UserControl>

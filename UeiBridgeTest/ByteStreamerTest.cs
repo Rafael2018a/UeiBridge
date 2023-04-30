@@ -54,7 +54,7 @@ namespace UeiBridgeTest
         public void DeserializeObjectTest()
         {
 
-            FileInfo _playFile = new FileInfo(@"c:\Users\Rafi\source\repos\UeiBridge\ByteStreamer3\SampleJson\sample for unit test.json");
+            FileInfo _playFile = new FileInfo(@"..\..\..\..\ByteStreamer3\SampleJson\sample for unit test.json");
 
             using (StreamReader reader = _playFile.OpenText())
             {

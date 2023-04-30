@@ -25,6 +25,11 @@ namespace UeiBridge
         {
             _ueiDigitalWriter.WriteSingleScanUInt16(scan);
         }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
     }
 
     /// <summary>
@@ -37,15 +42,18 @@ namespace UeiBridge
 
         //privates
         log4net.ILog _logger = StaticMethods.GetLogger();
-        IConvert _attachedConverter;
+        IConvert2<UInt16[]> _attachedConverter;
         const string _channelsString = "Do0:2";// Do0:2 - 3*8 first bits as 'out'
         IWriterAdapter<UInt16[]> _digitalWriter;
+        private Session _session;
+
         public IWriterAdapter<UInt16[]> DigitalWriter => _digitalWriter;
         System.Collections.Generic.List<ViewerItem<UInt16>> _lastScanList;
 
-        public DIO403OutputDeviceManager(DeviceSetup setup, IWriterAdapter<UInt16[]> digitalWriter) : base(setup)
+        public DIO403OutputDeviceManager(DeviceSetup setup, IWriterAdapter<UInt16[]> digitalWriter, UeiDaq.Session session) : base(setup)
         {
             _digitalWriter = digitalWriter;
+            this._session = session;
         }
         public DIO403OutputDeviceManager() : base(null) // must have default c-tor
         {
@@ -59,22 +67,22 @@ namespace UeiBridge
             //{
             //    _writer.Dispose();
             //}
-            if (null != _digitalWriter.OriginSession)
+            if (null != _session)
             {
-                _digitalWriter.OriginSession.Stop();
-                _digitalWriter.OriginSession.Dispose();
+                _session.Stop();
+                _session.Dispose();
             }
         }
 
         public override bool OpenDevice()
         {
-            _attachedConverter = new DIO403Convert(_digitalWriter.OriginSession.GetNumberOfChannels());
+            _attachedConverter = new DigitalConverter(); //DIO403Convert(_digitalWriter.OriginSession.GetNumberOfChannels());
 
-            int noOfbits = _digitalWriter.OriginSession.GetNumberOfChannels() * 8;
-            int firstBit = _digitalWriter.OriginSession.GetChannel(0).GetIndex() * 8;
+            int noOfbits = _session.GetNumberOfChannels() * 8;
+            int firstBit = _session.GetChannel(0).GetIndex() * 8;
             _logger.Info($"Init success: {InstanceName}. Bits {firstBit}..{firstBit + noOfbits - 1} as output. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}"); // { noOfCh} output channels
 
-            _lastScanList = new System.Collections.Generic.List<ViewerItem<UInt16>>(new ViewerItem<UInt16>[_digitalWriter.OriginSession.GetNumberOfChannels()]);
+            _lastScanList = new System.Collections.Generic.List<ViewerItem<UInt16>>(new ViewerItem<UInt16>[_session.GetNumberOfChannels()]);
 
             Task.Factory.StartNew(() => OutputDeviceHandler_Task());
             _isDeviceReady = true;
@@ -109,7 +117,7 @@ namespace UeiBridge
 
         protected override void HandleRequest(EthernetMessage request)
         {
-            var ls = _attachedConverter.EthToDevice(request.PayloadBytes);
+            var ls = _attachedConverter.DownstreamConvert( request.PayloadBytes);
             ushort[] scan = ls as ushort[];
             System.Diagnostics.Debug.Assert( scan != null);
             _digitalWriter.WriteSingleScan( scan);

@@ -80,10 +80,11 @@ namespace UeiBridge
             {
                 _mainConfig = Config2.LoadConfigFromFile(new FileInfo(Config2.DafaultSettingsFilename));
             }
-            catch (FileNotFoundException ex)
+            catch (FileNotFoundException )
             {
-                _mainConfig = Config2.BuildDefaultConfig(cubeUrlList);
-                _mainConfig.SaveAs(Config2.DafaultSettingsFilename);
+                var t = Config2.BuildDefaultConfig(cubeUrlList);
+                t.SaveAs( new FileInfo( Config2.DafaultSettingsFilename), true);
+                _mainConfig = Config2.LoadConfigFromFile(new FileInfo(Config2.DafaultSettingsFilename));
                 Console.WriteLine($"New default settings file created. {Config2.DafaultSettingsFilename}.");
             }
             catch (InvalidOperationException ex)

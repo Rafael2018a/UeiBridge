@@ -93,7 +93,10 @@ namespace UeiBridgeSetup.ViewModels
 
         }
 
-        private void SaveFile(object param) { }
+        private void SaveFile(object param) 
+        {
+            MainConfig.SaveAs(new FileInfo(Config2.DafaultSettingsFilename), true);
+        }
         private void SaveFileAs(object param) { }
         private void CloseApp(object param) { }
     }

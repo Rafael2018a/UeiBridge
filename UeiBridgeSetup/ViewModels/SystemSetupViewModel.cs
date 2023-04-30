@@ -17,6 +17,7 @@ namespace UeiBridgeSetup.ViewModels
         private ViewModelBase _selectedViewModel;
         private EndPointViewModel _destinationEndPointViewModel;
         private EndPointViewModel _localEndPointViewModel;
+        private Config2 _mainConfig;
         #endregion
         #region === publics ===
         public EndPointViewModel LocalEndPointViewModel
@@ -93,7 +94,7 @@ namespace UeiBridgeSetup.ViewModels
             switch (_selectedSlot.DeviceName)
             {
                 case DeviceMap2.SL508Literal:
-                    return new SL508ViewModel();
+                    return new SL508ViewModel(_mainConfig, selectedSlot);
                 case DeviceMap2.AO308Literal:
                     return new AO308ViewModel();
                 case DeviceMap2.DIO403Literal:
@@ -121,10 +122,10 @@ namespace UeiBridgeSetup.ViewModels
         public DelegateCommand AddCubeCommand { get; }
         #endregion
 
-        public SystemSetupViewModel(Config2 _mainConfig)
+        public SystemSetupViewModel(Config2 mainConfig)
         {
-            //_mainConfig = cfg;
-            LoadCubeList(_mainConfig);
+            _mainConfig = mainConfig;
+            LoadCubeList( mainConfig);
             if (CubeList.Count > 0)
             {
                 SelectedCube = CubeList[0];
@@ -166,7 +167,7 @@ namespace UeiBridgeSetup.ViewModels
         {
             foreach (CubeSetup cubesetup in mainConfig.CubeSetupList)
             {
-                if (!cubesetup.CubeUrl.ToLower().StartsWith("simu"))
+                //if (!cubesetup.CubeUrl.ToLower().StartsWith("simu"))
                 {
                     CubeList.Add(new CubeSetupViewModel(cubesetup, true));
                 }

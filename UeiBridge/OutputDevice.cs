@@ -46,7 +46,7 @@ namespace UeiBridge
         BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
         log4net.ILog _logger = StaticMethods.GetLogger();
         //System.Timers.Timer _resetLastScanTimer = new System.Timers.Timer(1000);
-        bool _disposeStarted = false;
+        //bool _disposeStarted = false;
         #endregion
 
         protected OutputDevice(DeviceSetup deviceSetup)
@@ -74,10 +74,11 @@ namespace UeiBridge
         /// <param name="m"></param>
         public virtual void Enqueue(byte[] m)
         {
-            if (_disposeStarted)
+            while (_dataItemsQueue2.IsCompleted)
+            {
                 return;
+            }
 
-            //string errorString;
             try
             {
                 EthernetMessage em = EthernetMessage.CreateFromByteArray(m, MessageWay.downstream);
@@ -87,7 +88,7 @@ namespace UeiBridge
                     _dataItemsQueue2.Add(em);
                 }
             }
-            catch( ArgumentException ex)
+            catch (Exception ex)
             {
                 _logger.Warn($"Incoming byte message error. {ex.Message}. message dropped.");
             }
@@ -106,6 +107,7 @@ namespace UeiBridge
 
                 if (null == incomingMessage) // end task token
                 {
+                    _dataItemsQueue2.CompleteAdding();
                     break;
                 }
 
@@ -148,11 +150,11 @@ namespace UeiBridge
 
         public virtual void Dispose()
         {
-            _disposeStarted = true;
-            _dataItemsQueue2.Add(null); // end task token
+            
+            _dataItemsQueue2.Add(null); // end task token (first, free Take() api and then apply CompleteAdding()
             Thread.Sleep(100);
             _dataItemsQueue2.CompleteAdding();
-            if (null != _deviceSetup)
+            //if (null != _deviceSetup)
             {
                 _logger.Debug($"Disposing {_deviceSetup.DeviceName}/Output, slot {_deviceSetup.SlotNumber}");
             }

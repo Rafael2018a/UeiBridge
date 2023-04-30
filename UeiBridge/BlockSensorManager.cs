@@ -17,13 +17,10 @@ namespace UeiBridge
     {
         #region === publics ====
         public override string DeviceName => DeviceMap2.BlocksensorLiteral; //"BlockSensor";
-        //public string InstanceName => "BlockSensorManager";
         #endregion
         #region === privates ===
-        //AO308OutputDeviceManager _ao308Device;
         log4net.ILog _logger = StaticMethods.GetLogger();
         List<BlockSensorEntry> _blockSensorTable = new List<BlockSensorEntry>();
-        DIO403Convert _digitalConverter = new DIO403Convert( null);
         IWriterAdapter<double[]> _analogWriter;
         int _subaddress = -1;
         double[] _scanToEmit;
@@ -32,7 +29,7 @@ namespace UeiBridge
         bool _isInDispose = false;
         #endregion
 
-        public BlockSensorManager(DeviceSetup deviceSetup, IWriterAdapter<double[]> writer) : base(deviceSetup)
+        public BlockSensorManager(DeviceSetup deviceSetup, IWriterAdapter<double[]> writer, UeiDaq.Session session) : base(deviceSetup)
         {
             System.Diagnostics.Debug.Assert(writer != null);
             System.Diagnostics.Debug.Assert(null != ThisDeviceSetup);
@@ -54,7 +51,7 @@ namespace UeiBridge
             _blockSensorTable.Add(new BlockSensorEntry(serial++, "vref4", 0, 3));
             _blockSensorTable.Add(new BlockSensorEntry(serial++, "p5v3", 1, 3));
 
-            _scanToEmit = new double[writer.OriginSession.GetNumberOfChannels()];
+            _scanToEmit = new double[session.GetNumberOfChannels()];
             
         }
         public BlockSensorManager() : base(null) // empty c-tor for Activator.CreateInstance()

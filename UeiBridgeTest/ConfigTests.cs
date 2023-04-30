@@ -62,7 +62,7 @@ namespace UeiBridgeTest
             string url = "simu://";
             CubeSetup cs = new CubeSetup( new List<UeiDeviceAdapter>(), url);
             Config2 c2 = new Config2(new List<CubeSetup> { cs });
-            c2.SaveAs("newfile.config");
+            c2.SaveAs( new FileInfo( "newfile.config"), true);
         }
 
         /// <summary>
@@ -105,6 +105,41 @@ namespace UeiBridgeTest
             Config2 c3 = Config2.LoadConfigFromFile(new FileInfo(Config2.DafaultSettingsFilename));
             c2.CubeSetupList.FirstOrDefault().DeviceSetupList.FirstOrDefault().DeviceName = "kkk";
             Assert.That(c2.Equals(c3), Is.False);
+        }
+        //[Test]
+        public void FileInfoTest()
+        {
+
+            FileInfo fi = new FileInfo("file1.txt");
+
+            CreateBackupFile(fi);
+
+            using (StreamWriter sw = fi.AppendText())
+            {
+                sw.WriteLine("line1");
+            }
+
+        }
+
+        private static void CreateBackupFile(FileInfo fi)
+        {
+            string barename = Path.GetFileNameWithoutExtension(fi.Name);
+            string ext = Path.GetExtension(fi.Name);
+            int index = 1;
+            while (true)
+            {
+                string backname = $"{barename} ({index}){ext}";
+                if (File.Exists(backname))
+                {
+                    index++;
+                    continue;
+                }
+                else
+                {
+                    fi.CopyTo(backname);
+                    break;
+                }
+            }
         }
     }
 

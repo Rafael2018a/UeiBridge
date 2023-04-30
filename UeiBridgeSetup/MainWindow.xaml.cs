@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -36,6 +37,20 @@ namespace UeiBridgeSetup
         private void SetSystemViewModel(SystemSetupViewModel sysVM)
         {
             _systemSetupView.DataContext = sysVM;
+        }
+
+        //protected override void OnClosing(CancelEventArgs e)
+        //{
+        //    base.OnClosing(e);
+        //}
+        private void Window_Closing(object sender, CancelEventArgs e)
+        {
+            
+            //if (_mainVM.IsConfigDirty)
+            //{
+            //    _mainVM.AskToSaveFile
+            //    e.Cancel = true;
+            //}
         }
     }
 }

@@ -42,7 +42,7 @@ namespace UeiBridge
                                         "");
                 }
 
-                System.Diagnostics.Debug.Assert(_serialSession.GetNumberOfChannels() == _thisDeviceSetup.Channels.Length);
+                System.Diagnostics.Debug.Assert(_serialSession.GetNumberOfChannels() == _thisDeviceSetup.Channels.Count);
                 //System.Diagnostics.Debug.Assert(numberOfChannels == Config.Instance.SerialChannels.Length);
 
                 _serialSession.ConfigureTimingForMessagingIO(1000, 100.0);

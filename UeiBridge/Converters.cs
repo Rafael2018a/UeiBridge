@@ -9,6 +9,7 @@ using UeiBridge.Library;
 
 namespace UeiBridge
 {
+    [Obsolete]
     class DIO403Convert : IConvert
     {
         public string DeviceName => "DIO-403";
@@ -97,7 +98,7 @@ namespace UeiBridge
             return resultVector;
         }
     }
-
+#if remove
     /// <summary>
     /// Convert from double to UIint16
     /// </summary>
@@ -151,7 +152,7 @@ namespace UeiBridge
             throw new NotImplementedException();
         }
     }
-
+#endif
     class SL508Convert : IConvert
     {
         public SL508Convert(DeviceSetup setup)
@@ -180,6 +181,35 @@ namespace UeiBridge
         }
     }
 
+    public class DigitalConverter : IConvert2<UInt16[]>
+    {
+        public UInt16[] DownstreamConvert(byte[] messagePayload)
+        {
+            // convert int8 vector to int16 vector
+            // ================================
+            UInt16[] resultVector = new UInt16[messagePayload.Length];
+            Array.Clear(resultVector, 0, resultVector.Length);
+            for (int ch = 0; ch < messagePayload.Length; ch++)
+            {
+                resultVector[ch] = messagePayload[ch];
+            }
+            return resultVector;
+        }
+
+        public byte[] UpstreamConvert(UInt16[] dt)
+        {
+            // convert int16 vector to int8 vector
+            // ================================
+            UInt16[] deviceVector = dt;
+            byte[] resultVector = new byte[deviceVector.Length];
+            Array.Clear(resultVector, 0, resultVector.Length);
+            for (int ch = 0; ch < deviceVector.Length; ch++)
+            {
+                resultVector[ch] = (byte)(deviceVector[ch] & 0xFF);
+            }
+            return resultVector;
+        }
+    }
     public class AnalogConverter : IConvert2<double[]>
     {
         //readonly double _peekToPeekVoltage;

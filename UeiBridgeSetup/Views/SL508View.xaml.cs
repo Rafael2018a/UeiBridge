@@ -23,6 +23,9 @@ namespace UeiBridgeSetup.Views
         public SL508View()
         {
             InitializeComponent();
+
+            ModeCombo.ItemsSource = Enum.GetValues(typeof(UeiDaq.SerialPortMode));//.Cast<UeiDaq.SerialPortMode>();
+            BaudCombo.ItemsSource = Enum.GetValues(typeof(UeiDaq.SerialPortSpeed));
         }
     }
 }
