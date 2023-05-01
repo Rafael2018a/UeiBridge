@@ -62,18 +62,18 @@ namespace UeiBridge.Types
     /// <summary>
     /// Contains: Object to write to device, serial channel id (in case of serial)
     /// </summary>
-    public class ScanResult
-    {
-        object _scan;
-        UeiBridge.InputDevice _originDevice; // tbd. remove dependency
-        public ScanResult(object scan, UeiBridge.InputDevice originDevice)
-        {
-            _scan = scan;
-            _originDevice = originDevice;
-        }
-        public object Scan { get => _scan; }
-        public UeiBridge.InputDevice OriginDevice { get => _originDevice; }
-    }
+    //public class ScanResult
+    //{
+    //    object _scan;
+    //    UeiBridge.InputDevice _originDevice; 
+    //    public ScanResult(object scan, UeiBridge.InputDevice originDevice)
+    //    {
+    //        _scan = scan;
+    //        _originDevice = originDevice;
+    //    }
+    //    public object Scan { get => _scan; }
+    //    public UeiBridge.InputDevice OriginDevice { get => _originDevice; }
+    //}
     /// <summary>
     /// This class encapsulates payload with dest address
     /// </summary>

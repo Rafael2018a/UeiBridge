@@ -39,7 +39,7 @@ namespace UeiBridge
         /// Find and instantiate suitable converter
         /// </summary>
         /// <returns></returns>
-        public static IConvert CreateConverterInstance( DeviceSetup setup) // tbd. deviceName not needed
+        public static IConvert CreateConverterInstance( DeviceSetup setup) 
         {
             IConvert attachedConverter = null;
             foreach (Type theType in System.Reflection.Assembly.GetExecutingAssembly().GetTypes())
@@ -100,7 +100,7 @@ namespace UeiBridge
             }
 
             msg.SlotNumber = setup.SlotNumber;
-            msg.UnitId = 0; // tbd
+            msg.UnitId = 0; 
             msg.CardType = (byte)key;
             msg.PayloadBytes = payload;
             msg.NominalLength = payload.Length + EthernetMessage._payloadOffset;

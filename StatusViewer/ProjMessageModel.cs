@@ -12,7 +12,7 @@ namespace StatusViewer
         //Int64 _int64value;
         string [] _stringValue;
         //double _projTimeInSec;
-        double fracFactor = Math.Pow(2, 32) - 1; // tbd. not sure about -1
+        //double fracFactor = Math.Pow(2, 32) - 1; 
         string _desc;
         StatusTrait _trait;
 

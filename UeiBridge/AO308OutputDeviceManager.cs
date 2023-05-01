@@ -21,6 +21,7 @@ namespace UeiBridge
         public IWriterAdapter<double[]> AnalogWriter => _analogWriter;
 
         public Session UeiSession { get => _session; }
+        public bool IsBlockSensorActive { get; private set; }
         #endregion
 
         #region === privates ===
@@ -33,10 +34,11 @@ namespace UeiBridge
         UeiDaq.Session _session;
         #endregion
 
-        public AO308OutputDeviceManager(DeviceSetup deviceSetup1, IWriterAdapter<double[]> analogWriter, UeiDaq.Session session) : base(deviceSetup1)
+        public AO308OutputDeviceManager(DeviceSetup deviceSetup1, IWriterAdapter<double[]> analogWriter, UeiDaq.Session session, bool isBlockSensorActive) : base(deviceSetup1)
         {
             this._analogWriter = analogWriter;
             this._session = session;
+            this.IsBlockSensorActive = isBlockSensorActive;
         }
 
         public AO308OutputDeviceManager() : base(null) { }
@@ -53,7 +55,9 @@ namespace UeiBridge
                 Task.Factory.StartNew(() => OutputDeviceHandler_Task());
 
                 var range = _session.GetDevice().GetAORanges();
-                if ( _deviceSetup.IsBlockSensorActive) 
+                AO308Setup ao308 = _deviceSetup as AO308Setup;
+                //System.Diagnostics.Debug.Assert(this.IsBlockSensorActive.HasValue);
+                if ( this.IsBlockSensorActive) 
                 {
                     _logger.Info($"Init success: {InstanceName} . { numOfCh} channels. Range {range[0].minimum},{range[0].maximum}V. Listening on BlockSensor");
                 }

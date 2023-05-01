@@ -46,7 +46,6 @@ namespace UeiBridge
         { }
         public override bool OpenDevice()
         {
-            //_logger.Debug($"{this.DeviceName} OpenDevice() ..... tbd");
             if (null == _serialSession.SerialSession)
             {
                 _logger.Warn($"Failed to open device {this.InstanceName}");
@@ -218,7 +217,7 @@ namespace UeiBridge
         //}
         //System.Diagnostics.Debug.Assert(_deviceSession != null);
         //byte[] m = request.RequestObject as byte[];
-        //_logger.Warn($"Should send to RS: {Encoding.ASCII.GetString(m)} ... TBD");
+        //_logger.Warn($"Should send to RS: {Encoding.ASCII.GetString(m)} ... ");
     }
 
 

@@ -107,7 +107,7 @@ namespace UeiBridge
             _programBuilder.CreateDeviceManagers(deviceList);
             _programBuilder.ActivateDownstreamOjects();
             _programBuilder.ActivateUpstreamObjects();
-            _programBuilder.CreateBlockSensorManager(deviceList);
+            _programBuilder.Build_BlockSensorManager(deviceList);
 
             // publish status to StatusViewer
             Task.Factory.StartNew(() => PublishStatus_Task(_programBuilder.PerDeviceObjectsList));
@@ -271,9 +271,9 @@ namespace UeiBridge
 
                         // block sensor
                         {
-                            IPEndPoint destEp = _mainConfig.Blocksensor.LocalEndPoint.ToIpEp();
-                            EthernetMessage em = Library.StaticMethods.Make_BlockSensor_downstream_message(new Int16[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 });
-                            udpClient.Send(em.GetByteArray(MessageWay.downstream), em.GetByteArray(MessageWay.downstream).Length, destEp);
+                            //IPEndPoint destEp = _mainConfig.Blocksensor.LocalEndPoint.ToIpEp();
+                            //EthernetMessage em = Library.StaticMethods.Make_BlockSensor_downstream_message(new Int16[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 });
+                            //udpClient.Send(em.GetByteArray(MessageWay.downstream), em.GetByteArray(MessageWay.downstream).Length, destEp);
                         }
 
                         Thread.Sleep(1000);

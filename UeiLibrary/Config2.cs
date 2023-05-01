@@ -32,7 +32,7 @@ namespace UeiBridge.Library
             return (this.Address == other.Address) && (this.Port == other.Port);
         }
 
-        public IPEndPoint ToIpEp() // tbd. make cast operator
+        public IPEndPoint ToIpEp() // should be cast operator
         {
             //try
             {
@@ -84,7 +84,7 @@ namespace UeiBridge.Library
         [XmlIgnore]
         public int SamplingInterval => 100; // ms
         [XmlIgnore]
-        public string CubeUrl { get; set; } // tbd. this is a patch.
+        public string CubeUrl { get; set; } 
         [XmlIgnore]
         public int CubeId // lsb of cube address
         {
@@ -102,8 +102,6 @@ namespace UeiBridge.Library
                 return result;
             }
         }
-        [XmlIgnore]
-        public bool IsBlockSensorActive { get; set; }
 
         public DeviceSetup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceAdapter device)
         {
@@ -143,11 +141,16 @@ namespace UeiBridge.Library
         //private string cubeUrl;
         //public string CubeUrl { get => cubeUrl; set => cubeUrl = value; }
     }
+    
     public class BlockSensorSetup : DeviceSetup
     {
+        public const int BlockSensorSlotNumber = 32;
         public bool IsActive { get; set; }
+        public int AnalogCardSlot { get; set; }
+        public int DigitalCardSlot { get; set; }
         public BlockSensorSetup(EndPoint localEndPoint, string deviceName) : base(localEndPoint, null, deviceName)
         {
+            SlotNumber = BlockSensorSlotNumber; 
         }
 
         protected BlockSensorSetup()
@@ -271,7 +274,6 @@ namespace UeiBridge.Library
 
     public class CubeSetup : IEquatable<CubeSetup>
     {
-        //const int tbd = 7;
         [XmlAttribute("Url")]
         public string CubeUrl { get; set; }
         [XmlIgnore]
@@ -299,7 +301,13 @@ namespace UeiBridge.Library
                     DeviceSetupList.Add(dv);
                 }
             }
+            BlockSensorSetup bsSetup = BuildBlockSensorSetup( DeviceSetupList);
+            if (null != bsSetup)
+            {
+                DeviceSetupList.Add(bsSetup);
+            }
         }
+
 
         public bool Equals(CubeSetup other)
         {
@@ -317,7 +325,7 @@ namespace UeiBridge.Library
             CubeUrl = cubeUrl;
             //CubeNumber = cubeNumber;
             //_ueiDeviceList = StaticMethods.GetDeviceList();
-            UeiDaq.DeviceCollection devColl = new UeiDaq.DeviceCollection(cubeUrl); // tbd. cubesetup should not depend on ueidaq.
+            UeiDaq.DeviceCollection devColl = new UeiDaq.DeviceCollection(cubeUrl); // cubesetup should not depend on ueidaq.
             try
             {
                 //DeviceSetupList = new DeviceSetup[devColl.Count];
@@ -343,6 +351,25 @@ namespace UeiBridge.Library
             }
         }
 #endif
+        private BlockSensorSetup BuildBlockSensorSetup(List<DeviceSetup> deviceSetupList)
+        {
+            DeviceSetup dsa = deviceSetupList.Where(t => t.DeviceName == DeviceMap2.AO308Literal).Select(t => t).FirstOrDefault();
+            DeviceSetup dsd = deviceSetupList.Where(t => t.DeviceName == DeviceMap2.DIO403Literal).Select(t => t).FirstOrDefault();
+
+            if ((dsa != null) && (dsd != null))
+            {
+                BlockSensorSetup Blocksensor = new BlockSensorSetup(new EndPoint(ConfigFactory.LocalIP, 50105), "BlockSensor");
+
+                Blocksensor.AnalogCardSlot = dsa.SlotNumber;
+                Blocksensor.DigitalCardSlot = dsd.SlotNumber;
+                return Blocksensor;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
     }
 
     [XmlInclude(typeof(AO308Setup))]
@@ -361,8 +388,8 @@ namespace UeiBridge.Library
         public AppSetup AppSetup;
         //public string[] CubeUrlList = new string[1];
         public List<CubeSetup> CubeSetupList = new List<CubeSetup>();
-        public BlockSensorSetup Blocksensor = new BlockSensorSetup(new EndPoint(ConfigFactory.LocalIP, 50105), "BlockSensor");
-        public ValidValuesClass ValidValues = new ValidValuesClass();
+        
+        //public ValidValuesClass ValidValues = new ValidValuesClass();
         public static string DafaultSettingsFilename => "UeiSettings2.config";
         public static string SettingsFilename { get; private set; } = DafaultSettingsFilename;
         //string[] _cubeUrls;
@@ -442,12 +469,31 @@ namespace UeiBridge.Library
                 resultConfig = serializer.Deserialize(sr) as Config2;
                 if (null != resultConfig)
                 {
-                    foreach (CubeSetup cube in resultConfig.CubeSetupList)
+                    foreach (CubeSetup cSetup in resultConfig.CubeSetupList)
                     {
-                        foreach (DeviceSetup device in cube.DeviceSetupList)
+                        foreach (DeviceSetup dSetup in cSetup.DeviceSetupList)
                         {
-                            device.CubeUrl = cube.CubeUrl;
-                            device.IsBlockSensorActive = resultConfig.Blocksensor.IsBlockSensorActive;
+                            dSetup.CubeUrl = cSetup.CubeUrl;
+
+                            //if (dSetup.DeviceName == DeviceMap2.AO308Literal)
+                            //{
+                            //    AO308Setup ao308 = dSetup as AO308Setup;
+                            //    BlockSensorSetup bssetup = resultConfig.GetSetupEntryForDevice( cSetup.CubeUrl, DeviceMap2.BlocksensorLiteral) as BlockSensorSetup;
+                            //    if (null != bssetup)
+                            //    {
+                            //        ao308.IsBlockSensorActive = bssetup.IsActive;
+                            //    }
+                            //}
+
+                            //if (dSetup.DeviceName == DeviceMap2.DIO403Literal)
+                            //{
+                            //    DIO403Setup ao403 = dSetup as DIO403Setup;
+                            //    BlockSensorSetup bssetup = resultConfig.GetSetupEntryForDevice(cSetup.CubeUrl, DeviceMap2.BlocksensorLiteral) as BlockSensorSetup;
+                            //    if (null != bssetup)
+                            //    {
+                            //        ao403.IsBlockSensorActive = bssetup.IsActive;
+                            //    }
+                            //}
                         }
                     }
                 }
@@ -494,9 +540,22 @@ namespace UeiBridge.Library
             }
             var theSetups = selectedCube.DeviceSetupList.Where(d => d.SlotNumber == slotNumber);
             DeviceSetup result = theSetups.FirstOrDefault();
-            //result.CubeUrl = selectedCube.CubeUrl;
-            //IPAddress ip = CubeUriToIpAddress(selectedCube.CubeUrl);
-            //result.CubeId = (null == ip)? -1: ip.GetAddressBytes()[3];
+            return result;
+        }
+        public DeviceSetup GetSetupEntryForDevice1(string cubeUrl, string deviceName)
+        {
+            if (this.CubeSetupList == null)
+            {
+                return null;
+            }
+            var cube = this.CubeSetupList.Where(e => e.CubeUrl == cubeUrl);
+            var selectedCube = cube.FirstOrDefault();
+            if (null == selectedCube)
+            {
+                return null;
+            }
+            var theSetups = selectedCube.DeviceSetupList.Where(d => d.DeviceName == deviceName);
+            DeviceSetup result = theSetups.FirstOrDefault();
             return result;
         }
 

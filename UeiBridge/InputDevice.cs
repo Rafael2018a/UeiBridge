@@ -21,13 +21,13 @@ namespace UeiBridge
 
         // protected
         protected Session _deviceSession;
-        protected string _cubeUrl; // tbd. remove this
+        //protected string _cubeUrl; // remove this
         protected string _channelsString;
         protected ISend<SendObject> _targetConsumer;
         protected System.Threading.Timer _samplingTimer;
         //protected DateTime _publishTime = DateTime.Now;
 
-        //protected DeviceSetup _deviceSetup;
+        public DeviceSetup ThisDeviceSetup { get; private set; }
 
         //protected InputDevice(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string cubeUrl)
         //{
@@ -46,7 +46,7 @@ namespace UeiBridge
             {
                 InstanceName = "<undefined input device>";
             }
-            //_deviceSetup = setup;
+            ThisDeviceSetup = setup;
         }
         public virtual void CloseDevice()
         {

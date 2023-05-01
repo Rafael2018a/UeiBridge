@@ -25,6 +25,7 @@ namespace UeiBridgeTest
 
             BlockSensorSetup setup = new BlockSensorSetup(new EndPoint("192.168.19.2", 50455), "BlockSensor");
             BlockSensorManager blocksensor = new BlockSensorManager(setup, mk, sess1);
+            blocksensor.OpenDevice();
             byte[] d403 = UeiBridge.Library.StaticMethods.Make_Dio403_upstream_message(new byte[] { 0x5, 0, 0 });
             blocksensor.Enqueue(d403);
             //double factor = AO308Setup.PeekVoltage_downstream / (Int16.MaxValue+1);
@@ -36,6 +37,8 @@ namespace UeiBridgeTest
             EthernetMessage em = UeiBridge.Library.StaticMethods.Make_BlockSensor_downstream_message(payload);
             blocksensor.Enqueue(em.GetByteArray(MessageWay.downstream));
             //s.Stop();
+
+            System.Threading.Thread.Sleep(1000);
             sess1.Dispose();
             // 6 7 5
 
@@ -74,7 +77,8 @@ namespace UeiBridgeTest
             var ao = devicelist.Where(i => i.PhDevice.GetDeviceName().StartsWith("Simu-AO16")).FirstOrDefault();
             AO308Setup setup = new AO308Setup(new EndPoint("8.8.8.8", 5000), new UeiDeviceAdapter(ao.PhDevice));
 
-            AO308OutputDeviceManager ao308 = new AO308OutputDeviceManager(setup, mk, session1);
+            AO308OutputDeviceManager ao308 = new AO308OutputDeviceManager(setup, mk, session1, false);
+            
             ao308.OpenDevice();
             AnalogConverter ac = new AnalogConverter(10, 12);
             var d1 = new double[] { 5, 7, 9 };

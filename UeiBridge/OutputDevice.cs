@@ -48,6 +48,7 @@ namespace UeiBridge
         //System.Timers.Timer _resetLastScanTimer = new System.Timers.Timer(1000);
         //bool _disposeStarted = false;
         #endregion
+        
 
         protected OutputDevice(DeviceSetup deviceSetup)
         {
@@ -123,8 +124,6 @@ namespace UeiBridge
                     _logger.Warn($"{InstanceName} wrong card id {incomingMessage.CardType} while expecting {cardId}. message dropped.");
                     continue;
                 }
-                // verify payload length
-                // tbd
 
                 // verify slot number
                 if (incomingMessage.SlotNumber != this._deviceSetup.SlotNumber)

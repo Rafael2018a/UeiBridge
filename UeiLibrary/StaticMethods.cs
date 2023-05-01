@@ -76,7 +76,7 @@ namespace UeiBridge.Library
                 result[i * 2 + 1] = two[1];
             }
 
-            return EthernetMessage.CreateMessage(32, -1, 0, result);
+            return EthernetMessage.CreateMessage(32, 32, 0, result);
         }
 
 
@@ -123,7 +123,7 @@ namespace UeiBridge.Library
         /// <summary>
         /// Build default config from cube-url-list
         /// </summary>
-        public static Config2 BuildDefaultConfig2( this Config2 c2, List<string> cubeUrlList) // tbd. should be static, not ext method.
+        public static Config2 BuildDefaultConfig2( this Config2 c2, List<string> cubeUrlList) 
         {
             List<CubeSetup> csetupList = new List<CubeSetup>();
             foreach (var url in cubeUrlList)
@@ -140,7 +140,6 @@ namespace UeiBridge.Library
 
             Config2 res = new Config2(csetupList);
             return res;
-
         }
     }
 }

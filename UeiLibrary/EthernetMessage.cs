@@ -191,7 +191,7 @@ namespace UeiBridge.Library
         //    }
 
         //    msg.SlotNumber = setup.SlotNumber;
-        //    msg.UnitId = 0; // tbd
+        //    msg.UnitId = 0; // 
         //    msg.CardType = (byte)key;
         //    msg.PayloadBytes = payload;
 

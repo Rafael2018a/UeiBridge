@@ -18,8 +18,8 @@ namespace UeiBridge
         AnalogScaledReader _reader;
         log4net.ILog _logger = StaticMethods.GetLogger();
         public override string DeviceName => "AI-201-100"; // 
-        IConvert _attachedConverter;
-        public override IConvert AttachedConverter => _attachedConverter;
+        IConvert2<double[]> _attachedConverter;
+        //public override IConvert AttachedConverter => _attachedConverter;
         //ISend<SendObject> _targetConsumer;
         AI201100Setup _thisDeviceSetup;
         double[] _lastScan;
@@ -27,7 +27,7 @@ namespace UeiBridge
         public AI201InputDeviceManager(ISend<SendObject> targetConsumer, AI201100Setup setup) : base(targetConsumer, setup)
         {
             _channelsString = "Ai0:23";
-            _attachedConverter = StaticMethods.CreateConverterInstance( setup);
+            _attachedConverter = new AnalogConverter(AI201100Setup.PeekVoltage_upstream, AO308Setup.PeekVoltage_downstream);
             
             _targetConsumer = targetConsumer;
             _thisDeviceSetup = setup;
@@ -50,7 +50,7 @@ namespace UeiBridge
                 System.Diagnostics.Debug.Assert(_lastScan.Length == _deviceSession.GetNumberOfChannels(), "wrong number of channels");
 
                 //ScanResult dr = new ScanResult(_lastScan, this);
-                byte[] payload = _attachedConverter.DeviceToEth(_lastScan);
+                byte[] payload = _attachedConverter.UpstreamConvert(_lastScan);
                 EthernetMessage em = StaticMethods.BuildEthernetMessageFromDevice(payload, this._thisDeviceSetup);
                 SendObject so = new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), em.GetByteArray( MessageWay.upstream));
                 _targetConsumer.Send(so);
