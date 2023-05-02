@@ -12,29 +12,20 @@ namespace UeiBridge
 {
     public abstract class InputDevice : IDeviceManager, IDisposable
     {
-        // abstarcts
         public virtual IConvert AttachedConverter { get; }
         public abstract string [] GetFormattedStatus( TimeSpan interval);
         public abstract void OpenDevice();
         public abstract string DeviceName { get; }
         public string InstanceName { get; }
+        public DeviceSetup ThisDeviceSetup { get; private set; }
 
-        // protected
         protected Session _deviceSession;
-        //protected string _cubeUrl; // remove this
         protected string _channelsString;
         protected ISend<SendObject> _targetConsumer;
         protected System.Threading.Timer _samplingTimer;
-        //protected DateTime _publishTime = DateTime.Now;
 
-        public DeviceSetup ThisDeviceSetup { get; private set; }
+        private log4net.ILog _logger = StaticMethods.GetLogger();
 
-        //protected InputDevice(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string cubeUrl)
-        //{
-        //    _targetConsumer = targetConsumer;
-        //    _samplingInterval = samplingInterval;
-        //    _cubeUrl = cubeUrl;
-        //}
         protected InputDevice(ISend<SendObject> targetConsumer, DeviceSetup setup)
         {
             _targetConsumer = targetConsumer;
@@ -48,18 +39,21 @@ namespace UeiBridge
             }
             ThisDeviceSetup = setup;
         }
-        public virtual void CloseDevice()
+        public virtual void CloseCurrentSession()
         {
             if (null != _deviceSession)
             {
-                _deviceSession.Stop();
+                if (_deviceSession.IsRunning())
+                {
+                    _deviceSession.Stop();
+                }
                 _deviceSession.Dispose();
             }
-            _deviceSession = null;
         }
 
-        public abstract void Dispose();
-
-        //public abstract int getme {get;}
+        public virtual void Dispose()
+        {
+            _logger.Debug($"Disposing {this.DeviceName}/Input, slot {ThisDeviceSetup.SlotNumber}");
+        }
     }
 }

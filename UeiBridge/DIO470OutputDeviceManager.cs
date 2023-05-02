@@ -19,7 +19,7 @@ namespace UeiBridge
         log4net.ILog _logger = StaticMethods.GetLogger();
         IConvert _attachedConverter;
         const string _channelsString = "Do0";
-        UeiDaq.Session _deviceSession;
+        //UeiDaq.Session _deviceSession;
         UeiDaq.DigitalWriter _writer;
         UInt16[] _lastScan;
 
@@ -32,17 +32,11 @@ namespace UeiBridge
 
         public override void Dispose()
         {
-            base.Dispose();
 
-            if (null != _writer)
-            {
-                _writer.Dispose();
-            }
-            if (null != _deviceSession)
-            {
-                _deviceSession.Stop();
-                _deviceSession.Dispose();
-            }
+
+            _writer.Dispose();
+            base.CloseCurrentSession();
+			base.Dispose();
         }
 
         public override bool OpenDevice()

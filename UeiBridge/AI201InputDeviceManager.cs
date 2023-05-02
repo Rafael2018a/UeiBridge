@@ -15,14 +15,13 @@ namespace UeiBridge
     /// </summary>
     class AI201InputDeviceManager : InputDevice
     {
-        AnalogScaledReader _reader;
-        log4net.ILog _logger = StaticMethods.GetLogger();
         public override string DeviceName => "AI-201-100"; // 
-        IConvert2<double[]> _attachedConverter;
-        //public override IConvert AttachedConverter => _attachedConverter;
-        //ISend<SendObject> _targetConsumer;
-        AI201100Setup _thisDeviceSetup;
-        double[] _lastScan;
+
+        private AnalogScaledReader _reader;
+        private log4net.ILog _logger = StaticMethods.GetLogger();
+        private IConvert2<double[]> _attachedConverter;
+        private AI201100Setup _thisDeviceSetup;
+        private double[] _lastScan;
 
         public AI201InputDeviceManager(ISend<SendObject> targetConsumer, AI201100Setup setup) : base(targetConsumer, setup)
         {
@@ -34,9 +33,7 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert(this.DeviceName.Equals(setup.DeviceName));
         }
 
-        public AI201InputDeviceManager() : base(null,null) // must have default const.
-        {
-        }
+        public AI201InputDeviceManager() : base(null, null) { }// must have default const.
 
         public void HandleResponse_Callback(object state)
         {
@@ -88,11 +85,10 @@ namespace UeiBridge
         {
             _samplingTimer.Dispose();
             System.Threading.Thread.Sleep(200);
-            CloseDevice();
-            _logger.Debug($"Disposing {this.DeviceName}/Input, slot {_thisDeviceSetup.SlotNumber}");
+            _reader.Dispose();
+            CloseCurrentSession();
+            base.Dispose();
         }
-
-        //
 
         public override string []GetFormattedStatus( TimeSpan interval)
         {
@@ -107,7 +103,6 @@ namespace UeiBridge
             }
             return new string[] { sb.ToString() };
         }
-
     }
 }
 

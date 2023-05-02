@@ -8,30 +8,6 @@ using UeiDaq;
 
 namespace UeiBridge
 {
-
-    public class DigitalWriterAdapter : IWriterAdapter<UInt16[]>
-    {
-        UeiDaq.DigitalWriter _ueiDigitalWriter;
-        Session _originSession;
-        public Session OriginSession => _originSession;
-
-        public DigitalWriterAdapter(DigitalWriter ueiDigitalWriter, Session originSession)
-        {
-            _ueiDigitalWriter = ueiDigitalWriter;
-            _originSession = originSession;
-        }
-
-        public void WriteSingleScan(ushort[] scan)
-        {
-            _ueiDigitalWriter.WriteSingleScanUInt16(scan);
-        }
-
-        public void Dispose()
-        {
-            throw new NotImplementedException();
-        }
-    }
-
     /// <summary>
     /// from the manual:
     /// ** 48-channel Digital I/O **
@@ -40,49 +16,36 @@ namespace UeiBridge
     {
         public override string DeviceName => "DIO-403";
 
-        //privates
-        log4net.ILog _logger = StaticMethods.GetLogger();
-        IConvert2<UInt16[]> _attachedConverter;
-        const string _channelsString = "Do0:2";// Do0:2 - 3*8 first bits as 'out'
-        IWriterAdapter<UInt16[]> _digitalWriter;
-        private Session _session;
-
-        public IWriterAdapter<UInt16[]> DigitalWriter => _digitalWriter;
-        System.Collections.Generic.List<ViewerItem<UInt16>> _lastScanList;
+        private log4net.ILog _logger = StaticMethods.GetLogger();
+        private IConvert2<UInt16[]> _attachedConverter;
+        private IWriterAdapter<UInt16[]> _digitalWriter;
+        //private Session _session;
+        private System.Collections.Generic.List<ViewerItem<UInt16>> _viewerItemist;
 
         public DIO403OutputDeviceManager(DeviceSetup setup, IWriterAdapter<UInt16[]> digitalWriter, UeiDaq.Session session) : base(setup)
         {
-            _digitalWriter = digitalWriter;
-            this._session = session;
+            this._digitalWriter = digitalWriter;
+            this._deviceSession = session;
         }
-        public DIO403OutputDeviceManager() : base(null) // must have default c-tor
-        {
-        }
+        public DIO403OutputDeviceManager() : base(null) { }// must have default c-tor
 
         public override void Dispose()
         {
+            _digitalWriter.Dispose();
+            base.CloseCurrentSession();
             base.Dispose();
-
-            //if (null != _writer)
-            //{
-            //    _writer.Dispose();
-            //}
-            if (null != _session)
-            {
-                _session.Stop();
-                _session.Dispose();
-            }
+            
         }
 
         public override bool OpenDevice()
         {
             _attachedConverter = new DigitalConverter(); //DIO403Convert(_digitalWriter.OriginSession.GetNumberOfChannels());
 
-            int noOfbits = _session.GetNumberOfChannels() * 8;
-            int firstBit = _session.GetChannel(0).GetIndex() * 8;
+            int noOfbits = _deviceSession.GetNumberOfChannels() * 8;
+            int firstBit = _deviceSession.GetChannel(0).GetIndex() * 8;
             _logger.Info($"Init success: {InstanceName}. Bits {firstBit}..{firstBit + noOfbits - 1} as output. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}"); // { noOfCh} output channels
 
-            _lastScanList = new System.Collections.Generic.List<ViewerItem<UInt16>>(new ViewerItem<UInt16>[_session.GetNumberOfChannels()]);
+            _viewerItemist = new System.Collections.Generic.List<ViewerItem<UInt16>>(new ViewerItem<UInt16>[_deviceSession.GetNumberOfChannels()]);
 
             Task.Factory.StartNew(() => OutputDeviceHandler_Task());
             _isDeviceReady = true;
@@ -92,12 +55,12 @@ namespace UeiBridge
         public override string [] GetFormattedStatus( TimeSpan interval)
         {
             System.Text.StringBuilder formattedString = new System.Text.StringBuilder("Output bits: ");
-            lock (_lastScanList)
+            lock (_viewerItemist)
             {
-                if (_lastScanList[0]?.timeToLive.Ticks > 0)
+                if (_viewerItemist[0]?.timeToLive.Ticks > 0)
                 {
-                    _lastScanList[0].timeToLive -= interval;
-                    foreach (var vi in _lastScanList)
+                    _viewerItemist[0].timeToLive -= interval;
+                    foreach (var vi in _viewerItemist)
                     {
                         if (null==vi)
                         {
@@ -121,11 +84,11 @@ namespace UeiBridge
             ushort[] scan = ls as ushort[];
             System.Diagnostics.Debug.Assert( scan != null);
             _digitalWriter.WriteSingleScan( scan);
-            lock (_lastScanList)
+            lock (_viewerItemist)
             {
                 for (int ch = 0; ch < scan.Length; ch++)
                 {
-                    _lastScanList[ch] = new ViewerItem<UInt16>(scan[ch], timeToLiveMs: 5000);
+                    _viewerItemist[ch] = new ViewerItem<UInt16>(scan[ch], timeToLiveMs: 5000);
                 }
             }
         }

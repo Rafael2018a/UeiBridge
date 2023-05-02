@@ -526,7 +526,7 @@ namespace UeiBridge.Library
         //    var ds = this.CubeSetupList[0].DeviceSetupList.Where(i => i.DeviceName == deviceName);
         //    return ds.FirstOrDefault();
         //}
-        public DeviceSetup GetSetupEntryForDevice(string cubeUrl, int slotNumber)
+        public DeviceSetup GetDeviceSetupEntry(string cubeUrl, int slotNumber)
         {
             if (this.CubeSetupList == null)
             {
@@ -542,7 +542,7 @@ namespace UeiBridge.Library
             DeviceSetup result = theSetups.FirstOrDefault();
             return result;
         }
-        public DeviceSetup GetSetupEntryForDevice1(string cubeUrl, string deviceName)
+        public DeviceSetup GetSetupEntryForDevice_notInUse(string cubeUrl, string deviceName)
         {
             if (this.CubeSetupList == null)
             {
@@ -590,16 +590,17 @@ namespace UeiBridge.Library
 
         public static System.Net.IPAddress CubeUriToIpAddress(string url)
         {
-            Uri u1 = new Uri(url);
-            var a1 = u1.Host;
-            System.Net.IPAddress result;
+            System.Net.IPAddress result = null;
+
+            //var a1 = u1.Host;
+            
             try
             {
+                Uri u1 = new Uri(url);
                 result = System.Net.IPAddress.Parse(u1.Host);
             }
-            catch (FormatException)
+            catch (Exception)
             {
-                result = null;// System.Net.IPAddress.None;
             }
             return result;
         }

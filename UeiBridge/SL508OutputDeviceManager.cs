@@ -98,7 +98,7 @@ namespace UeiBridge
         public override void Dispose()
         {
             _inDisposeState = true;
-            base.Dispose();
+            base.CloseCurrentSession();
             //return;
             for (int ch = 0; ch < _serialWriterList.Count; ch++)
             {

@@ -219,9 +219,9 @@ namespace UeiBridge
         public override void Dispose()
         {
             _isInDispose = true;
-            _analogWriter = null;
-            base.Dispose();
-
+            _analogWriter.Dispose();
+            base.CloseCurrentSession();
+			base.Dispose();
         }
     }
     class BlockSensorEntry

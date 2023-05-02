@@ -120,12 +120,40 @@ namespace UeiBridgeTest
 
             System.Threading.Thread.Sleep(100);
 
+            dio403.Dispose();
+
             Assert.Multiple(() =>
             {
                 Assert.That(mk1.Scan[0], Is.EqualTo(0xac));
                 Assert.That(mk1.Scan[1], Is.EqualTo(0x13));
             });
+        }
 
+        [Test]
+        public void DIO403InputDeviceManagerTest()
+        {
+            //Session s = new Session();
+            //s.CreateDOChannel("simu://Dev2/Di3:5");
+            //digitalWriterMock mk1 = new digitalWriterMock();
+            ////mk1.OriginSession = s;
+            //var devicelist = UeiBridge.Program.BuildDeviceList(new List<string>() { "simu://" });
+            //var ao = devicelist.Where(i => i.PhDevice.GetDeviceName().StartsWith("Simu-DIO64")).FirstOrDefault();
+
+            UeiDeviceAdapter uda = new UeiDeviceAdapter(DeviceMap2.DIO403Literal, 2); // simu://Simu-DIO64 is on slot 2
+
+            DIO403Setup setup = new DIO403Setup(null, new EndPoint("8.8.8.8", 5000), uda);
+            setup.CubeUrl = "simu://";
+
+            SenderMock sm = new SenderMock();
+
+            DIO403InputDeviceManager dio403 = new DIO403InputDeviceManager(sm, setup);
+            dio403.OpenDevice();
+
+            System.Threading.Thread.Sleep(100);
+
+            dio403.Dispose();
+
+            var so = sm._sentObject;
         }
     }
     public class analogWriterMock : IWriterAdapter<double[]>
@@ -158,12 +186,21 @@ namespace UeiBridgeTest
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            
         }
 
         public void WriteSingleScan(UInt16[] scan)
         {
             Scan = scan;
+        }
+    }
+
+    public class SenderMock : ISend<SendObject>
+    {
+        public SendObject _sentObject;
+        public void Send(SendObject i)
+        {
+            _sentObject = i;
         }
     }
 

@@ -34,7 +34,7 @@ namespace UeiBridgeSetup.ViewModels
             set
             {
                 _selectedPortIndex = value;
-                SL508892Setup setup = _mainConfig.GetSetupEntryForDevice(_selectedSlot.ThisDeviceSetup.CubeUrl, _selectedSlot.SlotNumber) as SL508892Setup;
+                SL508892Setup setup = _mainConfig.GetDeviceSetupEntry(_selectedSlot.ThisDeviceSetup.CubeUrl, _selectedSlot.SlotNumber) as SL508892Setup;
                 SerialMode = setup.Channels[_selectedPortIndex].mode;
                 Baudrate = setup.Channels[_selectedPortIndex].Baudrate;
             }
@@ -45,7 +45,7 @@ namespace UeiBridgeSetup.ViewModels
             set
             {
                 _baudrate = value;
-                SL508892Setup setup = _mainConfig.GetSetupEntryForDevice(_selectedSlot.ThisDeviceSetup.CubeUrl, _selectedSlot.SlotNumber) as SL508892Setup;
+                SL508892Setup setup = _mainConfig.GetDeviceSetupEntry(_selectedSlot.ThisDeviceSetup.CubeUrl, _selectedSlot.SlotNumber) as SL508892Setup;
                 setup.Channels[_selectedPortIndex].Baudrate = _baudrate;
                 RaisePropertyChanged();
             }
@@ -57,7 +57,7 @@ namespace UeiBridgeSetup.ViewModels
             set
             {
                 _serialMode = value;
-                SL508892Setup setup = _mainConfig.GetSetupEntryForDevice(_selectedSlot.ThisDeviceSetup.CubeUrl, _selectedSlot.SlotNumber) as SL508892Setup;
+                SL508892Setup setup = _mainConfig.GetDeviceSetupEntry(_selectedSlot.ThisDeviceSetup.CubeUrl, _selectedSlot.SlotNumber) as SL508892Setup;
                 setup.Channels[_selectedPortIndex].mode = _serialMode;
                 RaisePropertyChanged();
             }

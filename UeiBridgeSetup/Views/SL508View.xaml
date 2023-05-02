@@ -9,7 +9,7 @@
     <GroupBox>
         <GroupBox.Header>
             <StackPanel Orientation="Horizontal">
-                <TextBlock Grid.Row="0" Text="Serial port settings" FontSize="16" FontWeight="Bold"/>
+                <TextBlock Text="Serial port " FontSize="16" FontWeight="Bold"/>
                 <ContentControl Width="10"/>
                 <ComboBox x:Name="ChannelListComboBox" Grid.Row="0" Grid.Column="0" ItemsSource="{Binding ChannelList}" SelectedIndex="{Binding SelectedPortIndex}"/>
             </StackPanel>
@@ -17,26 +17,40 @@
         <Grid ShowGridLines="False">
             <Grid.RowDefinitions>
                 <RowDefinition Height="auto"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
             </Grid.RowDefinitions>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <!--<ComboBox x:Name="ChannelListComboBox" Grid.Row="0" Grid.Column="0" ItemsSource="{Binding ChannelList}" SelectedIndex="{Binding SelectedPortIndex}"/>-->
-            <StackPanel Grid.Row="1" Grid.Column="0">
-                <TextBlock Text="Mode" FontSize="14"/>
-                <ComboBox x:Name="ModeCombo" SelectedItem="{Binding SerialMode}"/>
-                <TextBlock Text="Baud rate"/>
+            <!--<StackPanel Grid.Row="1" Grid.Column="0">-->
+            <StackPanel Orientation="Horizontal" Margin="10,20,10,10" Grid.Row="0" Grid.Column="0">
+                    <TextBlock Text="Mode" FontSize="14"/>
+                    <ContentControl Width="20"/>
+                    <ComboBox x:Name="ModeCombo" SelectedItem="{Binding SerialMode}"/>
+                </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="10" Grid.Row="1" Grid.Column="0">
+                    <TextBlock Text="Baud rate" FontSize="14"/>
+                    <ContentControl Width="20"/>
                 <ComboBox x:Name="BaudCombo" SelectedItem="{Binding Baudrate}"/>
-                <TextBlock Text="Parity"/>
-                <TextBox Text="9600" Width="100"/>
-                <TextBlock Text="Stop bits"/>
-                <TextBox Text="9600" Width="100"/>
-            </StackPanel>
+                </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="10" Grid.Row="2" Grid.Column="0">
+                    <TextBlock Text="Parity" FontSize="14"/>
+                    <ContentControl Width="20"/>
+                    <TextBox Text="9600" Width="100"/>
+                </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="10" Grid.Row="3" Grid.Column="0">
+                    <TextBlock Text="Stop bits" FontSize="14"/>
+                    <ContentControl Width="20"/>
+                    <TextBox Text="9600" Width="100"/>
+                </StackPanel>
+            <!--</StackPanel>-->
             <!--<TextBlock Grid.Row="0" Grid.Column="0" Text="SL-508" FontSize="18"/>-->
             <!--<TextBlock Grid.Row="1" Grid.Column="1" Text="SL-508" FontSize="18"/>-->
-            <Image Grid.Row="1" Grid.Column="1" Source="/Images/uei_product_io_dna_sl_508.jpg" Height="100" />
+            <Image Grid.Row="1" Grid.Column="1" Grid.RowSpan="4" Source="/Images/uei_product_io_dna_sl_508.jpg" Height="100" />
 
 
         </Grid>

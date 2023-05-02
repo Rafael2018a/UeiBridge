@@ -101,8 +101,13 @@ namespace UeiBridgeTest
         [Test]
         public void CompareConfigTest()
         {
-            Config2 c2 = Config2.LoadConfigFromFile(new FileInfo(Config2.DafaultSettingsFilename));
-            Config2 c3 = Config2.LoadConfigFromFile(new FileInfo(Config2.DafaultSettingsFilename));
+            string filename = "setupForTest.config";
+
+            Config2 c1 = Config2.BuildDefaultConfig(new List<string> { "simu://" });
+            c1.SaveAs( new FileInfo(filename), true);
+
+            Config2 c2 = Config2.LoadConfigFromFile(new FileInfo(filename));
+            Config2 c3 = Config2.LoadConfigFromFile(new FileInfo(filename));
             c2.CubeSetupList.FirstOrDefault().DeviceSetupList.FirstOrDefault().DeviceName = "kkk";
             Assert.That(c2.Equals(c3), Is.False);
         }

@@ -85,6 +85,7 @@
     <Compile Include="BlockSensorManager.cs" />
     <Compile Include="Converters.cs" />
     <Compile Include="CubeSeeker.cs" />
+    <Compile Include="DigitalWriterAdapter.cs" />
     <Compile Include="DIO403InputDeviceManager.cs" />
     <Compile Include="DIO403OutputDeviceManager.cs" />
     <Compile Include="DIO470OutputDeviceManager.cs" />

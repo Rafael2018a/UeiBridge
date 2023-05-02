@@ -26,28 +26,18 @@ namespace UeiBridge
 
     public abstract class OutputDevice : IDeviceManager,  IDisposable, IEnqueue<byte[]> // IEnqueue<DeviceRequest>,
     {
-        #region abstracts properties
         public abstract string DeviceName { get; }
         public string InstanceName { get; private set; }
-        #endregion
-        #region abstract methods
         public abstract bool OpenDevice();
         protected abstract void HandleRequest(EthernetMessage request);
         public abstract string [] GetFormattedStatus( TimeSpan interval);
         //public abstract object ThisDeviceSetup { get; set; }
-        #endregion
-        #region protected fields
         protected string _caseUrl; // remove?
         protected DeviceSetup _deviceSetup; // from config
         protected bool _isDeviceReady=false;
-        //protected DateTime _publishTime = DateTime.Now;
-        #endregion
-        #region privates
+        protected Session _deviceSession;
         BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
         log4net.ILog _logger = StaticMethods.GetLogger();
-        //System.Timers.Timer _resetLastScanTimer = new System.Timers.Timer(1000);
-        //bool _disposeStarted = false;
-        #endregion
         
 
         protected OutputDevice(DeviceSetup deviceSetup)
@@ -147,17 +137,28 @@ namespace UeiBridge
             //_logger.Debug($"OutputDeviceHandler_Task Fin. {InstanceName}");
         }
 
+        public virtual void CloseCurrentSession()
+        {
+            if (null != _deviceSession)
+            {
+                if (_deviceSession.IsRunning())
+                {
+                    _deviceSession.Stop();
+                }
+                _deviceSession.Dispose();
+            }
+        }
+
         public virtual void Dispose()
+        {
+            _logger.Debug($"Disposing {_deviceSetup.DeviceName}/Output, slot {_deviceSetup.SlotNumber}");
+        }
+        public virtual void HaltMessageLoop()
         {
             
             _dataItemsQueue2.Add(null); // end task token (first, free Take() api and then apply CompleteAdding()
             Thread.Sleep(100);
             _dataItemsQueue2.CompleteAdding();
-            //if (null != _deviceSetup)
-            {
-                _logger.Debug($"Disposing {_deviceSetup.DeviceName}/Output, slot {_deviceSetup.SlotNumber}");
-            }
-            
         }
     }
 }

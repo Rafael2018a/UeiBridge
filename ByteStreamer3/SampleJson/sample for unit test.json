@@ -1,0 +1,18 @@
+{
+  "Header": {
+    "ConverterName": "icd_meni",
+    "NumberOfCycles": 20,
+    "WaitStateMs": 100,
+    "DestIp": "227.10.20.30",
+    "DestPort": 50099
+  },
+  "Bodyhhh": {
+    "CardId": 5,
+    "SlotNumber": 0,
+    "Payload": [
+      1,
+      2,
+      3
+    ]
+  }
+}

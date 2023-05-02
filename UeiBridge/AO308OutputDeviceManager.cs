@@ -17,31 +17,27 @@ namespace UeiBridge
     public class AO308OutputDeviceManager : OutputDevice
     {
         #region === publics ====
-        public override string DeviceName => DeviceMap2.AO308Literal;// "AO-308";
+        public override string DeviceName => DeviceMap2.AO308Literal;
         public IWriterAdapter<double[]> AnalogWriter => _analogWriter;
-
-        public Session UeiSession { get => _session; }
+        public Session UeiSession { get => _deviceSession; }
         public bool IsBlockSensorActive { get; private set; }
         #endregion
 
         #region === privates ===
-        IWriterAdapter<double[]> _analogWriter;
-        log4net.ILog _logger = StaticMethods.GetLogger();
-        List<ViewerItem<double>> _viewerItemList = new List<ViewerItem<double>>();
-        //object _viewerItemListLock = new object();
-        bool _inDisposeState = false;
+        private IWriterAdapter<double[]> _analogWriter;
+        private log4net.ILog _logger = StaticMethods.GetLogger();
+        private List<ViewerItem<double>> _viewerItemList = new List<ViewerItem<double>>();
+        private bool _inDisposeState = false;
         private IConvert2<double[]> _attachedConverter;
-        UeiDaq.Session _session;
         #endregion
 
         public AO308OutputDeviceManager(DeviceSetup deviceSetup1, IWriterAdapter<double[]> analogWriter, UeiDaq.Session session, bool isBlockSensorActive) : base(deviceSetup1)
         {
             this._analogWriter = analogWriter;
-            this._session = session;
+            this._deviceSession = session;
             this.IsBlockSensorActive = isBlockSensorActive;
         }
-
-        public AO308OutputDeviceManager() : base(null) { }
+        public AO308OutputDeviceManager() : base(null) { } // must have empty c-tor
 
         public override bool OpenDevice()
         {
@@ -49,12 +45,12 @@ namespace UeiBridge
             {
                 _attachedConverter = new AnalogConverter(AI201100Setup.PeekVoltage_upstream, AO308Setup.PeekVoltage_downstream);
 
-                int numOfCh = _session.GetNumberOfChannels();
+                int numOfCh = _deviceSession.GetNumberOfChannels();
                 System.Diagnostics.Debug.Assert(numOfCh == 8);
 
                 Task.Factory.StartNew(() => OutputDeviceHandler_Task());
 
-                var range = _session.GetDevice().GetAORanges();
+                var range = _deviceSession.GetDevice().GetAORanges();
                 AO308Setup ao308 = _deviceSetup as AO308Setup;
                 //System.Diagnostics.Debug.Assert(this.IsBlockSensorActive.HasValue);
                 if ( this.IsBlockSensorActive) 
@@ -132,17 +128,10 @@ namespace UeiBridge
         public override void Dispose()
         {
             _inDisposeState = true;
-            base.Dispose();
-
+            base.HaltMessageLoop();
             _analogWriter.Dispose();
-            if (null != _session)
-            {
-                if (_session.IsRunning())
-                {
-                    _session.Stop();
-                }
-                _session.Dispose();
-            }
+            base.CloseCurrentSession();
+            base.Dispose();
         }
     }
 }
