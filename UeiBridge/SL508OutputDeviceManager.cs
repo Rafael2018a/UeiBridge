@@ -25,14 +25,14 @@ namespace UeiBridge
         List<SerialWriter> _serialWriterList = new List<SerialWriter>();
         Dictionary<SerialPortSpeed, int> _serialSpeedDic = new Dictionary<SerialPortSpeed, int>();
         bool _inDisposeState = false;
-
+        private DeviceSetup _deviceSetup;
         public SL508OutputDeviceManager(DeviceSetup setup, SL508Session serialSession) : base(setup)
         {
             System.Diagnostics.Debug.Assert(null != serialSession);
             _serialSession = serialSession;
             _attachedConverter = StaticMethods.CreateConverterInstance(setup);
             System.Diagnostics.Debug.Assert(null != serialSession);
-
+            this._deviceSetup = setup;
             // init message list
             if (null != serialSession.SerialSession)
             {
@@ -42,7 +42,7 @@ namespace UeiBridge
                 }
             }
         }
-        public SL508OutputDeviceManager() { }// (default c-tor must be present)
+        public SL508OutputDeviceManager() { } // (default c-tor must be present)
         
         public override bool OpenDevice()
         {

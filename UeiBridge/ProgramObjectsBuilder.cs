@@ -291,7 +291,7 @@ namespace UeiBridge
                 BlockSensorSetup bssetup = _mainConfig.GetDeviceSetupEntry(_mainConfig.CubeSetupList[tbd].CubeUrl, BlockSensorSetup.BlockSensorSlotNumber) as BlockSensorSetup;
 #if !blocksim
                 // redirect dio430/input to block-sensor.
-                IEnumerable<PerDeviceObjects> inputDevices = _PerDeviceObjectsList.Where(i => i.InputDeviceManager != null).Where(i => i.InputDeviceManager.DeviceName == DeviceMap2.DIO403Literal).Where(i => i.InputDeviceManager.ThisDeviceSetup.SlotNumber == bssetup.DigitalCardSlot);
+                IEnumerable<PerDeviceObjects> inputDevices = _PerDeviceObjectsList.Where(i => i.InputDeviceManager != null).Where(i => i.InputDeviceManager.DeviceName == DeviceMap2.DIO403Literal).Where(i => i.InputDeviceManager.SlotNumber == bssetup.DigitalCardSlot);
                 DIO403InputDeviceManager dio403 = inputDevices.Select(i => i.InputDeviceManager).FirstOrDefault() as DIO403InputDeviceManager;
                 System.Diagnostics.Debug.Assert(dio403 != null);
                 dio403.TargetConsumer = blockSensor;

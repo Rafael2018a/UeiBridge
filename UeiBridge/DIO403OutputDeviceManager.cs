@@ -21,18 +21,20 @@ namespace UeiBridge
         private IWriterAdapter<UInt16[]> _digitalWriter;
         private System.Collections.Generic.List<ViewItem<UInt16>> _viewerItemist;
         private Session _ueiSession;
+        private DeviceSetup _deviceSetup;
 
         public DIO403OutputDeviceManager(DeviceSetup setup, IWriterAdapter<UInt16[]> digitalWriter, UeiDaq.Session session) : base(setup)
         {
             this._digitalWriter = digitalWriter;
             this._ueiSession = session;
+            this._deviceSetup = setup;
         }
         public DIO403OutputDeviceManager() { }// must have default c-tor
 
         public override void Dispose()
         {
             _digitalWriter.Dispose();
-            base.CloseCurrentSession(_ueiSession);
+            CloseSession(_ueiSession);
             base.Dispose();
             
         }

@@ -24,19 +24,19 @@ namespace UeiBridge
         readonly System.Net.IPEndPoint _targetEp;
         readonly SL508892Setup _thisDeviceSetup;
 
-        public override IConvert AttachedConverter => _attachedConverter;
+        //public override IConvert AttachedConverter => _attachedConverter;
         //public List<SerialWriter> SerialWriterList => _serialWriterList;
         public bool InDisposeState => _InDisposeState;
-
+        private ISend<SendObject> _targetConsumer;
         private SL508Session _serialSession;
-        public SL508InputDeviceManager(ISend<SendObject> targetConsumer, DeviceSetup setup, SL508Session serialSession) : base(targetConsumer, setup)
+        public SL508InputDeviceManager(ISend<SendObject> targetConsumer, DeviceSetup setup, SL508Session serialSession) : base( setup)
         {
             _serialPorts = new List<SerialPort>();
             _serialReaderList = new List<SerialReader>();
             //_serialWriterList = new List<SerialWriter>();
             _attachedConverter = StaticMethods.CreateConverterInstance(setup);
             _lastScanList = new List<ViewItem<byte[]>>();
-            
+            _targetConsumer = targetConsumer;
            
             _serialSession = serialSession;
             _targetEp = setup.DestEndPoint.ToIpEp();
@@ -48,7 +48,7 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert(this.DeviceName.Equals(setup.DeviceName));
         }
 
-        public SL508InputDeviceManager() : base(null,null)
+        public SL508InputDeviceManager() 
         {
         }
 
@@ -96,7 +96,7 @@ namespace UeiBridge
 
                 _lastScanList[channel] = new ViewItem<byte[]>(receiveBuffer, timeToLiveMs: 5000);
                 //_logger.Debug($"read from serial port. ch {channel}");
-                byte [] payload = this.AttachedConverter.DeviceToEth(receiveBuffer);
+                byte [] payload = this._attachedConverter.DeviceToEth(receiveBuffer);
                 EthernetMessage em = StaticMethods.BuildEthernetMessageFromDevice(payload, this._thisDeviceSetup, channel);
                 // forward to consumer (send by udp)
                 //ScanResult sr = new ScanResult(receiveBuffer, this);

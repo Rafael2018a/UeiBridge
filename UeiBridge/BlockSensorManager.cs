@@ -19,21 +19,22 @@ namespace UeiBridge
         public override string DeviceName => DeviceMap2.BlocksensorLiteral; //"BlockSensor";
         #endregion
         #region === privates ===
-        log4net.ILog _logger = StaticMethods.GetLogger();
-        List<BlockSensorEntry> _blockSensorTable = new List<BlockSensorEntry>();
-        IWriterAdapter<double[]> _analogWriter;
-        int _subaddress = -1;
-        double[] _scanToEmit;
-        BlockSensorSetup ThisDeviceSetup => _deviceSetup as BlockSensorSetup;
-
-        bool _isInDispose = false;
+        private log4net.ILog _logger = StaticMethods.GetLogger();
+        private List<BlockSensorEntry> _blockSensorTable = new List<BlockSensorEntry>();
+        private IWriterAdapter<double[]> _analogWriter;
+        private int _subaddress = -1;
+        private double[] _scanToEmit;
+        private BlockSensorSetup _deviceSetup;
+        private bool _isInDispose = false;
         #endregion
 
         public BlockSensorManager(DeviceSetup deviceSetup, IWriterAdapter<double[]> writer, UeiDaq.Session session) : base(deviceSetup)
         {
             System.Diagnostics.Debug.Assert(writer != null);
-            System.Diagnostics.Debug.Assert(null != ThisDeviceSetup);
             _analogWriter = writer;
+
+            _deviceSetup = deviceSetup as BlockSensorSetup;
+            System.Diagnostics.Debug.Assert(null != _deviceSetup);
 
             int serial = 0;
             _blockSensorTable.Add(new BlockSensorEntry(serial++, "ps1", 4, 0));
@@ -68,7 +69,7 @@ namespace UeiBridge
 
         public override bool OpenDevice()
         {
-            _logger.Info($"Init success: {InstanceName} . Listening on { ThisDeviceSetup.LocalEndPoint.ToIpEp()}");
+            _logger.Info($"Init success: {InstanceName} . Listening on { _deviceSetup.LocalEndPoint.ToIpEp()}");
 
             Task.Factory.StartNew(() => OutputDeviceHandler_Task());
             _isDeviceReady = true;

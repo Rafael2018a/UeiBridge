@@ -22,31 +22,33 @@ namespace UeiBridge
         private DIO403Setup _thisDeviceSetup;
         private UInt16[] _lastScan;
         private System.Threading.Timer _samplingTimer;
-
-
-        public DIO403InputDeviceManager( ISend<SendObject> targetConsumer, DeviceSetup setup): base(targetConsumer, setup)
+        const string _channelsString = "Di3:5"; // 3 * 8 last bits as 'out'
+        private Session _ueiSession;
+        private ISend<SendObject> _targetConsumer;
+        public DIO403InputDeviceManager( ISend<SendObject> targetConsumer, DeviceSetup setup): base( setup)
         {
-            _channelsString = "Di3:5"; // 3 * 8 last bits as 'out'
+            
             _attachedConverter = new DigitalConverter();// StaticMethods.CreateConverterInstance( setup);
             _thisDeviceSetup = setup as DIO403Setup;
+            _targetConsumer = targetConsumer;
 
             System.Diagnostics.Debug.Assert(null != setup);
             System.Diagnostics.Debug.Assert(DeviceName.Equals(setup.DeviceName));
         }
-        public DIO403InputDeviceManager() : base(null, null) { }// must have default c-tor.
+        public DIO403InputDeviceManager()  { }// must have default c-tor.
         public override void OpenDevice()
         {
             string deviceUrl = $"{_thisDeviceSetup.CubeUrl}Dev{_thisDeviceSetup.SlotNumber}/{_channelsString}";
 
             try
             {
-                _deviceSession = new Session();
-                _deviceSession.CreateDIChannel(deviceUrl);
-                _deviceSession.ConfigureTimingForSimpleIO();
-                _reader = new DigitalReader(_deviceSession.GetDataStream());
+                _ueiSession = new Session();
+                _ueiSession.CreateDIChannel(deviceUrl);
+                _ueiSession.ConfigureTimingForSimpleIO();
+                _reader = new DigitalReader(_ueiSession.GetDataStream());
 
-                int noOfbits = _deviceSession.GetNumberOfChannels() * 8;
-                int firstBit = _deviceSession.GetChannel(0).GetIndex() * 8;
+                int noOfbits = _ueiSession.GetNumberOfChannels() * 8;
+                int firstBit = _ueiSession.GetChannel(0).GetIndex() * 8;
                 _logger.Info($"Init success: {InstanceName}(Digital). Bits {firstBit}..{firstBit + noOfbits - 1} as input. Dest: {_thisDeviceSetup.DestEndPoint.ToIpEp()}");
                 TimeSpan interval = TimeSpan.FromMilliseconds(_thisDeviceSetup.SamplingInterval);
                 _samplingTimer = new System.Threading.Timer(DeviceScan_Callback, null, TimeSpan.Zero, interval);
@@ -54,7 +56,7 @@ namespace UeiBridge
             catch (Exception ex)
             {
                 _logger.Error(ex.Message);
-                _deviceSession = null;
+                _ueiSession = null;
             }
         }
         public override void Dispose()
@@ -62,7 +64,7 @@ namespace UeiBridge
             _logger.Debug($"Disposing {this.DeviceName}/Input, slot {_thisDeviceSetup.SlotNumber}");
             _samplingTimer.Dispose();
             System.Threading.Thread.Sleep(200); // wait for callback to finish
-            base.CloseCurrentSession();
+            CloseSession(_ueiSession);
 			base.Dispose();
         }
         public void DeviceScan_Callback(object state)
@@ -73,7 +75,7 @@ namespace UeiBridge
             {
                 _lastScan = _reader.ReadSingleScanUInt16();
                 System.Diagnostics.Debug.Assert(_lastScan != null);
-                System.Diagnostics.Debug.Assert(_lastScan.Length == _deviceSession.GetNumberOfChannels(), "wrong number of channels");
+                System.Diagnostics.Debug.Assert(_lastScan.Length == _ueiSession.GetNumberOfChannels(), "wrong number of channels");
                 byte[] payload = _attachedConverter.UpstreamConvert(_lastScan);
                 var em = StaticMethods.BuildEthernetMessageFromDevice( payload, _thisDeviceSetup);
 

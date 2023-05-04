@@ -24,9 +24,10 @@ namespace UeiBridge
         UeiDaq.DigitalWriter _writer;
         UInt16[] _lastScan;
         private Session _ueiSession;
-
+        private DeviceSetup _deviceSetup;
         public DIO470OutputDeviceManager(DeviceSetup setup) : base(setup)
         {
+            this._deviceSetup = setup;
         }
         public DIO470OutputDeviceManager()  // must have default c-tor
         {
@@ -34,10 +35,8 @@ namespace UeiBridge
 
         public override void Dispose()
         {
-
-
             _writer.Dispose();
-            base.CloseCurrentSession(_ueiSession);
+            CloseSession(_ueiSession);
 			base.Dispose();
         }
 

@@ -19,11 +19,10 @@ namespace UeiBridge
         protected abstract void HandleRequest(EthernetMessage request);
 
         public string InstanceName { get; private set; }
-
-        protected DeviceSetup _deviceSetup; 
+        public int SlotNumber { get; private set; }
+        //protected DeviceSetup _deviceSetup; 
         protected bool _isDeviceReady=false;
-        
-
+       
         private BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
         private log4net.ILog _logger = StaticMethods.GetLogger();
 
@@ -32,7 +31,6 @@ namespace UeiBridge
         {
             if (null != deviceSetup)
             {
-                _deviceSetup = deviceSetup;
                 InstanceName = $"{DeviceName}/Cube{deviceSetup.CubeId}/Slot{deviceSetup.SlotNumber}/Output";
             }
             else
@@ -40,6 +38,7 @@ namespace UeiBridge
                 InstanceName = "<undefiend output device>";
                 throw new ArgumentNullException();
             }
+            this.SlotNumber = deviceSetup.SlotNumber;
         }
 
         /// <summary>
@@ -97,7 +96,7 @@ namespace UeiBridge
                     continue;
                 }
                 // verify slot number
-                if (incomingMessage.SlotNumber != this._deviceSetup.SlotNumber)
+                if (incomingMessage.SlotNumber != this.SlotNumber)
                 {
                     _logger.Warn($"{InstanceName} wrong slot number ({incomingMessage.SlotNumber}). incoming message dropped.");
                     continue;
@@ -120,7 +119,7 @@ namespace UeiBridge
             }
         }
 
-        public virtual void CloseCurrentSession( Session theSession)
+        public static void CloseSession( Session theSession)
         {
             if (null != theSession)
             {
@@ -134,7 +133,7 @@ namespace UeiBridge
 
         public virtual void Dispose()
         {
-            _logger.Debug($"Disposing {_deviceSetup.DeviceName}/Output, slot {_deviceSetup.SlotNumber}");
+            _logger.Debug($"Device manager {InstanceName} Disposed");
         }
         public virtual void HaltMessageLoop()
         {

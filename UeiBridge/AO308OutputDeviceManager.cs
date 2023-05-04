@@ -30,6 +30,7 @@ namespace UeiBridge
         private bool _inDisposeState = false;
         private IConvert2<double[]> _attachedConverter;
         private Session _ueiSession;
+        private DeviceSetup _deviceSetup;
         #endregion
 
         public AO308OutputDeviceManager(DeviceSetup deviceSetup1, IWriterAdapter<double[]> analogWriter, UeiDaq.Session session, bool isBlockSensorActive) : base(deviceSetup1)
@@ -37,6 +38,7 @@ namespace UeiBridge
             this._analogWriter = analogWriter;
             this._ueiSession = session;
             this.IsBlockSensorActive = isBlockSensorActive;
+            this._deviceSetup = deviceSetup1;
         }
         public AO308OutputDeviceManager() {} // must have empty c-tor
 
@@ -131,7 +133,7 @@ namespace UeiBridge
             _inDisposeState = true;
             base.HaltMessageLoop();
             _analogWriter.Dispose();
-            base.CloseCurrentSession(_ueiSession);
+            CloseSession(_ueiSession);
             base.Dispose();
         }
     }

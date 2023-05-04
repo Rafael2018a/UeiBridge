@@ -12,23 +12,17 @@ namespace UeiBridge
 {
     public abstract class InputDevice : IDeviceManager, IDisposable
     {
-        public virtual IConvert AttachedConverter { get; }
         public abstract string [] GetFormattedStatus( TimeSpan interval);
         public abstract void OpenDevice();
-        public abstract string DeviceName { get; }
-        public string InstanceName { get; }
-        public DeviceSetup ThisDeviceSetup { get; private set; }
+        public abstract string DeviceName { get; } 
 
-        protected Session _deviceSession;
-        protected string _channelsString;
-        protected ISend<SendObject> _targetConsumer;
-        
-
+        public string InstanceName { get; private set; }
+        public int SlotNumber { get; private set; }
         private log4net.ILog _logger = StaticMethods.GetLogger();
 
-        protected InputDevice(ISend<SendObject> targetConsumer, DeviceSetup setup)
+        public InputDevice() { }
+        protected InputDevice( DeviceSetup setup)
         {
-            _targetConsumer = targetConsumer;
             if (null != setup)
             {
                 InstanceName = $"{DeviceName}/Cube{setup.CubeId}/Slot{setup.SlotNumber}/Input";
@@ -37,23 +31,23 @@ namespace UeiBridge
             {
                 InstanceName = "<undefined input device>";
             }
-            ThisDeviceSetup = setup;
+            SlotNumber = setup.SlotNumber;
         }
-        public virtual void CloseCurrentSession()
+        public static void CloseSession(Session theSession)
         {
-            if (null != _deviceSession)
+            if (null != theSession)
             {
-                if (_deviceSession.IsRunning())
+                if (theSession.IsRunning())
                 {
-                    _deviceSession.Stop();
+                    theSession.Stop();
                 }
-                _deviceSession.Dispose();
+                theSession.Dispose();
             }
         }
 
         public virtual void Dispose()
         {
-            _logger.Debug($"Disposing {this.DeviceName}/Input, slot {ThisDeviceSetup.SlotNumber}");
+            _logger.Debug($"Device manager {InstanceName} Disposed");
         }
     }
 }
