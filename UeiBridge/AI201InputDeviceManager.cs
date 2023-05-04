@@ -22,6 +22,7 @@ namespace UeiBridge
         private IConvert2<double[]> _attachedConverter;
         private AI201100Setup _thisDeviceSetup;
         private double[] _lastScan;
+        private System.Threading.Timer _samplingTimer;
 
         public AI201InputDeviceManager(ISend<SendObject> targetConsumer, AI201100Setup setup) : base(targetConsumer, setup)
         {

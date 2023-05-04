@@ -21,7 +21,7 @@ namespace UeiBridge
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            _ueiDigitalWriter.Dispose();
         }
     }
 }

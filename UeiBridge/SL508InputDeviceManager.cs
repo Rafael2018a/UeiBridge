@@ -20,7 +20,7 @@ namespace UeiBridge
         readonly List<SerialReader> _serialReaderList;
         IConvert _attachedConverter;
         bool _InDisposeState = false;
-        List<ViewerItem<byte[]>> _lastScanList;
+        List<ViewItem<byte[]>> _lastScanList;
         readonly System.Net.IPEndPoint _targetEp;
         readonly SL508892Setup _thisDeviceSetup;
 
@@ -35,7 +35,7 @@ namespace UeiBridge
             _serialReaderList = new List<SerialReader>();
             //_serialWriterList = new List<SerialWriter>();
             _attachedConverter = StaticMethods.CreateConverterInstance(setup);
-            _lastScanList = new List<ViewerItem<byte[]>>();
+            _lastScanList = new List<ViewItem<byte[]>>();
             
            
             _serialSession = serialSession;
@@ -94,7 +94,7 @@ namespace UeiBridge
             {
                 byte[] receiveBuffer = _serialReaderList[channel].EndRead(ar);
 
-                _lastScanList[channel] = new ViewerItem<byte[]>(receiveBuffer, timeToLiveMs: 5000);
+                _lastScanList[channel] = new ViewItem<byte[]>(receiveBuffer, timeToLiveMs: 5000);
                 //_logger.Debug($"read from serial port. ch {channel}");
                 byte [] payload = this.AttachedConverter.DeviceToEth(receiveBuffer);
                 EthernetMessage em = StaticMethods.BuildEthernetMessageFromDevice(payload, this._thisDeviceSetup, channel);
@@ -138,7 +138,7 @@ namespace UeiBridge
                 return;
             }
 
-            _lastScanList = new List<ViewerItem<byte[]>>(new ViewerItem<byte[]>[_serialSession.GetNumberOfChannels()]);
+            _lastScanList = new List<ViewItem<byte[]>>(new ViewItem<byte[]>[_serialSession.GetNumberOfChannels()]);
 
             System.Threading.Thread.Sleep(100);
             //int ch = 0;

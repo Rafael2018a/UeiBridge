@@ -18,7 +18,7 @@ namespace UeiBridge
         // privates
         log4net.ILog _logger = StaticMethods.GetLogger();
         IConvert _attachedConverter;
-        List<ViewerItem<byte[]>> _lastScanList = new List<ViewerItem<byte[]>>();
+        List<ViewItem<byte[]>> _lastScanList = new List<ViewItem<byte[]>>();
         SL508Session _serialSession;
         int _sentBytesAcc = 0;
         int _numberOfSentMessages = 0;
@@ -42,8 +42,8 @@ namespace UeiBridge
                 }
             }
         }
-        public SL508OutputDeviceManager() : base(null)// (default c-tor must be present)
-        { }
+        public SL508OutputDeviceManager() { }// (default c-tor must be present)
+        
         public override bool OpenDevice()
         {
             if (null == _serialSession.SerialSession)
@@ -98,7 +98,7 @@ namespace UeiBridge
         public override void Dispose()
         {
             _inDisposeState = true;
-            base.CloseCurrentSession();
+            //base.CloseCurrentSession(); tbd. see what to do with Serial session
             //return;
             for (int ch = 0; ch < _serialWriterList.Count; ch++)
             {
@@ -180,7 +180,7 @@ namespace UeiBridge
                 //_logger.Debug($"Sent ch{request.SerialChannel} {BitConverter.ToString(incomingMessage)}");
                 _sentBytesAcc += sentBytes;
                 _numberOfSentMessages++;
-                _lastScanList[request.SerialChannelNumber] = new ViewerItem<byte[]>(request.PayloadBytes, 5000);
+                _lastScanList[request.SerialChannelNumber] = new ViewItem<byte[]>(request.PayloadBytes, 5000);
             }
             catch (UeiDaqException ex)
             {

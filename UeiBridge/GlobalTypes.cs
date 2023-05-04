@@ -95,21 +95,36 @@ namespace UeiBridge.Types
         string [] GetFormattedStatus( TimeSpan interval);
     }
 
-    public class TeeObject : ISend<SendObject>
+    //public class TeeObject : ISend<SendObject>
+    //{
+    //    IEnqueue<byte[]> send1;
+    //    ISend<SendObject> send2;
+    //    public TeeObject(IEnqueue<byte[]> send1, ISend<SendObject> send2)
+    //    {
+    //        this.send1 = send1;
+    //        this.send2 = send2;
+    //    }
+    //    public void Send(SendObject obj)
+    //    {
+    //        send1.Enqueue(obj.ByteMessage);
+    //        send2.Send(obj);
+    //    }
+    //}
+
+    /// <summary>
+    /// Helper class for GetFormattedStatus() method
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    class ViewItem<T>
     {
-        IEnqueue<byte[]> send1;
-        ISend<SendObject> send2;
-        public TeeObject(IEnqueue<byte[]> send1, ISend<SendObject> send2)
+        public T readValue;
+        public TimeSpan timeToLive;
+
+        public ViewItem(T readValue, int timeToLiveMs)
         {
-            this.send1 = send1;
-            this.send2 = send2;
-        }
-        public void Send(SendObject obj)
-        {
-            send1.Enqueue(obj.ByteMessage);
-            send2.Send(obj);
+            this.readValue = readValue;
+            this.timeToLive = TimeSpan.FromMilliseconds(timeToLiveMs);
         }
     }
-
 
 }

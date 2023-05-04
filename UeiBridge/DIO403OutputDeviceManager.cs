@@ -19,20 +19,20 @@ namespace UeiBridge
         private log4net.ILog _logger = StaticMethods.GetLogger();
         private IConvert2<UInt16[]> _attachedConverter;
         private IWriterAdapter<UInt16[]> _digitalWriter;
-        //private Session _session;
-        private System.Collections.Generic.List<ViewerItem<UInt16>> _viewerItemist;
+        private System.Collections.Generic.List<ViewItem<UInt16>> _viewerItemist;
+        private Session _ueiSession;
 
         public DIO403OutputDeviceManager(DeviceSetup setup, IWriterAdapter<UInt16[]> digitalWriter, UeiDaq.Session session) : base(setup)
         {
             this._digitalWriter = digitalWriter;
-            this._deviceSession = session;
+            this._ueiSession = session;
         }
-        public DIO403OutputDeviceManager() : base(null) { }// must have default c-tor
+        public DIO403OutputDeviceManager() { }// must have default c-tor
 
         public override void Dispose()
         {
             _digitalWriter.Dispose();
-            base.CloseCurrentSession();
+            base.CloseCurrentSession(_ueiSession);
             base.Dispose();
             
         }
@@ -41,11 +41,11 @@ namespace UeiBridge
         {
             _attachedConverter = new DigitalConverter(); //DIO403Convert(_digitalWriter.OriginSession.GetNumberOfChannels());
 
-            int noOfbits = _deviceSession.GetNumberOfChannels() * 8;
-            int firstBit = _deviceSession.GetChannel(0).GetIndex() * 8;
+            int noOfbits = _ueiSession.GetNumberOfChannels() * 8;
+            int firstBit = _ueiSession.GetChannel(0).GetIndex() * 8;
             _logger.Info($"Init success: {InstanceName}. Bits {firstBit}..{firstBit + noOfbits - 1} as output. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}"); // { noOfCh} output channels
 
-            _viewerItemist = new System.Collections.Generic.List<ViewerItem<UInt16>>(new ViewerItem<UInt16>[_deviceSession.GetNumberOfChannels()]);
+            _viewerItemist = new System.Collections.Generic.List<ViewItem<UInt16>>(new ViewItem<UInt16>[_ueiSession.GetNumberOfChannels()]);
 
             Task.Factory.StartNew(() => OutputDeviceHandler_Task());
             _isDeviceReady = true;
@@ -88,7 +88,7 @@ namespace UeiBridge
             {
                 for (int ch = 0; ch < scan.Length; ch++)
                 {
-                    _viewerItemist[ch] = new ViewerItem<UInt16>(scan[ch], timeToLiveMs: 5000);
+                    _viewerItemist[ch] = new ViewItem<UInt16>(scan[ch], timeToLiveMs: 5000);
                 }
             }
         }

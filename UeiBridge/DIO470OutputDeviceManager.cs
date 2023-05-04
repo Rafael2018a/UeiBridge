@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using UeiBridge.Types;
 using System.Timers;
 using UeiBridge.Library;
+using UeiDaq;
 
 namespace UeiBridge
 {
@@ -22,11 +23,12 @@ namespace UeiBridge
         //UeiDaq.Session _deviceSession;
         UeiDaq.DigitalWriter _writer;
         UInt16[] _lastScan;
+        private Session _ueiSession;
 
         public DIO470OutputDeviceManager(DeviceSetup setup) : base(setup)
         {
         }
-        public DIO470OutputDeviceManager() : base(null) // must have default c-tor
+        public DIO470OutputDeviceManager()  // must have default c-tor
         {
         }
 
@@ -35,7 +37,7 @@ namespace UeiBridge
 
 
             _writer.Dispose();
-            base.CloseCurrentSession();
+            base.CloseCurrentSession(_ueiSession);
 			base.Dispose();
         }
 
@@ -43,11 +45,11 @@ namespace UeiBridge
         {
             _attachedConverter = StaticMethods.CreateConverterInstance( _deviceSetup);
             string cubeUrl = $"{_deviceSetup.CubeUrl}Dev{_deviceSetup.SlotNumber}/{_channelsString}";
-            _deviceSession = new UeiDaq.Session();
-            _deviceSession.CreateDOChannel(cubeUrl);
+            _ueiSession = new UeiDaq.Session();
+            _ueiSession.CreateDOChannel(cubeUrl);
 
-            _deviceSession.ConfigureTimingForSimpleIO();
-            _writer = new UeiDaq.DigitalWriter(_deviceSession.GetDataStream());
+            _ueiSession.ConfigureTimingForSimpleIO();
+            _writer = new UeiDaq.DigitalWriter(_ueiSession.GetDataStream());
 
             //UInt16[] u16 = { 0x1 };
             //_writer.WriteSingleScanUInt16(u16);

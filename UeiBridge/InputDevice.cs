@@ -22,7 +22,7 @@ namespace UeiBridge
         protected Session _deviceSession;
         protected string _channelsString;
         protected ISend<SendObject> _targetConsumer;
-        protected System.Threading.Timer _samplingTimer;
+        
 
         private log4net.ILog _logger = StaticMethods.GetLogger();
 

@@ -6,40 +6,28 @@ using UeiDaq;
 using UeiBridge.Types;
 using UeiBridge.Library;
 
-/// <summary>
-/// All files in project might refer to this file.
-/// Types in this file might NOT refer to types in any other file.
-/// </summary>
 namespace UeiBridge
 {
-    class ViewerItem <T>
-    {
-        public T readValue;
-        public TimeSpan timeToLive;
-
-        public ViewerItem(T readValue, int timeToLiveMs)
-        {
-            this.readValue = readValue;
-            this.timeToLive = TimeSpan.FromMilliseconds(timeToLiveMs);
-        }
-    }
-
+    /// <summary>
+    /// Parent class for all [x]outputDeviceManger classes.
+    /// </summary>
     public abstract class OutputDevice : IDeviceManager,  IDisposable, IEnqueue<byte[]> // IEnqueue<DeviceRequest>,
     {
         public abstract string DeviceName { get; }
-        public string InstanceName { get; private set; }
         public abstract bool OpenDevice();
+        public abstract string[] GetFormattedStatus(TimeSpan interval);
         protected abstract void HandleRequest(EthernetMessage request);
-        public abstract string [] GetFormattedStatus( TimeSpan interval);
-        //public abstract object ThisDeviceSetup { get; set; }
-        protected string _caseUrl; // remove?
-        protected DeviceSetup _deviceSetup; // from config
+
+        public string InstanceName { get; private set; }
+
+        protected DeviceSetup _deviceSetup; 
         protected bool _isDeviceReady=false;
-        protected Session _deviceSession;
-        BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
-        log4net.ILog _logger = StaticMethods.GetLogger();
         
 
+        private BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
+        private log4net.ILog _logger = StaticMethods.GetLogger();
+
+        protected OutputDevice() { }
         protected OutputDevice(DeviceSetup deviceSetup)
         {
             if (null != deviceSetup)
@@ -50,19 +38,13 @@ namespace UeiBridge
             else
             {
                 InstanceName = "<undefiend output device>";
+                throw new ArgumentNullException();
             }
-            //deviceSetup.CubeUrl;
-            //_resetLastScanTimer.Elapsed += resetLastScanTimer_Elapsed;
-            //_resetLastScanTimer.AutoReset = true;
-            //_resetLastScanTimer.Enabled = true;
         }
 
-        //protected abstract void resetLastScanTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e);
-
         /// <summary>
-        /// Enqueue message from Ethernet
+        /// Change byte-message to 'EthernetMessage' and push to message-loop-queue
         /// </summary>
-        /// <param name="m"></param>
         public virtual void Enqueue(byte[] m)
         {
             while (_dataItemsQueue2.IsCompleted)
@@ -90,7 +72,6 @@ namespace UeiBridge
         /// </summary>
         protected void OutputDeviceHandler_Task()
         {
-           // _logger.Debug($"OutputDeviceHandler_Task start. {InstanceName}");
             // message loop
             while (false == _dataItemsQueue2.IsCompleted)
             {
@@ -102,50 +83,52 @@ namespace UeiBridge
                     break;
                 }
 
+                // verify internal consistency
                 if (false == incomingMessage.InternalValidityTest())
                 {
                     _logger.Warn("Invalid message. rejected");
                     continue;
                 }
-                // verify card type
+                // verify valid card type
                 int cardId = DeviceMap2.GetCardIdFromCardName(this.DeviceName);
                 if ( cardId != incomingMessage.CardType)
                 {
                     _logger.Warn($"{InstanceName} wrong card id {incomingMessage.CardType} while expecting {cardId}. message dropped.");
                     continue;
                 }
-
                 // verify slot number
                 if (incomingMessage.SlotNumber != this._deviceSetup.SlotNumber)
                 {
                     _logger.Warn($"{InstanceName} wrong slot number ({incomingMessage.SlotNumber}). incoming message dropped.");
                     continue;
                 }
+                // alert if items lost
                 if (_dataItemsQueue2.Count ==  _dataItemsQueue2.BoundedCapacity)
                 {
                     _logger.Warn($"Input queue items = {_dataItemsQueue2.Count}");
                 }
+
+                // finally, Handle message
                 if (_isDeviceReady)
                 {
                     HandleRequest(incomingMessage);
                 }
                 else
                 {
-                    _logger.Warn($"Device {DeviceName} not ready. message dropped.");
+                    _logger.Warn($"Device {DeviceName} not ready. message rejected.");
                 }
             }
-            //_logger.Debug($"OutputDeviceHandler_Task Fin. {InstanceName}");
         }
 
-        public virtual void CloseCurrentSession()
+        public virtual void CloseCurrentSession( Session theSession)
         {
-            if (null != _deviceSession)
+            if (null != theSession)
             {
-                if (_deviceSession.IsRunning())
+                if (theSession.IsRunning())
                 {
-                    _deviceSession.Stop();
+                    theSession.Stop();
                 }
-                _deviceSession.Dispose();
+                theSession.Dispose();
             }
         }
 
@@ -155,7 +138,6 @@ namespace UeiBridge
         }
         public virtual void HaltMessageLoop()
         {
-            
             _dataItemsQueue2.Add(null); // end task token (first, free Take() api and then apply CompleteAdding()
             Thread.Sleep(100);
             _dataItemsQueue2.CompleteAdding();

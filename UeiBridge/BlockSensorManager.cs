@@ -54,7 +54,7 @@ namespace UeiBridge
             _scanToEmit = new double[session.GetNumberOfChannels()];
 
         }
-        public BlockSensorManager() : base(null) // empty c-tor for Activator.CreateInstance()
+        public BlockSensorManager() // empty c-tor for Activator.CreateInstance()
         {
         }
 
@@ -145,71 +145,6 @@ namespace UeiBridge
             base.Enqueue(byteMessage);
         }
 
-        /// <summary>
-        /// Two types of messages might reach here
-        /// 1. From "DIO-403/Input". (a copy of the upstream message)
-        /// 2. From Ethernet. id of this message is 32 ("to BlockSensor").
-        /// </summary>
-        //public override void Enqueue(byte[] byteMessage)
-        //{
-        //    if (_isInDispose)
-        //    {
-        //        return;
-        //    }
-        //    // upstream message from digital/input card
-        //    if (byteMessage[EthernetMessage._cardTypeOffset] == DeviceMap2.GetCardIdFromCardName(DeviceMap2.DIO403Literal)) //"DIO-403"))
-        //    {
-        //        // convert
-        //        try
-        //        {
-        //            EthernetMessage msg = EthernetMessage.CreateFromByteArray(byteMessage, MessageWay.upstream);
-        //            if (null == msg) throw new ArgumentNullException();
-
-        //            _subaddress = msg.PayloadBytes[0] & 0x7; // get lower 3 bits
-        //        }
-        //        catch (ArgumentException ex)
-        //        {
-        //            _logger.Warn($"BlockSensor: {ex.Message}");
-        //        }
-        //        return;
-        //    }
-
-        //    // downstream message aimed to block sensor
-        //    if (byteMessage[EthernetMessage._cardTypeOffset] == DeviceMap2.GetCardIdFromCardName( DeviceMap2.BlocksensorLiteral))
-        //    {
-        //        if (_subaddress < 0)
-        //        {
-        //            return;
-        //        }
-        //        if ((_payloadLength+EthernetMessage._payloadOffset) != byteMessage.Length)
-        //        {
-        //            _logger.Warn($"Incoming message length {byteMessage.Length}not match. expecting {_payloadLength+EthernetMessage._payloadOffset+_payloadLength}, message rejected.");
-        //            return;
-        //        }
-        //        // select entries from block-sensor table.
-        //        var selectedEntries = _blockSensorTable.Where(ent => ent.Subaddress == this._subaddress); 
-
-        //        // convert incoming message 
-        //        EthernetMessage downstreamEthMessage = EthernetMessage.CreateFromByteArray(byteMessage, MessageWay.downstream);
-        //        double[] downstreamPayload = _analogConverter.DownstreamConvert(downstreamEthMessage.PayloadBytes) as double[];
-        //        if (false == downstreamEthMessage.InternalValidityTest())
-        //        {
-        //            _logger.Warn("Incoming message length validity check failed, message rejected.");
-        //        }
-
-        //        // build 'scan'
-        //        Array.Clear(_scanToEmit, 0, _scanToEmit.Length);
-        //        foreach (var entry in selectedEntries)
-        //        {
-        //            double voltageToEmit = downstreamPayload[entry.EntrySerial];
-        //            int channelToEmit = entry.chan_ain;
-        //            _scanToEmit[channelToEmit] = voltageToEmit;
-        //        }
-
-        //        // emit 'scan' to analog card
-        //        _analogWriter.WriteSingleScan(_scanToEmit);
-        //    }
-        //}
 
         public void Send(SendObject obj)
         {
@@ -220,7 +155,7 @@ namespace UeiBridge
         {
             _isInDispose = true;
             _analogWriter.Dispose();
-            base.CloseCurrentSession();
+            //base.CloseCurrentSession() ; tbd. actually, this is the a0308 session. what to do?
 			base.Dispose();
         }
     }

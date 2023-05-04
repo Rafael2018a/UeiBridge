@@ -21,7 +21,7 @@ namespace UeiBridge
         private IConvert2<UInt16[]> _attachedConverter;
         private DIO403Setup _thisDeviceSetup;
         private UInt16[] _lastScan;
-
+        private System.Threading.Timer _samplingTimer;
 
 
         public DIO403InputDeviceManager( ISend<SendObject> targetConsumer, DeviceSetup setup): base(targetConsumer, setup)
@@ -50,7 +50,6 @@ namespace UeiBridge
                 _logger.Info($"Init success: {InstanceName}(Digital). Bits {firstBit}..{firstBit + noOfbits - 1} as input. Dest: {_thisDeviceSetup.DestEndPoint.ToIpEp()}");
                 TimeSpan interval = TimeSpan.FromMilliseconds(_thisDeviceSetup.SamplingInterval);
                 _samplingTimer = new System.Threading.Timer(DeviceScan_Callback, null, TimeSpan.Zero, interval);
-
             }
             catch (Exception ex)
             {
