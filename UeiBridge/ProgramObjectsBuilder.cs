@@ -87,7 +87,10 @@ namespace UeiBridge
                 //setup.CubeUrl = realDevice.CubeUrl;
                 //setup.IsBlockSensorActive = _mainConfig.Blocksensor.IsActive;
                 List<PerDeviceObjects> objs = BuildObjectsForDevice(realDevice, setup);
-                _PerDeviceObjectsList.AddRange(objs);
+                if (null != objs)
+                {
+                    _PerDeviceObjectsList.AddRange(objs);
+                }
             }
         }
 
@@ -157,6 +160,15 @@ namespace UeiBridge
 
         private List<PerDeviceObjects> Build_AO308(DeviceEx realDevice, DeviceSetup setup)
         {
+            // if block-sensor is active, Do not build AO308,
+            // since Block sensor takes control on the analog output. 
+            BlockSensorSetup bssetup = _mainConfig.GetDeviceSetupEntry(setup.CubeUrl, BlockSensorSetup.BlockSensorSlotNumber) as BlockSensorSetup;
+            bool bsActive = ((null != bssetup) && (true == bssetup.IsActive) && (bssetup.AnalogCardSlot == setup.SlotNumber)) ? true : false;
+            if (bsActive)
+            {
+                return null;
+            }
+
             // create uei entities
             Session theSession = new Session();
             string cubeUrl = $"{setup.CubeUrl}Dev{ setup.SlotNumber}/Ao0:7";
@@ -165,14 +177,11 @@ namespace UeiBridge
             theSession.ConfigureTimingForSimpleIO();
             var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()), theSession);
 
-            BlockSensorSetup bssetup = _mainConfig.GetDeviceSetupEntry(setup.CubeUrl, BlockSensorSetup.BlockSensorSlotNumber) as BlockSensorSetup;
-            bool bsActive = ((null != bssetup) && (true == bssetup.IsActive) && (bssetup.AnalogCardSlot == setup.SlotNumber))? true: false;
-
             AO308OutputDeviceManager ao308 = new AO308OutputDeviceManager(setup as AO308Setup, aWriter, theSession, bsActive);
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
 
             // if block sensor isn't active, set ao308 as consumer of udp-reader
-            if (!ao308.IsBlockSensorActive)
+            //if (!ao308.IsBlockSensorActive)
             {
                 var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
                 UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, ao308, ao308.InstanceName);
@@ -284,11 +293,24 @@ namespace UeiBridge
 
         public void Build_BlockSensorManager(List<DeviceEx> realDeviceList)
         {
-            BlockSensorManager blockSensor = CreateBlockSensorObject2();
-            if (null != blockSensor)
+            foreach (CubeSetup csetup in _mainConfig.CubeSetupList)
             {
-                int tbd = 0;
-                BlockSensorSetup bssetup = _mainConfig.GetDeviceSetupEntry(_mainConfig.CubeSetupList[tbd].CubeUrl, BlockSensorSetup.BlockSensorSlotNumber) as BlockSensorSetup;
+                // check if block sensor is active for cube
+                BlockSensorSetup bssetup = _mainConfig.GetDeviceSetupEntry(csetup.CubeUrl, BlockSensorSetup.BlockSensorSlotNumber) as BlockSensorSetup;
+                if ((null == bssetup) || (false == bssetup.IsActive))
+                {
+                    continue;
+                }
+
+                Session theSession = new Session();
+                string cubeUrl = $"{ csetup.CubeUrl}Dev{ bssetup.AnalogCardSlot}/Ao0:7";
+                var ch = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
+                System.Diagnostics.Debug.Assert(ch.GetMaximum() == AO308Setup.PeekVoltage_downstream);
+                theSession.ConfigureTimingForSimpleIO();
+                var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()), theSession);
+
+                BlockSensorManager2 blockSensor = new BlockSensorManager2(bssetup, aWriter, theSession);
+
 #if !blocksim
                 // redirect dio430/input to block-sensor.
                 IEnumerable<PerDeviceObjects> inputDevices = _PerDeviceObjectsList.Where(i => i.InputDeviceManager != null).Where(i => i.InputDeviceManager.DeviceName == DeviceMap2.DIO403Literal).Where(i => i.InputDeviceManager.SlotNumber == bssetup.DigitalCardSlot);
@@ -313,69 +335,10 @@ namespace UeiBridge
                 blockSensor.Enqueue(d403);
 #endif
                 _PerDeviceObjectsList.Add(pd);
+
             }
 
-        }
 
-        /// <summary>
-        /// BlockSensorManager might be created only if digital and analog cards exists
-        /// </summary>
-        private BlockSensorManager CreateBlockSensorObject(List<DeviceEx> realDeviceList)
-        {
-            int tbd = 0;
-            BlockSensorSetup bssetup = _mainConfig.GetDeviceSetupEntry(_mainConfig.CubeSetupList[tbd].CubeUrl, BlockSensorSetup.BlockSensorSlotNumber) as BlockSensorSetup;
-
-            if (false == bssetup.IsActive)
-            {
-                _logger.Debug("Block sensor disabled.");
-                return null;
-            }
-
-            bool analogExist = realDeviceList.Any(d => (d.PhDevice.GetDeviceName() == DeviceMap2.AO308Literal) && (d.PhDevice.GetIndex() == bssetup.AnalogCardSlot));
-            bool digitalExist = realDeviceList.Any(d => (d.PhDevice.GetDeviceName() == DeviceMap2.DIO403Literal) && (d.PhDevice.GetIndex() == bssetup.DigitalCardSlot));
-            if (analogExist && digitalExist)
-            {
-                var ls = _PerDeviceObjectsList.Where(d => (d.OutputDeviceManager != null) && d.OutputDeviceManager.DeviceName == DeviceMap2.AO308Literal);
-                OutputDevice od = ls.Select(d => d.OutputDeviceManager).FirstOrDefault();
-                AO308OutputDeviceManager ao308dev = od as AO308OutputDeviceManager;
-                if (null != ao308dev)
-                {
-                    BlockSensorManager bsManager = new BlockSensorManager(bssetup, ao308dev.AnalogWriter, ao308dev.UeiSession);
-                    return bsManager;
-                }
-                else
-                {
-                    _logger.Warn("Failed to create block-sensor object");
-                }
-            }
-            else
-            {
-                _logger.Warn("Failed to create block-sensor object");
-            }
-
-            return null;
-        }
-        private BlockSensorManager CreateBlockSensorObject2()
-        {
-            foreach (CubeSetup csetup in _mainConfig.CubeSetupList)
-            {
-                BlockSensorSetup bssetup = _mainConfig.GetDeviceSetupEntry(csetup.CubeUrl, BlockSensorSetup.BlockSensorSlotNumber) as BlockSensorSetup;
-                if ((null == bssetup) || (false == bssetup.IsActive))
-                {
-                    continue;
-                }
-
-                // check pre conditions
-                AO308OutputDeviceManager ao308 = GetOutputDeviceManager<AO308OutputDeviceManager>(csetup.CubeUrl, bssetup.AnalogCardSlot, DeviceMap2.AO308Literal);
-                DIO403InputDeviceManager dio403 = GetInputDeviceManager<DIO403InputDeviceManager>(csetup.CubeUrl, bssetup.DigitalCardSlot, DeviceMap2.DIO403Literal);
-                if (null != ao308 && null!=dio403)
-                {
-                    BlockSensorManager bsManager = new BlockSensorManager(bssetup, ao308.AnalogWriter, ao308.UeiSession);
-                    return bsManager;
-                }
-            }
-
-            return null;
         }
 
         public void Dispose()

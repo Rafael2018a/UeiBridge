@@ -76,7 +76,7 @@ namespace UeiBridge.Library
                 result[i * 2 + 1] = two[1];
             }
 
-            return EthernetMessage.CreateMessage(32, 32, 0, result);
+            return EthernetMessage.CreateMessage( 32, 32, 0, result);
         }
 
 

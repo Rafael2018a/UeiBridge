@@ -23,15 +23,14 @@ namespace UeiBridge
         public bool IsBlockSensorActive { get; private set; }
         #endregion
 
-        #region === privates ===
-        private IWriterAdapter<double[]> _analogWriter;
-        private log4net.ILog _logger = StaticMethods.GetLogger();
-        private List<ViewItem<double>> _viewerItemList = new List<ViewItem<double>>();
-        private bool _inDisposeState = false;
-        private IConvert2<double[]> _attachedConverter;
+        protected IWriterAdapter<double[]> _analogWriter;
+        protected log4net.ILog _logger = StaticMethods.GetLogger();
+        protected List<ViewItem<double>> _viewerItemList = new List<ViewItem<double>>();
+        protected bool _inDisposeState = false;
+        protected AnalogConverter _attachedConverter;
+
         private Session _ueiSession;
         private DeviceSetup _deviceSetup;
-        #endregion
 
         public AO308OutputDeviceManager(DeviceSetup deviceSetup1, IWriterAdapter<double[]> analogWriter, UeiDaq.Session session, bool isBlockSensorActive) : base(deviceSetup1)
         {

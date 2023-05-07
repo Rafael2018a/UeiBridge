@@ -52,7 +52,7 @@ namespace UeiBridge.Library
 
         public UeiDaq.SerialPortMode mode = UeiDaq.SerialPortMode.RS232;
 
-        [XmlElement("Baud")]
+        //[XmlElement("Baud")]
         public UeiDaq.SerialPortSpeed Baudrate { get; set; }
 
         public UeiDaq.SerialPortParity parity = UeiDaq.SerialPortParity.None;
@@ -150,7 +150,7 @@ namespace UeiBridge.Library
         public int DigitalCardSlot { get; set; }
         public BlockSensorSetup(EndPoint localEndPoint, string deviceName) : base(localEndPoint, null, deviceName)
         {
-            SlotNumber = BlockSensorSlotNumber; 
+            SlotNumber = AnalogCardSlot;
         }
 
         protected BlockSensorSetup()

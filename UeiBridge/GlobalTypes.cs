@@ -115,7 +115,7 @@ namespace UeiBridge.Types
     /// Helper class for GetFormattedStatus() method
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    class ViewItem<T>
+    public class ViewItem<T>
     {
         public T readValue;
         public TimeSpan timeToLive;
@@ -124,6 +124,22 @@ namespace UeiBridge.Types
         {
             this.readValue = readValue;
             this.timeToLive = TimeSpan.FromMilliseconds(timeToLiveMs);
+        }
+    }
+
+    class BlockSensorEntry
+    {
+        public int EntrySerial { get; private set; }
+        public string SignalName { get; private set; }
+        public int chan_ain { get; private set; }
+        public int Subaddress { get; private set; }
+
+        public BlockSensorEntry(int entrySerial, string signalName, int subaddress, int chan_ain)
+        {
+            this.EntrySerial = entrySerial;
+            this.SignalName = signalName;
+            this.Subaddress = subaddress;
+            this.chan_ain = chan_ain;
         }
     }
 
