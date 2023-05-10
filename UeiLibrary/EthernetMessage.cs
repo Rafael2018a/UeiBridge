@@ -27,6 +27,7 @@ namespace UeiBridge.Library
         public int NominalLength { get; set; }
 
         public const int _payloadOffset = 16;// _payloadOffset;
+        public const int _unitIdOffset = 4;
         public const int _cardTypeOffset = 5;// _cardTypeOffset;
         public const int _slotNumberOffset = 6;
         public const int _serailChannelOffset = 7;
@@ -44,7 +45,7 @@ namespace UeiBridge.Library
             byte[] messageBytes = new byte[_payloadOffset + PayloadBytes.Length];
             Array.Clear(messageBytes, 0, messageBytes.Length);
 
-            // card type
+            messageBytes[_unitIdOffset] = (byte)UnitId;
             messageBytes[_cardTypeOffset] = (byte)CardType;
             messageBytes[_serailChannelOffset] = (byte)SerialChannelNumber;
             messageBytes[_slotNumberOffset] = (byte)SlotNumber;
@@ -117,13 +118,13 @@ namespace UeiBridge.Library
             // header & payload
             //resutlMessage.HeaderBytes = new byte[EthernetMessage._payloadOffset];
             //Array.Copy(byteMessage, resutlMessage.HeaderBytes, EthernetMessage._payloadOffset);
-            resutlMessage.PayloadBytes = new byte[byteMessage.Length - EthernetMessage._payloadOffset];
-            Array.Copy(byteMessage, EthernetMessage._payloadOffset, resutlMessage.PayloadBytes, 0, byteMessage.Length - EthernetMessage._payloadOffset);
+            resutlMessage.PayloadBytes = new byte[byteMessage.Length - _payloadOffset];
+            Array.Copy(byteMessage, _payloadOffset, resutlMessage.PayloadBytes, 0, byteMessage.Length - EthernetMessage._payloadOffset);
 
-            // type & slot
-            resutlMessage.CardType = byteMessage[EthernetMessage._cardTypeOffset];
-            resutlMessage.SerialChannelNumber = byteMessage[EthernetMessage._serailChannelOffset];
-            resutlMessage.SlotNumber = byteMessage[EthernetMessage._slotNumberOffset];
+            resutlMessage.UnitId = byteMessage[_unitIdOffset];
+            resutlMessage.CardType = byteMessage[_cardTypeOffset];
+            resutlMessage.SerialChannelNumber = byteMessage[_serailChannelOffset];
+            resutlMessage.SlotNumber = byteMessage[_slotNumberOffset];
             resutlMessage.NominalLength = byteMessage.Length; 
 
             return resutlMessage;

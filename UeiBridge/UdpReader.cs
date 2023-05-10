@@ -31,6 +31,8 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert(instanceName.Length > 1);
 
             _udpclient = new UdpClient();
+
+            
         }
 
         public void Start()
@@ -54,10 +56,12 @@ namespace UeiBridge
                 //_logger.Info($"Multicast receiver - {this._instanceName} - esablished. Listening on {_msListeningiEp}");
                 // Start listening for incoming data
                 _udpclient.BeginReceive(new AsyncCallback(ReceivedCallback), null);
+
+                _logger.Debug($"Udp reader start. {this._instanceName}");
             }
             catch (SocketException ex)
             {
-                _logger.Warn( $"{_instanceName}: Faild to establish multicast receiver. Group {_msListeningiEp}. {ex.Message}");
+                _logger.Warn( $"{_instanceName}: Failed to establish multicast receiver. Group {_msListeningiEp}. {ex.Message}");
             }
         }
 

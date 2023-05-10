@@ -5,13 +5,14 @@ using System.Threading.Tasks;
 using UeiDaq;
 using UeiBridge.Types;
 using UeiBridge.Library;
+using System.Net;
 
 namespace UeiBridge
 {
     /// <summary>
     /// Parent class for all [x]outputDeviceManger classes.
     /// </summary>
-    public abstract class OutputDevice : IDeviceManager,  IDisposable, IEnqueue<byte[]> // IEnqueue<DeviceRequest>,
+    public abstract class OutputDevice : IDeviceManager, IDisposable, IEnqueue<byte[]> // IEnqueue<DeviceRequest>,
     {
         public abstract string DeviceName { get; }
         public abstract bool OpenDevice();
@@ -20,9 +21,11 @@ namespace UeiBridge
 
         public string InstanceName { get; private set; }
         public int SlotNumber { get; private set; }
+        public string CubeUrl { get; private set; }
+        public int CubeId { get; private set; }
         //protected DeviceSetup _deviceSetup; 
-        protected bool _isDeviceReady=false;
-       
+        protected bool _isDeviceReady = false;
+
         private BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
         private log4net.ILog _logger = StaticMethods.GetLogger();
 
@@ -39,6 +42,18 @@ namespace UeiBridge
                 throw new ArgumentNullException();
             }
             this.SlotNumber = deviceSetup.SlotNumber;
+            this.CubeUrl = deviceSetup.CubeUrl;
+
+            IPAddress ipa = Config2.CubeUriToIpAddress(this.CubeUrl);
+            if (null != ipa)
+            {
+                CubeId = ipa.GetAddressBytes()[3];
+            }
+            else
+            {
+                CubeId = -1;
+            }
+
         }
 
         /// <summary>
@@ -46,7 +61,7 @@ namespace UeiBridge
         /// </summary>
         public virtual void Enqueue(byte[] m)
         {
-            while (_dataItemsQueue2.IsCompleted)
+            if (_dataItemsQueue2.IsCompleted)
             {
                 return;
             }
@@ -55,10 +70,7 @@ namespace UeiBridge
             {
                 EthernetMessage em = EthernetMessage.CreateFromByteArray(m, MessageWay.downstream);
                 System.Diagnostics.Debug.Assert(em != null);
-                if (!_dataItemsQueue2.IsCompleted)
-                {
-                    _dataItemsQueue2.Add(em);
-                }
+                _dataItemsQueue2.Add(em);
             }
             catch (Exception ex)
             {
@@ -90,7 +102,7 @@ namespace UeiBridge
                 }
                 // verify valid card type
                 int cardId = DeviceMap2.GetCardIdFromCardName(this.DeviceName);
-                if ( cardId != incomingMessage.CardType)
+                if (cardId != incomingMessage.CardType)
                 {
                     _logger.Warn($"{InstanceName} wrong card id {incomingMessage.CardType} while expecting {cardId}. message dropped.");
                     continue;
@@ -102,7 +114,7 @@ namespace UeiBridge
                     continue;
                 }
                 // alert if items lost
-                if (_dataItemsQueue2.Count ==  _dataItemsQueue2.BoundedCapacity)
+                if (_dataItemsQueue2.Count == _dataItemsQueue2.BoundedCapacity)
                 {
                     _logger.Warn($"Input queue items = {_dataItemsQueue2.Count}");
                 }
@@ -119,7 +131,7 @@ namespace UeiBridge
             }
         }
 
-        public static void CloseSession( Session theSession)
+        public static void CloseSession(Session theSession)
         {
             if (null != theSession)
             {
