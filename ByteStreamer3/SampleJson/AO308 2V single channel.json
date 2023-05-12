@@ -1,19 +1,19 @@
 {
   "Header": {
     "EnablePlay": false,
-    "Title": "Uei general card",
-    "ConverterName": null,
+    "DestIp": "227.3.1.10",
+    "DestPort": 50035,
     "NumberOfCycles": 20,
     "WaitStateMs": 100,
-    "DestIp": "227.3.1.10",
-    "DestPort": 50035
+    "ConverterName": null
   },
   "Body": {
-    "CardId": 0,
+    "CardType": 2,
     "SlotNumber": 0,
+    "CubeId": 2,
     "Payload": [
-      01,
-      28,
+      1,
+      28
     ]
   }
 }

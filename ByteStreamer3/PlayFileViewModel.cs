@@ -7,12 +7,24 @@ using System.Threading.Tasks;
 
 namespace ByteStreamer3
 {
-    class PlayFileViewModel: INotifyPropertyChanged
+    /// <summary>
+    /// ViewModel for JFileAux object
+    /// </summary>
+    class PlayFileViewModel : INotifyPropertyChanged
     {
         #region === publics ===
         public event PropertyChangedEventHandler PropertyChanged;
-        public bool IsItemChecked { get; set; } = true;
-        public PlayFile PlayFile { get => _playFile; set => _playFile = value; }
+        public bool IsItemChecked
+        {
+            get => _isItemChecked;
+            set
+            {
+                _isItemChecked = value;
+                PlayFile.JFileObject.Header.EnablePlay = value;
+                RaisePropertyChangedEvent("IsItemChecked");
+            }
+        }
+        public JFileAux PlayFile { get; private set; }
         public int PlayedBlocksCount
         {
             get => _playedBlocksCount;
@@ -23,7 +35,7 @@ namespace ByteStreamer3
             }
         }
         public string Filename { get; set; }
-        public string FixedDesc { get => _fixedDesc; set => _fixedDesc = value; }
+        public string FixedDesc { get; private set; }
         public string VarDesc
         {
             get => _varDesc;
@@ -33,31 +45,32 @@ namespace ByteStreamer3
                 RaisePropertyChangedEvent("VarDesc");
             }
         }
-        public int NoOfCycles => _playFile.JFileObject.Header.NumberOfCycles;
+        public int NoOfCycles => PlayFile.JFileObject.Header.NumberOfCycles;
         #endregion
 
         #region === privates ===
-        string _fixedDesc;
-        string _varDesc;
-        int _playedBlocksCount;
-        PlayFile _playFile;
+        private string _varDesc;
+        private int _playedBlocksCount;
+        private bool _isItemChecked = true;
         #endregion
 
-        public void SetPlayedBlocksCount(int n)
-        {
-            PlayedBlocksCount = n;
-        }
         void RaisePropertyChangedEvent(string propName)
         {
             if (PropertyChanged != null)
                 PropertyChanged(this, new PropertyChangedEventArgs(propName));
         }
 
-        public PlayFileViewModel( PlayFile playFile)
+        public PlayFileViewModel(JFileAux playFile)
         {
-            this._playFile = playFile;
-            Filename = _playFile.PlayFileInfo.Name;
-            _fixedDesc = $"Dest: {_playFile.DestEndPoint}";
+            this.PlayFile = playFile;
+            Filename = PlayFile.PlayFileInfo.Name;
+
+            var ip = System.Net.IPAddress.Parse(PlayFile.JFileObject.Header.DestIp);
+            var destEp = new System.Net.IPEndPoint(ip, PlayFile.JFileObject.Header.DestPort);
+
+            FixedDesc = $"Dest: {destEp}";
+
+            IsItemChecked = playFile.JFileObject.Header.EnablePlay;
         }
 
     }

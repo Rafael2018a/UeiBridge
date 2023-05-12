@@ -8,19 +8,12 @@ namespace ByteStreamer3.Utilities
 {
     public class JFileHeader
     {
-        //public bool EnablePlay { get; set; }
-        //public string Title { get => title; set => title = value; }
-        public string ConverterName { get; set; } // 
-        public int NumberOfCycles { get => numberOfCycles; set => numberOfCycles = value; }
-        public int WaitStateMs { get => waitStateMs; set => waitStateMs = value; }
-        public string DestIp { get => destIp; set => destIp = value; }
-        public int DestPort { get => destPort; set => destPort = value; }
-
-        //private string title = "Uei general card";
-        private int numberOfCycles = 20;
-        private int waitStateMs = 100;
-        private string destIp = "227.10.20.30";
-        private int destPort = 50099;
+        public bool EnablePlay { get; set; } = false;
+        public string DestIp { get; set; } = "227.10.20.30";
+        public int DestPort { get; set; } = 50099;
+        public int NumberOfCycles { get; set; }= 20;
+        public int WaitStateMs { get; set; }= 100;
+        public string ConverterName { get; set; }
 
         public JFileHeader()
         {
@@ -28,13 +21,14 @@ namespace ByteStreamer3.Utilities
     }
     public class JFileBody
     {
-        public int CardId = -1;
-        public int SlotNumber = -1;
+        public int CardType { get; set; } = 2;
+        public int SlotNumber { get; set; } = 1;
+        public int CubeId { get; set; } = 2;
         public int[] Payload { get; set; }
 
         public JFileBody(int[] payload)
         {
-            Payload = payload;
+            this.Payload = payload;
         }
     }
     public class JFileClass

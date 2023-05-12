@@ -18,7 +18,7 @@ namespace UeiBridgeTest
         [Test]
         public void TestPlayItem()
         {
-            PlayFile pi=null;// = new PlayItem();
+            JFileAux pi=null;// = new PlayItem();
             Assert.That(pi, Is.Null);
             //Assert.Pass();
         }

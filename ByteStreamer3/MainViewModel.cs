@@ -17,29 +17,28 @@ namespace ByteStreamer3
         public event PropertyChangedEventHandler PropertyChanged;
 
         #region === privates ======
-        DirectoryInfo _playFolder;
-        //string _filesToPlayMessage;
-        string _playFolderBoxBorderColor;
-        const string _settingsFilename = "bytestreamer3.setting.bin";
-        SettingBag _settingBag;
-        int _simpleCounter;
-        System.Windows.Threading.DispatcherTimer _guiUpdateTimer = new System.Windows.Threading.DispatcherTimer();
-        bool _nowPlaying = false;
-        System.Windows.Window _parentWindow;
-        ObservableCollection<PlayFileViewModel> _playList;
-        System.Threading.CancellationTokenSource _playCancelSource;
+        private string _playFolderBoxBorderColor;
+        private const string _settingsFilename = "bytestreamer3.setting.bin";
+        private SettingBag _settingBag;
+        private int _simpleCounter;
+        private System.Windows.Threading.DispatcherTimer _guiUpdateTimer = new System.Windows.Threading.DispatcherTimer();
+        private bool _nowPlaying = false;
+        private System.Windows.Window _parentWindow;
+        private ObservableCollection<PlayFileViewModel> _playList;
+        private System.Threading.CancellationTokenSource _playCancelSource;
+        private string _playFolderString;
         #endregion
 
         #region ==== Publics =======
         public bool IsPlayOneByOne { get; set; }
         public bool IsRepeat { get; set; }
         //public FilePlayer2 Player { get; private set; }
-        public string PlayFolder
+        public string PlayFolderString
         {
-            get { return _playFolder.FullName; }
+            get { return _playFolderString; }
             set
             {
-                _playFolder = new DirectoryInfo(value);
+                _playFolderString = value;
                 RaisePropertyChangedEvent("PlayFolder");
             }
         }
@@ -107,7 +106,7 @@ namespace ByteStreamer3
             _guiUpdateTimer.Start();
 
             NowPlaying = true;
-            foreach(var i in _playList)
+            foreach (var i in _playList)
             {
                 i.PlayedBlocksCount = 0;
             }
@@ -141,15 +140,16 @@ namespace ByteStreamer3
             dialog.IsFolderPicker = true;
             dialog.RestoreDirectory = true;
             dialog.AddToMostRecentlyUsedList = true;
-            dialog.InitialDirectory = PlayFolder;
+            dialog.InitialDirectory = PlayFolderString;
             CommonFileDialogResult result = dialog.ShowDialog();
             // 
             if (result == CommonFileDialogResult.Ok)
             {
-                PlayFolder = dialog.FileName;
-                _settingBag.PlayFolder = PlayFolder;
-                SetPlayFolder(new DirectoryInfo(PlayFolder));
-                PlayFolderBoxBorderColor = (_playFolder.Exists) ? "Gray" : "Red";
+                PlayFolderString = dialog.FileName;
+                _settingBag.PlayFolder = PlayFolderString;
+                var di = new DirectoryInfo(PlayFolderString);
+                LoadPlayList( di);
+                PlayFolderBoxBorderColor = ( di.Exists) ? "Gray" : "Red";
             }
         }
         bool CanSelectPlayFolder(object obj)
@@ -164,35 +164,45 @@ namespace ByteStreamer3
         }
         #endregion
 
-        void SetPlayFolder(DirectoryInfo playFolder)
+        void LoadPlayList(DirectoryInfo playFolder)
         {
             if (!playFolder.Exists)
                 return;
-            this._playFolder = playFolder;
+
             FileInfo[] jsonlist = playFolder.GetFiles("*.json");
-            var onlyValids = new List<PlayFile>(jsonlist.Select(i => new PlayFile(i)).Where(i => i.IsValidItem()));
+            var onlyValids = new List<JFileAux>(jsonlist.Select((FileInfo i) => new JFileAux(i)).Where((JFileAux i) => i.IsValidItem()));
             var vmlist = onlyValids.Select(i => new PlayFileViewModel(i));
             PlayList = new ObservableCollection<PlayFileViewModel>(vmlist);
 
+        }
+
+        private static void CreateSampleFile(DirectoryInfo playFolder)
+        {
+            string filename = "sample.json";
+            var first = playFolder.GetFiles(filename).FirstOrDefault();
             // create sample file
-            if (onlyValids.Count == 0)
+            if (first == null)
             {
                 JFileClass jclass = new JFileClass(new JFileHeader(), new JFileBody(new int[] { 01, 02, 03 }));
-                string s = Newtonsoft.Json.JsonConvert.SerializeObject(jclass, Formatting.Indented);
-                using (StreamWriter fs = new StreamWriter("sample.json"))
+                string s = JsonConvert.SerializeObject(jclass, Formatting.Indented);
+                string fn = Path.Combine(playFolder.FullName, filename);
+                using (StreamWriter fs = new StreamWriter(fn))
                 {
                     fs.Write(s);
                 }
             }
         }
+
         public MainViewModel(System.Windows.Window parentWindow)
         {
             LoadCommands();
             _settingBag = LoadSetting();
             _parentWindow = parentWindow;
-            _playFolder = new DirectoryInfo(_settingBag.PlayFolder);
-            SetPlayFolder(_playFolder);
-            PlayFolderBoxBorderColor = (_playFolder.Exists) ? "Gray" : "Red";
+            var dirInfo = new DirectoryInfo(_settingBag.PlayFolder);
+            PlayFolderString = _settingBag.PlayFolder;
+            LoadPlayList( dirInfo);
+            CreateSampleFile(dirInfo);
+            PlayFolderBoxBorderColor = ( dirInfo.Exists) ? "Gray" : "Red";
             // defaults
             IsPlayOneByOne = true;
             IsRepeat = false;
@@ -207,6 +217,10 @@ namespace ByteStreamer3
             using (FileStream fs = new FileStream(_settingsFilename, FileMode.Create, System.IO.FileAccess.Write))
             {
                 formatter.Serialize(fs, _settingBag);
+            }
+            foreach( var f in PlayList)
+            {
+                f.PlayFile.Save();
             }
         }
 
@@ -260,13 +274,19 @@ namespace ByteStreamer3
                             if ((!playfileVM.PlayFile.IsValidItem()) || (false == playfileVM.IsItemChecked))
                                 continue;
 
-                            playfileVM.SetPlayedBlocksCount(0);
+                            var ip = System.Net.IPAddress.Parse(playfileVM.PlayFile.JFileObject.Header.DestIp);
+                            var destEp = new System.Net.IPEndPoint(ip, playfileVM.PlayFile.JFileObject.Header.DestPort);
+                            var udpWriter = new UdpWriter(destEp);
+
+                            playfileVM.PlayedBlocksCount=0;
                             for (int i = 0; i < playfileVM.PlayFile.JFileObject.Header.NumberOfCycles; i++)
                             {
                                 // -- send block ....
-                                playfileVM.PlayFile.SendBlockByUdp();
+                                var eth = JFileAux.JsonToEtherentMessage(playfileVM.PlayFile.JFileObject);
+                                udpWriter.Send(eth.GetByteArray(UeiBridge.Library.MessageWay.downstream));
+
                                 System.Threading.Thread.Sleep(playfileVM.PlayFile.JFileObject.Header.WaitStateMs);
-                                playfileVM.SetPlayedBlocksCount(1 + playfileVM.PlayedBlocksCount);
+                                playfileVM.PlayedBlocksCount++;
 
                                 _playCancelSource.Token.ThrowIfCancellationRequested();
                             }
@@ -291,26 +311,31 @@ namespace ByteStreamer3
             _playCancelSource = new System.Threading.CancellationTokenSource();
             List<Task> playTaskList = new List<Task>();
 
-                foreach (PlayFileViewModel playfileVM in playList)
-                {
-                    if ((!playfileVM.PlayFile.IsValidItem()) || (false == playfileVM.IsItemChecked))
-                        continue;
+            foreach (PlayFileViewModel playfileVM in playList)
+            {
+                if ((!playfileVM.PlayFile.IsValidItem()) || (false == playfileVM.IsItemChecked))
+                    continue;
 
-                    Task t = Task.Run(() =>
+                Task t = Task.Factory.StartNew(() =>
+                   {
+                       var ip = System.Net.IPAddress.Parse(playfileVM.PlayFile.JFileObject.Header.DestIp);
+                       var destEp = new System.Net.IPEndPoint(ip, playfileVM.PlayFile.JFileObject.Header.DestPort);
+                       var udpWriter = new UdpWriter(destEp);
+
+                       playfileVM.PlayedBlocksCount = 0;
+                       for (int i = 0; i < playfileVM.PlayFile.JFileObject.Header.NumberOfCycles; i++)
                        {
-                           playfileVM.SetPlayedBlocksCount(0);
-                           for (int i = 0; i < playfileVM.PlayFile.JFileObject.Header.NumberOfCycles; i++)
-                           {
-                               playfileVM.PlayFile.SendBlockByUdp();
-                               System.Threading.Thread.Sleep(playfileVM.PlayFile.JFileObject.Header.WaitStateMs);
-                               playfileVM.SetPlayedBlocksCount(1 + playfileVM.PlayedBlocksCount);
+                           var eth = JFileAux.JsonToEtherentMessage(playfileVM.PlayFile.JFileObject);
+                           udpWriter.Send(eth.GetByteArray(UeiBridge.Library.MessageWay.downstream));
+                           System.Threading.Thread.Sleep(playfileVM.PlayFile.JFileObject.Header.WaitStateMs);
+                           playfileVM.PlayedBlocksCount++;
 
-                               _playCancelSource.Token.ThrowIfCancellationRequested();
-                           }
-                       }, _playCancelSource.Token);
-                    playTaskList.Add(t);
-                }
-            
+                           _playCancelSource.Token.ThrowIfCancellationRequested();
+                       }
+                   }, _playCancelSource.Token);
+
+                playTaskList.Add(t);
+            }
 
             Task result = Task.Factory.ContinueWhenAll(playTaskList.ToArray(), z => NowPlaying = false);
             return result;
