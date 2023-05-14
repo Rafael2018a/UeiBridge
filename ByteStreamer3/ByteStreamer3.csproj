@@ -155,5 +155,8 @@
     <Resource Include="Images\icons8-pause-48.png" />
     <Resource Include="Images\icons8-stop-48.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\icons8-replay-48.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

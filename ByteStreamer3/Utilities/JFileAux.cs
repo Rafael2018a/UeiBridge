@@ -17,7 +17,7 @@ namespace ByteStreamer3
 
         public bool IsValidItem()
         {
-            return ((JFileObject != null) && (JFileObject.Body != null) && (JFileObject.Header != null));
+            return ((JFileObject != null) && (JFileObject.Body != null) && (JFileObject.Header != null) && (JFileObject.Body.Payload != null));
         }
 
         public JFileAux(FileInfo fileToPlay)
@@ -48,7 +48,7 @@ namespace ByteStreamer3
             {
                 block[i] = Convert.ToByte(playItem.Body.Payload[i]);
             }
-            UeiBridge.Library.EthernetMessage resultMessage = UeiBridge.Library.EthernetMessage.CreateMessage(playItem.Body.CardType, playItem.Body.SlotNumber, 0, block);
+            UeiBridge.Library.EthernetMessage resultMessage = UeiBridge.Library.EthernetMessage.CreateMessage(playItem.Body.CardType, playItem.Body.SlotNumber, playItem.Body.CubeId, block);
             return resultMessage;
         }
 
@@ -64,5 +64,6 @@ namespace ByteStreamer3
                 }
             }
         }
+
     }
 }

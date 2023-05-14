@@ -8,7 +8,7 @@
     "ConverterName": null
   },
   "Body": {
-    "CardType": 2,
+    "CardType": 0,
     "SlotNumber": 0,
     "CubeId": 2,
     "Payload": [

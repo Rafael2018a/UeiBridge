@@ -2,13 +2,13 @@
   "Header": {
     "EnablePlay": false,
     "DestIp": "227.3.1.10",
-    "DestPort": 50040,
+    "DestPort": 50035,
     "NumberOfCycles": 20,
     "WaitStateMs": 100,
     "ConverterName": null
   },
   "Body": {
-    "CardType": 2,
+    "CardType": 4,
     "SlotNumber": 5,
     "CubeId": 2,
     "Payload": [

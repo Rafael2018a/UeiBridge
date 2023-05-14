@@ -16,7 +16,7 @@ namespace UeiBridge
         public InputDevice InputDeviceManager { get;  set; }
         public OutputDevice OutputDeviceManager { get; set; }
         public UdpWriter UdpWriter { get; set; }
-        public SL508Session SerialSession { get; set; }
+        //public SL508Session SerialSession { get; set; }
         public PerDeviceObjects(string deviceName, int slotNumber, string cubeUrl)
         {
             this.DeviceName = deviceName;
@@ -46,11 +46,11 @@ namespace UeiBridge
         //    this.UdpReader = udpReader;
 
         //}
-        public void Update(SL508Session serialSession, int slotNumber)
-        {
-            System.Diagnostics.Debug.Assert(slotNumber == this.SlotNumber);
-            this.SerialSession = serialSession;
-        }
+        //public void Update(SL508Session serialSession, int slotNumber)
+        //{
+        //    System.Diagnostics.Debug.Assert(slotNumber == this.SlotNumber);
+        //    this.SerialSession = serialSession;
+        //}
         //public PerDeviceObjects(InputDevice inputDevice, UdpWriter udpWriter, SL508Session serialSession)
         //{
 

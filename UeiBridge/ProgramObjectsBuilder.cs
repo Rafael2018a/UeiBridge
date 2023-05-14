@@ -22,7 +22,7 @@ namespace UeiBridge
         public List<UdpReader> UdpReadersList => _udpReaderList;
 
 
-        UdpToSlotMessagner _udpMessagner = new UdpToSlotMessagner();
+        UdpToSlotMessenger _udpMessenger = new UdpToSlotMessenger();
         Config2 _mainConfig;
 
         public ProgramObjectsBuilder(Config2 mainConfig)
@@ -191,8 +191,8 @@ namespace UeiBridge
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
 
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
-            UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessagner, ao308.InstanceName);
-            _udpMessagner.SubscribeConsumer(ao308);
+            UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, ao308.InstanceName);
+            _udpMessenger.SubscribeConsumer(ao308);
             _udpReaderList.Add(ureader);
 
             pd.OutputDeviceManager = ao308;
@@ -234,15 +234,15 @@ namespace UeiBridge
 
             SL508OutputDeviceManager od = new SL508OutputDeviceManager(setup, serialSession);
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
-            UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessagner, od.InstanceName);
+            UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, od.InstanceName);
 
             var pd = new PerDeviceObjects(realDevice);
-            pd.SerialSession = serialSession;
+            //pd.SerialSession = serialSession;
             pd.InputDeviceManager = id;
             pd.OutputDeviceManager = od;
             pd.UdpWriter = uWriter;
 
-            _udpMessagner.SubscribeConsumer(od);
+            _udpMessenger.SubscribeConsumer(od);
             _udpReaderList.Add(ureader);
 
             return new List<PerDeviceObjects>() { pd };
@@ -265,12 +265,12 @@ namespace UeiBridge
         {
             DIO470OutputDeviceManager od = new DIO470OutputDeviceManager(setup);
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
-            UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessagner, od.InstanceName);
+            UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, od.InstanceName);
 
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
             pd.OutputDeviceManager = od;
 
-            _udpMessagner.SubscribeConsumer(od);
+            _udpMessenger.SubscribeConsumer(od);
             _udpReaderList.Add(ureader);
 
             return new List<PerDeviceObjects>() { pd };
@@ -287,7 +287,7 @@ namespace UeiBridge
             // output
             DIO403OutputDeviceManager od = new DIO403OutputDeviceManager(setup, aWriter, theSession);
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
-            UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessagner, od.InstanceName);
+            UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, od.InstanceName);
 
             // input
             string instanceName = $"{realDevice.PhDevice.GetDeviceName()}/Slot{realDevice.PhDevice.GetIndex()}";
@@ -300,7 +300,7 @@ namespace UeiBridge
             pd.InputDeviceManager = id;
             pd.UdpWriter = udpWriter;
 
-            _udpMessagner.SubscribeConsumer(od);
+            _udpMessenger.SubscribeConsumer(od);
             _udpReaderList.Add(ureader);
 
             return new List<PerDeviceObjects>() { pd };
@@ -335,13 +335,13 @@ namespace UeiBridge
 #endif
                 // define udp-reader for block sensor
                 var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
-                UdpReader ureader = new UdpReader(bssetup.LocalEndPoint.ToIpEp(), nic, _udpMessagner, "BlockSensor");
+                UdpReader ureader = new UdpReader(bssetup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, "BlockSensor");
 
                 // add block sensor to device list
                 PerDeviceObjects pd = new PerDeviceObjects(blockSensor.DeviceName, -1, "no_cube");
                 pd.OutputDeviceManager = blockSensor;
 
-                _udpMessagner.SubscribeConsumer(blockSensor);
+                _udpMessenger.SubscribeConsumer(blockSensor);
                 _udpReaderList.Add(ureader);
 
                 blockSensor.OpenDevice();
@@ -378,13 +378,17 @@ namespace UeiBridge
         }
     }
 
-    public class UdpToSlotMessagner : IEnqueue<byte[]>
+    /// <summary>
+    /// messenger
+    /// 
+    /// </summary>
+    public class UdpToSlotMessenger : IEnqueue<byte[]>
     {
         private ILog _logger = StaticMethods.GetLogger();
         private List<OutputDevice> _consumersList = new List<OutputDevice>();
         private BlockingCollection<byte[]> _inputQueue = new BlockingCollection<byte[]>(1000); // max 1000 items
 
-        public UdpToSlotMessagner()
+        public UdpToSlotMessenger()
         {
             Task.Factory.StartNew(() => DispatchToConsumer_Task());
         }

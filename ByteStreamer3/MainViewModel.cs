@@ -24,7 +24,7 @@ namespace ByteStreamer3
         private System.Windows.Threading.DispatcherTimer _guiUpdateTimer = new System.Windows.Threading.DispatcherTimer();
         private bool _nowPlaying = false;
         private System.Windows.Window _parentWindow;
-        private ObservableCollection<PlayFileViewModel> _playList;
+        private ObservableCollection<PlayFileViewModel> _playFileVMList;
         private System.Threading.CancellationTokenSource _playCancelSource;
         private string _playFolderString;
         #endregion
@@ -42,15 +42,6 @@ namespace ByteStreamer3
                 RaisePropertyChangedEvent("PlayFolder");
             }
         }
-        //public string FilesToPlayMessage 
-        //{ 
-        //    get => _filesToPlayMessage;
-        //    set
-        //    {
-        //        _filesToPlayMessage = value;
-        //        RaisePropertyChangedEvent("FilesToPlayMessage");
-        //    }
-        //}
         public string PlayFolderBoxBorderColor
         {
             get => _playFolderBoxBorderColor;
@@ -80,16 +71,17 @@ namespace ByteStreamer3
                     StartPlayCommand.OnCanExecuteChanged();
                     StopPlayCommand.OnCanExecuteChanged();
                     BrowseFolderCommand.OnCanExecuteChanged();
+                    ReloadFilesCommand.OnCanExecuteChanged();
                 });
             }
         }
-        public ObservableCollection<PlayFileViewModel> PlayList
+        public ObservableCollection<PlayFileViewModel> PlayFileVMList
         {
-            get => _playList;
+            get => _playFileVMList;
             set
             {
-                _playList = value;
-                RaisePropertyChangedEvent("PlayList");
+                _playFileVMList = value;
+                RaisePropertyChangedEvent("PlayFileVMList");
             }
         }
 
@@ -99,6 +91,7 @@ namespace ByteStreamer3
         public RelayCommand StartPlayCommand { get; set; }
         public RelayCommand StopPlayCommand { get; set; }
         public RelayCommand BrowseFolderCommand { get; set; }
+        public RelayCommand ReloadFilesCommand { get; set; }
         void StartPlay(object obj)
         {
             _guiUpdateTimer.Interval = TimeSpan.FromMilliseconds(1000);
@@ -106,20 +99,29 @@ namespace ByteStreamer3
             _guiUpdateTimer.Start();
 
             NowPlaying = true;
-            foreach (var i in _playList)
+            foreach (var i in _playFileVMList)
             {
                 i.PlayedBlocksCount = 0;
             }
             if (IsPlayOneByOne)
             {
-                StartPlayOneByOne(_playList.ToList());
+                StartPlayOneByOne(_playFileVMList.ToList());
             }
             else
             {
-                StartPlaySimultaneously(_playList.ToList());
+                StartPlaySimultaneously(_playFileVMList.ToList());
             }
         }
         bool CanStartPlay(object obj)
+        {
+            return (_nowPlaying == false);
+        }
+        void ReloadFiles(object obj)
+        {
+            var dirInfo = new DirectoryInfo(_settingBag.PlayFolder);
+            LoadPlayList(dirInfo);
+        }
+        bool CanReloadFiles(object obj)
         {
             return (_nowPlaying == false);
         }
@@ -161,6 +163,7 @@ namespace ByteStreamer3
             StartPlayCommand = new RelayCommand(StartPlay, CanStartPlay);
             StopPlayCommand = new RelayCommand(StopPlay, CanStopPlay);
             BrowseFolderCommand = new RelayCommand(SelectPlayFolder, CanSelectPlayFolder);
+            ReloadFilesCommand = new RelayCommand(ReloadFiles, CanReloadFiles);
         }
         #endregion
 
@@ -172,7 +175,7 @@ namespace ByteStreamer3
             FileInfo[] jsonlist = playFolder.GetFiles("*.json");
             var onlyValids = new List<JFileAux>(jsonlist.Select((FileInfo i) => new JFileAux(i)).Where((JFileAux i) => i.IsValidItem()));
             var vmlist = onlyValids.Select(i => new PlayFileViewModel(i));
-            PlayList = new ObservableCollection<PlayFileViewModel>(vmlist);
+            PlayFileVMList = new ObservableCollection<PlayFileViewModel>(vmlist);
 
         }
 
@@ -199,7 +202,7 @@ namespace ByteStreamer3
             _settingBag = LoadSetting();
             _parentWindow = parentWindow;
             var dirInfo = new DirectoryInfo(_settingBag.PlayFolder);
-            PlayFolderString = _settingBag.PlayFolder;
+            //PlayFolderString = _settingBag.PlayFolder;
             LoadPlayList( dirInfo);
             CreateSampleFile(dirInfo);
             PlayFolderBoxBorderColor = ( dirInfo.Exists) ? "Gray" : "Red";
@@ -218,7 +221,7 @@ namespace ByteStreamer3
             {
                 formatter.Serialize(fs, _settingBag);
             }
-            foreach( var f in PlayList)
+            foreach( var f in PlayFileVMList)
             {
                 f.PlayFile.Save();
             }

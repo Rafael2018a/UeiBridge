@@ -62,13 +62,22 @@
                                         </StackPanel>
                                     </Button.Content>
                                 </Button>
+                                <Button Command="{Binding ReloadFilesCommand}" Height="25">
+                                    <Button.Content>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Image Source="/Images/icons8-replay-48.png" Height="20"/>
+                                            <TextBlock Text="Reload" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button.Content>
+                                </Button>
                                 <CheckBox Content="Repeat"  IsChecked="{Binding IsRepeat}"/>
                                 <CheckBox Content="Play one by one" IsChecked="{Binding IsPlayOneByOne}"/>
                             </StackPanel>
                         </StackPanel>
                     </GroupBox>
                     <GroupBox x:Name="Playlist" Grid.Row="1" BorderBrush="Gray" Margin="5,0,5,0" BorderThickness="1" Header="Play list" >
-                        <ListView x:Name="NowPlayingListView" ItemsSource="{Binding Path=PlayList}" BorderThickness="0">
+                        <ScrollViewer>
+                            <ListView x:Name="NowPlayingListView" ItemsSource="{Binding Path=PlayFileVMList}" BorderThickness="0">
                             <ListView.ItemTemplate>
                                 <DataTemplate>
                                     <StackPanel Orientation="Horizontal">
@@ -87,6 +96,7 @@
                                 </DataTemplate>
                             </ListView.ItemTemplate>
                         </ListView>
+                        </ScrollViewer>
                     </GroupBox>
                 </Grid>
             </TabItem>
