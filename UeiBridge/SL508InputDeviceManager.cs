@@ -28,8 +28,8 @@ namespace UeiBridge
         //public List<SerialWriter> SerialWriterList => _serialWriterList;
         public bool InDisposeState => _InDisposeState;
         private ISend<SendObject> _targetConsumer;
-        private SL508Session _serialSession;
-        public SL508InputDeviceManager(ISend<SendObject> targetConsumer, DeviceSetup setup, SL508Session serialSession) : base( setup)
+        private SessionEx _serialSession;
+        public SL508InputDeviceManager(ISend<SendObject> targetConsumer, DeviceSetup setup, SessionEx serialSession) : base( setup)
         {
             _serialPorts = new List<SerialPort>();
             _serialReaderList = new List<SerialReader>();
@@ -132,7 +132,7 @@ namespace UeiBridge
         }
         public override void OpenDevice()
         {
-            if (null == _serialSession.SerialSession)
+            if (_serialSession == null)
             {
                 _logger.Warn($"Failed to open device {this.InstanceName}");
                 return;

@@ -225,8 +225,26 @@ namespace UeiBridge
 
         private List<PerDeviceObjects> Build_SL508(DeviceEx realDevice, DeviceSetup setup)
         {
-            SL508Session serialSession = new SL508Session(setup as SL508892Setup);//, realDevice.CubeUrl);
-            System.Diagnostics.Debug.Assert(null != serialSession);
+            SessionEx serialSession = null;
+            try
+            {
+                serialSession = new SessionEx(setup as SL508892Setup);//, realDevice.CubeUrl);
+            }
+            catch (UeiDaqException ex)
+            {
+                _logger.Warn($"Failed to init serial card mananger.Slot { setup.SlotNumber}. {ex.Message}. Might be invalid baud rate");
+                return null;
+            }
+
+            // emit info log
+            _logger.Info($" == Serial channels for cube { setup.CubeUrl}, slot { setup.SlotNumber}");
+            foreach (Channel c in serialSession.GetChannels())
+            {
+                SerialPort sp1 = c as SerialPort;
+                string s1 = sp1.GetSpeed().ToString();
+                string s2 = s1.Replace("BitsPerSecond", "");
+                _logger.Debug($"CH:{sp1.GetIndex()}, Rate {s2} bps, Mode {sp1.GetMode()}.");
+            }
 
             string instanceName = $"{realDevice.PhDevice.GetDeviceName()}/Slot{realDevice.PhDevice.GetIndex()}";
             UdpWriter uWriter = new UdpWriter(instanceName, setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMCast);

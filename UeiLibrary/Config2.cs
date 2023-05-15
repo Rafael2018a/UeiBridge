@@ -49,14 +49,12 @@ namespace UeiBridge.Library
     {
         [XmlAttribute("Port")]
         public string portname = "ComX";
-
         public UeiDaq.SerialPortMode mode = UeiDaq.SerialPortMode.RS232;
-
         //[XmlElement("Baud")]
         public UeiDaq.SerialPortSpeed Baudrate { get; set; }
-
         public UeiDaq.SerialPortParity parity = UeiDaq.SerialPortParity.None;
         public UeiDaq.SerialPortStopBits stopbits = UeiDaq.SerialPortStopBits.StopBits1;
+        public int LocalUdpPort { get; set; }
 
         public SerialChannel(string portname, UeiDaq.SerialPortSpeed speed)
         {
@@ -257,7 +255,12 @@ namespace UeiBridge.Library
                     result = new AI201100Setup(new EndPoint(RemoteIp, portNumber++), ueiDevice);
                     break;
                 case DeviceMap2.SL508Literal:
-                    result = new SL508892Setup(new EndPoint(LocalIP, portNumber++), new EndPoint(RemoteIp, portNumber++), ueiDevice);
+                    var sl508 = new SL508892Setup(new EndPoint(LocalIP, portNumber++), new EndPoint(RemoteIp, portNumber++), ueiDevice);
+                    foreach (var ch in sl508.Channels)
+                    {
+                        ch.LocalUdpPort = portNumber++;
+                    }
+                    result = sl508;
                     break;
                 case "Simu-AO16":
                     result = new SimuAO16Setup(new EndPoint(LocalIP, portNumber++), ueiDevice);

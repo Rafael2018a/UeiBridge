@@ -31,8 +31,10 @@ namespace UeiBridge.Library
     public interface IWriterAdapter<T>: IDisposable
     {
         void WriteSingleScan(T scan);
-        //int NumberOfChannels { get; }
-        //UeiDaq.Session OriginSession { get; }
+    }
+    public interface IReadAdapter<T>: IDisposable
+    {
+
     }
 
     public struct DeviceEx

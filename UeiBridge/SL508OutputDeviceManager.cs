@@ -18,35 +18,37 @@ namespace UeiBridge
         // privates
         log4net.ILog _logger = StaticMethods.GetLogger();
         IConvert _attachedConverter;
-        List<ViewItem<byte[]>> _lastScanList = new List<ViewItem<byte[]>>();
-        SL508Session _serialSession;
+        List<ViewItem<byte[]>> _lastScanList = new List<ViewItem<byte[]>>(); // todo. rename
+        SessionEx _serialSession;
         int _sentBytesAcc = 0;
         int _numberOfSentMessages = 0;
         List<SerialWriter> _serialWriterList = new List<SerialWriter>();
         Dictionary<SerialPortSpeed, int> _serialSpeedDic = new Dictionary<SerialPortSpeed, int>();
         bool _inDisposeState = false;
         private DeviceSetup _deviceSetup;
-        public SL508OutputDeviceManager(DeviceSetup setup, SL508Session serialSession) : base(setup)
+        public SL508OutputDeviceManager(DeviceSetup setup, SessionEx serialSession) : base(setup)
         {
+
+            if ((setup==null)||(serialSession == null))
+            {
+                return;
+            }
             System.Diagnostics.Debug.Assert(null != serialSession);
             _serialSession = serialSession;
             _attachedConverter = StaticMethods.CreateConverterInstance(setup);
             System.Diagnostics.Debug.Assert(null != serialSession);
             this._deviceSetup = setup;
             // init message list
-            if (null != serialSession.SerialSession)
+            for (int i = 0; i < serialSession.GetNumberOfChannels(); i++)
             {
-                for (int i = 0; i < serialSession.GetNumberOfChannels(); i++)
-                {
-                    _lastScanList.Add(null);
-                }
+                _lastScanList.Add(null);
             }
         }
         public SL508OutputDeviceManager() { } // (default c-tor must be present)
-        
+
         public override bool OpenDevice()
         {
-            if (null == _serialSession.SerialSession)
+            if ((_serialSession == null) || (_deviceSetup == null))
             {
                 _logger.Warn($"Failed to open device {this.InstanceName}");
                 return false;
@@ -111,7 +113,7 @@ namespace UeiBridge
             //_serialSession.Dispose();
             //_logger.Debug("_serialSession?.Dispose();");
         }
-        public override string [] GetFormattedStatus(TimeSpan interval)
+        public override string[] GetFormattedStatus(TimeSpan interval)
         {
             //StringBuilder formattedString = new StringBuilder();
             List<string> resultList = new List<string>();
@@ -146,16 +148,10 @@ namespace UeiBridge
             {
                 return;
             }
-            if(true == _inDisposeState)
+            if (true == _inDisposeState)
             {
                 return;
             }
-            //byte []  incomingMessage = request.RequestObject as byte[];
-            //System.Diagnostics.Debug.Assert(incomingMessage != null);
-            //System.Diagnostics.Debug.Assert(request.SerialChannel >= 0);
-            //if (_serialInputManager?.SerialWriterList != null)
-            //{
-            //if (_serialInputManager.SerialWriterList.Count > request.SerialChannel)
 
             System.Diagnostics.Debug.Assert(request.SerialChannelNumber < _serialWriterList.Count);
             UeiDaq.SerialWriter sw = _serialWriterList[request.SerialChannelNumber];
@@ -165,6 +161,7 @@ namespace UeiBridge
             try
             {
                 sentBytes = sw.Write(request.PayloadBytes);
+
                 // wait
                 {
                     SerialPort sPort = (SerialPort)_serialSession.GetChannel(request.SerialChannelNumber);
@@ -176,7 +173,6 @@ namespace UeiBridge
                 }
                 //_logger.Debug($" *** Write to serial port. ch {request.SerialChannelNumber}");
                 System.Diagnostics.Debug.Assert(sentBytes == request.PayloadBytes.Length);
-                //System.Threading.Thread.Sleep(10);
                 //_logger.Debug($"Sent ch{request.SerialChannel} {BitConverter.ToString(incomingMessage)}");
                 _sentBytesAcc += sentBytes;
                 _numberOfSentMessages++;
@@ -190,13 +186,6 @@ namespace UeiBridge
             {
                 _logger.Warn($"{ex.Message}. Total {_sentBytesAcc} bytes in {_numberOfSentMessages} messages.");
             }
-            //else
-            //{
-            //    //if (false == _serialInputManager.InDisposeState)
-            //    {
-            //        _logger.Warn("Failed to send serial message. SerialWriter==null)");
-            //    }
-            //}
         }
 
         //protected override void resetLastScanTimer_Elapsed(object sender, ElapsedEventArgs e)
