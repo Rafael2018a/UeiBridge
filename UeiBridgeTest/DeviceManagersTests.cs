@@ -54,7 +54,7 @@ namespace UeiBridgeTest
 
 
         //[SetUp]
-        public void Setup()
+        public void Setup1()
         {
             string url = "simu://";
             List<CubeSetup> csetupList = new List<CubeSetup>();
@@ -157,6 +157,61 @@ namespace UeiBridgeTest
 
             var so = sm._sentObject;
         }
+
+        [Test]
+        public void Sl508PreTest()
+        {
+            string resourceText = "simu://Dev4/Com0";
+            Session SrlSession = new Session();
+            SrlSession.CreateSerialPort(resourceText,
+                                        SerialPortMode.RS232,
+                                        SerialPortSpeed.BitsPerSecond14400,
+                                        SerialPortDataBits.DataBits7,
+                                        SerialPortParity.None,
+                                        SerialPortStopBits.StopBits1,
+                                        "");
+
+        }
+#if dont
+        [Test]
+        public void SL508inputTest()
+        {
+            // create session
+            UeiDeviceAdapter devAd = new UeiDeviceAdapter("Simu-COM", 4);
+
+            SL508892Setup setup = new SL508892Setup(null, null, devAd);
+            setup.CubeUrl = "simu://";
+            SerialSessionEx serialSession = new SerialSessionEx(setup);
+
+            // emit info log
+            foreach (Channel c in serialSession.GetChannels())
+            {
+                SerialPort sp1 = c as SerialPort;
+                string s1 = sp1.GetSpeed().ToString();
+                string s2 = s1.Replace("BitsPerSecond", "");
+            }
+
+            // build input manager
+            //string instanceName = $"{realDevice.PhDevice.GetDeviceName()}/Slot{realDevice.PhDevice.GetIndex()}";
+            ISend<SendObject> uWriter = null;
+                //new UdpWriter(instanceName, setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMCast);
+
+            // build serial readers
+            List<IReaderAdapter<byte[]>> serialReaderList = new List<IReaderAdapter<byte[]>>();
+            for (int ch = 0; ch < serialSession.GetNumberOfChannels(); ch++)
+            {
+
+                var sr = new SerialReader(serialSession.GetDataStream(), serialSession.GetChannel(ch).GetIndex());
+                var sr1 = new SerialReaderAdapter(sr);
+                serialReaderList.Add(sr1);
+            }
+
+            // create input manager
+            SL508InputDeviceManager indev = new SL508InputDeviceManager( serialReaderList, setup, uWriter);
+
+
+        }
+#endif
     }
     public class analogWriterMock : IWriterAdapter<double[]>
     {

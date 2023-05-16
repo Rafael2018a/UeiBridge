@@ -55,7 +55,7 @@ namespace UeiBridge
 
             return id as DeviceType;
         }
-
+        SL508UnitedManager _sl508united;
         public void CreateDeviceManagers(List<DeviceEx> realDeviceList)
         {
             if (realDeviceList == null)
@@ -98,9 +98,24 @@ namespace UeiBridge
                 {
                     _PerDeviceObjectsList.AddRange(objs);
                 }
+
+                if (realDevice.PhDevice.GetDeviceName() == DeviceMap2.SL508Literal)
+                {
+                    //_udpMessenger.SubscribeConsumer(od);
+                    var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
+                    
+                    _sl508united = new SL508UnitedManager(realDevice, setup);
+
+                    _serialUreader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _sl508united, "UnitedSerial");
+
+                    _sl508united.OpenDevice();
+                    _serialUreader.Start();
+                    _logger.Info($"Listening on {setup.LocalEndPoint.ToIpEp()}");
+                }
             }
         }
 
+        UdpReader _serialUreader;
         public void ActivateDownstreamOjects()
         {
             // activate downward (output) objects
@@ -225,6 +240,8 @@ namespace UeiBridge
 
         private List<PerDeviceObjects> Build_SL508(DeviceEx realDevice, DeviceSetup setup)
         {
+            return null;
+
             SL508Session serialSession = new SL508Session(setup as SL508892Setup);//, realDevice.CubeUrl);
             System.Diagnostics.Debug.Assert(null != serialSession);
 
@@ -371,6 +388,10 @@ namespace UeiBridge
                 entry.UdpWriter?.Dispose();
 
             }
+
+            _sl508united.Dispose();
+
+
             foreach (var entry in _udpReaderList)
             {
                 entry.Dispose();

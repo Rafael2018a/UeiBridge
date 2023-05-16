@@ -22,11 +22,11 @@ namespace UeiBridge
         IPEndPoint _msListeningiEp;
         IPAddress _localNIC;
 
-        public UdpReader( IPEndPoint listeninigEp, IPAddress localNIC, IEnqueue<byte[]> consumer, string instanceName)
+        public UdpReader( IPEndPoint listeningEp, IPAddress localNIC, IEnqueue<byte[]> consumer, string instanceName)
         {
             this._datagramConsumer = consumer;
             this._instanceName = instanceName;
-            this._msListeningiEp = listeninigEp;
+            this._msListeningiEp = listeningEp;
             this._localNIC = (localNIC==null)? IPAddress.Any : localNIC;
             System.Diagnostics.Debug.Assert(instanceName.Length > 1);
 
@@ -57,7 +57,7 @@ namespace UeiBridge
                 // Start listening for incoming data
                 _udpclient.BeginReceive(new AsyncCallback(ReceivedCallback), null);
 
-                _logger.Debug($"Udp reader start. {this._instanceName}");
+                _logger.Debug($"Udp reader start. {this._instanceName} ep={_msListeningiEp}");
             }
             catch (SocketException ex)
             {
