@@ -57,11 +57,13 @@ namespace UeiBridge
                 //System.Diagnostics.Debug.Assert(this.IsBlockSensorActive.HasValue);
                 if ( this.IsBlockSensorActive) 
                 {
-                    _logger.Info($"Init success: {InstanceName} . { numOfCh} channels. Range {range[0].minimum},{range[0].maximum}V. Listening on BlockSensor");
+                    //_logger.Info($"Init success: {InstanceName} . { numOfCh} channels. Range {range[0].minimum},{range[0].maximum}V. Listening on BlockSensor");
+                    _logger.Info($"Init success: {InstanceName}. Listening on BlockSensor");
                 }
                 else
                 {
-                    _logger.Info($"Init success: {InstanceName} . { numOfCh} channels. Range {range[0].minimum},{range[0].maximum}V. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}");
+                    //_logger.Info($"Init success: {InstanceName} . { numOfCh} channels. Range {range[0].minimum},{range[0].maximum}V. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}");
+                    _logger.Info($"Init success: {InstanceName}. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}");
                 }
 
                 _isDeviceReady = true;

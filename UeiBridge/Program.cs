@@ -107,7 +107,7 @@ namespace UeiBridge
             _programBuilder.CreateDeviceManagers(deviceList);
             _programBuilder.ActivateDownstreamOjects();
             _programBuilder.ActivateUpstreamObjects();
-            _programBuilder.Build_BlockSensorManager(deviceList);
+            _programBuilder.Build_BlockSensorManager(deviceList); // since BlockSensor doesn't reside in a physical slot, in must be built separately.
 
             // publish status to StatusViewer
             Task.Factory.StartNew(() => PublishStatus_Task(_programBuilder.PerDeviceObjectsList));
@@ -200,6 +200,10 @@ namespace UeiBridge
                 if (deviceObjects?.OutputDeviceManager != null)
                 {
                     deviceListScan.Add(deviceObjects.OutputDeviceManager);
+                }
+                if (deviceObjects?.UnitedDeviceManager != null)
+                {
+                    deviceListScan.Add(deviceObjects.UnitedDeviceManager);
                 }
             }
 

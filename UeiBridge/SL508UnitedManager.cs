@@ -10,10 +10,10 @@ namespace UeiBridge
     /// <summary>
     /// SL508-United-Manager
     /// </summary>
-    public class SL508UnitedManager : IDisposable, IEnqueue<byte[]>
+    public class SL508UnitedManager : IDisposable, IDeviceManager, IEnqueue<byte[]>
     {
         private log4net.ILog _logger = StaticMethods.GetLogger();
-        private DeviceEx realDevice;
+        //private DeviceEx realDevice;
         private DeviceSetup setup;
         private Session SrlSession;
         private SerialReader SrlReader;
@@ -22,12 +22,25 @@ namespace UeiBridge
         private IAsyncResult readerIAsyncResult;
         const int minLength = 200;
 
-        public SL508UnitedManager(DeviceEx realDevice, DeviceSetup setup)
-        {
-            this.realDevice = realDevice;
-            this.setup = setup;
-        }
+        public string DeviceName => "SL-508-892";
+        public string InstanceName { get; private set; }
 
+        public SL508UnitedManager( DeviceSetup setup)
+        {
+            //this.realDevice = realDevice;
+            this.setup = setup;
+
+            if (null != setup)
+            {
+                InstanceName = $"{DeviceName}/Cube{setup.CubeId}/Slot{setup.SlotNumber}/Input";
+            }
+            else
+            {
+                InstanceName = "<undefined input device>";
+            }
+
+        }
+        public SL508UnitedManager() { }
         internal void OpenDevice()
         {
             SrlSession = new Session();
@@ -60,7 +73,9 @@ namespace UeiBridge
             foreach (Channel c in SrlSession.GetChannels())
             {
                 SerialPort sp1 = c as SerialPort;
-                _logger.Debug($"CH:{sp1.GetIndex()}, Speed:{sp1.GetSpeed()}, Mode: {sp1.GetMode()}");
+                string s1 = sp1.GetSpeed().ToString();
+                string s2 = s1.Replace("BitsPerSecond", "");
+                _logger.Debug($"CH:{sp1.GetIndex()}, Rate: {s2} bps, Mode: {sp1.GetMode()}");
             }
 
             return; 
@@ -149,8 +164,22 @@ namespace UeiBridge
 
         public void Enqueue(byte[] byteMessage)
         {
-            SrlWriter.Write( byteMessage);
-            //SrlWriter.Write(new byte[] { 01, 02, 03 });
+            try
+            {
+                SrlWriter.Write(byteMessage);
+            }
+            catch (UeiDaqException ex)
+            {
+                _logger.Warn(ex.Message);
+                //SrlWriter.Write(new byte[] { 01, 02, 03 });
+
+                //Message "Data was lost because it was not read fast enough" string
+            }
+        }
+
+        public string[] GetFormattedStatus(TimeSpan interval)
+        {
+            return new string[] { $"{this.DeviceName} not ready yet" };
         }
     }
 }

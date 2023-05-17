@@ -3,13 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Net;
 using UeiDaq;
 using log4net;
 using UeiBridge.Library;
 using UeiBridge.Types;
-using System.Collections.Concurrent;
 
 namespace UeiBridge
 {
@@ -29,6 +27,7 @@ namespace UeiBridge
         {
             _mainConfig = mainConfig;
         }
+#if dont
         public DeviceType GetOutputDeviceManager<DeviceType>(string cubeUrl, int deviceSlot, string deviceName = null) where DeviceType : OutputDevice
         {
             var deviceInSlot = _PerDeviceObjectsList.Where(d => (d.OutputDeviceManager != null) && (d.SlotNumber == deviceSlot) && (d.CubeUrl == cubeUrl));
@@ -55,7 +54,8 @@ namespace UeiBridge
 
             return id as DeviceType;
         }
-        SL508UnitedManager _sl508united;
+#endif
+        //SL508UnitedManager _sl508united;
         public void CreateDeviceManagers(List<DeviceEx> realDeviceList)
         {
             if (realDeviceList == null)
@@ -69,36 +69,34 @@ namespace UeiBridge
             {
                 // prologue
                 // =========
-                // it type exists
+                // it device manager exists for device.
                 var t = StaticMethods.GetDeviceManagerType<IDeviceManager>(realDevice.PhDevice.GetDeviceName());
                 if (null == t)
                 {
                     _logger.Debug($"Device {realDevice.PhDevice.GetDeviceName()} not supported");
                     continue;
                 }
-                // if config entry exists
+                // if config entry exists for device
                 DeviceSetup setup = _mainConfig.GetDeviceSetupEntry(realDevice.CubeUrl, realDevice.PhDevice.GetIndex());
                 if (null == setup)
                 {
                     _logger.Warn($"No config entry for {realDevice.CubeUrl},  {realDevice.PhDevice.GetDeviceName()}, Slot {realDevice.PhDevice.GetIndex()}");
                     continue;
                 }
-                // if config entry match
+                // if config entry cube/slot match
                 if (setup.DeviceName != realDevice.PhDevice.GetDeviceName())
                 {
                     _logger.Warn($"Config entry at slot {realDevice.PhDevice.GetIndex()}/ Cube {realDevice.CubeUrl} does not match physical device {realDevice.PhDevice.GetDeviceName()}");
                     continue;
                 }
 
-                // build manager(s)
-                //setup.CubeUrl = realDevice.CubeUrl;
-                //setup.IsBlockSensorActive = _mainConfig.Blocksensor.IsActive;
                 List<PerDeviceObjects> objs = BuildObjectsForDevice(realDevice, setup);
                 if (null != objs)
                 {
                     _PerDeviceObjectsList.AddRange(objs);
                 }
 
+#if dont
                 if (realDevice.PhDevice.GetDeviceName() == DeviceMap2.SL508Literal)
                 {
                     //_udpMessenger.SubscribeConsumer(od);
@@ -112,10 +110,11 @@ namespace UeiBridge
                     _serialUreader.Start();
                     _logger.Info($"Listening on {setup.LocalEndPoint.ToIpEp()}");
                 }
+#endif
             }
         }
 
-        UdpReader _serialUreader;
+        //UdpReader _serialUreader;
         public void ActivateDownstreamOjects()
         {
             // activate downward (output) objects
@@ -240,7 +239,30 @@ namespace UeiBridge
 
         private List<PerDeviceObjects> Build_SL508(DeviceEx realDevice, DeviceSetup setup)
         {
-            return null;
+
+            var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
+
+            var sl508 = new SL508UnitedManager( setup);
+
+            _udpMessenger.SubscribeConsumer(sl508, 2, 3);
+            var ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, "UnitedSerial");
+
+            sl508.OpenDevice();
+            ureader.Start();
+            //_logger.Info($"Listening on {setup.LocalEndPoint.ToIpEp()}");
+
+            var pd = new PerDeviceObjects(realDevice);
+            //pd.SerialSession = serialSession;
+            pd.UnitedDeviceManager = sl508;
+            //pd.UdpWriter = uWriter;
+
+            
+
+            return new List<PerDeviceObjects>() { pd };
+
+        }
+        private List<PerDeviceObjects> Build_SL508_old(DeviceEx realDevice, DeviceSetup setup)
+        {
 
             SL508Session serialSession = new SL508Session(setup as SL508892Setup);//, realDevice.CubeUrl);
             System.Diagnostics.Debug.Assert(null != serialSession);
@@ -387,90 +409,16 @@ namespace UeiBridge
                 System.Threading.Thread.Sleep(50);
                 entry.UdpWriter?.Dispose();
 
+                entry.UnitedDeviceManager?.Dispose();
             }
 
-            _sl508united.Dispose();
+            //_sl508united.Dispose();
 
 
             foreach (var entry in _udpReaderList)
             {
                 entry.Dispose();
             }
-        }
-    }
-
-    /// <summary>
-    /// messenger
-    /// 
-    /// </summary>
-    public class UdpToSlotMessenger : IEnqueue<byte[]>
-    {
-        private ILog _logger = StaticMethods.GetLogger();
-        private List<OutputDevice> _consumersList = new List<OutputDevice>();
-        private BlockingCollection<byte[]> _inputQueue = new BlockingCollection<byte[]>(1000); // max 1000 items
-
-        public UdpToSlotMessenger()
-        {
-            Task.Factory.StartNew(() => DispatchToConsumer_Task());
-        }
-        public void Enqueue(byte[] byteMessage)
-        {
-            if (_inputQueue.IsCompleted)
-            {
-                return;
-            }
-
-            try
-            {
-                _inputQueue.Add(byteMessage);
-            }
-            catch (Exception ex)
-            {
-                _logger.Warn($"Incoming byte message error. {ex.Message}. message dropped.");
-            }
-        }
-
-        void DispatchToConsumer_Task()
-        {
-            // message loop
-            while (false == _inputQueue.IsCompleted)
-            {
-                byte[] incomingMessage = _inputQueue.Take(); // get from q
-
-                if (null == incomingMessage) // end task token
-                {
-                    _inputQueue.CompleteAdding();
-                    break;
-                }
-
-                EthernetMessage ethMag = EthernetMessage.CreateFromByteArray( incomingMessage, MessageWay.downstream);
-
-                var clist = _consumersList.Where(consumer => ((consumer.CubeId == ethMag.UnitId) && ( consumer.SlotNumber == ethMag.SlotNumber )));
-                if (clist.Count()==0) // no subs
-                {
-                    _logger.Warn($"No consumer to message aimed to slot {ethMag.SlotNumber} and unit id {ethMag.UnitId}");
-                    continue;
-                }
-                if (clist.Count() > 1) // 2 subs with same parameters
-                {
-                    throw new ArgumentException();
-                }
-
-                OutputDevice outDev = clist.FirstOrDefault();
-
-                outDev.Enqueue(incomingMessage);
-            }
-
-        }
-
-        /// <summary>
-        /// Subscribe
-        /// </summary>
-        public void SubscribeConsumer(OutputDevice outDevice)
-        {
-            int slot = outDevice.SlotNumber;
-            _logger.Info($"Device {outDevice.DeviceName} subscribed");
-            _consumersList.Add(outDevice);
         }
     }
 }

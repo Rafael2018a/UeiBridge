@@ -16,6 +16,8 @@ namespace UeiBridge
         public InputDevice InputDeviceManager { get;  set; }
         public OutputDevice OutputDeviceManager { get; set; }
         public UdpWriter UdpWriter { get; set; }
+        public SL508UnitedManager UnitedDeviceManager { get; set; }
+
         //public SL508Session SerialSession { get; set; }
         public PerDeviceObjects(string deviceName, int slotNumber, string cubeUrl)
         {
