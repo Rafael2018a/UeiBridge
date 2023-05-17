@@ -65,10 +65,7 @@ namespace UeiBridgeTest
                     Assert.That(jFileObject.Header, Is.Not.Null);
                     Assert.That(jFileObject.Header.ConverterName, Is.Not.Null);
                 });
-                    //
             }
-
-            
         }
     }
 

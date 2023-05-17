@@ -15,16 +15,19 @@ namespace UeiBridge.Library
     {
         public string DeviceName { get; private set; }
         public int DeviceSlot { get; private set; }
+        public string CubeUrl { get; set; }
+
         public UeiDeviceAdapter( UeiDaq.Device ueiDevice)
         {
             this.DeviceName = ueiDevice.GetDeviceName();
             this.DeviceSlot = ueiDevice.GetIndex();
         }
 
-        public UeiDeviceAdapter(string deviceName, int deviceSlot)
+        public UeiDeviceAdapter(string cubeurl, string deviceName, int deviceSlot )
         {
-            DeviceName = deviceName;
+            CubeUrl = cubeurl;
             DeviceSlot = deviceSlot;
+            DeviceName = deviceName;
         }
     }
 
@@ -38,11 +41,11 @@ namespace UeiBridge.Library
         IAsyncResult BeginRead(int minLen, AsyncCallback readerCallback, int channel);
     }
 
-    public struct DeviceEx
+    public struct DeviceEx1
     {
         public UeiDaq.Device PhDevice { get; private set; }
         public string CubeUrl { get; private set; }
-        public DeviceEx(Device device, string cubeUrl)
+        public DeviceEx1(Device device, string cubeUrl)
         {
             PhDevice = device;
             CubeUrl = cubeUrl;

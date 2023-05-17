@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using NUnit.Framework;
 using UeiBridge;
@@ -9,6 +10,12 @@ namespace UeiBridgeTest
     [TestFixture]
     class BuilderTests
     {
+
+        [SetUp]
+        public void  SetUp()
+        {
+            Trace.Listeners.Add(new ConsoleTraceListener());
+        }
         [Test]
         public void BuildSimuDeviceList()
         {
@@ -16,13 +23,15 @@ namespace UeiBridgeTest
 
             ProgramObjectsBuilder programBuilder = new ProgramObjectsBuilder(c2);
 
-            List<DeviceEx> deviceList = UeiBridge.Program.BuildDeviceList(new List<string>(new string[] { "simu://" }));
+            List<UeiDeviceAdapter> deviceList = UeiBridge.Program.BuildDeviceList(new List<string>(new string[] { "simu://" }));
 
             programBuilder.CreateDeviceManagers(deviceList);
 
             Assert.That(programBuilder.PerDeviceObjectsList.Count, Is.EqualTo(1));
 
             programBuilder.Dispose();
+
+            Trace.WriteLine("success");
         }
 
         [Test]

@@ -32,9 +32,9 @@ namespace UeiBridge
         /// Build linear device list.
         /// This method assumes that the indicates cubes exists.
         /// </summary>
-        public static List<DeviceEx> BuildDeviceList(List<string> cubesUrl)
+        public static List<UeiDeviceAdapter> BuildDeviceList(List<string> cubesUrl)
         {
-            List<DeviceEx> resultList = new List<DeviceEx>();
+            List<UeiDeviceAdapter> resultList = new List<UeiDeviceAdapter>();
             foreach (string url in cubesUrl)
             {
                 DeviceCollection devColl = new DeviceCollection(url);
@@ -42,11 +42,12 @@ namespace UeiBridge
                 foreach (Device dev in devColl)
                 {
                     if (dev == null) continue; // this for the last entry, which is null
-                    resultList.Add(new DeviceEx(dev, url));
+                    resultList.Add(new UeiDeviceAdapter(url, dev.GetDeviceName(), dev.GetIndex()));
                 }
             }
             return resultList;
         }
+#if dont
         public static List<DeviceEx> BuildDeviceList(string cubeUrl)
         {
             List<DeviceEx> resultList = new List<DeviceEx>();
@@ -59,6 +60,7 @@ namespace UeiBridge
             }
             return resultList;
         }
+#endif
         private void Run()
         {
             // print current version
@@ -100,7 +102,7 @@ namespace UeiBridge
                 return;
             }
 
-            List<DeviceEx> deviceList = BuildDeviceList(cubeUrlList);
+            List<UeiDeviceAdapter> deviceList = BuildDeviceList(cubeUrlList);
             DisplayDeviceList(deviceList);
 
             _programBuilder = new ProgramObjectsBuilder( _mainConfig);
@@ -161,19 +163,19 @@ namespace UeiBridge
             return result;
         }
 
-        private void DisplayDeviceList(List<DeviceEx> devList)
+        private void DisplayDeviceList(List<UeiDeviceAdapter> devList)
         {
             // prepare device list
             if (null == devList) throw new ArgumentNullException();
 
-            IEnumerable<IGrouping<string, DeviceEx>> GroupByUrl = devList.GroupBy(s => s.CubeUrl);
+            IEnumerable<IGrouping<string, UeiDeviceAdapter>> GroupByUrl = devList.GroupBy(s => s.CubeUrl);
 
-            foreach (IGrouping<string, DeviceEx> group in GroupByUrl)
+            foreach (IGrouping<string, UeiDeviceAdapter> group in GroupByUrl)
             {
                 _logger.Info($" *** Device list for cube {group.Key}:");
-                foreach (DeviceEx dev in group)
+                foreach (UeiDeviceAdapter dev in group)
                 {
-                    _logger.Info($"{dev.PhDevice.GetDeviceName()} on slot {dev.PhDevice.GetIndex()}");
+                    _logger.Info($"{dev.DeviceName} on slot {dev.DeviceSlot}");
                 }
                 //_logger.Info(" *** End device list:");
             }

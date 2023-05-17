@@ -72,7 +72,7 @@ namespace UeiBridgeTest
         public void CubeSetupTest1()
         {
             List<UeiDeviceAdapter> devList = new List<UeiDeviceAdapter>();
-            devList.Add(new UeiDeviceAdapter("devicename1", 51));
+            devList.Add(new UeiDeviceAdapter(null, "devicename1", 51));
             CubeSetup cs = new CubeSetup(devList, "<unknown-url>");
             Assert.That( cs.DeviceSetupList.Count, Is.EqualTo(1));
         }
@@ -83,7 +83,7 @@ namespace UeiBridgeTest
         public void CubeSetupTest2()
         {
             List<UeiDeviceAdapter> devList = new List<UeiDeviceAdapter>();
-            devList.Add(new UeiDeviceAdapter("AO-308", 101));
+            devList.Add(new UeiDeviceAdapter( null, "AO-308", 101));
             CubeSetup cs = new CubeSetup(devList, "<unknown-url>");
             Assert.That( cs.DeviceSetupList.Count, Is.EqualTo(1));
             Assert.That(cs.DeviceSetupList[0], Is.Not.Null);
@@ -110,41 +110,6 @@ namespace UeiBridgeTest
             Config2 c3 = Config2.LoadConfigFromFile(new FileInfo(filename));
             c2.CubeSetupList.FirstOrDefault().DeviceSetupList.FirstOrDefault().DeviceName = "kkk";
             Assert.That(c2.Equals(c3), Is.False);
-        }
-        //[Test]
-        public void FileInfoTest()
-        {
-
-            FileInfo fi = new FileInfo("file1.txt");
-
-            CreateBackupFile(fi);
-
-            using (StreamWriter sw = fi.AppendText())
-            {
-                sw.WriteLine("line1");
-            }
-
-        }
-
-        private static void CreateBackupFile(FileInfo fi)
-        {
-            string barename = Path.GetFileNameWithoutExtension(fi.Name);
-            string ext = Path.GetExtension(fi.Name);
-            int index = 1;
-            while (true)
-            {
-                string backname = $"{barename} ({index}){ext}";
-                if (File.Exists(backname))
-                {
-                    index++;
-                    continue;
-                }
-                else
-                {
-                    fi.CopyTo(backname);
-                    break;
-                }
-            }
         }
     }
 

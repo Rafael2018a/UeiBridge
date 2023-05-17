@@ -63,7 +63,10 @@ namespace UeiBridge
         public override void Dispose()
         {
             _logger.Debug($"Disposing {this.DeviceName}/Input, slot {_thisDeviceSetup.SlotNumber}");
-            _samplingTimer.Dispose();
+            if (null != _samplingTimer)
+            {
+                _samplingTimer.Dispose();
+            }
             System.Threading.Thread.Sleep(200); // wait for callback to finish
             CloseSession(_ueiSession);
 			base.Dispose();

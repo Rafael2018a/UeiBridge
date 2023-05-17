@@ -133,7 +133,7 @@ namespace UeiBridge.Library
                 foreach (Device dev in devColl)
                 {
                     if (dev == null) continue; // this for the last entry, which is null
-                    rl.Add(new UeiDeviceAdapter(dev.GetDeviceName(), dev.GetIndex()));
+                    rl.Add(new UeiDeviceAdapter( url, dev.GetDeviceName(), dev.GetIndex()));
                 }
                 csetupList.Add(new CubeSetup(rl, url));
             }

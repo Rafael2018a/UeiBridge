@@ -25,10 +25,10 @@ namespace UeiBridge
             this.SlotNumber = slotNumber;
             this.CubeUrl = cubeUrl;
         }
-        public PerDeviceObjects( DeviceEx deviceEx)//, OutputDevice outDevice, UdpReader reader)
+        public PerDeviceObjects(UeiDeviceAdapter deviceEx)//, OutputDevice outDevice, UdpReader reader)
         {
-            this.DeviceName = deviceEx.PhDevice.GetDeviceName();
-            this.SlotNumber = deviceEx.PhDevice.GetIndex();
+            this.DeviceName = deviceEx.DeviceName;
+            this.SlotNumber = deviceEx.DeviceSlot;
             this.CubeUrl = deviceEx.CubeUrl;
             //this.OutputDeviceManager = outDevice;
             //this.UdpReader = reader;

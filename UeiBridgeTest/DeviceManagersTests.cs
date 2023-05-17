@@ -58,8 +58,8 @@ namespace UeiBridgeTest
         {
             string url = "simu://";
             List<CubeSetup> csetupList = new List<CubeSetup>();
-            List<DeviceEx> devList = UeiBridge.Program.BuildDeviceList(url);
-            var resList = devList.Select(d => new UeiDeviceAdapter(d.PhDevice.GetDeviceName(), d.PhDevice.GetIndex()));// as List<UeiDeviceAdapter>;
+            List<UeiDeviceAdapter> devList = UeiBridge.Program.BuildDeviceList(new List<string> { url });
+            var resList = devList.Select(d => new UeiDeviceAdapter( null, d.DeviceName, d.DeviceSlot));// as List<UeiDeviceAdapter>;
             List<UeiDeviceAdapter> l = new List<UeiDeviceAdapter>(resList);
             csetupList.Add(new CubeSetup(l, url));
 
@@ -76,8 +76,8 @@ namespace UeiBridgeTest
             analogWriterMock mk = new analogWriterMock();
             //mk.OriginSession = session1;
             var devicelist = UeiBridge.Program.BuildDeviceList(new List<string>() { "simu://" });
-            var ao = devicelist.Where(i => i.PhDevice.GetDeviceName().StartsWith("Simu-AO16")).FirstOrDefault();
-            AO308Setup setup = new AO308Setup(new EndPoint("8.8.8.8", 5000), new UeiDeviceAdapter(ao.PhDevice));
+            var ao = devicelist.Where(i => i.DeviceName.StartsWith("Simu-AO16")).FirstOrDefault();
+            AO308Setup setup = new AO308Setup(new EndPoint("8.8.8.8", 5000), new UeiDeviceAdapter(null, ao.DeviceName, ao.DeviceSlot));
 
             AO308OutputDeviceManager ao308 = new AO308OutputDeviceManager(setup, mk, session1, false);
             
@@ -109,9 +109,9 @@ namespace UeiBridgeTest
             digitalWriterMock mk1 = new digitalWriterMock();
             //mk1.OriginSession = s;
             var devicelist = UeiBridge.Program.BuildDeviceList(new List<string>() { "simu://" });
-            var ao = devicelist.Where(i => i.PhDevice.GetDeviceName().StartsWith("Simu-DIO64")).FirstOrDefault();
+            var ao = devicelist.Where(i => i.DeviceName.StartsWith("Simu-DIO64")).FirstOrDefault();
 
-            DIO403Setup setup = new DIO403Setup(new EndPoint("8.8.8.8", 5000), null, new UeiDeviceAdapter(ao.PhDevice));
+            DIO403Setup setup = new DIO403Setup(new EndPoint("8.8.8.8", 5000), null, new UeiDeviceAdapter(null, ao.DeviceName, ao.DeviceSlot));
 
             DIO403OutputDeviceManager dio403 = new DIO403OutputDeviceManager(setup, mk1, s);
             dio403.OpenDevice();
@@ -131,7 +131,7 @@ namespace UeiBridgeTest
             });
         }
 
-        //[Test] tbd. renew this test!!!
+        [Test] 
         public void DIO403InputDeviceManagerTest()
         {
             //Session s = new Session();
@@ -139,9 +139,9 @@ namespace UeiBridgeTest
             //digitalWriterMock mk1 = new digitalWriterMock();
             ////mk1.OriginSession = s;
             //var devicelist = UeiBridge.Program.BuildDeviceList(new List<string>() { "simu://" });
-            //var ao = devicelist.Where(i => i.PhDevice.GetDeviceName().StartsWith("Simu-DIO64")).FirstOrDefault();
+            //var ao = devicelist.Where(i => i.DeviceName.StartsWith("Simu-DIO64")).FirstOrDefault();
 
-            UeiDeviceAdapter uda = new UeiDeviceAdapter(DeviceMap2.DIO403Literal, 2); // simu://Simu-DIO64 is on slot 2
+            UeiDeviceAdapter uda = new UeiDeviceAdapter(null, DeviceMap2.DIO403Literal, 2); // simu://Simu-DIO64 is on slot 2
 
             DIO403Setup setup = new DIO403Setup(null, new EndPoint("8.8.8.8", 5000), uda);
             setup.CubeUrl = "simu://";
@@ -192,7 +192,7 @@ namespace UeiBridgeTest
             }
 
             // build input manager
-            //string instanceName = $"{realDevice.PhDevice.GetDeviceName()}/Slot{realDevice.PhDevice.GetIndex()}";
+            //string instanceName = $"{realDevice.DeviceName}/Slot{realDevice.DeviceSlot}";
             ISend<SendObject> uWriter = null;
                 //new UdpWriter(instanceName, setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMCast);
 
