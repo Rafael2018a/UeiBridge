@@ -16,6 +16,8 @@ namespace UeiBridge
     {
         public override string DeviceName => "DIO-470";
 
+        protected override bool IsDeviceReady { get; set; }
+
         //privates
         log4net.ILog _logger = StaticMethods.GetLogger();
         IConvert _attachedConverter;
@@ -37,7 +39,7 @@ namespace UeiBridge
         {
             _writer.Dispose();
             CloseSession(_ueiSession);
-			base.Dispose();
+            _logger.Debug($"Device manager {InstanceName} Disposed");
         }
 
         public override bool OpenDevice()
@@ -58,7 +60,7 @@ namespace UeiBridge
             _logger.Info($"Init success: {InstanceName}. Bits {firstBit}..{firstBit + noOfbits - 1} as output"); // { noOfCh} output channels
 
             Task.Factory.StartNew(() => OutputDeviceHandler_Task());
-            _isDeviceReady = true;
+            IsDeviceReady = true;
             return false;
         }
 

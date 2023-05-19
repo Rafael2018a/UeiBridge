@@ -39,7 +39,7 @@ namespace ByteStreamer3
             set
             {
                 _playFolderString = value;
-                RaisePropertyChangedEvent("PlayFolder");
+                RaisePropertyChangedEvent("PlayFolderString");
             }
         }
         public string PlayFolderBoxBorderColor
@@ -150,6 +150,7 @@ namespace ByteStreamer3
                 PlayFolderString = dialog.FileName;
                 _settingBag.PlayFolder = PlayFolderString;
                 var di = new DirectoryInfo(PlayFolderString);
+                
                 LoadPlayList( di);
                 PlayFolderBoxBorderColor = ( di.Exists) ? "Gray" : "Red";
             }
@@ -202,7 +203,7 @@ namespace ByteStreamer3
             _settingBag = LoadSetting();
             _parentWindow = parentWindow;
             var dirInfo = new DirectoryInfo(_settingBag.PlayFolder);
-            //PlayFolderString = _settingBag.PlayFolder;
+            PlayFolderString = _settingBag.PlayFolder;
             LoadPlayList( dirInfo);
             CreateSampleFile(dirInfo);
             PlayFolderBoxBorderColor = ( dirInfo.Exists) ? "Gray" : "Red";

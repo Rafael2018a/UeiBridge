@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -25,16 +24,14 @@ namespace UeiBridge
         {
             Program p = new Program();
             p.Run();
-
-            System.Threading.Thread.Sleep(1000);
         }
         /// <summary>
         /// Build linear device list.
         /// This method assumes that the indicates cubes exists.
         /// </summary>
-        public static List<UeiDeviceAdapter> BuildDeviceList(List<string> cubesUrl)
+        public static List<UeiDeviceInfo> BuildDeviceList(List<string> cubesUrl)
         {
-            List<UeiDeviceAdapter> resultList = new List<UeiDeviceAdapter>();
+            List<UeiDeviceInfo> resultList = new List<UeiDeviceInfo>();
             foreach (string url in cubesUrl)
             {
                 DeviceCollection devColl = new DeviceCollection(url);
@@ -42,25 +39,11 @@ namespace UeiBridge
                 foreach (Device dev in devColl)
                 {
                     if (dev == null) continue; // this for the last entry, which is null
-                    resultList.Add(new UeiDeviceAdapter(url, dev.GetDeviceName(), dev.GetIndex()));
+                    resultList.Add(new UeiDeviceInfo(url, dev.GetDeviceName(), dev.GetIndex()));
                 }
             }
             return resultList;
         }
-#if dont
-        public static List<DeviceEx> BuildDeviceList(string cubeUrl)
-        {
-            List<DeviceEx> resultList = new List<DeviceEx>();
-            DeviceCollection devColl = new DeviceCollection(cubeUrl);
-
-            foreach (Device dev in devColl)
-            {
-                if (dev == null) continue; // this for the last entry, which is null
-                resultList.Add(new DeviceEx(dev, cubeUrl));
-            }
-            return resultList;
-        }
-#endif
         private void Run()
         {
             // print current version
@@ -102,7 +85,7 @@ namespace UeiBridge
                 return;
             }
 
-            List<UeiDeviceAdapter> deviceList = BuildDeviceList(cubeUrlList);
+            List<UeiDeviceInfo> deviceList = BuildDeviceList(cubeUrlList);
             DisplayDeviceList(deviceList);
 
             _programBuilder = new ProgramObjectsBuilder( _mainConfig);
@@ -111,7 +94,7 @@ namespace UeiBridge
             _programBuilder.ActivateUpstreamObjects();
             _programBuilder.Build_BlockSensorManager(deviceList); // since BlockSensor doesn't reside in a physical slot, in must be built separately.
 
-            // publish status to StatusViewer
+            // publish status (StatusViewer)
             Task.Factory.StartNew(() => PublishStatus_Task(_programBuilder.PerDeviceObjectsList));
 
             // self tests
@@ -163,53 +146,49 @@ namespace UeiBridge
             return result;
         }
 
-        private void DisplayDeviceList(List<UeiDeviceAdapter> devList)
+        /// <summary>
+        /// Emit device list to log
+        /// </summary>
+        private void DisplayDeviceList(List<UeiDeviceInfo> devList)
         {
             // prepare device list
             if (null == devList) throw new ArgumentNullException();
 
-            IEnumerable<IGrouping<string, UeiDeviceAdapter>> GroupByUrl = devList.GroupBy(s => s.CubeUrl);
+            IEnumerable<IGrouping<string, UeiDeviceInfo>> GroupByUrl = devList.GroupBy(s => s.CubeUrl);
 
-            foreach (IGrouping<string, UeiDeviceAdapter> group in GroupByUrl)
+            foreach (IGrouping<string, UeiDeviceInfo> group in GroupByUrl)
             {
                 _logger.Info($" *** Device list for cube {group.Key}:");
-                foreach (UeiDeviceAdapter dev in group)
+                foreach (UeiDeviceInfo dev in group)
                 {
                     _logger.Info($"{dev.DeviceName} on slot {dev.DeviceSlot}");
                 }
-                //_logger.Info(" *** End device list:");
             }
-
         }
         void PublishStatus_Task(List<PerDeviceObjects> deviceList)
         {
             const int intervalMs = 100;
-            IPEndPoint destEP = _mainConfig.AppSetup.StatusViewerEP.ToIpEp();
-            UdpWriter uw = new UdpWriter("To-StatusViewer", destEP, _mainConfig.AppSetup.SelectedNicForMCast);
             TimeSpan interval = TimeSpan.FromMilliseconds(intervalMs);
+            IPEndPoint destEP = _mainConfig.AppSetup.StatusViewerEP.ToIpEp();
+            UdpWriter uwriter = new UdpWriter("To-StatusViewer", destEP, _mainConfig.AppSetup.SelectedNicForMCast);
             _logger.Info($"StatusViewer dest ep: {destEP.ToString()} (Local NIC {_mainConfig.AppSetup.SelectedNicForMCast})");
 
             List<IDeviceManager> deviceListScan = new List<IDeviceManager>();
 
-            // prepare list
+            // prepare list of device managers
             foreach (PerDeviceObjects deviceObjects in deviceList) //ProjectRegistry.Instance.OutputDevicesMap)
             {
                 if (deviceObjects.InputDeviceManager != null)
                 {
                     deviceListScan.Add(deviceObjects.InputDeviceManager);
                 }
-
                 if (deviceObjects?.OutputDeviceManager != null)
                 {
                     deviceListScan.Add(deviceObjects.OutputDeviceManager);
                 }
-                if (deviceObjects?.UnitedDeviceManager != null)
-                {
-                    deviceListScan.Add(deviceObjects.UnitedDeviceManager);
-                }
             }
 
-            // get formatted string for each device in list
+            // get formatted string from each device manager and send by udp
             while (true)
             {
                 foreach (IDeviceManager dm in deviceListScan)
@@ -221,9 +200,8 @@ namespace UeiBridge
                     string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
                     byte[] send_buffer = Encoding.ASCII.GetBytes(s);
                     SendObject so = new SendObject(destEP, send_buffer);
-                    uw.Send(so);
+                    uwriter.Send(so);
                 }
-
                 System.Threading.Thread.Sleep(interval);
             }
         }

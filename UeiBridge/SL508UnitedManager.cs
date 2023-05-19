@@ -10,7 +10,7 @@ namespace UeiBridge
     /// <summary>
     /// SL508-United-Manager
     /// </summary>
-    public class SL508UnitedManager : IDisposable, IDeviceManager, IEnqueue<byte[]>
+    public class SL508UnitedManager : OutputDevice //IDisposable, IDeviceManager, IEnqueue<byte[]>
     {
         private log4net.ILog _logger = StaticMethods.GetLogger();
         //private DeviceEx realDevice;
@@ -22,26 +22,18 @@ namespace UeiBridge
         private IAsyncResult readerIAsyncResult;
         const int minLength = 200;
 
-        public string DeviceName => "SL-508-892";
-        public string InstanceName { get; private set; }
+        public override string DeviceName => "SL-508-892";
+
+        protected override bool IsDeviceReady { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
         public SL508UnitedManager( DeviceSetup setup)
         {
-            //this.realDevice = realDevice;
+            System.Diagnostics.Debug.Assert(null != setup);
             this.setup = setup;
-
-            if (null != setup)
-            {
-                InstanceName = $"{DeviceName}/Cube{setup.CubeId}/Slot{setup.SlotNumber}/Input";
-            }
-            else
-            {
-                InstanceName = "<undefined input device>";
-            }
-
+            //InstanceName = $"{DeviceName}/Cube{setup.CubeId}/Slot{setup.SlotNumber}/Input";
         }
         public SL508UnitedManager() { }
-        internal void OpenDevice()
+        public override bool OpenDevice()
         {
             SrlSession = new Session();
             SerialPort p = SrlSession.CreateSerialPort("pdna://192.168.100.2/Dev3/Com0,1",
@@ -57,6 +49,10 @@ namespace UeiBridge
             // - 100 bytes have been received
             // - 10ms elapsed (rate set to 100Hz);
             SrlSession.ConfigureTimingForMessagingIO(100, 100.0);
+            // 100 The miminum number of messages to buffer before notifying the session. 
+            // rn: actuall, number of bytes before notifying..
+            // 100.0 The rate at which the device notifies the session that messages have been received. Set the rate to 0 to be notified immediately when a message is received. 
+
             SrlSession.GetTiming().SetTimeout(500);
 
             SrlReader = new SerialReader(SrlSession.GetDataStream(), SrlSession.GetChannel(0).GetIndex());
@@ -69,6 +65,7 @@ namespace UeiBridge
             // automatically in the callback
             readerAsyncCallback = new AsyncCallback(ReaderCallback);
             readerIAsyncResult = SrlReader.BeginRead(minLength, readerAsyncCallback, null);
+            // minLength: number of byts to read.
 
             foreach (Channel c in SrlSession.GetChannels())
             {
@@ -78,18 +75,8 @@ namespace UeiBridge
                 _logger.Debug($"CH:{sp1.GetIndex()}, Rate: {s2} bps, Mode: {sp1.GetMode()}");
             }
 
-            return; 
+            return true; 
 
-            Task t = System.Threading.Tasks.Task.Factory.StartNew(() => 
-            { 
-                for(int i =0; i<50; i++)
-                {
-                    Thread.Sleep(10);
-                    byte b = Convert.ToByte(i);
-                    SrlWriter.Write(new byte[] { b, 02, 03 });
-                    
-                }
-            });
         }
 
         private void ReaderCallback(IAsyncResult ar)
@@ -142,7 +129,7 @@ namespace UeiBridge
             }
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             try
             {
@@ -159,14 +146,19 @@ namespace UeiBridge
 
             SrlSession.Dispose();
             SrlSession = null;
-            _logger.Debug("Session disposed");
+            _logger.Debug("Serial session disposed");
         }
 
-        public void Enqueue(byte[] byteMessage)
+        public override string[] GetFormattedStatus(TimeSpan interval)
+        {
+            return new string[] { $"{this.DeviceName} not ready yet" };
+        }
+
+        protected override void HandleRequest(EthernetMessage request)
         {
             try
             {
-                SrlWriter.Write(byteMessage);
+                SrlWriter.Write(request.PayloadBytes);
             }
             catch (UeiDaqException ex)
             {
@@ -175,11 +167,6 @@ namespace UeiBridge
 
                 //Message "Data was lost because it was not read fast enough" string
             }
-        }
-
-        public string[] GetFormattedStatus(TimeSpan interval)
-        {
-            return new string[] { $"{this.DeviceName} not ready yet" };
         }
     }
 }

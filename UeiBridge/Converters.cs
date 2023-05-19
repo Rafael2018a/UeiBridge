@@ -9,51 +9,51 @@ using UeiBridge.Library;
 
 namespace UeiBridge
 {
-    [Obsolete]
-    class DIO403Convert : IConvert
-    {
-        public string DeviceName => "DIO-403";
-        string _lastError = null;
-        readonly int _numberOfOutChannels;
+    //[Obsolete]
+    //class DIO403Convert : IConvert
+    //{
+    //    public string DeviceName => "DIO-403";
+    //    string _lastError = null;
+    //    readonly int _numberOfOutChannels;
 
-        [Obsolete]
-        public DIO403Convert(DeviceSetup setup)
-        {
-            _numberOfOutChannels = 3;// Config.Instance.MaxDigital403OutputChannels;
-        }
-        public DIO403Convert( int numberOfChannels)
-        {
-            _numberOfOutChannels = numberOfChannels;
-        }
+    //    [Obsolete]
+    //    public DIO403Convert(DeviceSetup setup)
+    //    {
+    //        _numberOfOutChannels = 3;// Config.Instance.MaxDigital403OutputChannels;
+    //    }
+    //    public DIO403Convert( int numberOfChannels)
+    //    {
+    //        _numberOfOutChannels = numberOfChannels;
+    //    }
 
-        string IConvert.LastErrorMessage => _lastError;
+    //    string IConvert.LastErrorMessage => _lastError;
 
-        public byte[] DeviceToEth(object dt)
-        {
-            // convert int16 vector to int8 vector
-            // ================================
-            UInt16[] deviceVector = (UInt16[])dt;
-            byte[] resultVector = new byte[deviceVector.Length];
-            Array.Clear(resultVector, 0, resultVector.Length);
-            for (int ch = 0; ch < deviceVector.Length; ch++)
-            {
-                resultVector[ch] = (byte)(deviceVector[ch] & 0xFF);
-            }
-            return resultVector;
-        }
-        public object EthToDevice(byte[] messagePayload)
-        {
-            // convert int8 vector to int16 vector
-            // ================================
-            UInt16[] resultVector = new UInt16[messagePayload.Length];
-            Array.Clear(resultVector, 0, resultVector.Length);
-            for (int ch = 0; ch < messagePayload.Length; ch++)
-            {
-                resultVector[ch] = messagePayload[ch];
-            }
-            return resultVector;
-        }
-    }
+    //    public byte[] DeviceToEth(object dt)
+    //    {
+    //        // convert int16 vector to int8 vector
+    //        // ================================
+    //        UInt16[] deviceVector = (UInt16[])dt;
+    //        byte[] resultVector = new byte[deviceVector.Length];
+    //        Array.Clear(resultVector, 0, resultVector.Length);
+    //        for (int ch = 0; ch < deviceVector.Length; ch++)
+    //        {
+    //            resultVector[ch] = (byte)(deviceVector[ch] & 0xFF);
+    //        }
+    //        return resultVector;
+    //    }
+    //    public object EthToDevice(byte[] messagePayload)
+    //    {
+    //        // convert int8 vector to int16 vector
+    //        // ================================
+    //        UInt16[] resultVector = new UInt16[messagePayload.Length];
+    //        Array.Clear(resultVector, 0, resultVector.Length);
+    //        for (int ch = 0; ch < messagePayload.Length; ch++)
+    //        {
+    //            resultVector[ch] = messagePayload[ch];
+    //        }
+    //        return resultVector;
+    //    }
+    //}
     class DIO470Convert : IConvert
     {
         public string DeviceName => "DIO-470";
@@ -153,33 +153,33 @@ namespace UeiBridge
         }
     }
 #endif
-    class SL508Convert : IConvert
-    {
-        public SL508Convert(DeviceSetup setup)
-        {
-        }
+    //class SL508Convert : IConvert
+    //{
+    //    public SL508Convert(DeviceSetup setup)
+    //    {
+    //    }
 
-        public string DeviceName => "SL-508-892";
+    //    public string DeviceName => "SL-508-892";
 
-        public string LastErrorMessage => throw new NotImplementedException();
+    //    public string LastErrorMessage => throw new NotImplementedException();
 
-        public byte[] DeviceToEth(object dt)
-        {
-            System.Diagnostics.Debug.Assert(dt.GetType() == typeof(byte[]));
-            byte[] result = dt as byte[];
-            return result;
-        }
+    //    public byte[] DeviceToEth(object dt)
+    //    {
+    //        System.Diagnostics.Debug.Assert(dt.GetType() == typeof(byte[]));
+    //        byte[] result = dt as byte[];
+    //        return result;
+    //    }
 
-        public object EthToDevice(byte[] messagePayload)
-        {
-            return messagePayload;
-            //byte[] newpayload = new byte[messagePayload.Length + 2];
-            //Array.Copy(messagePayload, newpayload, messagePayload.Length);
-            //newpayload[newpayload.Length - 1] = 10; // lf
-            //newpayload[newpayload.Length - 2] = 13; // cr
-            //return newpayload;
-        }
-    }
+    //    public object EthToDevice(byte[] messagePayload)
+    //    {
+    //        return messagePayload;
+    //        //byte[] newpayload = new byte[messagePayload.Length + 2];
+    //        //Array.Copy(messagePayload, newpayload, messagePayload.Length);
+    //        //newpayload[newpayload.Length - 1] = 10; // lf
+    //        //newpayload[newpayload.Length - 2] = 13; // cr
+    //        //return newpayload;
+    //    }
+    //}
 
     public class DigitalConverter : IConvert2<UInt16[]>
     {

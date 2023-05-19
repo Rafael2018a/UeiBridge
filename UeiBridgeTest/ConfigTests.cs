@@ -60,7 +60,7 @@ namespace UeiBridgeTest
         {
             System.IO.File.Delete("newfile.config");
             string url = "simu://";
-            CubeSetup cs = new CubeSetup( new List<UeiDeviceAdapter>(), url);
+            CubeSetup cs = new CubeSetup( new List<UeiDeviceInfo>(), url);
             Config2 c2 = new Config2(new List<CubeSetup> { cs });
             c2.SaveAs( new FileInfo( "newfile.config"), true);
         }
@@ -71,8 +71,8 @@ namespace UeiBridgeTest
         [Test]
         public void CubeSetupTest1()
         {
-            List<UeiDeviceAdapter> devList = new List<UeiDeviceAdapter>();
-            devList.Add(new UeiDeviceAdapter(null, "devicename1", 51));
+            List<UeiDeviceInfo> devList = new List<UeiDeviceInfo>();
+            devList.Add(new UeiDeviceInfo(null, "devicename1", 51));
             CubeSetup cs = new CubeSetup(devList, "<unknown-url>");
             Assert.That( cs.DeviceSetupList.Count, Is.EqualTo(1));
         }
@@ -82,8 +82,8 @@ namespace UeiBridgeTest
         [Test]
         public void CubeSetupTest2()
         {
-            List<UeiDeviceAdapter> devList = new List<UeiDeviceAdapter>();
-            devList.Add(new UeiDeviceAdapter( null, "AO-308", 101));
+            List<UeiDeviceInfo> devList = new List<UeiDeviceInfo>();
+            devList.Add(new UeiDeviceInfo( null, "AO-308", 101));
             CubeSetup cs = new CubeSetup(devList, "<unknown-url>");
             Assert.That( cs.DeviceSetupList.Count, Is.EqualTo(1));
             Assert.That(cs.DeviceSetupList[0], Is.Not.Null);

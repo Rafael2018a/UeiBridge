@@ -16,8 +16,10 @@ namespace UeiBridge
     {
         public override string DeviceName => "DIO-403";
 
+        protected override bool IsDeviceReady {get ; set; }
+
         private log4net.ILog _logger = StaticMethods.GetLogger();
-        private IConvert2<UInt16[]> _attachedConverter;
+        private IConvert2<UInt16[]> _digitalConverter;
         private IWriterAdapter<UInt16[]> _digitalWriter;
         private System.Collections.Generic.List<ViewItem<UInt16>> _viewerItemist;
         private Session _ueiSession;
@@ -35,13 +37,13 @@ namespace UeiBridge
         {
             _digitalWriter.Dispose();
             CloseSession(_ueiSession);
-            base.Dispose();
-            
+            _logger.Debug($"Device manager {InstanceName} Disposed");
+
         }
 
         public override bool OpenDevice()
         {
-            _attachedConverter = new DigitalConverter(); //DIO403Convert(_digitalWriter.OriginSession.GetNumberOfChannels());
+            _digitalConverter = new DigitalConverter(); //DIO403Convert(_digitalWriter.OriginSession.GetNumberOfChannels());
 
             int noOfbits = _ueiSession.GetNumberOfChannels() * 8;
             int firstBit = _ueiSession.GetChannel(0).GetIndex() * 8;
@@ -51,7 +53,7 @@ namespace UeiBridge
             _viewerItemist = new System.Collections.Generic.List<ViewItem<UInt16>>(new ViewItem<UInt16>[_ueiSession.GetNumberOfChannels()]);
 
             Task.Factory.StartNew(() => OutputDeviceHandler_Task());
-            _isDeviceReady = true;
+            IsDeviceReady = true;
             return false;
         }
 
@@ -83,7 +85,7 @@ namespace UeiBridge
 
         protected override void HandleRequest(EthernetMessage request)
         {
-            var ls = _attachedConverter.DownstreamConvert( request.PayloadBytes);
+            var ls = _digitalConverter.DownstreamConvert( request.PayloadBytes);
             ushort[] scan = ls as ushort[];
             System.Diagnostics.Debug.Assert( scan != null);
             _digitalWriter.WriteSingleScan( scan);

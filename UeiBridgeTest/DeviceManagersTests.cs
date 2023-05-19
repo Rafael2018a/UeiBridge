@@ -58,9 +58,9 @@ namespace UeiBridgeTest
         {
             string url = "simu://";
             List<CubeSetup> csetupList = new List<CubeSetup>();
-            List<UeiDeviceAdapter> devList = UeiBridge.Program.BuildDeviceList(new List<string> { url });
-            var resList = devList.Select(d => new UeiDeviceAdapter( null, d.DeviceName, d.DeviceSlot));// as List<UeiDeviceAdapter>;
-            List<UeiDeviceAdapter> l = new List<UeiDeviceAdapter>(resList);
+            List<UeiDeviceInfo> devList = UeiBridge.Program.BuildDeviceList(new List<string> { url });
+            var resList = devList.Select(d => new UeiDeviceInfo( null, d.DeviceName, d.DeviceSlot));// as List<UeiDeviceAdapter>;
+            List<UeiDeviceInfo> l = new List<UeiDeviceInfo>(resList);
             csetupList.Add(new CubeSetup(l, url));
 
             // save default config to file
@@ -77,9 +77,9 @@ namespace UeiBridgeTest
             //mk.OriginSession = session1;
             var devicelist = UeiBridge.Program.BuildDeviceList(new List<string>() { "simu://" });
             var ao = devicelist.Where(i => i.DeviceName.StartsWith("Simu-AO16")).FirstOrDefault();
-            AO308Setup setup = new AO308Setup(new EndPoint("8.8.8.8", 5000), new UeiDeviceAdapter(null, ao.DeviceName, ao.DeviceSlot));
+            AO308Setup setup = new AO308Setup(new EndPoint("8.8.8.8", 5000), new UeiDeviceInfo(null, ao.DeviceName, ao.DeviceSlot));
 
-            AO308OutputDeviceManager ao308 = new AO308OutputDeviceManager(setup, mk, session1, false);
+            AO308OutputDeviceManager ao308 = new AO308OutputDeviceManager(setup, mk);
             
             ao308.OpenDevice();
             AnalogConverter ac = new AnalogConverter(10, 12);
@@ -111,7 +111,7 @@ namespace UeiBridgeTest
             var devicelist = UeiBridge.Program.BuildDeviceList(new List<string>() { "simu://" });
             var ao = devicelist.Where(i => i.DeviceName.StartsWith("Simu-DIO64")).FirstOrDefault();
 
-            DIO403Setup setup = new DIO403Setup(new EndPoint("8.8.8.8", 5000), null, new UeiDeviceAdapter(null, ao.DeviceName, ao.DeviceSlot));
+            DIO403Setup setup = new DIO403Setup(new EndPoint("8.8.8.8", 5000), null, new UeiDeviceInfo(null, ao.DeviceName, ao.DeviceSlot));
 
             DIO403OutputDeviceManager dio403 = new DIO403OutputDeviceManager(setup, mk1, s);
             dio403.OpenDevice();
@@ -141,7 +141,7 @@ namespace UeiBridgeTest
             //var devicelist = UeiBridge.Program.BuildDeviceList(new List<string>() { "simu://" });
             //var ao = devicelist.Where(i => i.DeviceName.StartsWith("Simu-DIO64")).FirstOrDefault();
 
-            UeiDeviceAdapter uda = new UeiDeviceAdapter(null, DeviceMap2.DIO403Literal, 2); // simu://Simu-DIO64 is on slot 2
+            UeiDeviceInfo uda = new UeiDeviceInfo(null, DeviceMap2.DIO403Literal, 2); // simu://Simu-DIO64 is on slot 2
 
             DIO403Setup setup = new DIO403Setup(null, new EndPoint("8.8.8.8", 5000), uda);
             setup.CubeUrl = "simu://";
@@ -172,6 +172,72 @@ namespace UeiBridgeTest
                                         "");
 
         }
+
+        [Test]
+        public void AnalogOutSessionTest()
+        {
+            Session s1 = new Session();
+            s1.CreateAOChannel("simu://Dev1/AO0:7", -5.0, 8.0); // this values does NOT matter. min/max if fixed to -10,10
+
+            Range[] rg = s1.GetDevice().GetAORanges();
+            s1.ConfigureTimingForSimpleIO(); // without this line, .Start() will throw "The session is not in a state allowing this operation"
+            s1.Start();
+
+            var writer = new AnalogScaledWriter(s1.GetDataStream());
+            var scan = new double[s1.GetNumberOfChannels() + 1];
+            writer.WriteSingleScan(scan);
+
+            s1.Stop();
+            s1.Dispose();
+
+            Assert.That(rg[0].minimum, Is.EqualTo(-10.0));
+            Assert.That(rg[0].maximum, Is.EqualTo(10.0));
+        }
+
+        [Test]
+        public void DigitalInSessionTest1()
+        {
+            Session s1 = new Session();
+            //while (true)
+            //{
+            //    try
+            //    {
+            //        s1.CreateDIChannel("simu://Dev2/Di0:3");
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        //s1.Stop();
+            //        s1.Dispose();
+            //        System.Threading.Thread.Sleep(500);
+            //        s1 = new Session();
+            //        continue;
+            //    }
+            //    break;
+            //}
+
+            s1.CreateDIChannel("simu://Dev2/Di0");
+
+            Range[] rg = s1.GetDevice().GetDIRanges();
+            s1.ConfigureTimingForSimpleIO(); // without this line, .Start() will throw "The session is not in a state allowing this operation"
+
+            Assert.That(s1.IsRunning(), Is.EqualTo(false));
+            s1.Start();
+
+
+            var _reader = new DigitalReader(s1.GetDataStream());
+            var val = _reader.ReadSingleScanUInt16();
+
+            Assert.That(s1.IsRunning(), Is.EqualTo(true));
+
+            s1.Stop();
+
+            Assert.That(s1.IsRunning(), Is.EqualTo(false));
+
+            s1.Dispose();
+
+            Assert.That(val.Count, Is.EqualTo(1));
+        }
+
 #if dont
         [Test]
         public void SL508inputTest()

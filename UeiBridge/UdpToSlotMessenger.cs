@@ -92,7 +92,7 @@ namespace UeiBridge
         /// </summary>
         public void SubscribeConsumer(OutputDevice outDevice)
         {
-            ConsumerEntry ce = new ConsumerEntry(outDevice.SlotNumber, outDevice.CubeId, outDevice);
+            ConsumerEntry ce = new ConsumerEntry(outDevice.DeviceInfo.DeviceSlot, outDevice.DeviceInfo.CubeId, outDevice);
             _consumersList.Add(ce);
 //            int slot = outDevice.SlotNumber;
             //_logger.Info($"Device {outDevice.DeviceName} subscribed");

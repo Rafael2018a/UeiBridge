@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using UeiBridge.Library;
 using UeiDaq;
 
 /// <summary>
@@ -10,9 +11,6 @@ using UeiDaq;
 /// </summary>
 namespace UeiBridge.Types
 {
-    /// <summary>
-    /// Send items that should be pushed to q (return immediately)
-    /// </summary>
     public interface IEnqueue<Item>
     {
         void Enqueue(Item i);
@@ -36,28 +34,28 @@ namespace UeiBridge.Types
     /// <summary>
     /// (Immutable)
     /// </summary>
-    [Obsolete]
-    public class DeviceRequest
-    {
-        readonly object _requestObject;
-        readonly string _caseUrl;
-        readonly int _serialChannel;
-        //readonly string _deviceName;
+    //[Obsolete]
+    //public class DeviceRequest
+    //{
+    //    readonly object _requestObject;
+    //    readonly string _caseUrl;
+    //    readonly int _serialChannel;
+    //    //readonly string _deviceName;
 
-        public object RequestObject => _requestObject;
+    //    public object RequestObject => _requestObject;
 
-        public string CaseUrl => _caseUrl;
+    //    public string CaseUrl => _caseUrl;
 
-        public int SerialChannel => _serialChannel;
+    //    public int SerialChannel => _serialChannel;
 
-        //public string DeviceName => _deviceName;
-        public DeviceRequest(object requestObject, string caseUrl, int serialChannel = -1)//, string deviceName=null)
-        {
-            _requestObject = requestObject;
-            _caseUrl = caseUrl;
-            _serialChannel = serialChannel;
-        }
-    }
+    //    //public string DeviceName => _deviceName;
+    //    public DeviceRequest(object requestObject, string caseUrl, int serialChannel = -1)//, string deviceName=null)
+    //    {
+    //        _requestObject = requestObject;
+    //        _caseUrl = caseUrl;
+    //        _serialChannel = serialChannel;
+    //    }
+    //}
 
     /// <summary>
     /// Contains: Object to write to device, serial channel id (in case of serial)
@@ -87,12 +85,12 @@ namespace UeiBridge.Types
             ByteMessage = byteMessage;
         }
     }
-
     public interface IDeviceManager
     {
         string DeviceName { get; }
         string InstanceName { get; }
         string [] GetFormattedStatus( TimeSpan interval);
+        UeiDeviceInfo DeviceInfo { get; }
     }
 
     //public class TeeObject : ISend<SendObject>

@@ -18,13 +18,10 @@ namespace UeiBridge
         public abstract bool OpenDevice();
         public abstract string[] GetFormattedStatus(TimeSpan interval);
         protected abstract void HandleRequest(EthernetMessage request);
+        protected abstract bool IsDeviceReady { get; set; }
 
         public string InstanceName { get; private set; }
-        public int SlotNumber { get; private set; }
-        public string CubeUrl { get; private set; }
-        public int CubeId { get; private set; }
-        //protected DeviceSetup _deviceSetup; 
-        protected bool _isDeviceReady = false;
+        public UeiDeviceInfo DeviceInfo { get; private set; }
 
         private BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
         private log4net.ILog _logger = StaticMethods.GetLogger();
@@ -32,28 +29,10 @@ namespace UeiBridge
         protected OutputDevice() { }
         protected OutputDevice(DeviceSetup deviceSetup)
         {
-            if (null != deviceSetup)
-            {
-                InstanceName = $"{DeviceName}/Cube{deviceSetup.CubeId}/Slot{deviceSetup.SlotNumber}/Output";
-            }
-            else
-            {
-                InstanceName = "<undefiend output device>";
-                throw new ArgumentNullException();
-            }
-            this.SlotNumber = deviceSetup.SlotNumber;
-            this.CubeUrl = deviceSetup.CubeUrl;
-
-            IPAddress ipa = Config2.CubeUriToIpAddress(this.CubeUrl);
-            if (null != ipa)
-            {
-                CubeId = ipa.GetAddressBytes()[3];
-            }
-            else
-            {
-                CubeId = -1;
-            }
-
+            System.Diagnostics.Debug.Assert(null != deviceSetup);
+            
+            InstanceName = $"{DeviceName}/Cube{deviceSetup.CubeId}/Slot{deviceSetup.SlotNumber}/Output";
+            DeviceInfo = new UeiDeviceInfo(deviceSetup.CubeUrl, DeviceName, deviceSetup.SlotNumber);
         }
 
         /// <summary>
@@ -108,7 +87,7 @@ namespace UeiBridge
                     continue;
                 }
                 // verify slot number
-                if (incomingMessage.SlotNumber != this.SlotNumber)
+                if (incomingMessage.SlotNumber != this.DeviceInfo.DeviceSlot)
                 {
                     _logger.Warn($"{InstanceName} wrong slot number ({incomingMessage.SlotNumber}). incoming message dropped.");
                     continue;
@@ -120,7 +99,7 @@ namespace UeiBridge
                 }
 
                 // finally, Handle message
-                if (_isDeviceReady)
+                if (IsDeviceReady)
                 {
                     HandleRequest(incomingMessage);
                 }
@@ -143,10 +122,10 @@ namespace UeiBridge
             }
         }
 
-        public virtual void Dispose()
-        {
-            _logger.Debug($"Device manager {InstanceName} Disposed");
-        }
+        public abstract void Dispose();
+        
+            
+        
         public virtual void HaltMessageLoop()
         {
             _dataItemsQueue2.Add(null); // end task token (first, free Take() api and then apply CompleteAdding()

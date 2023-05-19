@@ -56,7 +56,7 @@ namespace UeiBridge
         }
 #endif
         //SL508UnitedManager _sl508united;
-        public void CreateDeviceManagers(List<UeiDeviceAdapter> realDeviceList)
+        public void CreateDeviceManagers(List<UeiDeviceInfo> realDeviceList)
         {
             if (realDeviceList == null)
             {
@@ -65,7 +65,7 @@ namespace UeiBridge
             _PerDeviceObjectsList = new List<PerDeviceObjects>();
             _udpReaderList = new List<UdpReader>();
 
-            foreach (UeiDeviceAdapter realDevice in realDeviceList)
+            foreach (UeiDeviceInfo realDevice in realDeviceList)
             {
                 // prologue
                 // =========
@@ -146,7 +146,7 @@ namespace UeiBridge
             }
         }
 
-        private List<PerDeviceObjects> BuildObjectsForDevice(UeiDeviceAdapter realDevice, DeviceSetup setup)
+        private List<PerDeviceObjects> BuildObjectsForDevice(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
             switch (realDevice.DeviceName)
             {
@@ -172,7 +172,7 @@ namespace UeiBridge
                     }
                 case DeviceMap2.SL508Literal:
                     {
-                        return Build_SL508(realDevice, setup);
+                        return Build_SL508( setup);
                     }
                 default:
                     {
@@ -182,7 +182,7 @@ namespace UeiBridge
             }
         }
 
-        private List<PerDeviceObjects> Build_AO308(UeiDeviceAdapter realDevice, DeviceSetup setup)
+        private List<PerDeviceObjects> Build_AO308(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
             // if block-sensor is active, Do not build AO308,
             // since Block sensor takes control on the analog output. 
@@ -201,19 +201,22 @@ namespace UeiBridge
             theSession.ConfigureTimingForSimpleIO();
             var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()), theSession);
 
-            AO308OutputDeviceManager ao308 = new AO308OutputDeviceManager(setup as AO308Setup, aWriter, theSession, bsActive);
+            AO308OutputDeviceManager ao308 = new AO308OutputDeviceManager(setup as AO308Setup, aWriter);
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
+            pd.OutputDeviceManager = ao308;
+            pd.UeiSession = theSession;
 
+            // udp reader
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
             UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, ao308.InstanceName);
             _udpMessenger.SubscribeConsumer(ao308);
             _udpReaderList.Add(ureader);
 
-            pd.OutputDeviceManager = ao308;
+            
 
             return new List<PerDeviceObjects>() { pd };
         }
-        List<PerDeviceObjects> Build_SimuAO16_2(UeiDeviceAdapter realDevice, DeviceSetup setup)
+        List<PerDeviceObjects> Build_SimuAO16_2(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
             Session theSession = new Session();
             string cubeUrl = $"{setup.CubeUrl}Dev{ setup.SlotNumber}/Ao0:7";
@@ -237,23 +240,19 @@ namespace UeiBridge
             return new List<PerDeviceObjects>() { pd };
         }
 
-        private List<PerDeviceObjects> Build_SL508(UeiDeviceAdapter realDevice, DeviceSetup setup)
+        private List<PerDeviceObjects> Build_SL508( DeviceSetup setup)
         {
 
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
-
             var sl508 = new SL508UnitedManager( setup);
-
             _udpMessenger.SubscribeConsumer(sl508, 2, 3);
             var ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, "UnitedSerial");
-
             sl508.OpenDevice();
             ureader.Start();
             //_logger.Info($"Listening on {setup.LocalEndPoint.ToIpEp()}");
-
-            var pd = new PerDeviceObjects(realDevice);
+            var pd = new PerDeviceObjects();
             //pd.SerialSession = serialSession;
-            pd.UnitedDeviceManager = sl508;
+            pd.OutputDeviceManager = sl508;
             //pd.UdpWriter = uWriter;
 
             
@@ -288,7 +287,7 @@ namespace UeiBridge
             return new List<PerDeviceObjects>() { pd };
         }
 #endif
-        private List<PerDeviceObjects> Build_AI201(UeiDeviceAdapter realDevice, DeviceSetup setup)
+        private List<PerDeviceObjects> Build_AI201(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
             string instanceName = $"{realDevice.DeviceName}/Slot{realDevice.DeviceSlot}";
             UdpWriter uWriter = new UdpWriter(instanceName, setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMCast);
@@ -301,7 +300,7 @@ namespace UeiBridge
             return new List<PerDeviceObjects>() { pd };
         }
 
-        private List<PerDeviceObjects> Build_DIO470(UeiDeviceAdapter realDevice, DeviceSetup setup)
+        private List<PerDeviceObjects> Build_DIO470(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
             DIO470OutputDeviceManager od = new DIO470OutputDeviceManager(setup);
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
@@ -316,7 +315,7 @@ namespace UeiBridge
             return new List<PerDeviceObjects>() { pd };
         }
 
-        private List<PerDeviceObjects> Build_DIO403(UeiDeviceAdapter realDevice, DeviceSetup setup)
+        private List<PerDeviceObjects> Build_DIO403(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
             string cubeUrl = $"{setup.CubeUrl}Dev{ setup.SlotNumber}/Do0:2";// Do0:2 - 3*8 first bits as 'out'
             Session theSession = new UeiDaq.Session();
@@ -346,7 +345,7 @@ namespace UeiBridge
             return new List<PerDeviceObjects>() { pd };
         }
 
-        public void Build_BlockSensorManager(List<UeiDeviceAdapter> realDeviceList)
+        public void Build_BlockSensorManager(List<UeiDeviceInfo> realDeviceList)
         {
             foreach (CubeSetup csetup in _mainConfig.CubeSetupList)
             {
@@ -368,7 +367,7 @@ namespace UeiBridge
 
 #if !blocksim
                 // redirect dio430/input to block-sensor.
-                IEnumerable<PerDeviceObjects> inputDevices = _PerDeviceObjectsList.Where(i => i.InputDeviceManager != null).Where(i => i.InputDeviceManager.DeviceName == DeviceMap2.DIO403Literal).Where(i => i.InputDeviceManager.SlotNumber == bssetup.DigitalCardSlot);
+                IEnumerable<PerDeviceObjects> inputDevices = _PerDeviceObjectsList.Where(i => i.InputDeviceManager != null).Where(i => i.InputDeviceManager.DeviceName == DeviceMap2.DIO403Literal).Where(i => i.InputDeviceManager.DeviceInfo.DeviceSlot == bssetup.DigitalCardSlot);
                 DIO403InputDeviceManager dio403 = inputDevices.Select(i => i.InputDeviceManager).FirstOrDefault() as DIO403InputDeviceManager;
                 System.Diagnostics.Debug.Assert(dio403 != null);
                 dio403.TargetConsumer = blockSensor;
@@ -402,19 +401,24 @@ namespace UeiBridge
         {
             foreach (var entry in _PerDeviceObjectsList)
             {
-                System.Threading.Thread.Sleep(50);
+                System.Threading.Thread.Sleep(501);
                 entry.OutputDeviceManager?.Dispose();
-                System.Threading.Thread.Sleep(50);
-
                 entry.InputDeviceManager?.Dispose();
-                System.Threading.Thread.Sleep(50);
                 entry.UdpWriter?.Dispose();
-
-                entry.UnitedDeviceManager?.Dispose();
+                
+                if (null != entry.UeiSession)
+                {
+                    try
+                    {
+                        entry.UeiSession.Stop();
+                    }
+                    catch (UeiDaqException ex)
+                    {
+                        _logger.Warn(ex.Message);
+                    }
+                    entry.UeiSession.Dispose();
+                }
             }
-
-            //_sl508united.Dispose();
-
 
             foreach (var entry in _udpReaderList)
             {

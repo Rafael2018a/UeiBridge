@@ -23,7 +23,7 @@ namespace UeiBridge
         const int _payloadLength = 28;
 
         public BlockSensorManager2( DeviceSetup deviceSetup1, IWriterAdapter<double[]> analogWriter, UeiDaq.Session session) 
-            : base( deviceSetup1, analogWriter, session, true)
+            : base( deviceSetup1, analogWriter)
         {
             System.Diagnostics.Debug.Assert(analogWriter != null);
             this._analogWriter = analogWriter;
