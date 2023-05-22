@@ -16,7 +16,7 @@ namespace UeiBridgeTest
 
             ProgramObjectsBuilder programBuilder = new ProgramObjectsBuilder(c2);
 
-            List<DeviceEx> deviceList = UeiBridge.Program.BuildDeviceList(new List<string>(new string[] { "simu://" }));
+            List<UeiDeviceInfo> deviceList = UeiBridge.Program.BuildDeviceList(new List<string>(new string[] { "simu://" }));
 
             programBuilder.CreateDeviceManagers(deviceList);
 

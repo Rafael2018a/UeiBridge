@@ -18,7 +18,7 @@ namespace UeiBridge
             {
                 foreach (var channel in _thisDeviceSetup.Channels)
                 {
-                    string finalUrl = $"{_thisDeviceSetup.CubeUrl}Dev{_thisDeviceSetup.SlotNumber}/{channel.portname}";
+                    string finalUrl = $"{_thisDeviceSetup.CubeUrl}Dev{_thisDeviceSetup.SlotNumber}/Com{channel.ChannelIndex}";
                     var port = CreateSerialPort(finalUrl,
                                         channel.mode,
                                         channel.Baudrate,
@@ -67,7 +67,7 @@ namespace UeiBridge
             {
                 foreach (var channel in _thisDeviceSetup.Channels)
                 {
-                    string finalUrl = $"{_thisDeviceSetup.CubeUrl}Dev{_thisDeviceSetup.SlotNumber}/{channel.portname}";
+                    string finalUrl = $"{_thisDeviceSetup.CubeUrl}Dev{_thisDeviceSetup.SlotNumber}/Com{channel.ChannelIndex}";
                     var port = _serialSession.CreateSerialPort(finalUrl,
                                         channel.mode,
                                         channel.Baudrate,

@@ -80,7 +80,7 @@ namespace UeiBridgeSetup.ViewModels
             {
                 foreach (var channel in _thisDeviceSetup.Channels)
                 {
-                    ChannelList.Add(channel.portname);
+                    ChannelList.Add( $"Com{channel.ChannelIndex}");
                 }
 
                 SelectedPortIndex = 0;

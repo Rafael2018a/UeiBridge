@@ -45,10 +45,10 @@ namespace UeiBridge.Library
             //}
         }
     }
-    public class SerialChannel
+    public class SerialChannelSetup
     {
-        [XmlAttribute("Port")]
-        public string portname = "ComX";
+        [XmlAttribute("ChannelIndex")]
+        public int ChannelIndex = -1;
         public UeiDaq.SerialPortMode mode = UeiDaq.SerialPortMode.RS232;
         //[XmlElement("Baud")]
         public UeiDaq.SerialPortSpeed Baudrate { get; set; }
@@ -56,12 +56,12 @@ namespace UeiBridge.Library
         public UeiDaq.SerialPortStopBits stopbits = UeiDaq.SerialPortStopBits.StopBits1;
         public int LocalUdpPort { get; set; }
 
-        public SerialChannel(string portname, UeiDaq.SerialPortSpeed speed)
+        public SerialChannelSetup(int channelIndex, UeiDaq.SerialPortSpeed speed)
         {
-            this.portname = portname;
-            Baudrate = speed;
+            this.ChannelIndex = channelIndex;
+            this.Baudrate = speed;
         }
-        public SerialChannel()
+        public SerialChannelSetup()
         {
         }
     }
@@ -101,7 +101,7 @@ namespace UeiBridge.Library
             }
         }
 
-        public DeviceSetup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceAdapter device)
+        public DeviceSetup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device)
         {
             LocalEndPoint = localEndPoint;
             DestEndPoint = destEndPoint;
@@ -163,7 +163,7 @@ namespace UeiBridge.Library
         public AO308Setup()
         {
         }
-        public AO308Setup(EndPoint localEndPoint, UeiDeviceAdapter device) : base(localEndPoint, null, device)
+        public AO308Setup(EndPoint localEndPoint, UeiDeviceInfo device) : base(localEndPoint, null, device)
         {
         }
     }
@@ -173,7 +173,7 @@ namespace UeiBridge.Library
         public SimuAO16Setup()
         {
         }
-        public SimuAO16Setup(EndPoint localEndPoint, UeiDeviceAdapter device) : base(localEndPoint, null, device)
+        public SimuAO16Setup(EndPoint localEndPoint, UeiDeviceInfo device) : base(localEndPoint, null, device)
         {
         }
     }
@@ -181,7 +181,7 @@ namespace UeiBridge.Library
     {
         [XmlIgnore]
         public static double PeekVoltage_upstream => 12.0;
-        public AI201100Setup(EndPoint destEndPoint, UeiDeviceAdapter device) : base(null, destEndPoint, device)
+        public AI201100Setup(EndPoint destEndPoint, UeiDeviceInfo device) : base(null, destEndPoint, device)
         {
         }
         protected AI201100Setup()
@@ -195,7 +195,7 @@ namespace UeiBridge.Library
         {
         }
 
-        public DIO403Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceAdapter device) : base(localEndPoint, destEndPoint, device)
+        public DIO403Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base(localEndPoint, destEndPoint, device)
         {
         }
     }
@@ -205,25 +205,25 @@ namespace UeiBridge.Library
         {
         }
 
-        public DIO470Setup(EndPoint localEndPoint, UeiDeviceAdapter device) : base(localEndPoint, null, device)
+        public DIO470Setup(EndPoint localEndPoint, UeiDeviceInfo device) : base(localEndPoint, null, device)
         {
         }
     }
     public class SL508892Setup : DeviceSetup
     {
-        public List<SerialChannel> Channels;
+        public List<SerialChannelSetup> Channels;
         const int _numberOfSerialChannels = 8;
         public SL508892Setup()
         {
         }
 
-        public SL508892Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceAdapter device) : base(localEndPoint, destEndPoint, device)
+        public SL508892Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base(localEndPoint, destEndPoint, device)
         {
-            Channels = new List<SerialChannel>();
+            Channels = new List<SerialChannelSetup>();
 
-            for (int ch = 0; ch < _numberOfSerialChannels; ch++)
+            for (int chIndex = 0; chIndex < _numberOfSerialChannels; chIndex++)
             {
-                Channels.Add( new SerialChannel($"Com{ch}", UeiDaq.SerialPortSpeed.BitsPerSecond57600));
+                Channels.Add( new SerialChannelSetup(chIndex, UeiDaq.SerialPortSpeed.BitsPerSecond57600));
             }
         }
     }
@@ -234,7 +234,7 @@ namespace UeiBridge.Library
         public static string LocalIP => "227.3.1.10";
         public static string RemoteIp => "227.2.1.10";
 
-        public static DeviceSetup DeviceSetupFactory(UeiDeviceAdapter ueiDevice)
+        public static DeviceSetup DeviceSetupFactory(UeiDeviceInfo ueiDevice)
         {
             DeviceSetup result = null;
             if (null == ueiDevice.DeviceName)
@@ -280,7 +280,7 @@ namespace UeiBridge.Library
         [XmlAttribute("Url")]
         public string CubeUrl { get; set; }
         [XmlIgnore]
-        public int CubeNumber = 0;
+        public int CubeId = 0;
         public List<DeviceSetup> DeviceSetupList = new List<DeviceSetup>();
 
         //private List<Device> _ueiDeviceList;
@@ -289,7 +289,7 @@ namespace UeiBridge.Library
         {
         }
 
-        public CubeSetup(List<UeiDeviceAdapter> deviceList, string cubeUrl)
+        public CubeSetup(List<UeiDeviceInfo> deviceList, string cubeUrl)
         {
             CubeUrl = cubeUrl;
 
@@ -509,12 +509,12 @@ namespace UeiBridge.Library
             foreach (var url in cubeUrlList)
             {
                 UeiDaq.DeviceCollection devColl = new UeiDaq.DeviceCollection(url);
-                List<UeiDeviceAdapter> rl = new List<UeiDeviceAdapter>();
+                List<UeiDeviceInfo> rl = new List<UeiDeviceInfo>();
                 foreach (UeiDaq.Device dev in devColl)
                 {
                     if (dev == null)
                         continue; // this for the last entry, which is null
-                    rl.Add(new UeiDeviceAdapter(dev.GetDeviceName(), dev.GetIndex()));
+                    rl.Add(new UeiDeviceInfo(url, dev.GetDeviceName(), dev.GetIndex()));
                 }
                 csetupList.Add(new CubeSetup(rl, url));
             }

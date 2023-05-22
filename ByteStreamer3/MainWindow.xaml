@@ -41,7 +41,7 @@
                         <StackPanel Grid.Column="1" Orientation="Vertical">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="Folder" Margin="5"/>
-                                <TextBox MinWidth="300" Margin="5" Text="{Binding PlayFolderString}" IsReadOnly="True" BorderBrush="{Binding PlayFolderBoxBorderColor}"/>
+                                <TextBox MinWidth="400" Margin="5" Text="{Binding PlayFolderString}" IsReadOnly="True" BorderBrush="{Binding PlayFolderBoxBorderColor}"/>
                                 <Button Content="..." Margin="5" Command="{Binding BrowseFolderCommand}"/>
                             </StackPanel>
                             <Separator/>

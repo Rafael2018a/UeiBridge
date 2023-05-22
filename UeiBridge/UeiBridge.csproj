@@ -103,6 +103,7 @@
     <Compile Include="SL508Session.cs" />
     <Compile Include="StaticMethods.cs" />
     <Compile Include="UdpReader.cs" />
+    <Compile Include="UdpToSlotMessenger.cs" />
     <Compile Include="UdpWriter.cs" />
   </ItemGroup>
   <ItemGroup>
