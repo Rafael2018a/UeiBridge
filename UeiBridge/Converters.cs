@@ -9,6 +9,7 @@ using UeiBridge.Library;
 
 namespace UeiBridge
 {
+#if dont
     [Obsolete]
     class DIO403Convert : IConvert
     {
@@ -54,6 +55,7 @@ namespace UeiBridge
             return resultVector;
         }
     }
+#endif
     class DIO470Convert : IConvert
     {
         public string DeviceName => "DIO-470";
@@ -152,7 +154,7 @@ namespace UeiBridge
             throw new NotImplementedException();
         }
     }
-#endif
+
     class SL508Convert : IConvert
     {
         public SL508Convert(DeviceSetup setup)
@@ -180,7 +182,7 @@ namespace UeiBridge
             //return newpayload;
         }
     }
-
+#endif
     public class DigitalConverter : IConvert2<UInt16[]>
     {
         public UInt16[] DownstreamConvert(byte[] messagePayload)

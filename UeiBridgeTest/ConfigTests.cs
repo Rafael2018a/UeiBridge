@@ -72,7 +72,7 @@ namespace UeiBridgeTest
         public void CubeSetupTest1()
         {
             List<UeiDeviceInfo> devList = new List<UeiDeviceInfo>();
-            devList.Add(new UeiDeviceInfo("cubeurl","devicename1", 51));
+            devList.Add(new UeiDeviceInfo("cubeurl", 51,"devicename1"));
             CubeSetup cs = new CubeSetup(devList, "cubeurl");
             Assert.That( cs.DeviceSetupList.Count, Is.EqualTo(1));
         }
@@ -83,7 +83,7 @@ namespace UeiBridgeTest
         public void CubeSetupTest2()
         {
             List<UeiDeviceInfo> devList = new List<UeiDeviceInfo>();
-            devList.Add(new UeiDeviceInfo("cubeurl","AO-308", 101));
+            devList.Add(new UeiDeviceInfo("cubeurl", 101,"AO-308"));
             CubeSetup cs = new CubeSetup(devList, "<unknown-url>");
             Assert.That( cs.DeviceSetupList.Count, Is.EqualTo(1));
             Assert.That(cs.DeviceSetupList[0], Is.Not.Null);

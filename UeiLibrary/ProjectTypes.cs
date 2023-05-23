@@ -32,14 +32,14 @@ namespace UeiBridge.Library
                 }
             }
         }
-        public UeiDeviceInfo( UeiDaq.Device ueiDevice) // todo. add url.
-        {
-            this.DeviceName = ueiDevice.GetDeviceName();
-            this.DeviceSlot = ueiDevice.GetIndex();
+        //public UeiDeviceInfo( UeiDaq.Device ueiDevice) // todo. add url.
+        //{
+        //    this.DeviceName = ueiDevice.GetDeviceName();
+        //    this.DeviceSlot = ueiDevice.GetIndex();
             
-        }
+        //}
 
-        public UeiDeviceInfo(string cubeurl, string deviceName, int deviceSlot )
+        public UeiDeviceInfo(string cubeurl, int deviceSlot , string deviceName)
         {
             CubeUrl = cubeurl;
             DeviceSlot = deviceSlot;

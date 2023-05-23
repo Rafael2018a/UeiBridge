@@ -20,40 +20,33 @@ namespace UeiBridge
         protected abstract void HandleRequest(EthernetMessage request);
 
         public string InstanceName { get; private set; }
-        public int SlotNumber { get; private set; }
-        public string CubeUrl { get; private set; }
-        public int CubeId { get; private set; }
-        //protected DeviceSetup _deviceSetup; 
+        //public int SlotNumber { get; private set; }
+        //public string CubeUrl { get; private set; }
+        //public int CubeId { get; private set; }
+        public UeiDeviceInfo DeviceInfo { get; private set; }
+        
         protected bool _isDeviceReady = false;
-
         private BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
         private log4net.ILog _logger = StaticMethods.GetLogger();
 
         protected OutputDevice() { }
         protected OutputDevice(DeviceSetup deviceSetup)
         {
-            if (null != deviceSetup)
-            {
-                InstanceName = $"{DeviceName}/Cube{deviceSetup.CubeId}/Slot{deviceSetup.SlotNumber}/Output";
-            }
-            else
-            {
-                InstanceName = "<undefiend output device>";
-                throw new ArgumentNullException();
-            }
-            this.SlotNumber = deviceSetup.SlotNumber;
-            this.CubeUrl = deviceSetup.CubeUrl;
+            InstanceName = deviceSetup.GetInstanceName() + "/Output";
+            //this.SlotNumber = deviceSetup.SlotNumber;
+            //this.CubeUrl = deviceSetup.CubeUrl;
 
-            IPAddress ipa = Config2.CubeUriToIpAddress(this.CubeUrl);
-            if (null != ipa)
-            {
-                CubeId = ipa.GetAddressBytes()[3];
-            }
-            else
-            {
-                CubeId = -1;
-            }
+            //IPAddress ipa = Config2.CubeUriToIpAddress(this.CubeUrl);
+            //if (null != ipa)
+            //{
+            //    CubeId = ipa.GetAddressBytes()[3];
+            //}
+            //else
+            //{
+            //    CubeId = -1;
+            //}
 
+            DeviceInfo = deviceSetup.GetDeviceInfo();
         }
 
         /// <summary>
@@ -108,7 +101,7 @@ namespace UeiBridge
                     continue;
                 }
                 // verify slot number
-                if (incomingMessage.SlotNumber != this.SlotNumber)
+                if (incomingMessage.SlotNumber != this.DeviceInfo.DeviceSlot)
                 {
                     _logger.Warn($"{InstanceName} wrong slot number ({incomingMessage.SlotNumber}). incoming message dropped.");
                     continue;

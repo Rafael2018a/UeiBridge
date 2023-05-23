@@ -138,6 +138,14 @@ namespace UeiBridge.Library
         }
         //private string cubeUrl;
         //public string CubeUrl { get => cubeUrl; set => cubeUrl = value; }
+        public string GetInstanceName()
+        {
+            return $"{this.DeviceName}/Cube{this.CubeId}/Slot{this.SlotNumber}";
+        }
+        public UeiDeviceInfo GetDeviceInfo()
+        {
+            return new UeiDeviceInfo(CubeUrl, SlotNumber, DeviceName);
+        }
     }
     
     public class BlockSensorSetup : DeviceSetup
@@ -514,7 +522,7 @@ namespace UeiBridge.Library
                 {
                     if (dev == null)
                         continue; // this for the last entry, which is null
-                    rl.Add(new UeiDeviceInfo(url, dev.GetDeviceName(), dev.GetIndex()));
+                    rl.Add(new UeiDeviceInfo(url, dev.GetIndex(), dev.GetDeviceName() ));
                 }
                 csetupList.Add(new CubeSetup(rl, url));
             }

@@ -22,7 +22,7 @@ namespace UeiBridge
         private DIO403Setup _thisDeviceSetup;
         private UInt16[] _lastScan;
         private System.Threading.Timer _samplingTimer;
-        const string _channelsString = "Di3:5"; // 3 * 8 last bits as 'out'
+        private const string _channelsString = "Di3:5"; // 3 * 8 last bits as 'out'
         private Session _ueiSession;
         private ISend<SendObject> _targetConsumer;
         public DIO403InputDeviceManager( ISend<SendObject> targetConsumer, DeviceSetup setup): base( setup)
@@ -62,7 +62,7 @@ namespace UeiBridge
         public override void Dispose()
         {
             _logger.Debug($"Disposing {this.DeviceName}/Input, slot {_thisDeviceSetup.SlotNumber}");
-            _samplingTimer.Dispose();
+            _samplingTimer?.Dispose();
             System.Threading.Thread.Sleep(200); // wait for callback to finish
             CloseSession(_ueiSession);
 			base.Dispose();

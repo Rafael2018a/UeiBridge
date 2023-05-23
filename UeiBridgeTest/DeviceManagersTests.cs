@@ -54,18 +54,18 @@ namespace UeiBridgeTest
 
 
         //[SetUp]
-        public void Setup()
-        {
-            string url = "simu://";
-            List<CubeSetup> csetupList = new List<CubeSetup>();
-            List<UeiDeviceInfo> devList = UeiBridge.Program.BuildDeviceList(new List<string> { url });
-            var resList = devList.Select(d => new UeiDeviceInfo(url, d.DeviceName, d.DeviceSlot));// as List<UeiDeviceAdapter>;
-            List<UeiDeviceInfo> l = new List<UeiDeviceInfo>(resList);
-            csetupList.Add(new CubeSetup(l, url));
+        //public void Setup()
+        //{
+        //    string url = "simu://";
+        //    List<CubeSetup> csetupList = new List<CubeSetup>();
+        //    List<UeiDeviceInfo> devList = UeiBridge.Program.BuildDeviceList(new List<string> { url });
+        //    var resList = devList.Select(d => new UeiDeviceInfo(url, d.DeviceName, d.DeviceSlot));// as List<UeiDeviceAdapter>;
+        //    List<UeiDeviceInfo> l = new List<UeiDeviceInfo>(resList);
+        //    csetupList.Add(new CubeSetup(l, url));
 
-            // save default config to file
-            //Config2.Instance = new Config2(csetupList);
-        }
+        //    // save default config to file
+        //    //Config2.Instance = new Config2(csetupList);
+        //}
 
         [Test]
         public void AO308DeviceManagerTest()
@@ -77,7 +77,7 @@ namespace UeiBridgeTest
             //mk.OriginSession = session1;
             var devicelist = UeiBridge.Program.BuildDeviceList(new List<string>() { simuUrl });
             var ao = devicelist.Where(i => i.DeviceName.StartsWith("Simu-AO16")).FirstOrDefault();
-            AO308Setup setup = new AO308Setup(new EndPoint("8.8.8.8", 5000), new UeiDeviceInfo(simuUrl, "Simu-AO16", 1));
+            AO308Setup setup = new AO308Setup(new EndPoint("8.8.8.8", 5000), new UeiDeviceInfo(simuUrl, 1, "Simu-AO16"));
             setup.CubeUrl = simuUrl;
             AO308OutputDeviceManager ao308 = new AO308OutputDeviceManager(setup, mk, session1, false);
             
@@ -111,7 +111,7 @@ namespace UeiBridgeTest
             var devicelist = UeiBridge.Program.BuildDeviceList(new List<string>() { "simu://" });
             var ao = devicelist.Where(i => i.DeviceName.StartsWith("Simu-DIO64")).FirstOrDefault();
 
-            DIO403Setup setup = new DIO403Setup(new EndPoint("8.8.8.8", 5000), null, new UeiDeviceInfo("simu://", "Simu-DIO64", 2));
+            DIO403Setup setup = new DIO403Setup(new EndPoint("8.8.8.8", 5000), null, new UeiDeviceInfo("simu://", 2, "Simu-DIO64"));
 
             DIO403OutputDeviceManager dio403 = new DIO403OutputDeviceManager(setup, mk1, s);
             dio403.OpenDevice();
@@ -131,32 +131,34 @@ namespace UeiBridgeTest
             });
         }
 
-        //[Test] tbd. renew this test!!!
+        [Test]// tbd. renew this test!!!
         public void DIO403InputDeviceManagerTest()
         {
             //Session s = new Session();
-            //s.CreateDOChannel("simu://Dev2/Di3:5");
+            string url = "pdna://192.168.100.2/Dev2/Di3:5";
             //digitalWriterMock mk1 = new digitalWriterMock();
             ////mk1.OriginSession = s;
             //var devicelist = UeiBridge.Program.BuildDeviceList(new List<string>() { "simu://" });
             //var ao = devicelist.Where(i => i.DeviceName.StartsWith("Simu-DIO64")).FirstOrDefault();
 
-            UeiDeviceInfo uda = new UeiDeviceInfo("cubrurl",DeviceMap2.DIO403Literal, 2); // simu://Simu-DIO64 is on slot 2
+            UeiDeviceInfo info = new UeiDeviceInfo( url, 2, DeviceMap2.DIO403Literal); // simu://Simu-DIO64 is on slot 2
 
-            DIO403Setup setup = new DIO403Setup(null, new EndPoint("8.8.8.8", 5000), uda);
-            setup.CubeUrl = "simu://";
+            DIO403Setup setup = new DIO403Setup(null, new EndPoint("8.8.8.8", 5000), info);
+            setup.CubeUrl = url;
 
             SenderMock sm = new SenderMock();
 
             DIO403InputDeviceManager dio403 = new DIO403InputDeviceManager(sm, setup);
             dio403.OpenDevice();
+            
 
             System.Threading.Thread.Sleep(100);
 
             dio403.Dispose();
 
-            var so = sm._sentObject;
+            Assert.That(dio403.InstanceName, Is.EqualTo("DIO-403/Cube2/Slot2/Input"));
         }
+
     }
     public class analogWriterMock : IWriterAdapter<double[]>
     {

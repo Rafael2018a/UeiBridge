@@ -14,24 +14,19 @@ namespace UeiBridge
     {
         public abstract string [] GetFormattedStatus( TimeSpan interval);
         public abstract void OpenDevice();
-        public abstract string DeviceName { get; } 
+        public abstract string DeviceName { get; }
 
+        public UeiDeviceInfo DeviceInfo { get; private set; }
         public string InstanceName { get; private set; }
-        public int SlotNumber { get; private set; }
+        //public int SlotNumber { get; private set; }
         private log4net.ILog _logger = StaticMethods.GetLogger();
 
         public InputDevice() { }
         protected InputDevice( DeviceSetup setup)
         {
-            if (null != setup)
-            {
-                InstanceName = $"{DeviceName}/Cube{setup.CubeId}/Slot{setup.SlotNumber}/Input";
-            }
-            else
-            {
-                InstanceName = "<undefined input device>";
-            }
-            SlotNumber = setup.SlotNumber;
+            InstanceName = setup.GetInstanceName() + "/Input";
+            DeviceInfo = setup.GetDeviceInfo();
+            //SlotNumber = setup.SlotNumber;
         }
         public static void CloseSession(Session theSession)
         {

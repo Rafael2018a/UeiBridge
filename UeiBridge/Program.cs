@@ -41,7 +41,7 @@ namespace UeiBridge
                 foreach (Device dev in devColl)
                 {
                     if (dev == null) continue; // this for the last entry, which is null
-                    resultList.Add(new UeiDeviceInfo(url, dev.GetDeviceName(), dev.GetIndex()));
+                    resultList.Add(new UeiDeviceInfo(url, dev.GetIndex(), dev.GetDeviceName()));
                 }
             }
             return resultList;

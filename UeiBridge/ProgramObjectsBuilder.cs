@@ -181,7 +181,7 @@ namespace UeiBridge
 
             // create uei entities
             Session theSession = new Session();
-            string cubeUrl = $"{setup.CubeUrl}Dev{ setup.SlotNumber}/Ao0:7";
+            string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/Ao0:7";
             var c = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
             System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
             theSession.ConfigureTimingForSimpleIO();
@@ -202,7 +202,7 @@ namespace UeiBridge
         List<PerDeviceObjects> Build_SimuAO16_2(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
             Session theSession = new Session();
-            string cubeUrl = $"{setup.CubeUrl}Dev{ setup.SlotNumber}/Ao0:7";
+            string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/Ao0:7";
             var c = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
             System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
             theSession.ConfigureTimingForSimpleIO();
@@ -225,19 +225,22 @@ namespace UeiBridge
 
         private List<PerDeviceObjects> Build_SL508(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
+
+            SL508892Setup thisSetup = setup as SL508892Setup;
+
             SessionEx serialSession = null;
             try
             {
-                serialSession = new SessionEx(setup as SL508892Setup);//, realDevice.CubeUrl);
+                serialSession = new SessionEx(thisSetup);
             }
             catch (UeiDaqException ex)
             {
-                _logger.Warn($"Failed to init serial card mananger.Slot { setup.SlotNumber}. {ex.Message}. Might be invalid baud rate");
+                _logger.Warn($"Failed to init serial card mananger.Slot {setup.SlotNumber}. {ex.Message}. Might be invalid baud rate");
                 return null;
             }
 
             // emit info log
-            _logger.Info($" == Serial channels for cube { setup.CubeUrl}, slot { setup.SlotNumber}");
+            _logger.Info($" == Serial channels for cube {setup.CubeUrl}, slot {setup.SlotNumber}");
             foreach (UeiDaq.Channel ueiChannel in serialSession.GetChannels())
             {
                 SerialPort ueiPort = ueiChannel as SerialPort;
@@ -249,13 +252,24 @@ namespace UeiBridge
                 _logger.Debug($"CH:{ueiPort.GetIndex()}, Rate {s2} bps, Mode {ueiPort.GetMode()}. Listening port {portnum}");
             }
 
-            string instanceName = $"{realDevice.DeviceName}/Slot{realDevice.DeviceSlot}";
+            string instanceName = setup.GetInstanceName();// $"{realDevice.DeviceName}/Slot{realDevice.DeviceSlot}";
             UdpWriter uWriter = new UdpWriter(instanceName, setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMCast);
             SL508InputDeviceManager id = new SL508InputDeviceManager(uWriter, setup, serialSession);
 
             SL508OutputDeviceManager od = new SL508OutputDeviceManager(setup, serialSession);
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
             UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, od.InstanceName);
+#if eachport
+            {
+                var add = IPAddress.Parse( setup.LocalEndPoint.Address);
+                foreach( SerialChannelSetup chSetup in thisSetup.Channels)
+                {
+                    IPEndPoint ep = new IPEndPoint(add, chSetup.LocalUdpPort);
+                    UdpReader ureader2 = new UdpReader( ep, nic, _udpMessenger, $"{od.InstanceName}/{chSetup.LocalUdpPort}");
+                    _udpReaderList.Add(ureader2);
+                }
+            }
+#endif
 
             var pd = new PerDeviceObjects(realDevice);
             //pd.SerialSession = serialSession;
@@ -299,7 +313,7 @@ namespace UeiBridge
 
         private List<PerDeviceObjects> Build_DIO403(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
-            string cubeUrl = $"{setup.CubeUrl}Dev{ setup.SlotNumber}/Do0:2";// Do0:2 - 3*8 first bits as 'out'
+            string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/Do0:2";// Do0:2 - 3*8 first bits as 'out'
             Session theSession = new UeiDaq.Session();
             theSession.CreateDOChannel(cubeUrl);
             theSession.ConfigureTimingForSimpleIO();
@@ -339,7 +353,7 @@ namespace UeiBridge
                 }
 
                 Session theSession = new Session();
-                string cubeUrl = $"{ csetup.CubeUrl}Dev{ bssetup.AnalogCardSlot}/Ao0:7";
+                string cubeUrl = $"{csetup.CubeUrl}Dev{bssetup.AnalogCardSlot}/Ao0:7";
                 var ch = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
                 System.Diagnostics.Debug.Assert(ch.GetMaximum() == AO308Setup.PeekVoltage_downstream);
                 theSession.ConfigureTimingForSimpleIO();
@@ -349,7 +363,7 @@ namespace UeiBridge
 
 #if !blocksim
                 // redirect dio430/input to block-sensor.
-                IEnumerable<PerDeviceObjects> inputDevices = _PerDeviceObjectsList.Where(i => i.InputDeviceManager != null).Where(i => i.InputDeviceManager.DeviceName == DeviceMap2.DIO403Literal).Where(i => i.InputDeviceManager.SlotNumber == bssetup.DigitalCardSlot);
+                IEnumerable<PerDeviceObjects> inputDevices = _PerDeviceObjectsList.Where(i => i.InputDeviceManager != null).Where(i => i.InputDeviceManager.DeviceName == DeviceMap2.DIO403Literal).Where(i => i.InputDeviceManager.DeviceInfo.DeviceSlot == bssetup.DigitalCardSlot);
                 DIO403InputDeviceManager dio403 = inputDevices.Select(i => i.InputDeviceManager).FirstOrDefault() as DIO403InputDeviceManager;
                 System.Diagnostics.Debug.Assert(dio403 != null);
                 dio403.TargetConsumer = blockSensor;
@@ -381,17 +395,21 @@ namespace UeiBridge
 
         public void Dispose()
         {
+            List<Task> tl = new List<Task>();
             foreach (var entry in _PerDeviceObjectsList)
             {
-                System.Threading.Thread.Sleep(50);
-                entry.OutputDeviceManager?.Dispose();
+                tl.Add(
+                    Task.Factory.StartNew(() =>
+                    {
+                        entry.OutputDeviceManager?.Dispose();
+                        entry.InputDeviceManager?.Dispose();
+                        entry.UdpWriter?.Dispose();
+                    })
+                );
                 //System.Threading.Thread.Sleep(50);
-
-                entry.InputDeviceManager?.Dispose();
-                //System.Threading.Thread.Sleep(50);
-                entry.UdpWriter?.Dispose();
 
             }
+            Task.WaitAll(tl.ToArray());
             foreach (var entry in _udpReaderList)
             {
                 entry.Dispose();

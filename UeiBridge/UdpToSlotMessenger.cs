@@ -16,7 +16,7 @@ namespace UeiBridge
         public int CubeId { get; private set; }
         public IEnqueue<byte[]> Consumer { get; private set; }
 
-        public ConsumerEntry(int slotNumber, int cubeId, IEnqueue<byte[]> consumer)
+        public ConsumerEntry( int cubeId, int slotNumber,  IEnqueue<byte[]> consumer)
         {
             SlotNumber = slotNumber;
             CubeId = cubeId;
@@ -81,30 +81,14 @@ namespace UeiBridge
                 }
 
                 ConsumerEntry consumer = clist.FirstOrDefault();
-
                 consumer.Consumer.Enqueue(incomingMessage);
             }
-
         }
 
-        /// <summary>
-        /// Subscribe
-        /// </summary>
-//        public void SubscribeConsumer(OutputDevice outDevice)
-//        {
-//            ConsumerEntry ce = new ConsumerEntry(outDevice.DeviceInfo.DeviceSlot, outDevice.DeviceInfo.CubeId, outDevice);
-//            _consumersList.Add(ce);
-////            int slot = outDevice.SlotNumber;
-//            //_logger.Info($"Device {outDevice.DeviceName} subscribed");
-////            _consumersList.Add(outDevice);
-//        }
         public void SubscribeConsumer( IEnqueue<byte[]> consumer, int cubeId, int slotNumber)
         {
-            ConsumerEntry ce = new ConsumerEntry(slotNumber, cubeId, consumer);
+            ConsumerEntry ce = new ConsumerEntry(cubeId, slotNumber, consumer);
             _consumersList.Add(ce);
-            //int slot = slotNumber;
-            //_logger.Info($"Device {outDevice.DeviceName} subscribed");
-            //_consumersList.Add(outDevice);
         }
     }
 }
