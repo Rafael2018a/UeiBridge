@@ -17,7 +17,7 @@ namespace UeiBridge
         public override string DeviceName => "SL-508-892";
         // privates
         log4net.ILog _logger = StaticMethods.GetLogger();
-        IConvert _attachedConverter;
+        //IConvert _attachedConverter;
         List<ViewItem<byte[]>> _lastScanList = new List<ViewItem<byte[]>>(); // todo. rename
         SessionEx _serialSession;
         int _sentBytesAcc = 0;
@@ -35,7 +35,7 @@ namespace UeiBridge
             }
             System.Diagnostics.Debug.Assert(null != serialSession);
             _serialSession = serialSession;
-            _attachedConverter = StaticMethods.CreateConverterInstance(setup);
+            //_attachedConverter = StaticMethods.CreateConverterInstance(setup);
             System.Diagnostics.Debug.Assert(null != serialSession);
             this._deviceSetup = setup;
             // init message list

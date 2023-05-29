@@ -39,27 +39,27 @@ namespace UeiBridge
         /// Find and instantiate suitable converter
         /// </summary>
         /// <returns></returns>
-        public static IConvert CreateConverterInstance( DeviceSetup setup) 
-        {
-            IConvert attachedConverter = null;
-            foreach (Type theType in System.Reflection.Assembly.GetExecutingAssembly().GetTypes())
-            {
-                if (theType.IsInterface || theType.IsAbstract)
-                    continue;
+        //public static IConvert CreateConverterInstance( DeviceSetup setup) 
+        //{
+        //    IConvert attachedConverter = null;
+        //    foreach (Type theType in System.Reflection.Assembly.GetExecutingAssembly().GetTypes())
+        //    {
+        //        if (theType.IsInterface || theType.IsAbstract)
+        //            continue;
 
-                if (typeof(IConvert).IsAssignableFrom(theType))
-                {
-                    var at = (IConvert)Activator.CreateInstance(theType, setup);
-                    if (at.DeviceName == setup.DeviceName)
-                    {
-                        attachedConverter = at;
-                        break;
-                    }
-                }
-            }
+        //        if (typeof(IConvert).IsAssignableFrom(theType))
+        //        {
+        //            var at = (IConvert)Activator.CreateInstance(theType, setup);
+        //            if (at.DeviceName == setup.DeviceName)
+        //            {
+        //                attachedConverter = at;
+        //                break;
+        //            }
+        //        }
+        //    }
             
-            return attachedConverter;
-        }
+        //    return attachedConverter;
+        //}
 
         public static Type GetDeviceManagerType<ParentType>( string deviceName) where ParentType : IDeviceManager
         {

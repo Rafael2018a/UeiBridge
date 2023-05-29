@@ -159,6 +159,25 @@ namespace UeiBridgeTest
             Assert.That(dio403.InstanceName, Is.EqualTo("DIO-403/Cube2/Slot2/Input"));
         }
 
+        [Test]
+        public void SerialSessionTest()
+        {
+            UeiDeviceInfo di = new UeiDeviceInfo("simu://", 4, DeviceMap2.SL508Literal);
+
+            SL508892Setup deviceSetup = new SL508892Setup(null, null, di);
+
+            deviceSetup.Channels[1].Baudrate = SerialPortSpeed.BitsPerSecond14400;
+            deviceSetup.CubeUrl = "simu://";
+            SessionEx sx = new SessionEx(deviceSetup);
+            SerialPort ch = sx.GetChannel(1) as SerialPort;
+            var speed1 = ch.GetSpeed();
+            ch = sx.GetChannel(0) as SerialPort;
+            var speed0 = ch.GetSpeed();
+
+            Assert.That(speed0, Is.EqualTo(SerialPortSpeed.BitsPerSecond19200));
+            Assert.That(speed1, Is.EqualTo(SerialPortSpeed.BitsPerSecond14400));
+        }
+
     }
     public class analogWriterMock : IWriterAdapter<double[]>
     {

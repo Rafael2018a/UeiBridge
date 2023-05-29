@@ -18,7 +18,8 @@ namespace UeiBridge
 
         //privates
         log4net.ILog _logger = StaticMethods.GetLogger();
-        IConvert _attachedConverter;
+        //IConvert _attachedConverter;
+        private IConvert2<UInt16[]> _digitalConverter = new DigitalConverter();
         const string _channelsString = "Do0";
         //UeiDaq.Session _deviceSession;
         UeiDaq.DigitalWriter _writer;
@@ -42,7 +43,7 @@ namespace UeiBridge
 
         public override bool OpenDevice()
         {
-            _attachedConverter = StaticMethods.CreateConverterInstance( _deviceSetup);
+            //_attachedConverter = StaticMethods.CreateConverterInstance( _deviceSetup);
             string cubeUrl = $"{_deviceSetup.CubeUrl}Dev{_deviceSetup.SlotNumber}/{_channelsString}";
             _ueiSession = new UeiDaq.Session();
             _ueiSession.CreateDOChannel(cubeUrl);
@@ -78,7 +79,13 @@ namespace UeiBridge
 
         protected override void HandleRequest(EthernetMessage request)
         {
-            var ls = _attachedConverter.EthToDevice(request.PayloadBytes);
+            var ls = _digitalConverter.DownstreamConvert(request.PayloadBytes);
+                //_attachedConverter.EthToDevice(request.PayloadBytes);
+            if (null==ls)
+            {
+                _logger.Warn("Empty payload. rejected.");
+                return;
+            }
             ushort[] scan = ls as ushort[];
             System.Diagnostics.Debug.Assert( scan != null);
             _writer.WriteSingleScanUInt16( scan);

@@ -21,13 +21,13 @@ namespace UeiBridge.Types
     {
         void Send(Item i);
     }
-    public interface IConvert
-    {
-        object EthToDevice(byte[] messagePayload);
-        byte[] DeviceToEth(object dt);
-        string DeviceName { get; }
-        string LastErrorMessage { get; }
-    }
+    //public interface IConvert
+    //{
+    //    object EthToDevice(byte[] messagePayload);
+    //    byte[] DeviceToEth(object dt);
+    //    string DeviceName { get; }
+    //    string LastErrorMessage { get; }
+    //}
     public interface IConvert2<SourceType>
     {
         SourceType DownstreamConvert(byte[] messagePayload);

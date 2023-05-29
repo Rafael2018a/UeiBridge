@@ -9,6 +9,7 @@ using ByteStreamer3;
 using System.IO;
 using Newtonsoft.Json;
 using ByteStreamer3.Utilities;
+using UeiBridge.Types;
 
 namespace UeiBridgeTest
 {
@@ -23,12 +24,12 @@ namespace UeiBridgeTest
             //Assert.Pass();
         }
 
-        public class Consumner : UeiBridge.Types.IEnqueue<byte[]>
+        public class Consumer : UeiBridge.Types.IEnqueue<SendObject>
         {
             public byte[] receivedMessage { get; set; }
-            public void Enqueue(byte[] i)
+            public void Enqueue(SendObject so)
             {
-                receivedMessage = i;
+                receivedMessage = so.ByteMessage;
             }
         }
         [Test]
@@ -36,7 +37,7 @@ namespace UeiBridgeTest
         {
             IPAddress localNic = null;// IPAddress.Parse("192.168.1.154");
             IPEndPoint mcEndpoint = new IPEndPoint( IPAddress.Parse("231.168.19.10"), 7094);
-            Consumner consumer = new Consumner();
+            Consumer consumer = new Consumer();
             UeiBridge.UdpReader mcReader = new UeiBridge.UdpReader(mcEndpoint, localNic, consumer, "abcd");
             mcReader.Start();
 

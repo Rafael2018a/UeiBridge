@@ -16,7 +16,7 @@ namespace UeiBridgeTest
             msgr.SubscribeConsumer(mock, 10, 21);
             byte[] payload = new byte[] { 19, 29, 30 };
             var etm = EthernetMessage.CreateMessage(25, 21, 10, payload).GetByteArray(MessageWay.downstream);
-            msgr.Enqueue(etm);
+            msgr.Enqueue(new SendObject(null, etm));
             System.Threading.Thread.Sleep(20);
 
             Assert.That(mock.TheMessage, Is.EqualTo(etm));

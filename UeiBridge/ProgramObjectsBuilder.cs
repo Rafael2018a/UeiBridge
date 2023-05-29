@@ -259,7 +259,7 @@ namespace UeiBridge
             SL508OutputDeviceManager od = new SL508OutputDeviceManager(setup, serialSession);
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
             UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, od.InstanceName);
-#if eachport
+             // each port
             {
                 var add = IPAddress.Parse( setup.LocalEndPoint.Address);
                 foreach( SerialChannelSetup chSetup in thisSetup.Channels)
@@ -269,7 +269,7 @@ namespace UeiBridge
                     _udpReaderList.Add(ureader2);
                 }
             }
-#endif
+
 
             var pd = new PerDeviceObjects(realDevice);
             //pd.SerialSession = serialSession;
@@ -380,7 +380,7 @@ namespace UeiBridge
                 _udpReaderList.Add(ureader);
 
                 blockSensor.OpenDevice();
-                ureader.Start();
+                //ureader.Start();
 
 #if blocksim
                 byte[] d403 = Library.StaticMethods.Make_Dio403_upstream_message(new byte[] { 0x5, 0, 0 });

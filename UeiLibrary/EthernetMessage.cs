@@ -109,7 +109,7 @@ namespace UeiBridge.Library
             string errMsg;
             if (false == CheckByteArrayValidity(byteMessage, way, out errMsg))
             {
-                throw new ArgumentException(errMsg);
+                return null;
             }
 
             // Build message struct

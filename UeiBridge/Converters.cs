@@ -55,7 +55,7 @@ namespace UeiBridge
             return resultVector;
         }
     }
-#endif
+
     class DIO470Convert : IConvert
     {
         public string DeviceName => "DIO-470";
@@ -100,6 +100,7 @@ namespace UeiBridge
             return resultVector;
         }
     }
+#endif
 #if remove
     /// <summary>
     /// Convert from double to UIint16

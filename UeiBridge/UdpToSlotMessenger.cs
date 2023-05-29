@@ -27,17 +27,17 @@ namespace UeiBridge
     /// messenger
     /// 
     /// </summary>
-    public class UdpToSlotMessenger : IEnqueue<byte[]>
+    public class UdpToSlotMessenger : IEnqueue<SendObject>
     {
         private ILog _logger = StaticMethods.GetLogger();
         private List<ConsumerEntry> _consumersList = new List<ConsumerEntry>();
-        private BlockingCollection<byte[]> _inputQueue = new BlockingCollection<byte[]>(1000); // max 1000 items
+        private BlockingCollection<SendObject> _inputQueue = new BlockingCollection<SendObject>(1000); // max 1000 items
 
         public UdpToSlotMessenger()
         {
             Task.Factory.StartNew(() => DispatchToConsumer_Task());
         }
-        public void Enqueue(byte[] byteMessage)
+        public void Enqueue(SendObject sendObject1)
         {
             if (_inputQueue.IsCompleted)
             {
@@ -46,7 +46,7 @@ namespace UeiBridge
 
             try
             {
-                _inputQueue.Add(byteMessage);
+                _inputQueue.Add(sendObject1);
             }
             catch (Exception ex)
             {
@@ -59,7 +59,7 @@ namespace UeiBridge
             // message loop
             while (false == _inputQueue.IsCompleted)
             {
-                byte[] incomingMessage = _inputQueue.Take(); // get from q
+                SendObject incomingMessage = _inputQueue.Take(); // get from q
 
                 if (null == incomingMessage) // end task token
                 {
@@ -67,12 +67,18 @@ namespace UeiBridge
                     break;
                 }
 
-                EthernetMessage ethMag = EthernetMessage.CreateFromByteArray( incomingMessage, MessageWay.downstream);
+                EthernetMessage ethMag = EthernetMessage.CreateFromByteArray( incomingMessage.ByteMessage, MessageWay.downstream);
+
+                if (null==ethMag)
+                {
+                    _logger.Warn("Failed to parse incoming ethernet message");
+                    continue;
+                }
 
                 var clist = _consumersList.Where(consumer1 => ((consumer1.CubeId == ethMag.UnitId) && ( consumer1.SlotNumber == ethMag.SlotNumber )));
                 if (clist.Count()==0) // no subs
                 {
-                    _logger.Warn($"No consumer to message aimed to slot {ethMag.SlotNumber} and unit id {ethMag.UnitId}");
+                    _logger.Warn($"No consumer to message aimed to slot {ethMag.SlotNumber} /cube {ethMag.UnitId} (Target {incomingMessage.TargetEndPoint})");
                     continue;
                 }
                 if (clist.Count() > 1) // 2 subs with same parameters
@@ -81,7 +87,7 @@ namespace UeiBridge
                 }
 
                 ConsumerEntry consumer = clist.FirstOrDefault();
-                consumer.Consumer.Enqueue(incomingMessage);
+                consumer.Consumer.Enqueue(incomingMessage.ByteMessage);
             }
         }
 

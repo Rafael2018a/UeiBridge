@@ -231,7 +231,7 @@ namespace UeiBridge.Library
 
             for (int chIndex = 0; chIndex < _numberOfSerialChannels; chIndex++)
             {
-                Channels.Add( new SerialChannelSetup(chIndex, UeiDaq.SerialPortSpeed.BitsPerSecond57600));
+                Channels.Add( new SerialChannelSetup(chIndex, UeiDaq.SerialPortSpeed.BitsPerSecond19200));
             }
         }
     }

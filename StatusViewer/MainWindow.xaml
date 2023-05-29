@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:StatusViewer"
         mc:Ignorable="d"
-        Title="StatusViewer 1.02" Height="980" Width="605">
+        Title="{Binding AppVersion}" Height="980" Width="605">
     <Window.Resources>
         <local:BoolToVisibleConverter x:Key="BoolToVisibleConverter"/>
         <local:EnumToStringConverter x:Key="EnumToStringConverter"/>

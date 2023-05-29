@@ -113,7 +113,7 @@ namespace StatusViewer
             //dbgViewProcess = Process.Start(psi);
 
             StartCommand_Executed(this, null); // simulate 'start' command (as if user clicked 'start' right after startup)
-
+#if testonly
             Task.Factory.StartNew(() =>
             {
                 for (int i = 0; i < 10; i++)
@@ -146,6 +146,7 @@ namespace StatusViewer
                     }
                 }
             });
+#endif
         }
         private List<IPAddress> GetLocalIpList()
         {
@@ -360,6 +361,19 @@ namespace StatusViewer
                     PropertyChanged(this, new PropertyChangedEventArgs("MachineState"));
                     PropertyChanged(this, new PropertyChangedEventArgs("AtInitialState"));
                 }
+            }
+        }
+
+        public string AppVersion
+        {
+            get 
+            {
+                var EntAsm = System.Reflection.Assembly.GetEntryAssembly();//.GetName().Version;
+                System.IO.FileInfo fi = new System.IO.FileInfo(EntAsm.Location);
+                //_logger.Info($"UEI Bridge. Version {EntAsm.GetName().Version.ToString(3)}. Build time: {fi.LastWriteTime.ToString()}");
+                string result = $"StatusViewer. Version {EntAsm.GetName().Version.ToString(3)}";
+                return result;
+
             }
         }
 

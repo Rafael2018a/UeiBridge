@@ -8,7 +8,7 @@ using UeiBridge.Library;
 
 namespace UeiBridge
 {
-    class SessionEx : UeiDaq.Session
+    public class SessionEx : UeiDaq.Session
     {
         //public bool IsValidSession { get; set; } = false;
         public SessionEx(SL508892Setup _thisDeviceSetup)

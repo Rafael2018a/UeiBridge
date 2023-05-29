@@ -13,45 +13,39 @@ namespace UeiBridge
     /// <summary>
     /// "SL-508-892" manager.
     /// R&R: Reads from serial device and sends the result to 'targetConsumer'
+    /// This class is responsible for disposing the serial session.
     /// </summary>
     class SL508InputDeviceManager : InputDevice
     {
         public override string DeviceName => "SL-508-892";
-        public bool InDisposeState => _InDisposeState;
 
         private log4net.ILog _logger = StaticMethods.GetLogger();
         private readonly List<SerialReader> _serialReaderList = new List<SerialReader>();
-        //private IConvert _attachedConverter;
         private bool _InDisposeState = false;
         private List<ViewItem<byte[]>> _lastScanList = new List<ViewItem<byte[]>>();
-        private readonly System.Net.IPEndPoint _targetEp;
         private readonly SL508892Setup _thisDeviceSetup;
         private ISend<SendObject> _targetConsumer;
         private SessionEx _serialSession;
         private List<IAsyncResult> _readerIAsyncResultList;
         private const int minLen = 200;
+        
 
         public SL508InputDeviceManager(ISend<SendObject> targetConsumer, DeviceSetup setup, SessionEx serialSession) : base( setup)
         {
-            //_attachedConverter = StaticMethods.CreateConverterInstance(setup);
             _targetConsumer = targetConsumer;
             _thisDeviceSetup = setup as SL508892Setup;
             _serialSession = serialSession;
 
-            _targetEp = setup.DestEndPoint.ToIpEp();
-
+            System.Diagnostics.Debug.Assert(null != _targetConsumer);
+            System.Diagnostics.Debug.Assert(null != _thisDeviceSetup);
             System.Diagnostics.Debug.Assert(null != serialSession);
-            System.Diagnostics.Debug.Assert(null != setup);
             System.Diagnostics.Debug.Assert(this.DeviceName.Equals(setup.DeviceName));
         }
 
-        public SL508InputDeviceManager() 
-        {
-        }
+        public SL508InputDeviceManager() {}
 
         public override string [] GetFormattedStatus( TimeSpan interval)
         {
-            //StringBuilder formattedString = new StringBuilder();
             List<string> resultList = new List<string>();
             for (int ch = 0; ch < _lastScanList.Count; ch++)
             {
@@ -78,24 +72,23 @@ namespace UeiBridge
             }
             return resultList.ToArray();
         }
-        //AsyncCallback readerAsyncCallback;
 
         public void ReaderCallback(IAsyncResult ar)
         {
-            System.Diagnostics.Debug.Assert(null != _serialSession);
             int channel = (int)ar.AsyncState;
-            //_logger.Debug($"(int)ar.AsyncState; {channel}");
             try
             {
                 byte[] receiveBuffer = _serialReaderList[channel].EndRead(ar);
+                // this api might throw UeiDaqException exception with message "The device is not responding, check the connection and the device's status"
+                // in this case, the session must be closed/disposed and open again.
+
+                // ex.Message = "An error occurred while accessing the device"
 
                 _lastScanList[channel] = new ViewItem<byte[]>(receiveBuffer, timeToLiveMs: 5000);
-                //_logger.Debug($"read from serial port. ch {channel}");
                 byte [] payload = receiveBuffer;
                 EthernetMessage em = StaticMethods.BuildEthernetMessageFromDevice(payload, this._thisDeviceSetup, channel);
                 // forward to consumer (send by udp)
-                //ScanResult sr = new ScanResult(receiveBuffer, this);
-                _targetConsumer.Send(new SendObject(_targetEp, em.GetByteArray( MessageWay.upstream)));
+                _targetConsumer.Send(new SendObject( _thisDeviceSetup.DestEndPoint.ToIpEp(), em.GetByteArray( MessageWay.upstream)));
 
                 // restart reader
                 _readerIAsyncResultList[channel] = _serialReaderList[channel].BeginRead(minLen, this.ReaderCallback, channel);
@@ -112,19 +105,20 @@ namespace UeiBridge
                     }
                     else
                     {
-                        _logger.Debug($"Not resuming channel-read since disposing started. {InstanceName} ch{channel}");
+                        _logger.Debug($"Disposing {InstanceName} ch{channel}");
                         // tbd. Dispose session here?
                     }
                 }
                 else
                 {
-                    _logger.Warn($"ReaderCallback: {ex.Message}");
+                    _logger.Warn($"ReaderCallback:  {InstanceName}. {ex.Message}.");
+
                     // tbd. Dispose session here?
                 }
             }
             catch(Exception ex)
             {
-                _logger.Warn($"ReaderCallback: {ex.Message}");
+                _logger.Warn($"ReaderCallback: {InstanceName}. {ex.Message}");
             }
         }
         public override void OpenDevice()
@@ -148,7 +142,7 @@ namespace UeiBridge
                 ch1++;
             }
 
-            _logger.Info($"Init success {InstanceName}. {_serialSession.GetNumberOfChannels()} channels. Dest:{_targetEp}");
+            _logger.Info($"Init success {InstanceName}. {_serialSession.GetNumberOfChannels()} channels. Dest:{ _thisDeviceSetup.DestEndPoint.ToIpEp()}");
 
         }
         public override void Dispose()
@@ -158,10 +152,15 @@ namespace UeiBridge
             var waitall = _readerIAsyncResultList.Select(i => i.AsyncWaitHandle).ToArray();
             WaitHandle.WaitAll(waitall);
 
-            _logger.Debug($"Disposing {this.DeviceName}/Input, slot {_thisDeviceSetup.SlotNumber}");
-            if (_serialSession.IsRunning())
+            //_logger.Debug($"Disposing {this.DeviceName}/Input, slot {_thisDeviceSetup.SlotNumber}");
+            //if (_serialSession.IsRunning())
+            try
             {
                 _serialSession.Stop();
+            }
+            catch (UeiDaq.UeiDaqException ex)
+            {
+                _logger.Debug($"Session stop() failed. {ex.Message}");
             }
             _serialSession.Dispose();
         }
