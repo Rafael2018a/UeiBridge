@@ -24,8 +24,10 @@ namespace UeiBridge.Library
         public byte[] PayloadBytes { get; set; }
         //public byte[] HeaderBytes { get; set; }
         //public int _debugSerial { get; set; } // serial number of message
+        public int NominalLength { get; set; }
 
         public const int _payloadOffset = 16;// _payloadOffset;
+        public const int _unitIdOffset = 4;
         public const int _cardTypeOffset = 5;// _cardTypeOffset;
         public const int _slotNumberOffset = 6;
         public const int _serailChannelOffset = 7;
@@ -37,13 +39,13 @@ namespace UeiBridge.Library
         /// </summary>
         byte[] ToByteArray()
         {
-            if (!CheckValid())
+            if (!InternalValidityTest())
                 return null;
 
             byte[] messageBytes = new byte[_payloadOffset + PayloadBytes.Length];
             Array.Clear(messageBytes, 0, messageBytes.Length);
 
-            // card type
+            messageBytes[_unitIdOffset] = (byte)UnitId;
             messageBytes[_cardTypeOffset] = (byte)CardType;
             messageBytes[_serailChannelOffset] = (byte)SerialChannelNumber;
             messageBytes[_slotNumberOffset] = (byte)SlotNumber;
@@ -51,7 +53,7 @@ namespace UeiBridge.Library
             // message length
             byte[] twobytes = BitConverter.GetBytes(messageBytes.Length);
             Array.Copy(twobytes, 0, messageBytes, _lengthOffset, twobytes.Length);
-            
+
             // payload
             Array.Copy(PayloadBytes, 0, messageBytes, _payloadOffset, PayloadBytes.Length);
 
@@ -82,24 +84,19 @@ namespace UeiBridge.Library
         }
 
         /// <summary>
-        /// Message must have valid card type and payload
+        /// Internal Validity Test
         /// </summary>
         /// <returns></returns>
-        public bool CheckValid()
+        public bool InternalValidityTest()
         {
-            //if ((HeaderBytes == null) || (HeaderBytes.Length != _payloadOffset))
-            //    return false;
-
-            // card type exists
-            //if (!StaticMethods.DoesCardIdExist(CardType))
-            //    return false;
-
-            //if (!ProjectRegistry.Instance.DeviceKeys.ContainsKey(CardType))
-                //return false;
-
             // payload 
             if ((PayloadBytes==null) || (PayloadBytes.Length == 0))
                 return false;
+
+            if (PayloadBytes.Length != NominalLength-_payloadOffset)
+            {
+                return false;
+            }
 
             return true;
         }
@@ -112,7 +109,7 @@ namespace UeiBridge.Library
             string errMsg;
             if (false == CheckByteArrayValidity(byteMessage, way, out errMsg))
             {
-                throw new ArgumentException(errMsg);
+                return null;
             }
 
             // Build message struct
@@ -121,13 +118,14 @@ namespace UeiBridge.Library
             // header & payload
             //resutlMessage.HeaderBytes = new byte[EthernetMessage._payloadOffset];
             //Array.Copy(byteMessage, resutlMessage.HeaderBytes, EthernetMessage._payloadOffset);
-            resutlMessage.PayloadBytes = new byte[byteMessage.Length - EthernetMessage._payloadOffset];
-            Array.Copy(byteMessage, EthernetMessage._payloadOffset, resutlMessage.PayloadBytes, 0, byteMessage.Length - EthernetMessage._payloadOffset);
+            resutlMessage.PayloadBytes = new byte[byteMessage.Length - _payloadOffset];
+            Array.Copy(byteMessage, _payloadOffset, resutlMessage.PayloadBytes, 0, byteMessage.Length - EthernetMessage._payloadOffset);
 
-            // type & slot
-            resutlMessage.CardType = byteMessage[EthernetMessage._cardTypeOffset];
-            resutlMessage.SerialChannelNumber = byteMessage[EthernetMessage._serailChannelOffset];
-            resutlMessage.SlotNumber = byteMessage[EthernetMessage._slotNumberOffset];
+            resutlMessage.UnitId = byteMessage[_unitIdOffset];
+            resutlMessage.CardType = byteMessage[_cardTypeOffset];
+            resutlMessage.SerialChannelNumber = byteMessage[_serailChannelOffset];
+            resutlMessage.SlotNumber = byteMessage[_slotNumberOffset];
+            resutlMessage.NominalLength = byteMessage.Length; 
 
             return resutlMessage;
         }
@@ -194,7 +192,7 @@ namespace UeiBridge.Library
         //    }
 
         //    msg.SlotNumber = setup.SlotNumber;
-        //    msg.UnitId = 0; // tbd
+        //    msg.UnitId = 0; // 
         //    msg.CardType = (byte)key;
         //    msg.PayloadBytes = payload;
 
@@ -219,6 +217,7 @@ namespace UeiBridge.Library
             msg.CardType = cardId;
             msg.SlotNumber = slotNumber;
             msg.UnitId = unitId;
+            msg.NominalLength = payload.Length + _payloadOffset;
             return msg;
         }
 

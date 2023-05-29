@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using UeiBridge.Types;
 using System.Timers;
 using UeiBridge.Library;
+using UeiDaq;
 
 namespace UeiBridge
 {
@@ -14,48 +15,41 @@ namespace UeiBridge
     class DIO470OutputDeviceManager : OutputDevice
     {
         public override string DeviceName => "DIO-470";
-        public override string InstanceName { get; }
 
         //privates
         log4net.ILog _logger = StaticMethods.GetLogger();
-        IConvert _attachedConverter;
+        //IConvert _attachedConverter;
+        private IConvert2<UInt16[]> _digitalConverter = new DigitalConverter();
         const string _channelsString = "Do0";
-        UeiDaq.Session _deviceSession;
+        //UeiDaq.Session _deviceSession;
         UeiDaq.DigitalWriter _writer;
         UInt16[] _lastScan;
-
+        private Session _ueiSession;
+        private DeviceSetup _deviceSetup;
         public DIO470OutputDeviceManager(DeviceSetup setup) : base(setup)
         {
-            InstanceName = $"{DeviceName}/Slot{ setup.SlotNumber}/Output";
+            this._deviceSetup = setup;
         }
-        public DIO470OutputDeviceManager() : base(null) // must have default c-tor
+        public DIO470OutputDeviceManager()  // must have default c-tor
         {
         }
 
         public override void Dispose()
         {
-            base.Dispose();
-
-            if (null != _writer)
-            {
-                _writer.Dispose();
-            }
-            if (null != _deviceSession)
-            {
-                _deviceSession.Stop();
-                _deviceSession.Dispose();
-            }
+            _writer.Dispose();
+            CloseSession(_ueiSession);
+			base.Dispose();
         }
 
         public override bool OpenDevice()
         {
-            _attachedConverter = StaticMethods.CreateConverterInstance( _deviceSetup);
+            //_attachedConverter = StaticMethods.CreateConverterInstance( _deviceSetup);
             string cubeUrl = $"{_deviceSetup.CubeUrl}Dev{_deviceSetup.SlotNumber}/{_channelsString}";
-            _deviceSession = new UeiDaq.Session();
-            _deviceSession.CreateDOChannel(cubeUrl);
+            _ueiSession = new UeiDaq.Session();
+            _ueiSession.CreateDOChannel(cubeUrl);
 
-            _deviceSession.ConfigureTimingForSimpleIO();
-            _writer = new UeiDaq.DigitalWriter(_deviceSession.GetDataStream());
+            _ueiSession.ConfigureTimingForSimpleIO();
+            _writer = new UeiDaq.DigitalWriter(_ueiSession.GetDataStream());
 
             //UInt16[] u16 = { 0x1 };
             //_writer.WriteSingleScanUInt16(u16);
@@ -85,7 +79,13 @@ namespace UeiBridge
 
         protected override void HandleRequest(EthernetMessage request)
         {
-            var ls = _attachedConverter.EthToDevice(request.PayloadBytes);
+            var ls = _digitalConverter.DownstreamConvert(request.PayloadBytes);
+                //_attachedConverter.EthToDevice(request.PayloadBytes);
+            if (null==ls)
+            {
+                _logger.Warn("Empty payload. rejected.");
+                return;
+            }
             ushort[] scan = ls as ushort[];
             System.Diagnostics.Debug.Assert( scan != null);
             _writer.WriteSingleScanUInt16( scan);

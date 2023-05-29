@@ -2,6 +2,7 @@
 using System.Threading;
 using UeiDaq;
 using UeiBridge.Types;
+using UeiBridge.Library;
 
 /// <summary>
 /// All files in project might refer to this file.
@@ -11,46 +12,37 @@ namespace UeiBridge
 {
     public abstract class InputDevice : IDeviceManager, IDisposable
     {
-        // abstarcts
-        public abstract IConvert AttachedConverter { get; }
         public abstract string [] GetFormattedStatus( TimeSpan interval);
         public abstract void OpenDevice();
         public abstract string DeviceName { get; }
-        public abstract string InstanceName { get; }
 
-        // protected
-        protected Session _deviceSession;
-        protected string _cubeUrl; // tbd. remove this
-        protected string _channelsString;
-        protected ISend<SendObject> _targetConsumer;
-        protected System.Threading.Timer _samplingTimer;
-        //protected DateTime _publishTime = DateTime.Now;
+        public UeiDeviceInfo DeviceInfo { get; private set; }
+        public string InstanceName { get; private set; }
+        //public int SlotNumber { get; private set; }
+        private log4net.ILog _logger = StaticMethods.GetLogger();
 
-        //protected DeviceSetup _deviceSetup;
-
-        //protected InputDevice(IEnqueue<ScanResult> targetConsumer, TimeSpan samplingInterval, string cubeUrl)
-        //{
-        //    _targetConsumer = targetConsumer;
-        //    _samplingInterval = samplingInterval;
-        //    _cubeUrl = cubeUrl;
-        //}
-        protected InputDevice(ISend<SendObject> targetConsumer)//, DeviceSetup setup)
+        public InputDevice() { }
+        protected InputDevice( DeviceSetup setup)
         {
-            _targetConsumer = targetConsumer;
-            //_deviceSetup = setup;
+            InstanceName = setup.GetInstanceName() + "/Input";
+            DeviceInfo = setup.GetDeviceInfo();
+            //SlotNumber = setup.SlotNumber;
         }
-        public virtual void CloseDevice()
+        public static void CloseSession(Session theSession)
         {
-            if (null != _deviceSession)
+            if (null != theSession)
             {
-                _deviceSession.Stop();
-                _deviceSession.Dispose();
+                if (theSession.IsRunning())
+                {
+                    theSession.Stop();
+                }
+                theSession.Dispose();
             }
-            _deviceSession = null;
         }
 
-        public abstract void Dispose();
-
-        //public abstract int getme {get;}
+        public virtual void Dispose()
+        {
+            _logger.Debug($"Device manager {InstanceName} Disposed");
+        }
     }
 }

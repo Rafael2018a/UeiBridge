@@ -4,6 +4,8 @@ using System.Text;
 using UeiDaq;
 using UeiBridge.Types;
 using UeiBridge.Library;
+using System.Threading;
+using System.Linq;
 
 namespace UeiBridge
 {
@@ -11,53 +13,39 @@ namespace UeiBridge
     /// <summary>
     /// "SL-508-892" manager.
     /// R&R: Reads from serial device and sends the result to 'targetConsumer'
+    /// This class is responsible for disposing the serial session.
     /// </summary>
     class SL508InputDeviceManager : InputDevice
     {
-        log4net.ILog _logger = StaticMethods.GetLogger();
         public override string DeviceName => "SL-508-892";
-        readonly List<SerialPort> _serialPorts;
-        readonly List<SerialReader> _serialReaderList;
-        IConvert _attachedConverter;
-        bool _InDisposeState = false;
-        List<ViewerItem<byte[]>> _lastScanList;
-        readonly System.Net.IPEndPoint _targetEp;
-        readonly SL508892Setup _thisDeviceSetup;
 
-        public override IConvert AttachedConverter => _attachedConverter;
-        //public List<SerialWriter> SerialWriterList => _serialWriterList;
-        public bool InDisposeState => _InDisposeState;
+        private log4net.ILog _logger = StaticMethods.GetLogger();
+        private readonly List<SerialReader> _serialReaderList = new List<SerialReader>();
+        private bool _InDisposeState = false;
+        private List<ViewItem<byte[]>> _lastScanList = new List<ViewItem<byte[]>>();
+        private readonly SL508892Setup _thisDeviceSetup;
+        private ISend<SendObject> _targetConsumer;
+        private SessionEx _serialSession;
+        private List<IAsyncResult> _readerIAsyncResultList;
+        private const int minLen = 200;
+        
 
-        public override string InstanceName { get; }
-
-        private SL508Session _serialSession;
-        public SL508InputDeviceManager(ISend<SendObject> targetConsumer, DeviceSetup setup, SL508Session serialSession) : base(targetConsumer)
+        public SL508InputDeviceManager(ISend<SendObject> targetConsumer, DeviceSetup setup, SessionEx serialSession) : base( setup)
         {
-            _serialPorts = new List<SerialPort>();
-            _serialReaderList = new List<SerialReader>();
-            //_serialWriterList = new List<SerialWriter>();
-            _attachedConverter = StaticMethods.CreateConverterInstance(setup);
-            _lastScanList = new List<ViewerItem<byte[]>>();
-            
-           
-            _serialSession = serialSession;
-            InstanceName = $"{DeviceName}/Slot{setup.SlotNumber}/Input";
-            _targetEp = setup.DestEndPoint.ToIpEp();
-
+            _targetConsumer = targetConsumer;
             _thisDeviceSetup = setup as SL508892Setup;
+            _serialSession = serialSession;
 
+            System.Diagnostics.Debug.Assert(null != _targetConsumer);
+            System.Diagnostics.Debug.Assert(null != _thisDeviceSetup);
             System.Diagnostics.Debug.Assert(null != serialSession);
-            System.Diagnostics.Debug.Assert(null != setup);
             System.Diagnostics.Debug.Assert(this.DeviceName.Equals(setup.DeviceName));
         }
 
-        public SL508InputDeviceManager() : base(null)
-        {
-        }
+        public SL508InputDeviceManager() {}
 
         public override string [] GetFormattedStatus( TimeSpan interval)
         {
-            //StringBuilder formattedString = new StringBuilder();
             List<string> resultList = new List<string>();
             for (int ch = 0; ch < _lastScanList.Count; ch++)
             {
@@ -84,29 +72,26 @@ namespace UeiBridge
             }
             return resultList.ToArray();
         }
-        //AsyncCallback readerAsyncCallback;
-        private IAsyncResult readerIAsyncResult;
-        int minLen = 200;
 
         public void ReaderCallback(IAsyncResult ar)
         {
-            System.Diagnostics.Debug.Assert(null != _serialSession);
             int channel = (int)ar.AsyncState;
-            //_logger.Debug($"(int)ar.AsyncState; {channel}");
             try
             {
                 byte[] receiveBuffer = _serialReaderList[channel].EndRead(ar);
+                // this api might throw UeiDaqException exception with message "The device is not responding, check the connection and the device's status"
+                // in this case, the session must be closed/disposed and open again.
 
-                _lastScanList[channel] = new ViewerItem<byte[]>(receiveBuffer, timeToLiveMs: 5000);
-                //_logger.Debug($"read from serial port. ch {channel}");
-                byte [] payload = this.AttachedConverter.DeviceToEth(receiveBuffer);
+                // ex.Message = "An error occurred while accessing the device"
+
+                _lastScanList[channel] = new ViewItem<byte[]>(receiveBuffer, timeToLiveMs: 5000);
+                byte [] payload = receiveBuffer;
                 EthernetMessage em = StaticMethods.BuildEthernetMessageFromDevice(payload, this._thisDeviceSetup, channel);
                 // forward to consumer (send by udp)
-                //ScanResult sr = new ScanResult(receiveBuffer, this);
-                _targetConsumer.Send(new SendObject(_targetEp, em.GetByteArray( MessageWay.upstream)));
+                _targetConsumer.Send(new SendObject( _thisDeviceSetup.DestEndPoint.ToIpEp(), em.GetByteArray( MessageWay.upstream)));
 
                 // restart reader
-                readerIAsyncResult = _serialReaderList[channel].BeginRead(minLen, this.ReaderCallback, channel);
+                _readerIAsyncResultList[channel] = _serialReaderList[channel].BeginRead(minLen, this.ReaderCallback, channel);
             }
             catch (UeiDaqException ex)
             {
@@ -116,143 +101,68 @@ namespace UeiBridge
                     // clicked on fast enough!
                     if (_InDisposeState == false)
                     {
-                        readerIAsyncResult = _serialReaderList[channel].BeginRead(minLen, this.ReaderCallback, channel);
+                        _readerIAsyncResultList[channel] = _serialReaderList[channel].BeginRead(minLen, this.ReaderCallback, channel);
                     }
                     else
                     {
-                        //_logger.Debug($"{InstanceName} stopped listening on ch{channel}");
+                        _logger.Debug($"Disposing {InstanceName} ch{channel}");
+                        // tbd. Dispose session here?
                     }
                 }
                 else
                 {
-                    _logger.Warn($"ReaderCallback: {ex.Message}");
+                    _logger.Warn($"ReaderCallback:  {InstanceName}. {ex.Message}.");
+
+                    // tbd. Dispose session here?
                 }
             }
             catch(Exception ex)
             {
-                _logger.Warn($"ReaderCallback: {ex.Message}");
+                _logger.Warn($"ReaderCallback: {InstanceName}. {ex.Message}");
             }
         }
         public override void OpenDevice()
         {
-            if (null == _serialSession.SerialSession)
-            {
-                _logger.Warn($"Failed to open device {this.InstanceName}");
-                return;
-            }
+            _lastScanList = new List<ViewItem<byte[]>>(new ViewItem<byte[]>[_serialSession.GetNumberOfChannels()]);
+            _readerIAsyncResultList = new List<IAsyncResult>(new IAsyncResult[_thisDeviceSetup.Channels.Count]);
 
-            _lastScanList = new List<ViewerItem<byte[]>>(new ViewerItem<byte[]>[_serialSession.GetNumberOfChannels()]);
-
-            System.Threading.Thread.Sleep(100);
-            //int ch = 0;
             for (int ch = 0; ch < _serialSession.GetNumberOfChannels(); ch++)
             {
-                
                 var sr = new SerialReader(_serialSession.GetDataStream(), _serialSession.GetChannel(ch).GetIndex());
-                //readerAsyncCallback = new AsyncCallback(ReaderCallback);
-                //sr.BeginRead(minLen, readerAsyncCallback, ch);
                 _serialReaderList.Add(sr);
             }
             System.Threading.Thread.Sleep(10);
+
             // activate
             int ch1 = 0;
             foreach (var sl in _serialReaderList)
             {
                 AsyncCallback readerAsyncCallback = new AsyncCallback(ReaderCallback);
-                sl.BeginRead(minLen, readerAsyncCallback, ch1++);
+                _readerIAsyncResultList[ch1] = sl.BeginRead(minLen, readerAsyncCallback, ch1);
+                ch1++;
             }
-            //for (int i = 0; i < _serialSession.GetNumberOfChannels(); i++)
-            //{
-            //    _lastScanList.Add(null);
-            //}
 
-            _logger.Info($"Init success {InstanceName}. {_serialSession.GetNumberOfChannels()} channels. Dest:{_targetEp}");
+            _logger.Info($"Init success {InstanceName}. {_serialSession.GetNumberOfChannels()} channels. Dest:{ _thisDeviceSetup.DestEndPoint.ToIpEp()}");
 
         }
         public override void Dispose()
         {
-            //return;
             _InDisposeState = true;
-            //System.Threading.Thread.Sleep(5000);
-            //_logger.Debug("fin");
-            for (int i = 0; i < _serialReaderList.Count; i++)
-            {
-                //_serialReaderList[i].Dispose();
-            }
-            _logger.Debug($"Disposing {this.DeviceName}/Input, slot {_thisDeviceSetup.SlotNumber}");
+
+            var waitall = _readerIAsyncResultList.Select(i => i.AsyncWaitHandle).ToArray();
+            WaitHandle.WaitAll(waitall);
+
+            //_logger.Debug($"Disposing {this.DeviceName}/Input, slot {_thisDeviceSetup.SlotNumber}");
             //if (_serialSession.IsRunning())
-            //{
-            //    _deviceSession?.Stop();
-            //}
-            //_deviceSession.Stop();
-            //_deviceSession.GetDevice().Reset();
-            //_deviceSession.Dispose();
-
+            try
+            {
+                _serialSession.Stop();
+            }
+            catch (UeiDaq.UeiDaqException ex)
+            {
+                _logger.Debug($"Session stop() failed. {ex.Message}");
+            }
+            _serialSession.Dispose();
         }
-#if dont
-        [Obsolete]
-        private bool OpenDevices(string baseUrl, string deviceName)
-        {
-            _deviceSession = new Session();
-
-            foreach (var channel in Config.Instance.SerialChannels)
-            {
-                string finalUrl = baseUrl + channel.portname.ToString();
-                //string finalUrl = baseUrl + "Com0,1";
-                var port = _deviceSession.CreateSerialPort(finalUrl,
-                                    SerialPortMode.RS232,
-                                    SerialPortSpeed.BitsPerSecond250000,
-                                    SerialPortDataBits.DataBits8,
-                                    SerialPortParity.None,
-                                    SerialPortStopBits.StopBits1,
-                                    "");
-                _serialPorts.Add(port);
-            }
-
-            int numberOfChannels = _deviceSession.GetNumberOfChannels();
-            System.Diagnostics.Debug.Assert(numberOfChannels == Config.Instance.SerialChannels.Length);
-
-            _deviceSession.ConfigureTimingForMessagingIO(1000, 100.0);
-            _deviceSession.GetTiming().SetTimeout(5000); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
-            //_deviceSession.ConfigureTimingForSimpleIO();
-
-            {
-                _deviceSession.GetChannels();
-            }
-
-            for (int ch = 0; ch < numberOfChannels; ch++)
-            {
-                System.Threading.Thread.Sleep(10);
-                SerialReader sr = new SerialReader(_deviceSession.GetDataStream(), _deviceSession.GetChannel(ch).GetIndex());
-                _serialReaderList.Add(sr);
-                SerialWriter sw = new SerialWriter(_deviceSession.GetDataStream(), _deviceSession.GetChannel(ch).GetIndex());
-                //_serialWriterList.Add(sw);
-
-            }
-            _deviceSession.Start();
-
-            for (int ch = 0; ch < numberOfChannels; ch++)
-            {
-                System.Threading.Thread.Sleep(10);
-                readerAsyncCallback = new AsyncCallback(ReaderCallback);
-                readerIAsyncResult = _serialReaderList[ch].BeginRead(minLen, readerAsyncCallback, ch);
-            }
-
-            bool firstIteration = true;
-            foreach (SerialPort port in _serialPorts)
-            {
-                if (firstIteration)
-                {
-                    firstIteration = false;
-                    _logger.Info($"*** {DeviceName} init:");
-                }
-                int channleIndex = port.GetIndex();
-                _logger.Info($"Serial CH{channleIndex} init success. {port.GetMode()}  {port.GetSpeed()}.");////{c111.GetResourceName()}");
-            }
-
-            System.Threading.Thread.Sleep(500);
-            return true;
-        }
-#endif
     }
 }

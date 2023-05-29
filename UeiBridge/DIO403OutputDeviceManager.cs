@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using UeiBridge.Types;
 using System.Timers;
 using UeiBridge.Library;
+using UeiDaq;
 
 namespace UeiBridge
 {
@@ -11,57 +12,42 @@ namespace UeiBridge
     /// from the manual:
     /// ** 48-channel Digital I/O **
     /// </summary>
-    class DIO403OutputDeviceManager : OutputDevice //DioOutputDeviceManager
+    public class DIO403OutputDeviceManager : OutputDevice
     {
         public override string DeviceName => "DIO-403";
-        public override string InstanceName { get; }
 
-        //privates
-        log4net.ILog _logger = StaticMethods.GetLogger();
-        IConvert _attachedConverter;
-        const string _channelsString = "Do0:2";// Do0:2 - 3*8 first bits as 'out'
-        UeiDaq.Session _deviceSession;
-        UeiDaq.DigitalWriter _writer;
-        System.Collections.Generic.List<ViewerItem<UInt16>> _lastScanList;
+        private log4net.ILog _logger = StaticMethods.GetLogger();
+        private IConvert2<UInt16[]> _attachedConverter;
+        private IWriterAdapter<UInt16[]> _digitalWriter;
+        private System.Collections.Generic.List<ViewItem<UInt16>> _viewerItemist;
+        private Session _ueiSession;
+        private DeviceSetup _deviceSetup;
 
-        public DIO403OutputDeviceManager(DeviceSetup setup) : base(setup)
+        public DIO403OutputDeviceManager(DeviceSetup setup, IWriterAdapter<UInt16[]> digitalWriter, UeiDaq.Session session) : base(setup)
         {
-            InstanceName = $"{DeviceName}/Slot{ setup.SlotNumber}/Output";
+            this._digitalWriter = digitalWriter;
+            this._ueiSession = session;
+            this._deviceSetup = setup;
         }
-        public DIO403OutputDeviceManager() : base(null) // must have default c-tor
-        {
-        }
+        public DIO403OutputDeviceManager() { }// must have default c-tor
 
         public override void Dispose()
         {
+            _digitalWriter.Dispose();
+            CloseSession(_ueiSession);
             base.Dispose();
-
-            if (null != _writer)
-            {
-                _writer.Dispose();
-            }
-            if (null != _deviceSession)
-            {
-                _deviceSession.Stop();
-                _deviceSession.Dispose();
-            }
+            
         }
 
         public override bool OpenDevice()
         {
-            _attachedConverter = StaticMethods.CreateConverterInstance( _deviceSetup);
-            string cubeUrl = $"{_deviceSetup.CubeUrl}Dev{_deviceSetup.SlotNumber}/{_channelsString}";
-            _deviceSession = new UeiDaq.Session();
-            _deviceSession.CreateDOChannel(cubeUrl);
+            _attachedConverter = new DigitalConverter(); //DIO403Convert(_digitalWriter.OriginSession.GetNumberOfChannels());
 
-            _deviceSession.ConfigureTimingForSimpleIO();
-            _writer = new UeiDaq.DigitalWriter(_deviceSession.GetDataStream());
-
-            int noOfbits = _deviceSession.GetNumberOfChannels() * 8;
-            int firstBit = _deviceSession.GetChannel(0).GetIndex() * 8;
+            int noOfbits = _ueiSession.GetNumberOfChannels() * 8;
+            int firstBit = _ueiSession.GetChannel(0).GetIndex() * 8;
             _logger.Info($"Init success: {InstanceName}. Bits {firstBit}..{firstBit + noOfbits - 1} as output. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}"); // { noOfCh} output channels
 
-            _lastScanList = new System.Collections.Generic.List<ViewerItem<UInt16>>(new ViewerItem<UInt16>[_deviceSession.GetNumberOfChannels()]);
+            _viewerItemist = new System.Collections.Generic.List<ViewItem<UInt16>>(new ViewItem<UInt16>[_ueiSession.GetNumberOfChannels()]);
 
             Task.Factory.StartNew(() => OutputDeviceHandler_Task());
             _isDeviceReady = true;
@@ -71,13 +57,17 @@ namespace UeiBridge
         public override string [] GetFormattedStatus( TimeSpan interval)
         {
             System.Text.StringBuilder formattedString = new System.Text.StringBuilder("Output bits: ");
-            lock (_lastScanList)
+            lock (_viewerItemist)
             {
-                if (_lastScanList[0]?.timeToLive.Ticks > 0)
+                if (_viewerItemist[0]?.timeToLive.Ticks > 0)
                 {
-                    _lastScanList[0].timeToLive -= interval;
-                    foreach (var vi in _lastScanList)
+                    _viewerItemist[0].timeToLive -= interval;
+                    foreach (var vi in _viewerItemist)
                     {
+                        if (null==vi)
+                        {
+                            continue;
+                        }
                         formattedString.Append(Convert.ToString(vi.readValue, 2).PadLeft(8, '0'));
                         formattedString.Append("  ");
                     }
@@ -92,15 +82,15 @@ namespace UeiBridge
 
         protected override void HandleRequest(EthernetMessage request)
         {
-            var ls = _attachedConverter.EthToDevice(request.PayloadBytes);
+            var ls = _attachedConverter.DownstreamConvert( request.PayloadBytes);
             ushort[] scan = ls as ushort[];
             System.Diagnostics.Debug.Assert( scan != null);
-            _writer.WriteSingleScanUInt16( scan);
-            lock (_lastScanList)
+            _digitalWriter.WriteSingleScan( scan);
+            lock (_viewerItemist)
             {
                 for (int ch = 0; ch < scan.Length; ch++)
                 {
-                    _lastScanList[ch] = new ViewerItem<UInt16>(scan[ch], timeToLiveMs: 5000);
+                    _viewerItemist[ch] = new ViewItem<UInt16>(scan[ch], timeToLiveMs: 5000);
                 }
             }
         }

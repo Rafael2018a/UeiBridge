@@ -1,0 +1,50 @@
+﻿<Window x:Class="UeiBridgeSetup.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:UeiBridgeSetup"
+        xmlns:views="clr-namespace:UeiBridgeSetup.Views"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="700" Width="1134" Closing="Window_Closing">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="100"/>
+            <RowDefinition Height="30"/>
+            <RowDefinition/>
+            <RowDefinition Height="30"/>
+        </Grid.RowDefinitions>
+
+        <Menu Grid.Row="0" FontSize="18">
+            <MenuItem Header="_File">
+                <MenuItem Header="Load setup file" Command="{Binding OpenFileCommand}"/>
+                <!--<MenuItem Header="Open default file" Command="{Binding AddCommand}" CommandParameter="param"/>-->
+                <MenuItem Header="{Binding MenuItemHeader_Save}" Command="{Binding SaveFileCommand}" />
+                <MenuItem Header="{Binding MenuItemHeader_SaveAs}"/>
+                <MenuItem Header="Close"/>
+            </MenuItem>
+        </Menu>
+
+        <Grid Grid.Row="1" Background="#FF6A829A">
+            <StackPanel   Orientation="Horizontal" >
+                <TextBlock Text="UeiBridge settings" Margin="15" FontSize="26" VerticalAlignment="Center"/>
+                <Image Source="/Images/commercial-aircrft - Tailored 2.png" />
+                <TextBlock Text="Version 1.0" FontSize="18" VerticalAlignment="Bottom" Margin="10"/>
+            </StackPanel>
+        </Grid>
+        <StatusBar Grid.Row="2">
+            <StatusBarItem FontSize="18">
+                <StatusBarItem.Content>
+                    <TextBlock Text="{Binding MidStatusBarMessage}"/>
+                </StatusBarItem.Content>
+            </StatusBarItem>
+        </StatusBar>
+
+        <views:SystemSetupView Grid.Row="3" x:Name="_systemSetupView"/>
+
+        <StatusBar Grid.Row="4">
+            <StatusBarItem FontSize="18" Content="(c) IAI Malat. Dept 2288. Rafi Ne'eman."/>
+        </StatusBar>
+    </Grid>
+</Window>

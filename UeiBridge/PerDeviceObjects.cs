@@ -1,4 +1,6 @@
 ﻿using UeiDaq;
+using UeiBridge.Library;
+
 namespace UeiBridge
 {
     /// <summary>
@@ -6,21 +8,28 @@ namespace UeiBridge
     /// A card might have input or output manager or both
     /// reference to udp-reader or udp-writer is also included, (even thought each device manager have its own reference)
     /// </summary>
-    class PerDeviceObjects
+    public class PerDeviceObjects
     {
         public string DeviceName { get; private set; }
         public int SlotNumber { get; private set; }
-        public int CubeId { get; private set; }
-        public InputDevice InputDeviceManager { get; private set; }
-        public OutputDevice OutputDeviceManager { get; private set; }
-        public UdpReader UdpReader { get; private set; }
-        public UdpWriter UdpWriter { get; private set; }
-        public SL508Session SerialSession { get; private set; }
-        public PerDeviceObjects(string deviceName, int slotNumber, int cubeId)
+        public string CubeUrl { get; private set; }
+        public InputDevice InputDeviceManager { get;  set; }
+        public OutputDevice OutputDeviceManager { get; set; }
+        public UdpWriter UdpWriter { get; set; }
+        //public SL508Session SerialSession { get; set; }
+        public PerDeviceObjects(string deviceName, int slotNumber, string cubeUrl)
         {
             this.DeviceName = deviceName;
             this.SlotNumber = slotNumber;
-            this.CubeId = cubeId;
+            this.CubeUrl = cubeUrl;
+        }
+        public PerDeviceObjects(UeiDeviceInfo deviceEx)//, OutputDevice outDevice, UdpReader reader)
+        {
+            this.DeviceName = deviceEx.DeviceName;
+            this.SlotNumber = deviceEx.DeviceSlot;
+            this.CubeUrl = deviceEx.CubeUrl;
+            //this.OutputDeviceManager = outDevice;
+            //this.UdpReader = reader;
         }
         public void Update(InputDevice inputDevice, UdpWriter udpWriter, int slotNumber)
         {
@@ -29,19 +38,19 @@ namespace UeiBridge
             this.InputDeviceManager = inputDevice;
             this.UdpWriter = udpWriter;
         }
-        public void Update(OutputDevice outputDevice, UdpReader udpReader, int slotNumber)
-        {
-            System.Diagnostics.Debug.Assert(outputDevice.DeviceName == this.DeviceName);
-            System.Diagnostics.Debug.Assert(slotNumber == this.SlotNumber);
-            this.OutputDeviceManager = outputDevice;
-            this.UdpReader = udpReader;
+        //public void Update(OutputDevice outputDevice, UdpReader udpReader, int slotNumber)
+        //{
+        //    System.Diagnostics.Debug.Assert(outputDevice.DeviceName == this.DeviceName);
+        //    System.Diagnostics.Debug.Assert(slotNumber == this.SlotNumber);
+        //    this.OutputDeviceManager = outputDevice;
+        //    this.UdpReader = udpReader;
 
-        }
-        public void Update(SL508Session serialSession, int slotNumber)
-        {
-            System.Diagnostics.Debug.Assert(slotNumber == this.SlotNumber);
-            this.SerialSession = serialSession;
-        }
+        //}
+        //public void Update(SL508Session serialSession, int slotNumber)
+        //{
+        //    System.Diagnostics.Debug.Assert(slotNumber == this.SlotNumber);
+        //    this.SerialSession = serialSession;
+        //}
         //public PerDeviceObjects(InputDevice inputDevice, UdpWriter udpWriter, SL508Session serialSession)
         //{
 

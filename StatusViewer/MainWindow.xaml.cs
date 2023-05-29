@@ -113,13 +113,13 @@ namespace StatusViewer
             //dbgViewProcess = Process.Start(psi);
 
             StartCommand_Executed(this, null); // simulate 'start' command (as if user clicked 'start' right after startup)
-
+#if testonly
             Task.Factory.StartNew(() =>
             {
-                for (int i = 0; i < 1000; i++)
+                for (int i = 0; i < 10; i++)
                 {
                     UdpClient udpClient = new UdpClient();
-                    System.Threading.Thread.Sleep(100);
+                    System.Threading.Thread.Sleep(200);
 
                     string[] slist = new string[2];
                     slist[0]=  $"Regular message {i}";
@@ -146,6 +146,7 @@ namespace StatusViewer
                     }
                 }
             });
+#endif
         }
         private List<IPAddress> GetLocalIpList()
         {
@@ -293,12 +294,9 @@ namespace StatusViewer
         private void StartMulticast()
         {
             IPAddress mcAddress = null;
-            //int mcPort = -1;
-
-            
-            string mcIp = ConfigurationSettings.AppSettings["multicastIp"];
+            string mcIp = ConfigurationManager.AppSettings["multicastIp"];
             mcAddress = (mcIp != null) ? IPAddress.Parse(mcIp) : IPAddress.Parse("239.10.10.17"); // get from config or use default
-            string mcPort1 = ConfigurationSettings.AppSettings["multicastPort"];
+            string mcPort1 = ConfigurationManager.AppSettings["multicastPort"];
             mcPort = (mcPort1 != null) ? Int32.Parse(mcPort1) : 5093; // get from config or use default
             AppServices.WriteToTrace(string.Format("Multicast EP: {0}:{1}", mcAddress, mcPort));
 
@@ -363,6 +361,19 @@ namespace StatusViewer
                     PropertyChanged(this, new PropertyChangedEventArgs("MachineState"));
                     PropertyChanged(this, new PropertyChangedEventArgs("AtInitialState"));
                 }
+            }
+        }
+
+        public string AppVersion
+        {
+            get 
+            {
+                var EntAsm = System.Reflection.Assembly.GetEntryAssembly();//.GetName().Version;
+                System.IO.FileInfo fi = new System.IO.FileInfo(EntAsm.Location);
+                //_logger.Info($"UEI Bridge. Version {EntAsm.GetName().Version.ToString(3)}. Build time: {fi.LastWriteTime.ToString()}");
+                string result = $"StatusViewer. Version {EntAsm.GetName().Version.ToString(3)}";
+                return result;
+
             }
         }
 

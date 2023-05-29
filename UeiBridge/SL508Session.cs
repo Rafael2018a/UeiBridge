@@ -4,17 +4,55 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UeiDaq;
+using UeiBridge.Library;
 
 namespace UeiBridge
 {
-    class SL508Session : IDisposable
+    public class SessionEx : UeiDaq.Session
+    {
+        //public bool IsValidSession { get; set; } = false;
+        public SessionEx(SL508892Setup _thisDeviceSetup)
+        {
+            //log4net.ILog _logger = StaticMethods.GetLogger();
+            
+            {
+                foreach (var channel in _thisDeviceSetup.Channels)
+                {
+                    string finalUrl = $"{_thisDeviceSetup.CubeUrl}Dev{_thisDeviceSetup.SlotNumber}/Com{channel.ChannelIndex}";
+                    var port = CreateSerialPort(finalUrl,
+                                        channel.mode,
+                                        channel.Baudrate,
+                                        SerialPortDataBits.DataBits8,
+                                        channel.parity,
+                                        channel.stopbits,
+                                        "");
+                }
+
+                System.Diagnostics.Debug.Assert( GetNumberOfChannels() == _thisDeviceSetup.Channels.Count);
+                //System.Diagnostics.Debug.Assert(numberOfChannels == Config.Instance.SerialChannels.Length);
+
+                ConfigureTimingForMessagingIO(1000, 100.0);
+                GetTiming().SetTimeout(5000); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
+
+                //serialSession.ConfigureTimingForSimpleIO();
+
+                Start();
+
+                //IsValidSession = true;
+            }
+        }
+    }
+
+    public class SL508Session1 : IDisposable
     {
         private SL508892Setup _thisDeviceSetup;
         private Session _serialSession = new Session();
 
-        public Session SerialSession => _serialSession; 
+        public Session SerialSession => _serialSession;
 
-        public SL508Session(SL508892Setup setup)
+        //public int SlotNumber { get { return _thisDeviceSetup.SlotNumber; } }
+
+        public SL508Session1(SL508892Setup setup)
         {
             System.Diagnostics.Debug.Assert(null != setup);
             this._thisDeviceSetup = setup;
@@ -23,13 +61,13 @@ namespace UeiBridge
         private void OpenSession()
         {
             System.Diagnostics.Debug.Assert(null != _thisDeviceSetup);
-            //Session serialSession = new Session();
+            
             log4net.ILog _logger = StaticMethods.GetLogger();
             try
             {
                 foreach (var channel in _thisDeviceSetup.Channels)
                 {
-                    string finalUrl = $"{_thisDeviceSetup.CubeUrl}Dev{_thisDeviceSetup.SlotNumber}/{channel.portname}";
+                    string finalUrl = $"{_thisDeviceSetup.CubeUrl}Dev{_thisDeviceSetup.SlotNumber}/Com{channel.ChannelIndex}";
                     var port = _serialSession.CreateSerialPort(finalUrl,
                                         channel.mode,
                                         channel.Baudrate,
@@ -39,7 +77,7 @@ namespace UeiBridge
                                         "");
                 }
 
-                System.Diagnostics.Debug.Assert(_serialSession.GetNumberOfChannels() == _thisDeviceSetup.Channels.Length);
+                System.Diagnostics.Debug.Assert(_serialSession.GetNumberOfChannels() == _thisDeviceSetup.Channels.Count);
                 //System.Diagnostics.Debug.Assert(numberOfChannels == Config.Instance.SerialChannels.Length);
 
                 _serialSession.ConfigureTimingForMessagingIO(1000, 100.0);
@@ -49,10 +87,13 @@ namespace UeiBridge
 
                 _serialSession.Start();
 
+                _logger.Info( $" == Serial channels for cube {_thisDeviceSetup.CubeUrl}, slot {_thisDeviceSetup.SlotNumber}");
                 foreach (Channel c in _serialSession.GetChannels())
                 {
                     SerialPort sp1 = c as SerialPort;
-                    _logger.Debug($"CH{sp1.GetIndex() }, Speed{sp1.GetSpeed()}");
+                    string s1 = sp1.GetSpeed().ToString();
+                    string s2 = s1.Replace("BitsPerSecond", "");
+                    _logger.Debug($"CH:{sp1.GetIndex()}, Rate {s2} bps, Mode {sp1.GetMode()}.");
                 }
             }
             catch(UeiDaqException ex)

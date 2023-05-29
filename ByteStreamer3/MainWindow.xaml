@@ -13,16 +13,11 @@
 
     <Grid>
         <TabControl Margin="5">
-            <TabItem Header="Play single file" >
+            <TabItem Header="Play single file">
                 <Grid ShowGridLines="False">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="3*"></RowDefinition>
-                        <RowDefinition Height="7*"></RowDefinition>
-                    </Grid.RowDefinitions>
                     <Grid.Resources>
                         <Style TargetType="TextBlock">
                             <Setter Property="Margin" Value="5"/>
-                            <!--<Setter Property="Width" Value="100"/>-->
                         </Style>
                         <Style TargetType="TextBox">
                             <Setter Property="Height" Value="22"/>
@@ -32,56 +27,78 @@
                             <Setter Property="Margin" Value="5"/>
                             <Setter Property="Padding" Value="10,0,10,0"/>
                             <Setter Property="Height" Value="22"/>
-                            <!--<Setter Property="Background" Value="LightYellow"/>-->
                         </Style>
                         <Style TargetType="CheckBox">
                             <Setter Property="Margin" Value="5"/>
-                        </Style>
-                        <Style TargetType="StackPanel">
-                            <!--<Setter Property="Orientation" Value="Horizontal"/>-->
+                            <Setter Property="VerticalAlignment" Value="Center"/>
                         </Style>
                     </Grid.Resources>
-                    <Grid.ColumnDefinitions>
-                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="3*"></RowDefinition>
+                        <RowDefinition Height="7*"></RowDefinition>
+                    </Grid.RowDefinitions>
                     <GroupBox BorderBrush="Gray" Margin="5" BorderThickness="1" Header="Control" Grid.ColumnSpan="2">
                         <StackPanel Grid.Column="1" Orientation="Vertical">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="Folder" Margin="5"/>
-                                <TextBox MinWidth="300" Margin="5" Text="{Binding PlayFolder}" IsReadOnly="True" BorderBrush="{Binding PlayFolderBoxBorderColor}"/>
+                                <TextBox MinWidth="400" Margin="5" Text="{Binding PlayFolderString}" IsReadOnly="True" BorderBrush="{Binding PlayFolderBoxBorderColor}"/>
                                 <Button Content="..." Margin="5" Command="{Binding BrowseFolderCommand}"/>
-                                <TextBlock Text="{Binding FilesToPlayMessage}" Margin="5"/>
                             </StackPanel>
                             <Separator/>
                             <StackPanel Orientation="Horizontal">
-                                <Button Content="Start" Command="{Binding StartPlayCommand}" />
-                                <Button Content="Stop" IsEnabled="False"/>
-                                <CheckBox Content="Repeat" VerticalAlignment="Center" />
-                                <CheckBox Content="Play one by one" VerticalAlignment="Center" IsChecked="{Binding IsPlayOneByOne}"/>
+                                <Button Command="{Binding StartPlayCommand}" Height="25">
+                                    <Button.Content>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Image Source="/Images/icons8-play-48.png" Height="20" />
+                                            <TextBlock Text="Play" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button.Content>
+                                </Button>
+                                <Button Command="{Binding StopPlayCommand}" Height="25">
+                                    <Button.Content>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Image Source="/Images/icons8-stop-48.png" Height="20"/>
+                                            <TextBlock Text="Stop" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button.Content>
+                                </Button>
+                                <Button Command="{Binding ReloadFilesCommand}" Height="25">
+                                    <Button.Content>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Image Source="/Images/icons8-replay-48.png" Height="20"/>
+                                            <TextBlock Text="Reload" VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </Button.Content>
+                                </Button>
+                                <CheckBox Content="Repeat"  IsChecked="{Binding IsRepeat}"/>
+                                <CheckBox Content="Play one by one" IsChecked="{Binding IsPlayOneByOne}"/>
                             </StackPanel>
                         </StackPanel>
                     </GroupBox>
                     <GroupBox x:Name="Playlist" Grid.Row="1" BorderBrush="Gray" Margin="5,0,5,0" BorderThickness="1" Header="Play list" >
-                        <ListView x:Name="NowPlayingListView" ItemsSource="{Binding Path=PlayerViewModel.PlayList}" BorderThickness="0">
-                                <ListView.ItemTemplate>
-                                    <DataTemplate>
-                                        <StackPanel Orientation="Horizontal">
-                                            <CheckBox/>
-                                            <!--<TextBlock Text="File: />-->
-                                            <TextBlock Text="{Binding Name}" FontWeight="Bold" VerticalAlignment="Center" />
-                                            <!--<TextBlock Text="Played blocks: "/>-->
-                                            <!--<TextBlock Text="{Binding PlayedBlocks}" FontWeight="Bold"/>-->
-                                            <!--<TextBlock Text=" (" />
-                                            <TextBlock Text="{Binding Mail}" TextDecorations="Underline" Foreground="Blue" Cursor="Hand" />
-                                            <TextBlock Text=")" />-->
-                                        </StackPanel>
-                                    </DataTemplate>
-                                </ListView.ItemTemplate>
-                                
-                            </ListView>
-                        
+                        <ScrollViewer>
+                            <ListView x:Name="NowPlayingListView" ItemsSource="{Binding Path=PlayFileVMList}" BorderThickness="0">
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <CheckBox IsChecked="{Binding IsItemChecked}"/>
+                                        <TextBlock Text="{Binding Filename}" FontWeight="Bold" VerticalAlignment="Center" />
+                                        <ContentControl Width="10"/>
+                                        <TextBlock Text="{Binding FixedDesc}" VerticalAlignment="Center" />
+                                        <ContentControl Width="20"/>
+                                        <TextBlock Text="{Binding VarDesc}" VerticalAlignment="Center"/>
+                                        <TextBlock Text="0" VerticalAlignment="Center"/>
+                                        <ContentControl Width="2"/>
+                                        <ProgressBar Minimum="0" Maximum="{Binding NoOfCycles}" Value="{Binding PlayedBlocksCount}" Width="100" Height="5" VerticalAlignment="Center"/>
+                                        <ContentControl Width="2"/>
+                                        <TextBlock Text="{Binding NoOfCycles}" VerticalAlignment="Center"/>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                        </ListView>
+                        </ScrollViewer>
                     </GroupBox>
                 </Grid>
-
             </TabItem>
             <TabItem Header="Play multiple files">
                 <!--<Label Content="Content goes here..." />-->
@@ -139,7 +156,7 @@
                                 </StackPanel>
                                 <StackPanel  Margin="0,8,0,8">
                                     <TextBlock Text="Destination adderss" />
-                                    <TextBox MinWidth="100" Text="{Binding DestinationAddress}"/>
+                                    <!--<TextBox MinWidth="100" Text="{Binding DestinationAddress}"/>-->
                                     <TextBlock Text="Port" Width="auto"/>
                                     <TextBox Width="50"/>
                                 </StackPanel>
@@ -183,8 +200,7 @@
 
                 <!--</Border>-->
             </TabItem>
-
-            <TabItem Header="Play random block" >
+            <TabItem Header="Play random block"  IsEnabled="False">
             </TabItem>
         </TabControl>
         <!--</Border>-->

@@ -41,7 +41,7 @@ namespace UeiBridge
         }
     }
 #endif
-    class UdpWriter : ISend<SendObject>, IDisposable
+    public class UdpWriter : ISend<SendObject>, IDisposable
     {
         log4net.ILog _logger = StaticMethods.GetLogger();
         Socket _sendSocket;

@@ -1,0 +1,247 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{05D73F32-5FB8-49FE-BE5B-AF065D07C0C1}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <RootNamespace>UeiBridgeSetup</RootNamespace>
+    <AssemblyName>UeiBridgeSetup</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+    <WarningLevel>4</WarningLevel>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\bin64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>true</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Images\dot_net_system_folder_icon_250657.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xaml">
+      <RequiredTargetFramework>4.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="UeiDaqDNet, Version=2.5.0.58033, Culture=neutral, PublicKeyToken=ea46001077e283ec, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\3rdParty\x64\UeiDaqDNet.dll</HintPath>
+    </Reference>
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+  </ItemGroup>
+  <ItemGroup>
+    <ApplicationDefinition Include="App.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </ApplicationDefinition>
+    <Compile Include="Utilities\Converters.cs" />
+    <Compile Include="Utilities\DelegateCommand.cs" />
+    <Compile Include="ViewModels\AI201ViewModel.cs" />
+    <Compile Include="ViewModels\AO308ViewModel.cs" />
+    <Compile Include="ViewModels\DIO403ViewModel.cs" />
+    <Compile Include="ViewModels\DIO470ViewModel.cs" />
+    <Compile Include="ViewModels\SL508ViewModel.cs" />
+    <Compile Include="ViewModels\SystemSetupViewModel.cs" />
+    <Compile Include="ViewModels\EndPointViewModel.cs" />
+    <Compile Include="ViewModels\MainViewModel.cs" />
+    <Compile Include="ViewModels\CubeSetupViewModel.cs" />
+    <Compile Include="ViewModels\UeiSlotViewModel.cs" />
+    <Compile Include="ViewModels\ViewModelBase.cs" />
+    <Compile Include="Views\AddCubeDialog.xaml.cs">
+      <DependentUpon>AddCubeDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\AI201View.xaml.cs">
+      <DependentUpon>AI201View.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\AO308View.xaml.cs">
+      <DependentUpon>AO308View.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\DIO403View.xaml.cs">
+      <DependentUpon>DIO403View.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\DIO470View.xaml.cs">
+      <DependentUpon>DIO470View.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\EndPointView.xaml.cs">
+      <DependentUpon>EndPointView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SL508View.xaml.cs">
+      <DependentUpon>SL508View.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\SystemSetupView.xaml.cs">
+      <DependentUpon>SystemSetupView.xaml</DependentUpon>
+    </Compile>
+    <Page Include="MainWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Compile Include="App.xaml.cs">
+      <DependentUpon>App.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="MainWindow.xaml.cs">
+      <DependentUpon>MainWindow.xaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
+    <Page Include="Views\AddCubeDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\AI201View.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\AO308View.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\DIO403View.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\DIO470View.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\EndPointView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\SL508View.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Views\SystemSetupView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Properties\AssemblyInfo.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\cube_a.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\icons8-network-interface-card-68.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\commercial-aircrft - Tailored 2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\icons8-plus-math-48.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\icons8-subtract-48.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\UeiLibrary\UeiLibrary.csproj">
+      <Project>{73ac748f-67f0-4adc-a6cb-0e497f51e6ab}</Project>
+      <Name>UeiLibrary</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\uei_product_io_dna_sl_508.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\uei_product_io_dna_ao_308.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\uei_product_chassis_dna_ppc8_1g.jpg" />
+    <Resource Include="Images\uei_product_chassis_dna_ppc8_1g.png" />
+    <Resource Include="Images\uei_product_io_dna_ai_201_100.jpg" />
+    <Resource Include="Images\uei_product_io_dna_ai_201_100.orig.jpg" />
+    <Resource Include="Images\uei_product_io_dna_ao_308.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\uei_product_io_dna_dio_403.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\uei_product_io_dna_dio_470.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\uei_product_io_dna_dio_470.orig.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\uei_product_io_dna_sl_508.orig.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\uei_product_io_dna_ao_308.orig.png" />
+    <Resource Include="Images\uei_product_io_dna_dio_403.orig.jpg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\dot_net_system_folder_icon_250657.ico" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

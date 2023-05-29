@@ -7,22 +7,22 @@ namespace StatusViewer
     public enum ProjMessageType { Counter = 0, SimpleLog =1,  Text=2, Invalid};
     public class StatusEntryModel
     {
-        int _severity;
+        //int _severity;
         ProjMessageType _messageType;
-        Int64 _int64value;
+        //Int64 _int64value;
         string [] _stringValue;
-        double _projTimeInSec;
-        double fracFactor = Math.Pow(2, 32) - 1; // tbd. not sure about -1
+        //double _projTimeInSec;
+        //double fracFactor = Math.Pow(2, 32) - 1; 
         string _desc;
         StatusTrait _trait;
 
         [Obsolete]
         public ProjMessageType MessageType { get => _messageType; }
-        [Obsolete]
-        public long Int64value { get => _int64value; }
+        //[Obsolete]
+        //public long Int64value { get => _int64value; }
         public string [] StringValue { get => _stringValue; }
-        [Obsolete]
-        public double ProjTimeInSec { get => _projTimeInSec; }
+        //[Obsolete]
+        //public double ProjTimeInSec { get => _projTimeInSec; }
         public string Desc { get => _desc; }
         public StatusTrait Trait { get => _trait; }
 

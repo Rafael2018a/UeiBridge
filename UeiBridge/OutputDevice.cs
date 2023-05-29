@@ -5,79 +5,67 @@ using System.Threading.Tasks;
 using UeiDaq;
 using UeiBridge.Types;
 using UeiBridge.Library;
+using System.Net;
 
-/// <summary>
-/// All files in project might refer to this file.
-/// Types in this file might NOT refer to types in any other file.
-/// </summary>
 namespace UeiBridge
 {
-    class ViewerItem <T>
+    /// <summary>
+    /// Parent class for all [x]outputDeviceManger classes.
+    /// </summary>
+    public abstract class OutputDevice : IDeviceManager, IDisposable, IEnqueue<byte[]> // IEnqueue<DeviceRequest>,
     {
-        public T readValue;
-        public TimeSpan timeToLive;
-
-        public ViewerItem(T readValue, int timeToLiveMs)
-        {
-            this.readValue = readValue;
-            this.timeToLive = TimeSpan.FromMilliseconds(timeToLiveMs);
-        }
-    }
-
-    public abstract class OutputDevice : IDeviceManager,  IDisposable, IEnqueue<byte[]> // IEnqueue<DeviceRequest>,
-    {
-        #region abstracts properties
         public abstract string DeviceName { get; }
-        public abstract string InstanceName { get; }
-        #endregion
-        #region abstract methods
         public abstract bool OpenDevice();
+        public abstract string[] GetFormattedStatus(TimeSpan interval);
         protected abstract void HandleRequest(EthernetMessage request);
-        public abstract string [] GetFormattedStatus( TimeSpan interval);
-        #endregion
-        #region protected fields
-        protected string _caseUrl; // remove?
-        protected DeviceSetup _deviceSetup; // from config
-        protected bool _isDeviceReady=false;
-        //protected DateTime _publishTime = DateTime.Now;
-        #endregion
-        #region privates
-        BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
-        log4net.ILog _logger = StaticMethods.GetLogger();
-        //System.Timers.Timer _resetLastScanTimer = new System.Timers.Timer(1000);
-        bool _disposeStarted = false;
-        #endregion
 
+        public string InstanceName { get; private set; }
+        //public int SlotNumber { get; private set; }
+        //public string CubeUrl { get; private set; }
+        //public int CubeId { get; private set; }
+        public UeiDeviceInfo DeviceInfo { get; private set; }
+        
+        protected bool _isDeviceReady = false;
+        private BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
+        private log4net.ILog _logger = StaticMethods.GetLogger();
+
+        protected OutputDevice() { }
         protected OutputDevice(DeviceSetup deviceSetup)
         {
-            _deviceSetup = deviceSetup;
-            //_resetLastScanTimer.Elapsed += resetLastScanTimer_Elapsed;
-            //_resetLastScanTimer.AutoReset = true;
-            //_resetLastScanTimer.Enabled = true;
+            InstanceName = deviceSetup.GetInstanceName() + "/Output";
+            //this.SlotNumber = deviceSetup.SlotNumber;
+            //this.CubeUrl = deviceSetup.CubeUrl;
+
+            //IPAddress ipa = Config2.CubeUriToIpAddress(this.CubeUrl);
+            //if (null != ipa)
+            //{
+            //    CubeId = ipa.GetAddressBytes()[3];
+            //}
+            //else
+            //{
+            //    CubeId = -1;
+            //}
+
+            DeviceInfo = deviceSetup.GetDeviceInfo();
         }
 
-        //protected abstract void resetLastScanTimer_Elapsed(object sender, System.Timers.ElapsedEventArgs e);
-
         /// <summary>
-        /// Enqueue message from Ethernet
+        /// Change byte-message to 'EthernetMessage' and push to message-loop-queue
         /// </summary>
-        /// <param name="m"></param>
         public virtual void Enqueue(byte[] m)
         {
-            if (_disposeStarted)
+            if (_dataItemsQueue2.IsCompleted)
+            {
                 return;
+            }
 
-            //string errorString;
             try
             {
                 EthernetMessage em = EthernetMessage.CreateFromByteArray(m, MessageWay.downstream);
                 System.Diagnostics.Debug.Assert(em != null);
-                if (!_dataItemsQueue2.IsCompleted)
-                {
-                    _dataItemsQueue2.Add(em);
-                }
+                _dataItemsQueue2.Add(em);
             }
-            catch( ArgumentException ex)
+            catch (Exception ex)
             {
                 _logger.Warn($"Incoming byte message error. {ex.Message}. message dropped.");
             }
@@ -88,7 +76,6 @@ namespace UeiBridge
         /// </summary>
         protected void OutputDeviceHandler_Task()
         {
-           // _logger.Debug($"OutputDeviceHandler_Task start. {InstanceName}");
             // message loop
             while (false == _dataItemsQueue2.IsCompleted)
             {
@@ -96,49 +83,68 @@ namespace UeiBridge
 
                 if (null == incomingMessage) // end task token
                 {
+                    _dataItemsQueue2.CompleteAdding();
                     break;
                 }
 
-                // verify card type
-                int cardId = StaticMethods.GetCardIdFromCardName(this.DeviceName);
-                if ( cardId != incomingMessage.CardType)
+                // verify internal consistency
+                if (false == incomingMessage.InternalValidityTest())
+                {
+                    _logger.Warn("Invalid message. rejected");
+                    continue;
+                }
+                // verify valid card type
+                int cardId = DeviceMap2.GetCardIdFromCardName(this.DeviceName);
+                if (cardId != incomingMessage.CardType)
                 {
                     _logger.Warn($"{InstanceName} wrong card id {incomingMessage.CardType} while expecting {cardId}. message dropped.");
                     continue;
                 }
-                // verify payload length
-                // tbd
-
                 // verify slot number
-                if (incomingMessage.SlotNumber != this._deviceSetup.SlotNumber)
+                if (incomingMessage.SlotNumber != this.DeviceInfo.DeviceSlot)
                 {
                     _logger.Warn($"{InstanceName} wrong slot number ({incomingMessage.SlotNumber}). incoming message dropped.");
                     continue;
                 }
-                if (_dataItemsQueue2.Count ==  _dataItemsQueue2.BoundedCapacity)
+                // alert if items lost
+                if (_dataItemsQueue2.Count == _dataItemsQueue2.BoundedCapacity)
                 {
                     _logger.Warn($"Input queue items = {_dataItemsQueue2.Count}");
                 }
+
+                // finally, Handle message
                 if (_isDeviceReady)
                 {
                     HandleRequest(incomingMessage);
                 }
                 else
                 {
-                    _logger.Warn($"Device {DeviceName} not ready. message dropped.");
+                    _logger.Warn($"Device {DeviceName} not ready. message rejected.");
                 }
             }
-            //_logger.Debug($"OutputDeviceHandler_Task Fin. {InstanceName}");
+        }
+
+        public static void CloseSession(Session theSession)
+        {
+            if (null != theSession)
+            {
+                if (theSession.IsRunning())
+                {
+                    theSession.Stop();
+                }
+                theSession.Dispose();
+            }
         }
 
         public virtual void Dispose()
         {
-            _disposeStarted = true;
-            _dataItemsQueue2.Add(null); // end task token
+            _logger.Debug($"Device manager {InstanceName} Disposed");
+        }
+        public virtual void HaltMessageLoop()
+        {
+            _dataItemsQueue2.Add(null); // end task token (first, free Take() api and then apply CompleteAdding()
             Thread.Sleep(100);
             _dataItemsQueue2.CompleteAdding();
-            _logger.Debug($"Disposing {_deviceSetup.DeviceName}/Output, slot {_deviceSetup.SlotNumber}");
-            
         }
     }
 }

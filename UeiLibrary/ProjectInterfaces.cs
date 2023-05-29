@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UeiDaq;
 
 namespace UeiBridge.Library
 {
@@ -10,13 +11,8 @@ namespace UeiBridge.Library
     {
 
     }
-    public interface IAnalogWriter
-    {
-        void WriteSingleScan(double[] scen);
-        int NumberOfChannels { get; }
-    }
-    public interface DigitalWrite
-    {
-        bool WriteScan(UInt16[] scan);
-    }
+    //public interface IDigitalWriter
+    //{
+    //    bool WriteScan(UInt16[] scan);
+    //}
 }

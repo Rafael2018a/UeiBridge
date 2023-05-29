@@ -1,0 +1,77 @@
+﻿using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace ByteStreamer3
+{
+    /// <summary>
+    /// ViewModel for JFileAux object
+    /// </summary>
+    class PlayFileViewModel : INotifyPropertyChanged
+    {
+        #region === publics ===
+        public event PropertyChangedEventHandler PropertyChanged;
+        public bool IsItemChecked
+        {
+            get => _isItemChecked;
+            set
+            {
+                _isItemChecked = value;
+                PlayFile.JFileObject.Header.EnablePlay = value;
+                RaisePropertyChangedEvent("IsItemChecked");
+            }
+        }
+        public JFileAux PlayFile { get; private set; }
+        public int PlayedBlocksCount
+        {
+            get => _playedBlocksCount;
+            set
+            {
+                _playedBlocksCount = value;
+                RaisePropertyChangedEvent("PlayedBlocksCount");
+            }
+        }
+        public string Filename { get; set; }
+        public string FixedDesc { get; private set; }
+        public string VarDesc
+        {
+            get => _varDesc;
+            set
+            {
+                _varDesc = value;
+                RaisePropertyChangedEvent("VarDesc");
+            }
+        }
+        public int NoOfCycles => PlayFile.JFileObject.Header.NumberOfCycles;
+        #endregion
+
+        #region === privates ===
+        private string _varDesc;
+        private int _playedBlocksCount;
+        private bool _isItemChecked = true;
+        #endregion
+
+        void RaisePropertyChangedEvent(string propName)
+        {
+            if (PropertyChanged != null)
+                PropertyChanged(this, new PropertyChangedEventArgs(propName));
+        }
+
+        public PlayFileViewModel(JFileAux playFile)
+        {
+            this.PlayFile = playFile;
+            Filename = PlayFile.PlayFileInfo.Name;
+
+            var ip = System.Net.IPAddress.Parse(PlayFile.JFileObject.Header.DestIp);
+            var destEp = new System.Net.IPEndPoint(ip, PlayFile.JFileObject.Header.DestPort);
+
+            FixedDesc = $"Dest: {destEp}";
+
+            IsItemChecked = playFile.JFileObject.Header.EnablePlay;
+        }
+
+    }
+}
