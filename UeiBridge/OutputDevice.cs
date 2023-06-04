@@ -146,5 +146,10 @@ namespace UeiBridge
             Thread.Sleep(100);
             _dataItemsQueue2.CompleteAdding();
         }
+
+        protected void EmitInitMessage( string deviceMessage)
+        {
+            _logger.Info($"Cube{DeviceInfo.CubeId}/Slot{DeviceInfo.DeviceSlot}: {deviceMessage}");
+        }
     }
 }

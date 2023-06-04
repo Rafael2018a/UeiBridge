@@ -44,7 +44,7 @@
         <views:SystemSetupView Grid.Row="3" x:Name="_systemSetupView"/>
 
         <StatusBar Grid.Row="4">
-            <StatusBarItem FontSize="18" Content="(c) IAI Malat. Dept 2288. Rafi Ne'eman."/>
+            <StatusBarItem FontSize="18" Content="(c) IAI Malat. Dept 2288. R.N."/>
         </StatusBar>
     </Grid>
 </Window>

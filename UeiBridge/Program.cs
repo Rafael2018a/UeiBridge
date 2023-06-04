@@ -100,11 +100,11 @@ namespace UeiBridge
             }
 
             List<UeiDeviceInfo> deviceList = BuildDeviceList(cubeUrlList);
-            DisplayDeviceList(deviceList);
+            //DisplayDeviceList(deviceList);
 
             _programBuilder = new ProgramObjectsBuilder( _mainConfig);
             _programBuilder.CreateDeviceManagers(deviceList);
-            _programBuilder.ActivateDownstreamOjects();
+            _programBuilder.ActivateDownstreamObjects();
             _programBuilder.ActivateUpstreamObjects();
             _programBuilder.Build_BlockSensorManager(deviceList);
 

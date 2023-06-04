@@ -56,52 +56,63 @@ namespace UeiBridge
             return id as DeviceType;
         }
 
-        public void CreateDeviceManagers(List<UeiDeviceInfo> realDeviceList)
+        protected void EmitInitMessage(UeiDeviceInfo deviceInfo,  string deviceMessage)
         {
-            if (realDeviceList == null)
+            _logger.Info($"Cube{deviceInfo.CubeId}/Slot{deviceInfo.DeviceSlot}: {deviceMessage}");
+        }
+
+        public void CreateDeviceManagers(List<UeiDeviceInfo> deviceInfoList)
+        {
+            if (deviceInfoList == null)
             {
                 return;
             }
             _PerDeviceObjectsList = new List<PerDeviceObjects>();
             _udpReaderList = new List<UdpReader>();
 
-            foreach (UeiDeviceInfo realDevice in realDeviceList)
+            foreach (UeiDeviceInfo deviceInfo in deviceInfoList)
             {
+                string deviceMessage=null;
                 // prologue
                 // =========
                 // it type exists
-                var t = StaticMethods.GetDeviceManagerType<IDeviceManager>(realDevice.DeviceName);
+                var t = StaticMethods.GetDeviceManagerType<IDeviceManager>(deviceInfo.DeviceName);
                 if (null == t)
                 {
-                    _logger.Debug($"Device {realDevice.DeviceName} not supported");
+                    deviceMessage = $"Device {deviceInfo.DeviceName} not supported";
+                    EmitInitMessage( deviceInfo, deviceMessage);
                     continue;
                 }
                 // if config entry exists
-                DeviceSetup setup = _mainConfig.GetDeviceSetupEntry(realDevice.CubeUrl, realDevice.DeviceSlot);
+                DeviceSetup setup = _mainConfig.GetDeviceSetupEntry(deviceInfo.CubeUrl, deviceInfo.DeviceSlot);
                 if (null == setup)
                 {
-                    _logger.Warn($"No config entry for {realDevice.CubeUrl},  {realDevice.DeviceName}, Slot {realDevice.DeviceSlot}");
+                    deviceMessage = $"No config entry for {deviceInfo.CubeUrl},  {deviceInfo.DeviceName}, Slot {deviceInfo.DeviceSlot}";
+                    EmitInitMessage(deviceInfo, deviceMessage);
                     continue;
                 }
                 // if config entry match
-                if (setup.DeviceName != realDevice.DeviceName)
+                if (setup.DeviceName != deviceInfo.DeviceName)
                 {
-                    _logger.Warn($"Config entry at slot {realDevice.DeviceSlot}/ Cube {realDevice.CubeUrl} does not match physical device {realDevice.DeviceName}");
+                    deviceMessage = $"Config entry at slot {deviceInfo.DeviceSlot}/ Cube {deviceInfo.CubeUrl} does not match physical device {deviceInfo.DeviceName}";
+                    EmitInitMessage(deviceInfo, deviceMessage);
                     continue;
                 }
 
                 // build manager(s)
                 //setup.CubeUrl = realDevice.CubeUrl;
                 //setup.IsBlockSensorActive = _mainConfig.Blocksensor.IsActive;
-                List<PerDeviceObjects> objs = BuildObjectsForDevice(realDevice, setup);
+                List<PerDeviceObjects> objs = BuildObjectsForDevice(deviceInfo, setup);
                 if (null != objs)
                 {
                     _PerDeviceObjectsList.AddRange(objs);
                 }
+
+                
             }
         }
 
-        public void ActivateDownstreamOjects()
+        public void ActivateDownstreamObjects()
         {
             // activate downward (output) objects
             foreach (PerDeviceObjects deviceObjects in _PerDeviceObjectsList)
@@ -240,7 +251,7 @@ namespace UeiBridge
             }
 
             // emit info log
-            _logger.Info($" == Serial channels for cube {setup.CubeUrl}, slot {setup.SlotNumber}");
+            _logger.Debug($" == Serial channels for cube {setup.CubeUrl}, slot {setup.SlotNumber}");
             foreach (UeiDaq.Channel ueiChannel in serialSession.GetChannels())
             {
                 SerialPort ueiPort = ueiChannel as SerialPort;

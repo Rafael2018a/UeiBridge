@@ -44,5 +44,11 @@ namespace UeiBridge
         {
             _logger.Debug($"Device manager {InstanceName} Disposed");
         }
+
+        protected void EmitInitMessage(string deviceMessage)
+        {
+            _logger.Info($"Cube{DeviceInfo.CubeId}/Slot{DeviceInfo.DeviceSlot}: {deviceMessage}");
+        }
+
     }
 }

@@ -21,17 +21,13 @@ namespace UeiBridge
 
         public static log4net.ILog GetLogger()
         {
-            //var m = System.Reflection.MethodBase.GetCurrentMethod();
-            //var m1 = System.Reflection.MethodBase.GetCurrentMethod().
-
+            const int len= 13;
             System.Diagnostics.StackTrace stackTrace = new System.Diagnostics.StackTrace();
             // Get calling method name
-            var m = stackTrace.GetFrame(1).GetMethod();
+            var className = stackTrace.GetFrame(1).GetMethod().DeclaringType.Name;
+            className = (className.Length>len)? className.Substring(0, len): className.PadRight(len);
 
-
-            var x = log4net.LogManager.GetLogger(m.DeclaringType.Name);
-            //var x = log4net.LogManager.GetLogger("SpecialLogger");
-
+            var x = log4net.LogManager.GetLogger(className);
             return x;
         }
 
