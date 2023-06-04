@@ -49,7 +49,7 @@ namespace UeiBridge
 
                 int noOfbits = _ueiSession.GetNumberOfChannels() * 8;
                 int firstBit = _ueiSession.GetChannel(0).GetIndex() * 8;
-                EmitInitMessage( $"Init success: {DeviceName}(Digital). Bits {firstBit}..{firstBit + noOfbits - 1} as input. Dest: {_thisDeviceSetup.DestEndPoint.ToIpEp()}");
+                EmitInitMessage( $"Init success: {DeviceName}. Bits {firstBit}..{firstBit + noOfbits - 1} as input. Dest: {_thisDeviceSetup.DestEndPoint.ToIpEp()}");
                 TimeSpan interval = TimeSpan.FromMilliseconds(_thisDeviceSetup.SamplingInterval);
                 _samplingTimer = new System.Threading.Timer(DeviceScan_Callback, null, TimeSpan.Zero, interval);
             }

@@ -67,18 +67,19 @@ namespace UeiBridge
                     break;
                 }
 
-                EthernetMessage ethMag = EthernetMessage.CreateFromByteArray( incomingMessage.ByteMessage, MessageWay.downstream);
+                string err=null;
+                EthernetMessage ethMag = EthernetMessage.CreateFromByteArray( incomingMessage.ByteMessage, MessageWay.downstream,  ref err);
 
                 if (null==ethMag)
                 {
-                    _logger.Warn("Failed to parse incoming ethernet message");
+                    _logger.Warn($"Failed to parse incoming ethernet message (aimed to {incomingMessage.TargetEndPoint}). {err}");
                     continue;
                 }
 
                 var clist = _consumersList.Where(consumer1 => ((consumer1.CubeId == ethMag.UnitId) && ( consumer1.SlotNumber == ethMag.SlotNumber )));
                 if (clist.Count()==0) // no subs
                 {
-                    _logger.Warn($"No consumer to message aimed to slot {ethMag.SlotNumber} /cube {ethMag.UnitId} (Target {incomingMessage.TargetEndPoint})");
+                    _logger.Warn($"No consumer to message aimed to slot{ethMag.SlotNumber} /cube{ethMag.UnitId} ({incomingMessage.TargetEndPoint})");
                     continue;
                 }
                 if (clist.Count() > 1) // 2 subs with same parameters

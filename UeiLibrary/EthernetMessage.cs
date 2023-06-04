@@ -103,12 +103,14 @@ namespace UeiBridge.Library
         /// <summary>
         /// Create EthernetMessage from byte array
         /// </summary>
-        public static EthernetMessage CreateFromByteArray(byte[] byteMessage, MessageWay way)
+        public static EthernetMessage CreateFromByteArray(byte[] byteMessage, MessageWay way, ref string errorString)
         {
             EthernetMessage resutlMessage = null;
+            errorString = null;
             string errMsg;
             if (false == CheckByteArrayValidity(byteMessage, way, out errMsg))
             {
+                errorString = errMsg;
                 return null;
             }
 
@@ -137,7 +139,7 @@ namespace UeiBridge.Library
             // min len
             if (byteMessage.Length < 16)
             {
-                errorString = $"Byte message too short {byteMessage.Length}";
+                errorString = $"Message too short {byteMessage.Length}";
                 goto exit;
             }
             // preamble
@@ -145,7 +147,7 @@ namespace UeiBridge.Library
             {
                 if (byteMessage[0] != 0xAA || byteMessage[1] != 0x55)
                 {
-                    errorString = $"Byte message wrong preamble";
+                    errorString = $"Wrong preamble";
                     goto exit;
                 }
             }
@@ -153,14 +155,14 @@ namespace UeiBridge.Library
             {
                 if (byteMessage[0] != 0x55 || byteMessage[1] != 0xAA)
                 {
-                    errorString = $"Byte message wrong preamble";
+                    errorString = $"Wrong preamble";
                     goto exit;
                 }
             }
             UInt16 nominalLengh = BitConverter.ToUInt16(byteMessage, EthernetMessage._lengthOffset);
             if (nominalLengh != byteMessage.Length)
             {
-                errorString = $"Byte message inconsistent length nominal:{nominalLengh}  actual:{byteMessage.Length}";
+                errorString = $"Inconsistent length declared:{nominalLengh}  actual:{byteMessage.Length}";
                 goto exit;
             }
 

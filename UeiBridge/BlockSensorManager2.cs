@@ -85,7 +85,13 @@ namespace UeiBridge
                 var selectedEntries = _blockSensorTable.Where(ent => ent.Subaddress == this._subaddress);
 
                 // convert incoming message 
-                EthernetMessage downstreamEthMessage = EthernetMessage.CreateFromByteArray(byteMessage, MessageWay.downstream);
+                string err=null;
+                EthernetMessage downstreamEthMessage = EthernetMessage.CreateFromByteArray(byteMessage, MessageWay.downstream, ref err);
+                if (null==downstreamEthMessage)
+                {
+                    _logger.Warn(err);
+                    return;
+                }
                 double[] downstreamPayload = _attachedConverter.DownstreamConvert(downstreamEthMessage.PayloadBytes) as double[];
                 if (false == downstreamEthMessage.InternalValidityTest())
                 {

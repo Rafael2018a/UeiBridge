@@ -61,8 +61,14 @@ namespace UeiBridge
 
             try
             {
-                EthernetMessage em = EthernetMessage.CreateFromByteArray(m, MessageWay.downstream);
-                System.Diagnostics.Debug.Assert(em != null);
+                string err=null;
+                EthernetMessage em = EthernetMessage.CreateFromByteArray(m, MessageWay.downstream, ref err);
+                if (null==em)
+                {
+                    _logger.Warn(err);
+                    return;
+                }
+                
                 _dataItemsQueue2.Add(em);
             }
             catch (Exception ex)
