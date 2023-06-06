@@ -17,21 +17,21 @@ namespace UeiBridge.Library
         public string DeviceName { get; private set; }
         public int DeviceSlot { get; private set; }
         public string CubeUrl { get; set; }
-        public int CubeId
-        {
-            get
-            {
-                IPAddress ipa = Config2.CubeUriToIpAddress(this.CubeUrl);
-                if (null != ipa)
-                {
-                    return ipa.GetAddressBytes()[3];
-                }
-                else
-                {
-                    return -1;
-                }
-            }
-        }
+        public int CubeId { get; private set; }
+        //{
+        //    get
+        //    {
+        //        IPAddress ipa = Config2.CubeUriToIpAddress(this.CubeUrl);
+        //        if (null != ipa)
+        //        {
+        //            return ipa.GetAddressBytes()[3];
+        //        }
+        //        else
+        //        {
+        //            return -1;
+        //        }
+        //    }
+        //}
         //public UeiDeviceInfo( UeiDaq.Device ueiDevice) // todo. add url.
         //{
         //    this.DeviceName = ueiDevice.GetDeviceName();
@@ -39,11 +39,25 @@ namespace UeiBridge.Library
             
         //}
 
-        public UeiDeviceInfo(string cubeurl, int deviceSlot , string deviceName)
+        public UeiDeviceInfo(string cubeUrl, int deviceSlot , string deviceName)
         {
-            CubeUrl = cubeurl;
+            CubeUrl = cubeUrl;
             DeviceSlot = deviceSlot;
             DeviceName = deviceName;
+
+            if (null==cubeUrl) // block sensor
+            {
+                CubeId = -1;
+            }
+            else if (cubeUrl.ToLower().StartsWith("simu"))
+            {
+                CubeId = -2;
+            }
+            else
+            {
+                IPAddress ipa = Config2.CubeUriToIpAddress(this.CubeUrl);
+                CubeId = (null != ipa) ? ipa.GetAddressBytes()[3] : -1;
+            }
         }
     }
 

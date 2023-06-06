@@ -142,8 +142,7 @@ namespace UeiBridge
                 ch1++;
             }
 
-            
-            //_logger.Info($"Init success {InstanceName}. {_serialSession.GetNumberOfChannels()} channels. Dest:{ _thisDeviceSetup.DestEndPoint.ToIpEp()}");
+            EmitInitMessage( $"Init success {DeviceName}. {_serialSession.GetNumberOfChannels()} channels. Dest:{ _thisDeviceSetup.DestEndPoint.ToIpEp()}");
 
         }
         public override void Dispose()

@@ -171,6 +171,10 @@ namespace UeiBridge
                     {
                         return Build_SL508(realDevice, setup);
                     }
+                case DeviceMap2.AO322Literal:
+                    {
+                        return Build_AO332(realDevice, setup);
+                    }
                 default:
                     {
                         _logger.Warn($"Failed to build {realDevice.DeviceName}");
@@ -210,6 +214,31 @@ namespace UeiBridge
 
             return new List<PerDeviceObjects>() { pd };
         }
+
+        private List<PerDeviceObjects> Build_AO332(UeiDeviceInfo realDevice, DeviceSetup setup)
+        {
+            // create uei entities
+            Session theSession = new Session();
+            string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/Ao0:31";
+            var c = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
+            System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
+            theSession.ConfigureTimingForSimpleIO();
+            var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()), theSession);
+
+            AO332OutputDeviceManager ao322 = new AO332OutputDeviceManager(setup as AO332Setup, aWriter, theSession);
+            PerDeviceObjects pd = new PerDeviceObjects(realDevice);
+
+            var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
+            UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, ao322.InstanceName);
+            _udpMessenger.SubscribeConsumer(ao322, setup.CubeId, setup.SlotNumber);
+            _udpReaderList.Add(ureader);
+
+            pd.OutputDeviceManager = ao322;
+
+            return new List<PerDeviceObjects>() { pd };
+        }
+
+
         List<PerDeviceObjects> Build_SimuAO16_2(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
             Session theSession = new Session();
@@ -387,7 +416,8 @@ namespace UeiBridge
                 PerDeviceObjects pd = new PerDeviceObjects(blockSensor.DeviceName, -1, "no_cube");
                 pd.OutputDeviceManager = blockSensor;
 
-                _udpMessenger.SubscribeConsumer(blockSensor, csetup.CubeId, 32);
+                int cubeid = Config2.CubeUriToIpAddress( csetup.CubeUrl).GetAddressBytes()[3]; // tbd. result of CubeUriToIpAddress might be null
+                _udpMessenger.SubscribeConsumer(blockSensor, cubeid, 32);
                 _udpReaderList.Add(ureader);
 
                 blockSensor.OpenDevice();

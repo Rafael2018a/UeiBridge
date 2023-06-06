@@ -175,6 +175,18 @@ namespace UeiBridge.Library
         {
         }
     }
+    public class AO332Setup : DeviceSetup
+    {
+        [XmlIgnore]
+        public static double PeekVoltage_downstream => 10.0;
+
+        public AO332Setup()
+        {
+        }
+        public AO332Setup(EndPoint localEndPoint, UeiDeviceInfo device) : base(localEndPoint, null, device)
+        {
+        }
+    }
     //public class AO16Setup : AO308Setup { }
     public class SimuAO16Setup : DeviceSetup
     {
@@ -270,8 +282,11 @@ namespace UeiBridge.Library
                     }
                     result = sl508;
                     break;
-                case "Simu-AO16":
+                case DeviceMap2.SimuAO16Literal:
                     result = new SimuAO16Setup(new EndPoint(LocalIP, portNumber++), ueiDevice);
+                    break;
+                case DeviceMap2.AO322Literal:
+                    result = new AO332Setup(new EndPoint(LocalIP, portNumber++), ueiDevice);
                     break;
                 default:
                     Console.WriteLine($"Config: Device {ueiDevice.DeviceName} not supported.");
@@ -283,12 +298,24 @@ namespace UeiBridge.Library
         }
     }
 
+    [XmlInclude(typeof(AO308Setup))]
+    [XmlInclude(typeof(DIO403Setup))]
+    [XmlInclude(typeof(DIO470Setup))]
+    [XmlInclude(typeof(AI201100Setup))]
+    [XmlInclude(typeof(SL508892Setup))]
+    [XmlInclude(typeof(AO332Setup))]
+    [XmlInclude(typeof(BlockSensorSetup))]
+    [XmlInclude(typeof(SimuAO16Setup))]
     public class CubeSetup : IEquatable<CubeSetup>
     {
         [XmlAttribute("Url")]
         public string CubeUrl { get; set; }
-        [XmlIgnore]
-        public int CubeId = 0;
+        //[XmlIgnore]
+        //public int CubeId 
+        //{ 
+        //    get; 
+        //    private set; 
+        //}  = 0;
         public List<DeviceSetup> DeviceSetupList = new List<DeviceSetup>();
 
         //private List<Device> _ueiDeviceList;
@@ -383,89 +410,25 @@ namespace UeiBridge.Library
 
     }
 
-    [XmlInclude(typeof(AO308Setup))]
-    [XmlInclude(typeof(DIO403Setup))]
-    [XmlInclude(typeof(DIO470Setup))]
-    [XmlInclude(typeof(AI201100Setup))]
-    [XmlInclude(typeof(SL508892Setup))]
-    [XmlInclude(typeof(BlockSensorSetup))]
-    [XmlInclude(typeof(ValidValuesClass))]
-    [XmlInclude(typeof(SimuAO16Setup))]
+    
+    
+    
     public class Config2 : IEquatable<Config2>
     {
-        //private static Config2 _instance;
-        //private static object lockObject = new object();
 
         public AppSetup AppSetup;
-        //public string[] CubeUrlList = new string[1];
         public List<CubeSetup> CubeSetupList = new List<CubeSetup>();
-        
-        //public ValidValuesClass ValidValues = new ValidValuesClass();
+
         public static string DafaultSettingsFilename => "UeiSettings2.config";
         public static string SettingsFilename { get; private set; } = DafaultSettingsFilename;
-        //string[] _cubeUrls;
-        //private CubeSetup[] cubeSetups;
 
-        public Config2() // this is for serialization. 
-        {
-        }
-#if        Obsolete
-        private Config2(string [] cubeUrls)
-        {
-            AppSetup = new AppSetup();
-            UeiCubes = new List<CubeSetup>( new CubeSetup[cubeUrls.Length]);
-            for (int i = 0; i < cubeUrls.Length; i++)
-            {
-                UeiCubes[i] = new CubeSetup(cubeUrls[i]);
-            }
-        }
-#endif
+        public Config2() { }// this is for serialization. 
         public Config2(List<CubeSetup> cubeSetups)
         {
             AppSetup = new AppSetup();
             this.CubeSetupList.AddRange(cubeSetups);
         }
 
-        //public static Config2 Instance { get; set; }
-        //{
-        //get
-        //{
-        //    if (_instance == null)
-        //    {
-        //        lock (lockObject)
-        //        {
-        //            if (_instance == null)
-        //                _instance = LoadConfigFromFile(SettingsFilename);
-        //        }
-        //    }
-        //    return _instance;
-        //}
-        //}
-        //public static bool IsConfigFileExist()
-        //{
-        //    return System.IO.File.Exists(SettingsFilename);
-        //}
-#if old
-        public static void Reset()
-        {
-            _instance = null;
-        }
-        public void BuildNewConfig1(string [] urls)
-        {
-            _cubeUrls = urls;
-
-            var resultConfig = new Config2(urls);
-
-            var serializer = new XmlSerializer(typeof(Config2));
-            using (var writer = new StreamWriter(SettingsFilename))
-            {
-                serializer.Serialize(writer, resultConfig);
-                Console.WriteLine($"New default settings file created. {SettingsFilename}");
-            }
-
-            _instance = resultConfig;
-        }
-#endif
         /// <summary>
         /// Load config from file
         /// </summary>
@@ -485,26 +448,6 @@ namespace UeiBridge.Library
                         foreach (DeviceSetup dSetup in cSetup.DeviceSetupList)
                         {
                             dSetup.CubeUrl = cSetup.CubeUrl;
-
-                            //if (dSetup.DeviceName == DeviceMap2.AO308Literal)
-                            //{
-                            //    AO308Setup ao308 = dSetup as AO308Setup;
-                            //    BlockSensorSetup bssetup = resultConfig.GetSetupEntryForDevice( cSetup.CubeUrl, DeviceMap2.BlocksensorLiteral) as BlockSensorSetup;
-                            //    if (null != bssetup)
-                            //    {
-                            //        ao308.IsBlockSensorActive = bssetup.IsActive;
-                            //    }
-                            //}
-
-                            //if (dSetup.DeviceName == DeviceMap2.DIO403Literal)
-                            //{
-                            //    DIO403Setup ao403 = dSetup as DIO403Setup;
-                            //    BlockSensorSetup bssetup = resultConfig.GetSetupEntryForDevice(cSetup.CubeUrl, DeviceMap2.BlocksensorLiteral) as BlockSensorSetup;
-                            //    if (null != bssetup)
-                            //    {
-                            //        ao403.IsBlockSensorActive = bssetup.IsActive;
-                            //    }
-                            //}
                         }
                     }
                 }
@@ -532,11 +475,6 @@ namespace UeiBridge.Library
 
         }
 
-        //public DeviceSetup GetSetupEntryForDevice(int cubeId, string deviceName)
-        //{
-        //    var ds = this.CubeSetupList[0].DeviceSetupList.Where(i => i.DeviceName == deviceName);
-        //    return ds.FirstOrDefault();
-        //}
         public DeviceSetup GetDeviceSetupEntry(string cubeUrl, int slotNumber)
         {
             if (this.CubeSetupList == null)
@@ -553,24 +491,7 @@ namespace UeiBridge.Library
             DeviceSetup result = theSetups.FirstOrDefault();
             return result;
         }
-        public DeviceSetup GetSetupEntryForDevice_notInUse(string cubeUrl, string deviceName)
-        {
-            if (this.CubeSetupList == null)
-            {
-                return null;
-            }
-            var cube = this.CubeSetupList.Where(e => e.CubeUrl == cubeUrl);
-            var selectedCube = cube.FirstOrDefault();
-            if (null == selectedCube)
-            {
-                return null;
-            }
-            var theSetups = selectedCube.DeviceSetupList.Where(d => d.DeviceName == deviceName);
-            DeviceSetup result = theSetups.FirstOrDefault();
-            return result;
-        }
-
-        public void SaveAs( FileInfo fileToSave, bool overwrite)
+        public void SaveAs(FileInfo fileToSave, bool overwrite)
         {
             string fn = fileToSave.FullName;
             if (fileToSave.Exists)
@@ -594,42 +515,41 @@ namespace UeiBridge.Library
 
         public bool Equals(Config2 other)
         {
-            //CubeSetupList.Equals(other.CubeSetupList);
-
             return CubeSetupList.SequenceEqual(other.CubeSetupList);
         }
 
         public static System.Net.IPAddress CubeUriToIpAddress(string url)
         {
             System.Net.IPAddress result = null;
-
-            //var a1 = u1.Host;
-            
-            try
+            UriHostNameType ht = Uri.CheckHostName(url);
+            //bool ok1 = ;
+            if (Uri.IsWellFormedUriString(url, UriKind.Absolute))
             {
                 Uri u1 = new Uri(url);
-                result = System.Net.IPAddress.Parse(u1.Host);
+
+                bool ok = System.Net.IPAddress.TryParse(u1.Host, out result);
+                return (ok) ? result : null;
             }
-            catch (Exception)
+            else
             {
+                return null;
             }
-            return result;
         }
 
     }
-    public class ValidValuesClass
-    {
-        public string ValidSerialModes;
-        public string ValidBaudRates;
-        public string ValidStopBitsValues;
-        public string ValidParityValues;
+    //public class ValidValuesClass
+    //{
+    //    public string ValidSerialModes;
+    //    public string ValidBaudRates;
+    //    public string ValidStopBitsValues;
+    //    public string ValidParityValues;
 
-        public ValidValuesClass()
-        {
-            ValidSerialModes = UeiBridge.Library.StaticMethods.GetEnumValues<UeiDaq.SerialPortMode>();
-            ValidBaudRates = UeiBridge.Library.StaticMethods.GetEnumValues<UeiDaq.SerialPortSpeed>();
-            ValidStopBitsValues = UeiBridge.Library.StaticMethods.GetEnumValues<UeiDaq.SerialPortStopBits>();
-            ValidParityValues = UeiBridge.Library.StaticMethods.GetEnumValues<UeiDaq.SerialPortParity>();
-        }
-    }
+    //    public ValidValuesClass()
+    //    {
+    //        ValidSerialModes = UeiBridge.Library.StaticMethods.GetEnumValues<UeiDaq.SerialPortMode>();
+    //        ValidBaudRates = UeiBridge.Library.StaticMethods.GetEnumValues<UeiDaq.SerialPortSpeed>();
+    //        ValidStopBitsValues = UeiBridge.Library.StaticMethods.GetEnumValues<UeiDaq.SerialPortStopBits>();
+    //        ValidParityValues = UeiBridge.Library.StaticMethods.GetEnumValues<UeiDaq.SerialPortParity>();
+    //    }
+    //}
 }

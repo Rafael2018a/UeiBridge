@@ -29,7 +29,7 @@ namespace UeiBridge
         protected bool _inDisposeState = false;
         protected AnalogConverter _attachedConverter;
 
-        private Session _ueiSession;
+        protected Session _ueiSession;
         private DeviceSetup _deviceSetup;
 
         public AO308OutputDeviceManager(DeviceSetup deviceSetup1, IWriterAdapter<double[]> analogWriter, UeiDaq.Session session, bool isBlockSensorActive) : base(deviceSetup1)
@@ -79,11 +79,6 @@ namespace UeiBridge
             // init conditions check
             if (_inDisposeState)
             {
-                return;
-            }
-            if (em.NominalLength>32)
-            {
-                _logger.Warn($"Incoming message rejected. Payload length too large - {em.NominalLength}");
                 return;
             }
 
