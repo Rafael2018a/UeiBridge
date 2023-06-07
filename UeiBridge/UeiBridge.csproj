@@ -82,6 +82,7 @@
     <Compile Include="AI201InputDeviceManager.cs" />
     <Compile Include="AnalogWriteAdapter.cs" />
     <Compile Include="AO308OutputDeviceManager.cs" />
+    <Compile Include="AO332OutputDeviceManager.cs" />
     <Compile Include="BlockSensorManager2.cs" />
     <Compile Include="Converters.cs" />
     <Compile Include="CubeSeeker.cs" />

@@ -61,8 +61,14 @@ namespace UeiBridge
 
             try
             {
-                EthernetMessage em = EthernetMessage.CreateFromByteArray(m, MessageWay.downstream);
-                System.Diagnostics.Debug.Assert(em != null);
+                string err=null;
+                EthernetMessage em = EthernetMessage.CreateFromByteArray(m, MessageWay.downstream, ref err);
+                if (null==em)
+                {
+                    _logger.Warn(err);
+                    return;
+                }
+                
                 _dataItemsQueue2.Add(em);
             }
             catch (Exception ex)
@@ -145,6 +151,11 @@ namespace UeiBridge
             _dataItemsQueue2.Add(null); // end task token (first, free Take() api and then apply CompleteAdding()
             Thread.Sleep(100);
             _dataItemsQueue2.CompleteAdding();
+        }
+
+        protected void EmitInitMessage( string deviceMessage)
+        {
+            _logger.Info($"Cube{DeviceInfo.CubeId}/Slot{DeviceInfo.DeviceSlot}: {deviceMessage}");
         }
     }
 }

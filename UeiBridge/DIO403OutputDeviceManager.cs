@@ -45,7 +45,7 @@ namespace UeiBridge
 
             int noOfbits = _ueiSession.GetNumberOfChannels() * 8;
             int firstBit = _ueiSession.GetChannel(0).GetIndex() * 8;
-            _logger.Info($"Init success: {InstanceName}. Bits {firstBit}..{firstBit + noOfbits - 1} as output. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}"); // { noOfCh} output channels
+            EmitInitMessage($"Init success: {DeviceName}. Bits {firstBit}..{firstBit + noOfbits - 1} as output. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}"); // { noOfCh} output channels
 
             _viewerItemist = new System.Collections.Generic.List<ViewItem<UInt16>>(new ViewItem<UInt16>[_ueiSession.GetNumberOfChannels()]);
 
