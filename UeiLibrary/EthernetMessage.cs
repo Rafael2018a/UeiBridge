@@ -169,6 +169,8 @@ namespace UeiBridge.Library
         exit: return rc;
         }
 
+        // commit for test
+
         /// <summary>
         /// Create EthernetMessage from device result.
         /// Might return null.
