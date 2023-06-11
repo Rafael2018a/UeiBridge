@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UeiBridge;
-using UeiBridge.Library;
 using NUnit.Framework;
 using System.IO;
+using UeiBridge.Library;
 
 namespace UeiBridgeTest
 {
@@ -14,14 +14,14 @@ namespace UeiBridgeTest
     class ConfigTests
     {
         //[Test]
-        //public void NoConfigTest()
-        //{
-        //    Config2.Reset();
-        //    if (Config2.IsConfigFileExist())
-        //        System.IO.File.Delete(Config2.SettingsFilename);
-        //    DeviceSetup ds = Config2.Instance.GetSetupEntryForDevice("simu://", 2);
-        //    Assert.That(ds, Is.Null);
-        //}
+        public void GetName()
+        {
+            var EntAsm = System.Reflection.Assembly.GetEntryAssembly();
+            var s = EntAsm.GetName().Name;
+            int cube = 3;
+            string filename = $"{s}.Cube{cube}.config";
+
+        }
         //[Test]
         //public void LoadConfigTest()
         //{
@@ -60,11 +60,64 @@ namespace UeiBridgeTest
         {
             System.IO.File.Delete("newfile.config");
             string url = "simu://";
-            CubeSetup cs = new CubeSetup( new List<UeiDeviceInfo>(), url);
+            CubeSetup cs = new CubeSetup(new List<UeiDeviceInfo>(), url);
             Config2 c2 = new Config2(new List<CubeSetup> { cs });
-            c2.SaveAs( new FileInfo( "newfile.config"), true);
+            c2.SaveAs(new FileInfo("newfile.config"), true);
         }
+        [Test]
+        public void BuildAndSaveConfig3Test()
+        {
+            string url1 = "simu://";
+            string url2 = "pdna://192.168.100.2";
+            var list1 = new List<UeiDeviceInfo>();
+            var list2 = new List<UeiDeviceInfo>();
+            list1.Add(new UeiDeviceInfo(url1, 0, DeviceMap2.SimuAO16Literal));
+            list2.Add(new UeiDeviceInfo(url2, 0, DeviceMap2.SimuAO16Literal));
+            UeiBridge.LibraryA.CubeSetup cs1 = new UeiBridge.LibraryA.CubeSetup(list1);
+            UeiBridge.LibraryA.CubeSetup cs2 = new UeiBridge.LibraryA.CubeSetup(list2);
+            UeiBridge.LibraryA.Config2 c3 = new UeiBridge.LibraryA.Config2(new List<UeiBridge.LibraryA.CubeSetup> { cs1, cs2 });
+            //c3.SavePerCube("UeiBridge", true);
+        }
+        [Test]
+        public void LoadConfig3Test()
+        {
+            string cubeurl = "pdna://192.168.100.4";
 
+            UeiDaq.DeviceCollection devColl = new UeiDaq.DeviceCollection(cubeurl);
+            var l1 = devColl.Cast<UeiDaq.Device>().ToList();
+            List<UeiDeviceInfo> devList = l1.Select( (UeiDaq.Device i) => 
+            {
+                if (i == null)
+                    return null;
+                return new UeiDeviceInfo(cubeurl, i.GetIndex(), i.GetDeviceName());
+            }).ToList(); 
+
+            UeiBridge.LibraryA.Config2 c2a = UeiBridge.LibraryA.Config2.LoadConfig( new List<List<UeiDeviceInfo>>() { devList });
+            //Config3 _mainConfig;
+            //List<string> cubeUrlList = new List<string>() { "simu://", "192.168.100.4" };
+            //try
+            
+            //_mainConfig = Config3.LoadConfig( "basefilename");
+            
+            //catch (FileNotFoundException)
+            //{
+            //    var t = Config3.BuildDefaultConfigPerCube(cubeUrlList);
+            //    t.SaveAs(new FileInfo(Config2.DafaultSettingsFilename), true);
+            //    _mainConfig = Config3.LoadConfigFromFile(new FileInfo("DafaultSettingsFilename"));
+            //    Console.WriteLine($"New default settings file created. {Config2.DafaultSettingsFilename}.");
+            //}
+            //catch (InvalidOperationException ex)
+            //{
+            //    // ($"Failed to load configuration. {ex.Message}. Any key to abort....");
+            //    Console.ReadKey();
+            //}
+            //catch (Exception ex)
+            //{
+            //    // ($"Failed to load configuration. {ex.Message}. Any key to abort....");
+            //    Console.ReadKey();
+            //}
+
+        }
         /// <summary>
         /// Verify that CubeSetup does not generate device-setup for an unknown device.
         /// </summary>

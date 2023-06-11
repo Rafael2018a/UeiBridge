@@ -65,10 +65,19 @@ namespace UeiBridge.Library
     {
         void WriteSingleScan(T scan);
     }
-    public interface IReadAdapter<T>: IDisposable
+    public interface IReaderAdapter<T>: IDisposable
     {
 
     }
+
+    public class DigitalReaderAdapter : IReaderAdapter<UInt16[]>
+    {
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+    }
+
 
     public struct DeviceEx1
     {

@@ -353,23 +353,27 @@ namespace UeiBridge
 
         private List<PerDeviceObjects> Build_DIO403(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
-            string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/Do0:2";// Do0:2 - 3*8 first bits as 'out'
+            // prepare output manager
+            // ========================
+            string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/Do0,2,4";// Do0:2 - 3*8 first bits as 'out'
             Session theSession = new UeiDaq.Session();
             theSession.CreateDOChannel(cubeUrl);
             theSession.ConfigureTimingForSimpleIO();
-            DigitalWriterAdapter aWriter = new DigitalWriterAdapter(new UeiDaq.DigitalWriter(theSession.GetDataStream()));
+            DigitalWriterAdapter digitalWriter = new DigitalWriterAdapter(new UeiDaq.DigitalWriter(theSession.GetDataStream()));
 
-            // output
-            DIO403OutputDeviceManager od = new DIO403OutputDeviceManager(setup, aWriter, theSession);
+            DIO403OutputDeviceManager od = new DIO403OutputDeviceManager(setup, digitalWriter, theSession);
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
             UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, od.InstanceName);
 
-            // input
+            // prepare input manager
+            // =======================
             string instanceName = $"{realDevice.DeviceName}/Slot{realDevice.DeviceSlot}";
             UdpWriter udpWriter = new UdpWriter(instanceName, setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMCast);
-
             DIO403InputDeviceManager id = new DIO403InputDeviceManager(udpWriter, setup);
 
+
+            // register objects 
+            // =================
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
             pd.OutputDeviceManager = od;
             pd.InputDeviceManager = id;
@@ -380,7 +384,6 @@ namespace UeiBridge
 
             return new List<PerDeviceObjects>() { pd };
         }
-
         public void Build_BlockSensorManager(List<UeiDeviceInfo> realDeviceList)
         {
             foreach (CubeSetup csetup in _mainConfig.CubeSetupList)

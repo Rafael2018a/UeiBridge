@@ -208,8 +208,21 @@ namespace UeiBridge.Library
         {
         }
     }
+    public class DIOChannel
+    {
+        [XmlAttribute()]
+        public byte OctetIndex { get; set; }
+        public MessageWay Way { get; set; }
+        public DIOChannel( byte octetNumber, MessageWay way)
+        {
+            OctetIndex = octetNumber;
+            Way = way;
+        }
+        public DIOChannel() {}
+    }
     public class DIO403Setup : DeviceSetup
     {
+        public List<DIOChannel> IOChannelList { get; set; }
         //public Direction[] BitOctets;
         public DIO403Setup()
         {
@@ -217,6 +230,12 @@ namespace UeiBridge.Library
 
         public DIO403Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base(localEndPoint, destEndPoint, device)
         {
+            IOChannelList = new List<DIOChannel>();
+            for (byte ch = 0; ch < 6; ch++)
+            {
+                MessageWay w = (ch % 2 == 0) ? MessageWay.upstream : MessageWay.downstream;
+                IOChannelList.Add(new DIOChannel(ch, w));
+            }
         }
     }
     public class DIO470Setup : DeviceSetup

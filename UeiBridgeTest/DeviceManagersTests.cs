@@ -178,6 +178,17 @@ namespace UeiBridgeTest
             Assert.That(speed1, Is.EqualTo(SerialPortSpeed.BitsPerSecond14400));
         }
 
+        [Test]
+        public void DigitalSessionTest()
+        {
+            //Session s1 = new Session();
+            string sessionString = $"pdna://192.168.100.2/Dev5/Do2";// Do0:2 - 3*8 first bits as 'out'
+            //string sessionString = "simu://Dev2/Do5";
+            Session s1 = new UeiDaq.Session();
+           
+            s1.CreateDOChannel(sessionString);
+            s1.ConfigureTimingForSimpleIO();
+        }
     }
     public class analogWriterMock : IWriterAdapter<double[]>
     {
