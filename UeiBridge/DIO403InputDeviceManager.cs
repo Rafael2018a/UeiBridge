@@ -16,7 +16,7 @@ namespace UeiBridge
         public override string DeviceName => "DIO-403";
         public ISend<SendObject> TargetConsumer { get => _targetConsumer; set => _targetConsumer = value; }
 
-        private DigitalReader _reader;
+        //private DigitalReader _reader;
         private log4net.ILog _logger = StaticMethods.GetLogger();
         private IConvert2<UInt16[]> _attachedConverter;
         private DIO403Setup _thisDeviceSetup;
@@ -26,9 +26,24 @@ namespace UeiBridge
         private Session _ueiSession;
         private ISend<SendObject> _targetConsumer;
 
-        public DIO403InputDeviceManager(DeviceSetup setup, IReaderAdapter<UInt16[]> digitalReader, Session ueiSession, ISend<SendObject> targetConsumer) { }
+        private IReaderAdapter<UInt16[]> _digitalReader;
+
+        public DIO403InputDeviceManager(DeviceSetup setup, IReaderAdapter<UInt16[]> digitalReader, Session ueiSession, ISend<SendObject> targetConsumer): base (setup)
+        {
+            _thisDeviceSetup = setup as DIO403Setup;
+            _digitalReader = digitalReader;
+            _ueiSession = ueiSession;
+            _targetConsumer = targetConsumer;
+
+            _attachedConverter = new DigitalConverter();// StaticMethods.CreateConverterInstance( setup);
+
+            System.Diagnostics.Debug.Assert(null != setup);
+            System.Diagnostics.Debug.Assert(DeviceName.Equals(setup.DeviceName));
+
+        }
         public DIO403InputDeviceManager( ISend<SendObject> targetConsumer, DeviceSetup setup): base( setup)
         {
+            throw new NotImplementedException();
             
             _attachedConverter = new DigitalConverter();// StaticMethods.CreateConverterInstance( setup);
             _thisDeviceSetup = setup as DIO403Setup;
@@ -40,18 +55,22 @@ namespace UeiBridge
         public DIO403InputDeviceManager()  { }// must have default c-tor.
         public override void OpenDevice()
         {
-            string deviceUrl = $"{_thisDeviceSetup.CubeUrl}Dev{_thisDeviceSetup.SlotNumber}/{_channelsString}";
+            //string deviceUrl = $"{_thisDeviceSetup.CubeUrl}Dev{_thisDeviceSetup.SlotNumber}/{_channelsString}";
 
             try
             {
-                _ueiSession = new Session();
-                _ueiSession.CreateDIChannel(deviceUrl);
-                _ueiSession.ConfigureTimingForSimpleIO();
-                _reader = new DigitalReader(_ueiSession.GetDataStream());
+                //_ueiSession = new Session();
+                //_ueiSession.CreateDIChannel(deviceUrl);
+                //_ueiSession.ConfigureTimingForSimpleIO();
+                //_reader = new DigitalReader(_ueiSession.GetDataStream());
 
-                int noOfbits = _ueiSession.GetNumberOfChannels() * 8;
-                int firstBit = _ueiSession.GetChannel(0).GetIndex() * 8;
-                EmitInitMessage( $"Init success: {DeviceName}. Bits {firstBit}..{firstBit + noOfbits - 1} as input. Dest: {_thisDeviceSetup.DestEndPoint.ToIpEp()}");
+                //int noOfbits = _ueiSession.GetNumberOfChannels() * 8;
+                //int firstBit = _ueiSession.GetChannel(0).GetIndex() * 8;
+
+                string res = _ueiSession.GetChannel(0).GetResourceName();
+                string localpath = (new Uri(res)).LocalPath;
+                EmitInitMessage($"Init success: {DeviceName}. As {localpath}. Dest: {_thisDeviceSetup.DestEndPoint.ToIpEp()}"); // { noOfCh} output channels
+
                 TimeSpan interval = TimeSpan.FromMilliseconds(_thisDeviceSetup.SamplingInterval);
                 _samplingTimer = new System.Threading.Timer(DeviceScan_Callback, null, TimeSpan.Zero, interval);
             }
@@ -75,7 +94,7 @@ namespace UeiBridge
             // ===============
             try
             {
-                _lastScan = _reader.ReadSingleScanUInt16();
+                _lastScan = _digitalReader.ReadSingleScan();
                 System.Diagnostics.Debug.Assert(_lastScan != null);
                 System.Diagnostics.Debug.Assert(_lastScan.Length == _ueiSession.GetNumberOfChannels(), "wrong number of channels");
                 byte[] payload = _attachedConverter.UpstreamConvert(_lastScan);

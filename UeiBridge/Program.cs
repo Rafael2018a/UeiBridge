@@ -182,7 +182,7 @@ namespace UeiBridge
         {
             const int intervalMs = 100;
             IPEndPoint destEP = _mainConfig.AppSetup.StatusViewerEP.ToIpEp();
-            UdpWriter uw = new UdpWriter("To-StatusViewer", destEP, _mainConfig.AppSetup.SelectedNicForMCast);
+            UdpWriter uw = new UdpWriter( destEP, _mainConfig.AppSetup.SelectedNicForMCast);
             TimeSpan interval = TimeSpan.FromMilliseconds(intervalMs);
             _logger.Info($"StatusViewer dest ep: {destEP.ToString()} (Local NIC {_mainConfig.AppSetup.SelectedNicForMCast})");
 

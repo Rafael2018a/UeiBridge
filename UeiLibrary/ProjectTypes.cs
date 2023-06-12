@@ -67,11 +67,21 @@ namespace UeiBridge.Library
     }
     public interface IReaderAdapter<T>: IDisposable
     {
-
+        UInt16[] ReadSingleScan();
     }
 
     public class DigitalReaderAdapter : IReaderAdapter<UInt16[]>
     {
+        private DigitalReader _digitalReader;
+
+        public DigitalReaderAdapter(DigitalReader digitalReader)
+        {
+            this._digitalReader = digitalReader;
+        }
+        public UInt16[] ReadSingleScan()
+        {
+            return _digitalReader.ReadSingleScanUInt16();
+        }
         public void Dispose()
         {
             throw new NotImplementedException();
