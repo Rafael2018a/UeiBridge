@@ -36,9 +36,14 @@ namespace UeiBridge.Library
         //{
         //    this.DeviceName = ueiDevice.GetDeviceName();
         //    this.DeviceSlot = ueiDevice.GetIndex();
-            
-        //}
 
+        //}
+        /// <summary>
+        /// UeiDeviceInfo does NOT depends on UeiDaq namespace types
+        /// </summary>
+        /// <param name="cubeUrl"></param>
+        /// <param name="deviceSlot"></param>
+        /// <param name="deviceName"></param>
         public UeiDeviceInfo(string cubeUrl, int deviceSlot , string deviceName)
         {
             CubeUrl = cubeUrl;

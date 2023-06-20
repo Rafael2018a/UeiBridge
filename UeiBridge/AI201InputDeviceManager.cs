@@ -63,7 +63,7 @@ namespace UeiBridge
             }
         }
 
-        public override void OpenDevice()
+        public override bool OpenDevice()
         {
             double peek = AI201100Setup.PeekVoltage_upstream;
             try
@@ -78,11 +78,12 @@ namespace UeiBridge
                 TimeSpan interval = TimeSpan.FromMilliseconds(_thisDeviceSetup.SamplingInterval);
                 _samplingTimer = new System.Threading.Timer(HandleResponse_Callback, null, TimeSpan.Zero, interval);
                 EmitInitMessage($"Init success. {DeviceName}. {_ueiSession.GetNumberOfChannels()} input channels. Dest:{_thisDeviceSetup.DestEndPoint.ToIpEp()}");
-                return;
+                return true;
             }
             catch (Exception ex)
             {
                 _logger.Error(ex.Message);
+                return false;
             }
         }
         public override void Dispose()

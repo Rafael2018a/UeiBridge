@@ -355,7 +355,8 @@ namespace UeiBridge
         {
             // prepare output manager
             // ========================
-            string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/Do0,2,4";// Do0:2 - 3*8 first bits as 'out'
+            string outDevString = ComposeDio403DeviceString( realDevice, MessageWay.downstream);
+            string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/{outDevString}";// Do0:2 - 3*8 first bits as 'out'
             Session outSession = new Session();
             outSession.CreateDOChannel(cubeUrl);
             outSession.ConfigureTimingForSimpleIO();
@@ -372,7 +373,8 @@ namespace UeiBridge
             //string instanceName = $"{realDevice.DeviceName}/Slot{realDevice.DeviceSlot}";
             //DIO403InputDeviceManager id = new DIO403InputDeviceManager(udpWriter, setup);
             UdpWriter udpWriter = new UdpWriter( setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMCast);
-            string inSessionUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/Di1,3,5";
+            string inDevString = ComposeDio403DeviceString(realDevice, MessageWay.upstream);
+            string inSessionUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/{inDevString}";
             Session inSession = new Session();
             inSession.CreateDIChannel(inSessionUrl);
             inSession.ConfigureTimingForSimpleIO();
@@ -390,6 +392,28 @@ namespace UeiBridge
 
             return new List<PerDeviceObjects>() { pd };
         }
+
+        private string ComposeDio403DeviceString( UeiDeviceInfo devInfo, MessageWay way)
+        {
+            StringBuilder resultString = new StringBuilder( (way == MessageWay.downstream) ? "Do" : "Di");
+            //Do0,2,4
+            DIO403Setup setup = _mainConfig.GetDeviceSetupEntry<DIO403Setup>(devInfo);
+            if (null != setup)
+            {
+                IEnumerable<DIOChannel> l = setup.IOChannelList.Where(i => i.Way == way);
+                foreach( var c in l)
+                {
+                    resultString.Append( c.OctetIndex);
+                    resultString.Append(",");
+                }
+                resultString.Remove(resultString.Length - 1, 1);
+            }
+            else
+                throw new ArgumentNullException();
+
+            return resultString.ToString();
+        }
+
         public void Build_BlockSensorManager(List<UeiDeviceInfo> realDeviceList)
         {
             foreach (CubeSetup csetup in _mainConfig.CubeSetupList)

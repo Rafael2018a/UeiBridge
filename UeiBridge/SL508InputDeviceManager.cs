@@ -121,7 +121,7 @@ namespace UeiBridge
                 _logger.Warn($"ReaderCallback: {InstanceName}. {ex.Message}");
             }
         }
-        public override void OpenDevice()
+        public override bool OpenDevice()
         {
             _lastScanList = new List<ViewItem<byte[]>>(new ViewItem<byte[]>[_serialSession.GetNumberOfChannels()]);
             _readerIAsyncResultList = new List<IAsyncResult>(new IAsyncResult[_thisDeviceSetup.Channels.Count]);
@@ -144,6 +144,7 @@ namespace UeiBridge
 
             EmitInitMessage( $"Init success {DeviceName}. {_serialSession.GetNumberOfChannels()} channels. Dest:{ _thisDeviceSetup.DestEndPoint.ToIpEp()}");
 
+            return true;
         }
         public override void Dispose()
         {

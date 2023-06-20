@@ -9,7 +9,7 @@ using System.IO;
 
 namespace UeiBridge.Library
 {
-    class CubeSeeker
+    public class CubeSeeker
     {
         IPAddress SearchCube_TM( object state)
         {

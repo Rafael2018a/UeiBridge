@@ -116,30 +116,52 @@ namespace UeiBridge.Library
             return msgs;
         }
 
-    }
-
-    public static class ExtMethods
-    {
-        /// <summary>
-        /// Build default config from cube-url-list
-        /// </summary>
-        public static Config2 BuildDefaultConfig2( this Config2 c2, List<string> cubeUrlList) 
+        public static List<UeiDeviceInfo> DeviceCollectionToDeviceInfoList(DeviceCollection devColl, string cubeurl)
         {
-            List<CubeSetup> csetupList = new List<CubeSetup>();
-            foreach (var url in cubeUrlList)
+            try
             {
-                DeviceCollection devColl = new DeviceCollection(url);
-                List<UeiDeviceInfo> rl = new List<UeiDeviceInfo>();
-                foreach (Device dev in devColl)
+                var l1 = devColl.Cast<UeiDaq.Device>().ToList();
+                var devList = l1.Select((UeiDaq.Device i) =>
                 {
-                    if (dev == null) continue; // this for the last entry, which is null
-                    rl.Add(new UeiDeviceInfo(url, dev.GetIndex(), dev.GetDeviceName()));
-                }
-                csetupList.Add(new CubeSetup(rl, url));
+                    if (i == null)
+                        return null;
+                    //Uri url = new Uri(i.GetResourceName());
+                    //string curl = url.LocalPath;
+                    return new UeiDeviceInfo(cubeurl, i.GetIndex(), i.GetDeviceName());
+                });
+                var l2 = devList.ToList();
+                l2.Remove(null); // remove last null item
+                return l2;
             }
-
-            Config2 res = new Config2(csetupList);
-            return res;
+            catch (UeiDaq.UeiDaqException)
+            {
+                return null;
+            }
         }
     }
+
+    //public static class ExtMethods
+    //{
+    //    /// <summary>
+    //    /// Build default config from cube-url-list
+    //    /// </summary>
+    //    public static Config2 BuildDefaultConfig2( this Config2 c2, List<string> cubeUrlList) 
+    //    {
+    //        List<CubeSetup> csetupList = new List<CubeSetup>();
+    //        foreach (var url in cubeUrlList)
+    //        {
+    //            DeviceCollection devColl = new DeviceCollection(url);
+    //            List<UeiDeviceInfo> rl = new List<UeiDeviceInfo>();
+    //            foreach (Device dev in devColl)
+    //            {
+    //                if (dev == null) continue; // this for the last entry, which is null
+    //                rl.Add(new UeiDeviceInfo(url, dev.GetIndex(), dev.GetDeviceName()));
+    //            }
+    //            csetupList.Add(new CubeSetup(rl, url));
+    //        }
+
+    //        Config2 res = new Config2(csetupList);
+    //        return res;
+    //    }
+    //}
 }

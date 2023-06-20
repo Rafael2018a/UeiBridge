@@ -494,6 +494,10 @@ namespace UeiBridge.Library
 
         }
 
+        public T GetDeviceSetupEntry<T>(UeiDeviceInfo devInfo) where T : DeviceSetup
+        {
+            return GetDeviceSetupEntry(devInfo.CubeUrl, devInfo.DeviceSlot) as T;
+        }
         public DeviceSetup GetDeviceSetupEntry(string cubeUrl, int slotNumber)
         {
             if (this.CubeSetupList == null)

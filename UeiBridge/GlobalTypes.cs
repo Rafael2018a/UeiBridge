@@ -117,8 +117,8 @@ namespace UeiBridge.Types
     /// <typeparam name="T"></typeparam>
     public class ViewItem<T>
     {
-        public T readValue;
-        public TimeSpan timeToLive;
+        public T readValue { get; private set; }
+        public TimeSpan timeToLive { get; set; }
 
         public ViewItem(T readValue, int timeToLiveMs)
         {

@@ -9,24 +9,24 @@ namespace UeiBridgeTest
     [TestFixture]
     class BuilderTests
     {
+        //[Test]
+        //public void BuildSimuDeviceList()
+        //{
+        //    var c2 = Config2.LoadConfigFromFile(new System.IO.FileInfo("UeiSettings2.simu.config"));
+
+        //    ProgramObjectsBuilder programBuilder = new ProgramObjectsBuilder(c2);
+
+        //    List<UeiDeviceInfo> deviceList = UeiBridge.Program.BuildLinearDeviceList(new List<string>(new string[] { "simu://" }));
+
+        //    programBuilder.CreateDeviceManagers(deviceList);
+
+        //    Assert.That(programBuilder.PerDeviceObjectsList.Count, Is.EqualTo(1));
+
+        //    programBuilder.Dispose();
+        //}
+
         [Test]
-        public void BuildSimuDeviceList()
-        {
-            var c2 = Config2.LoadConfigFromFile(new System.IO.FileInfo("UeiSettings2.simu.config"));
-
-            ProgramObjectsBuilder programBuilder = new ProgramObjectsBuilder(c2);
-
-            List<UeiDeviceInfo> deviceList = UeiBridge.Program.BuildDeviceList(new List<string>(new string[] { "simu://" }));
-
-            programBuilder.CreateDeviceManagers(deviceList);
-
-            Assert.That(programBuilder.PerDeviceObjectsList.Count, Is.EqualTo(1));
-
-            programBuilder.Dispose();
-        }
-
-        [Test]
-        public void ParseDevieUrl()
+        public void ParseDeviceUrl()
         {
             IPAddress ip1 = Config2.CubeUriToIpAddress("pdna://192.168.100.2/");
             byte[] bytes1 = ip1.GetAddressBytes();

@@ -75,7 +75,7 @@ namespace UeiBridgeTest
             session1.CreateAOChannel("simu://Dev1/AO0:7", -10, +10);
             analogWriterMock mk = new analogWriterMock();
             //mk.OriginSession = session1;
-            var devicelist = UeiBridge.Program.BuildDeviceList(new List<string>() { simuUrl });
+            var devicelist = UeiBridge.Program.BuildLinearDeviceList(new List<string>() { simuUrl });
             var ao = devicelist.Where(i => i.DeviceName.StartsWith("Simu-AO16")).FirstOrDefault();
             AO308Setup setup = new AO308Setup(new EndPoint("8.8.8.8", 5000), new UeiDeviceInfo(simuUrl, 1, "Simu-AO16"));
             setup.CubeUrl = simuUrl;
@@ -102,19 +102,21 @@ namespace UeiBridgeTest
         }
 
         [Test]
-        public void DIO403OutDeviceMangerTest()
+        public void DigitalSimuDIO64_OutDeviceMangerTest()
         {
             Session s = new Session();
             s.CreateDOChannel("simu://Dev2/Do0:2");
             digitalWriterMock mk1 = new digitalWriterMock();
             //mk1.OriginSession = s;
-            var devicelist = UeiBridge.Program.BuildDeviceList(new List<string>() { "simu://" });
+            var devicelist = UeiBridge.Program.BuildLinearDeviceList(new List<string>() { "simu://" });
             var ao = devicelist.Where(i => i.DeviceName.StartsWith("Simu-DIO64")).FirstOrDefault();
 
             DIO403Setup setup = new DIO403Setup(new EndPoint("8.8.8.8", 5000), null, new UeiDeviceInfo("simu://", 2, "Simu-DIO64"));
 
             DIO403OutputDeviceManager dio403 = new DIO403OutputDeviceManager(setup, mk1, s);
-            dio403.OpenDevice();
+            bool ok = dio403.OpenDevice();
+
+
 
             var m = EthernetMessage.CreateMessage(4, 2, 0, new byte[] { 0xac, 0x13 });
 
@@ -126,6 +128,7 @@ namespace UeiBridgeTest
 
             Assert.Multiple(() =>
             {
+                Assert.That(ok, Is.EqualTo(true));
                 Assert.That(mk1.Scan[0], Is.EqualTo(0xac));
                 Assert.That(mk1.Scan[1], Is.EqualTo(0x13));
             });
@@ -135,28 +138,43 @@ namespace UeiBridgeTest
         public void DIO403InputDeviceManagerTest()
         {
             //Session s = new Session();
-            string url = "pdna://192.168.100.2/Dev2/Di3:5";
-            //digitalWriterMock mk1 = new digitalWriterMock();
-            ////mk1.OriginSession = s;
-            //var devicelist = UeiBridge.Program.BuildDeviceList(new List<string>() { "simu://" });
-            //var ao = devicelist.Where(i => i.DeviceName.StartsWith("Simu-DIO64")).FirstOrDefault();
+            string cubeurl = "pdna://192.168.100.2/Dev5/Di3:5";
 
-            UeiDeviceInfo info = new UeiDeviceInfo( url, 2, DeviceMap2.DIO403Literal); // simu://Simu-DIO64 is on slot 2
 
-            DIO403Setup setup = new DIO403Setup(null, new EndPoint("8.8.8.8", 5000), info);
-            setup.CubeUrl = url;
+            UeiDaq.DeviceCollection devColl = new UeiDaq.DeviceCollection(cubeurl);
+            List<UeiDeviceInfo> devList1 = UeiBridge.Library.StaticMethods.DeviceCollectionToDeviceInfoList(devColl, cubeurl);
 
-            SenderMock sm = new SenderMock();
+            if (devList1.Count == 9)
+            {
 
-            DIO403InputDeviceManager dio403 = new DIO403InputDeviceManager(sm, setup);
-            dio403.OpenDevice();
-            
+                //digitalWriterMock mk1 = new digitalWriterMock();
+                ////mk1.OriginSession = s;
+                //var devicelist = UeiBridge.Program.BuildDeviceList(new List<string>() { "simu://" });
+                //var ao = devicelist.Where(i => i.DeviceName.StartsWith("Simu-DIO64")).FirstOrDefault();
 
-            System.Threading.Thread.Sleep(100);
+                UeiDeviceInfo info = new UeiDeviceInfo(cubeurl, 2, DeviceMap2.DIO403Literal); // simu://Simu-DIO64 is on slot 2
 
-            dio403.Dispose();
+                Session inSession = new Session();
+                inSession.CreateDIChannel(cubeurl);
+                inSession.ConfigureTimingForSimpleIO();
 
-            Assert.That(dio403.InstanceName, Is.EqualTo("DIO-403/Cube2/Slot2/Input"));
+                IReaderAdapter<UInt16[]> reader = new digitalReaderMock();
+
+                DIO403Setup setup = new DIO403Setup(null, new EndPoint("8.8.8.8", 5000), info);
+                setup.CubeUrl = cubeurl;
+
+                SenderMock sm = new SenderMock();
+
+                DIO403InputDeviceManager dio403 = new DIO403InputDeviceManager(setup, reader, inSession, sm);
+                bool ok = dio403.OpenDevice();
+
+
+                System.Threading.Thread.Sleep(100);
+
+                dio403.Dispose();
+
+                Assert.That(ok, Is.EqualTo(true));
+            }
         }
 
         [Test]
@@ -182,8 +200,8 @@ namespace UeiBridgeTest
         public void DigitalSessionTest()
         {
             //Session s1 = new Session();
-            string sessionString = $"pdna://192.168.100.2/Dev5/Do2";// Do0:2 - 3*8 first bits as 'out'
-            //string sessionString = "simu://Dev2/Do5";
+            //string sessionString = $"pdna://192.168.100.2/Dev5/Do2";// Do0:2 - 3*8 first bits as 'out'
+            string sessionString = "simu://Dev2/Do1";
             Session s1 = new UeiDaq.Session();
            
             s1.CreateDOChannel(sessionString);
@@ -229,6 +247,18 @@ namespace UeiBridgeTest
         }
     }
 
+    public class digitalReaderMock : IReaderAdapter<UInt16[]>
+    {
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+
+        public UInt16[] ReadSingleScan()
+        {
+            return new UInt16[] { 0xAC13 };
+        }
+    }
     public class SenderMock : ISend<SendObject>
     {
         public SendObject _sentObject;

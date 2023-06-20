@@ -31,18 +31,19 @@ namespace UeiBridge
         /// Build linear device list.
         /// This method assumes that the indicates cubes exists.
         /// </summary>
-        public static List<UeiDeviceInfo> BuildDeviceList(List<string> cubesUrl)
+        public static List<UeiDeviceInfo> BuildLinearDeviceList(List<string> cubesUrl)
         {
             List<UeiDeviceInfo> resultList = new List<UeiDeviceInfo>();
             foreach (string url in cubesUrl)
             {
                 DeviceCollection devColl = new DeviceCollection(url);
+                resultList.AddRange( UeiBridge.Library.StaticMethods.DeviceCollectionToDeviceInfoList(devColl, url));
 
-                foreach (Device dev in devColl)
-                {
-                    if (dev == null) continue; // this for the last entry, which is null
-                    resultList.Add(new UeiDeviceInfo(url, dev.GetIndex(), dev.GetDeviceName()));
-                }
+                //foreach (Device dev in devColl)
+                //{
+                //    if (dev == null) continue; // this for the last entry, which is null
+                //    resultList.Add(new UeiDeviceInfo(url, dev.GetIndex(), dev.GetDeviceName()));
+                //}
             }
             return resultList;
         }
@@ -99,7 +100,7 @@ namespace UeiBridge
                 return;
             }
 
-            List<UeiDeviceInfo> deviceList = BuildDeviceList(cubeUrlList);
+            List<UeiDeviceInfo> deviceList = BuildLinearDeviceList(cubeUrlList);
             //DisplayDeviceList(deviceList);
 
             _programBuilder = new ProgramObjectsBuilder( _mainConfig);

@@ -39,7 +39,7 @@ namespace UeiBridgeTest
         [Test]
         public void CubeSetupVM1_Test()
         {
-            var devList = UeiBridge.Program.BuildDeviceList(new List<string> { "simu://" });
+            var devList = UeiBridge.Program.BuildLinearDeviceList(new List<string> { "simu://" });
 
             var resList = devList.Select(d => new UeiDeviceInfo("simu://", d.DeviceSlot, d.DeviceName));// as List<UeiDeviceAdapter>;
             List<UeiDeviceInfo> l = new List<UeiDeviceInfo>(resList);

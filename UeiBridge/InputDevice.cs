@@ -13,7 +13,7 @@ namespace UeiBridge
     public abstract class InputDevice : IDeviceManager, IDisposable
     {
         public abstract string [] GetFormattedStatus( TimeSpan interval);
-        public abstract void OpenDevice();
+        public abstract bool OpenDevice();
         public abstract string DeviceName { get; }
 
         public UeiDeviceInfo DeviceInfo { get; private set; }
