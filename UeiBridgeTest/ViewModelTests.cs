@@ -44,7 +44,7 @@ namespace UeiBridgeTest
             var resList = devList.Select(d => new UeiDeviceInfo("simu://", d.DeviceSlot, d.DeviceName));// as List<UeiDeviceAdapter>;
             List<UeiDeviceInfo> l = new List<UeiDeviceInfo>(resList);
 
-            CubeSetup cs = new CubeSetup(l, "simu://");
+            CubeSetup cs = new CubeSetup(l);
             CubeSetupViewModel cube = new CubeSetupViewModel(cs, false);
             Assert.That(cube.CubeAddress, Is.Null);
         }

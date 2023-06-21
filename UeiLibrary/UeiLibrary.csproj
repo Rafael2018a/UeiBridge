@@ -64,7 +64,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Config2.cs" />
-    <Compile Include="Config2a.cs" />
     <Compile Include="EthernetMessage.cs" />
     <Compile Include="JsonStatusClass.cs" />
     <Compile Include="ProjectTypes.cs" />
