@@ -25,10 +25,10 @@ namespace UeiBridge
         //private const string _channelsString = "Di1,3,5"; // 3 * 8 last bits as 'out'
         private Session _ueiSession;
         private ISend<SendObject> _targetConsumer;
-        private byte[] _fixedScan8b;
+        private byte[] _fullBuffer8bit;
         private List<byte> _scanMask = new List<byte>();
         private IReaderAdapter<UInt16[]> _digitalReader;
-        private const int _numberOfLines = 48; // 48 bits
+        private const int _maxNumberOfChannels = 6; // fixed. by device spec.
 
         public DIO403InputDeviceManager(DeviceSetup setup, IReaderAdapter<UInt16[]> digitalReader, Session ueiSession, ISend<SendObject> targetConsumer): base (setup)
         {
@@ -47,13 +47,14 @@ namespace UeiBridge
         public override bool OpenDevice()
         {
             // build scan-mask
-            for(int i=0; i < _numberOfLines/8; i++)
+            for(int i=0; i < _maxNumberOfChannels; i++)
             {
                 _scanMask.Add(0);
             }
             foreach (Channel ch in _ueiSession.GetChannels())
             {
-                _scanMask[ch.GetIndex()] = 0xff;
+                int i = ch.GetIndex();
+                _scanMask[i] = 0xff;
             }
 
             try
@@ -86,8 +87,8 @@ namespace UeiBridge
 
         public void DeviceScan_Callback(object state)
         {
-            ushort[] singleScanFixed = new ushort[6];
-            Array.Clear(singleScanFixed, 0, singleScanFixed.Length);
+            ushort[] fullBuffer16bit = new ushort[_maxNumberOfChannels];
+            Array.Clear(fullBuffer16bit, 0, fullBuffer16bit.Length);
 
             // read from device
             // ===============
@@ -99,11 +100,11 @@ namespace UeiBridge
                 int i = 0;
                 foreach( Channel ch in _ueiSession.GetChannels())
                 {
-                    singleScanFixed[ch.GetIndex()] = singleScan[i++];
+                    fullBuffer16bit[ch.GetIndex()] = singleScan[i++];
                 }
                 // make EthernetMessage
-                _fixedScan8b = _attachedConverter.UpstreamConvert(singleScanFixed);
-                var ethMsg = StaticMethods.BuildEthernetMessageFromDevice( _fixedScan8b, _thisDeviceSetup);
+                _fullBuffer8bit = _attachedConverter.UpstreamConvert(fullBuffer16bit);
+                var ethMsg = StaticMethods.BuildEthernetMessageFromDevice( _fullBuffer8bit, _thisDeviceSetup);
                 // send
                 _targetConsumer.Send(new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), ethMsg.GetByteArray( MessageWay.upstream)));
             }
@@ -118,11 +119,11 @@ namespace UeiBridge
         {
             System.Text.StringBuilder sb = new System.Text.StringBuilder("Input bits: ");
 
-            for(int i=0; i< _fixedScan8b.Length; i++)
+            for(int i=0; i< _fullBuffer8bit.Length; i++)
             {
                 if (_scanMask[i]>0)
                 {
-                    sb.Append(Convert.ToString(_fixedScan8b[i], 2).PadLeft(8, '0'));
+                    sb.Append(Convert.ToString(_fullBuffer8bit[i], 2).PadLeft(8, '0'));
                     sb.Append(" ");
                 }
                 else

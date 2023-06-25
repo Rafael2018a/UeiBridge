@@ -9,7 +9,7 @@ namespace UeiBridgeTest
     internal class NonSpecificTests
     {
         [Test]
-        public void MessangerTest()
+        public void MessengerTest()
         {
             UdpToSlotMessenger msgr = new UdpToSlotMessenger();
             EnqMock mock = new EnqMock();
@@ -21,8 +21,15 @@ namespace UeiBridgeTest
 
             Assert.That(mock.TheMessage, Is.EqualTo(etm));
         }
+        [Test]
+        public void EndPointTest()
+        {
+            EndPoint ep1 = EndPoint.MakeEndPoint("nonvalid", 25);
+            EndPoint ep2 = EndPoint.MakeEndPoint("8.8.8.8", 0);
+            Assert.That(ep1, Is.Null);
+            Assert.That(ep2, Is.Not.Null);
+        }
     }
-
     class EnqMock : IEnqueue<byte[]>
     {
         public byte[] TheMessage { get; set; }

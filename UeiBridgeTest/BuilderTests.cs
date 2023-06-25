@@ -26,7 +26,7 @@ namespace UeiBridgeTest
         //}
 
         [Test]
-        public void ParseDeviceUrl()
+        public void CubeUriToIpAddressTest()
         {
             IPAddress ip1 = Config2.CubeUriToIpAddress("pdna://192.168.100.2/");
             byte[] bytes1 = ip1.GetAddressBytes();

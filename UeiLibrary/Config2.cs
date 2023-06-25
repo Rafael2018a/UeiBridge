@@ -24,23 +24,36 @@ namespace UeiBridge.Library
             Address = addressString;
             Port = port;
         }
-
         public bool Equals(EndPoint other)
         {
             return (this.Address == other.Address) && (this.Port == other.Port);
         }
-
         public IPEndPoint ToIpEp() // should be cast operator
         {
-            //try
+            IPAddress ip;
+            bool ok = IPAddress.TryParse(Address, out ip);
+            if (ok)
             {
-                IPEndPoint ipep = new IPEndPoint(IPAddress.Parse(Address), Port);
+                IPEndPoint ipep = new IPEndPoint( ip, Port);
                 return ipep;
             }
-            //catch (Exception ex)
-            //{
-            //    return null;
-            //}
+            else
+            {
+                return null;
+            }
+        }
+        public static EndPoint MakeEndPoint(string addressString, int port)
+        {
+            EndPoint ep = new EndPoint(addressString, port);
+
+            if (null!=ep.ToIpEp())
+            {
+                return ep;
+            }
+            else
+            {
+                return null;
+            }
         }
     }
     public class SerialChannelSetup
@@ -66,7 +79,6 @@ namespace UeiBridge.Library
 
     public class AppSetup
     {
-        //[XmlElement(ElementName = "AppSetup")]
         public string SelectedNicForMCast = "221.109.251.103";
         public EndPoint StatusViewerEP = new EndPoint("239.10.10.17", 5093);
     }
@@ -109,8 +121,6 @@ namespace UeiBridge.Library
         /// <summary>
         /// This c-tor for block sensor which does not have a 'uei device'
         /// </summary>
-        /// <param name="localEndPoint"></param>
-        /// <param name="destEndPoint"></param>
         public DeviceSetup(EndPoint localEndPoint, EndPoint destEndPoint, string deviceName)
         {
             LocalEndPoint = localEndPoint;
@@ -134,8 +144,6 @@ namespace UeiBridge.Library
 
             return f1 && f2 && f3 && f4;
         }
-        //private string cubeUrl;
-        //public string CubeUrl { get => cubeUrl; set => cubeUrl = value; }
         public string GetInstanceName()
         {
             return $"{this.DeviceName}/Cube{this.CubeId}/Slot{this.SlotNumber}";
@@ -211,12 +219,12 @@ namespace UeiBridge.Library
         [XmlAttribute()]
         public byte OctetIndex { get; set; }
         public MessageWay Way { get; set; }
-        public DIOChannel( byte octetNumber, MessageWay way)
+        public DIOChannel(byte octetNumber, MessageWay way)
         {
             OctetIndex = octetNumber;
             Way = way;
         }
-        public DIOChannel() {}
+        public DIOChannel() { }
     }
     public class DIO403Setup : DeviceSetup
     {
@@ -234,6 +242,19 @@ namespace UeiBridge.Library
                 MessageWay w = (ch % 2 == 0) ? MessageWay.upstream : MessageWay.downstream;
                 IOChannelList.Add(new DIOChannel(ch, w));
             }
+        }
+    }
+    public class SimuDIO64Setup: DIO403Setup
+    {
+        public SimuDIO64Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base( localEndPoint, destEndPoint, device)
+        {
+            IOChannelList = new List<DIOChannel>();
+            for (byte ch = 0; ch < 4; ch++)
+            {
+                MessageWay w = (ch % 2 == 0) ? MessageWay.upstream : MessageWay.downstream;
+                IOChannelList.Add(new DIOChannel(ch, w));
+            }
+
         }
     }
     public class DIO470Setup : DeviceSetup
@@ -345,7 +366,7 @@ namespace UeiBridge.Library
         {
             CubeUrl = deviceList[0].CubeUrl;
             int cubeId = deviceList[0].CubeId;
-            ConfigFactory cf = new ConfigFactory( ConfigFactory.PortNumberStart+cubeId*100 );
+            ConfigFactory cf = new ConfigFactory(ConfigFactory.PortNumberStart + cubeId * 100);
 
 
             DeviceSetupList = new List<DeviceSetup>();
@@ -419,7 +440,7 @@ namespace UeiBridge.Library
 
             if ((dsa != null) && (dsd != null))
             {
-                 //cf = new ConfigFactory();
+                //cf = new ConfigFactory();
                 BlockSensorSetup Blocksensor = new BlockSensorSetup(new EndPoint(ConfigFactory.LocalIP, 50105), "BlockSensor");
 
                 Blocksensor.AnalogCardSlot = dsa.SlotNumber;
@@ -501,11 +522,11 @@ namespace UeiBridge.Library
                     int cube_id = devInfoList[0].CubeId;
                     string filename = (cube_id == -2) ? "Cube.simu.config" : $"Cube{cube_id}.config";
                     CubeSetup csFromFile = LoadCubeSetupFromFile(filename);
-                    if (null==csFromFile) // if failed to load from file
+                    if (null == csFromFile) // if failed to load from file
                     {
                         CubeSetup defaultSetup = new CubeSetup(devInfoList); // create default
                         resultConfig.CubeSetupList.Add(defaultSetup);
-                        
+
                         // save default to file
                         using (FileStream fs = new FileStream(filename, FileMode.Create, FileAccess.Write))
                         {
@@ -675,17 +696,29 @@ namespace UeiBridge.Library
 
         public static System.Net.IPAddress CubeUriToIpAddress(string url)
         {
-            System.Net.IPAddress result = null;
+            //m.Net.IPAddress result = null;
+            Uri resutlUri;
+            bool ok1 = Uri.TryCreate(url, UriKind.Absolute, out resutlUri);
+            if (ok1)
+            {
+                IPAddress resutlIp;
+                bool ok2 = System.Net.IPAddress.TryParse(resutlUri.Host, out resutlIp);
+                if (ok2)
+                {
+                    return resutlIp;
+                }
+            }
+            return null;
 
-            try
-            {
-                Uri u1 = new Uri(url);
-                result = System.Net.IPAddress.Parse(u1.Host);
-            }
-            catch (Exception)
-            {
-            }
-            return result;
+            //try
+            //{
+            //    Uri u1 = new Uri(url);
+            //    result = System.Net.IPAddress.Parse(u1.Host);
+            //}
+            //catch (Exception)
+            //{
+            //}
+            //return result;
         }
     }
     //public class ValidValuesClass

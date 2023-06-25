@@ -105,7 +105,7 @@ namespace UeiBridgeTest
         public void DigitalSimuDIO64_OutDeviceMangerTest()
         {
             Session s = new Session();
-            s.CreateDOChannel("simu://Dev2/Do0:2");
+            s.CreateDOChannel("simu://Dev2/Do0:3"); // 4 channels, no more (empiric).
             digitalWriterMock mk1 = new digitalWriterMock();
             //mk1.OriginSession = s;
             var devicelist = UeiBridge.Program.BuildLinearDeviceList(new List<string>() { "simu://" });
@@ -118,7 +118,7 @@ namespace UeiBridgeTest
 
 
 
-            var m = EthernetMessage.CreateMessage(4, 2, 0, new byte[] { 0xac, 0x13 });
+            var m = EthernetMessage.CreateMessage(4, 2, 0, new byte[] { 0xac, 0x13, 0x21, 0x22 });
 
             dio403.Enqueue(m.GetByteArray(MessageWay.downstream));
 
@@ -134,17 +134,17 @@ namespace UeiBridgeTest
             });
         }
 
-        [Test]// tbd. renew this test!!!
+        [Test]
         public void DIO403InputDeviceManagerTest()
         {
             //Session s = new Session();
-            string cubeurl = "pdna://192.168.100.2/Dev5/Di3:5";
+            string cubeurl = "pdna://192.168.100.2";//c";
 
 
             UeiDaq.DeviceCollection devColl = new UeiDaq.DeviceCollection(cubeurl);
             List<UeiDeviceInfo> devList1 = UeiBridge.Library.StaticMethods.DeviceCollectionToDeviceInfoList(devColl, cubeurl);
 
-            if (devList1.Count == 9)
+            if (devList1.Count > 1)
             {
 
                 //digitalWriterMock mk1 = new digitalWriterMock();
@@ -155,10 +155,10 @@ namespace UeiBridgeTest
                 UeiDeviceInfo info = new UeiDeviceInfo(cubeurl, 2, DeviceMap2.DIO403Literal); // simu://Simu-DIO64 is on slot 2
 
                 Session inSession = new Session();
-                inSession.CreateDIChannel(cubeurl);
+                inSession.CreateDIChannel(cubeurl+"/Dev5/Di3:5");
                 inSession.ConfigureTimingForSimpleIO();
 
-                IReaderAdapter<UInt16[]> reader = new digitalReaderMock();
+                IReaderAdapter<UInt16[]> reader = new digitalReaderMock( inSession.GetNumberOfChannels());
 
                 DIO403Setup setup = new DIO403Setup(null, new EndPoint("8.8.8.8", 5000), info);
                 setup.CubeUrl = cubeurl;
@@ -168,12 +168,13 @@ namespace UeiBridgeTest
                 DIO403InputDeviceManager dio403 = new DIO403InputDeviceManager(setup, reader, inSession, sm);
                 bool ok = dio403.OpenDevice();
 
-
+                
                 System.Threading.Thread.Sleep(100);
 
                 dio403.Dispose();
 
                 Assert.That(ok, Is.EqualTo(true));
+                Assert.That(sm._sentObject.ByteMessage[0], Is.EqualTo(0x55));
             }
         }
 
@@ -249,6 +250,13 @@ namespace UeiBridgeTest
 
     public class digitalReaderMock : IReaderAdapter<UInt16[]>
     {
+        int _numberOfChennels;
+
+        public digitalReaderMock(int numberOfChennels)
+        {
+            _numberOfChennels = numberOfChennels;
+        }
+
         public void Dispose()
         {
             throw new NotImplementedException();
@@ -256,7 +264,9 @@ namespace UeiBridgeTest
 
         public UInt16[] ReadSingleScan()
         {
-            return new UInt16[] { 0xAC13 };
+            UInt16[] result = new ushort[_numberOfChennels];
+            result[0] = 0xAC13;
+            return result;
         }
     }
     public class SenderMock : ISend<SendObject>

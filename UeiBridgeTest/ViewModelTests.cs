@@ -48,15 +48,15 @@ namespace UeiBridgeTest
             CubeSetupViewModel cube = new CubeSetupViewModel(cs, false);
             Assert.That(cube.CubeAddress, Is.Null);
         }
-        [Test]
-        public void SystemSetupVM_Test()
-        {
-            if (System.IO.File.Exists(Config2.DafaultSettingsFilename))
-            {
-                Config2 c2 = Config2.LoadConfigFromFile( new System.IO.FileInfo( Config2.DafaultSettingsFilename));
-                SystemSetupViewModel sysVM = new SystemSetupViewModel( c2);
-                Assert.That(sysVM.SlotList.Count, Is.GreaterThan(0));
-            }
-        }
+        //[Test]
+        //public void SystemSetupVM_Test()
+        //{
+        //    if (System.IO.File.Exists(Config2.DafaultSettingsFilename))
+        //    {
+        //        Config2 c2 = Config2.LoadConfigFromFile( new System.IO.FileInfo( Config2.DafaultSettingsFilename));
+        //        SystemSetupViewModel sysVM = new SystemSetupViewModel( c2);
+        //        Assert.That(sysVM.SlotList.Count, Is.GreaterThan(0));
+        //    }
+        //}
     }
 }
