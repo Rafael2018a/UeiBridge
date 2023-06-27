@@ -15,9 +15,6 @@ namespace UeiBridge
         public string CubeUrl { get; private set; }
         public InputDevice InputDeviceManager { get;  set; }
         public OutputDevice OutputDeviceManager { get; set; }
-        public UdpWriter UdpWriter { get; set; }
-        public string InitMessage { get; set; }
-        //public SL508Session SerialSession { get; set; }
         public PerDeviceObjects(string deviceName, int slotNumber, string cubeUrl)
         {
             this.DeviceName = deviceName;
@@ -29,41 +26,7 @@ namespace UeiBridge
             this.DeviceName = deviceEx.DeviceName;
             this.SlotNumber = deviceEx.DeviceSlot;
             this.CubeUrl = deviceEx.CubeUrl;
-            //this.OutputDeviceManager = outDevice;
-            //this.UdpReader = reader;
         }
-        public void Update(InputDevice inputDevice, UdpWriter udpWriter, int slotNumber)
-        {
-            System.Diagnostics.Debug.Assert( inputDevice.DeviceName == this.DeviceName);
-            System.Diagnostics.Debug.Assert(slotNumber == this.SlotNumber);
-            this.InputDeviceManager = inputDevice;
-            this.UdpWriter = udpWriter;
-        }
-        //public void Update(OutputDevice outputDevice, UdpReader udpReader, int slotNumber)
-        //{
-        //    System.Diagnostics.Debug.Assert(outputDevice.DeviceName == this.DeviceName);
-        //    System.Diagnostics.Debug.Assert(slotNumber == this.SlotNumber);
-        //    this.OutputDeviceManager = outputDevice;
-        //    this.UdpReader = udpReader;
-
-        //}
-        //public void Update(SL508Session serialSession, int slotNumber)
-        //{
-        //    System.Diagnostics.Debug.Assert(slotNumber == this.SlotNumber);
-        //    this.SerialSession = serialSession;
-        //}
-        //public PerDeviceObjects(InputDevice inputDevice, UdpWriter udpWriter, SL508Session serialSession)
-        //{
-
-
-        //    System.Diagnostics.Debug.Assert(inputDevice.DeviceName == DeviceName);
-        //}
-        //public PerDeviceObjects(OutputDevice outputDevice, UdpReader udpReader, SL508Session serialSession)
-        //{
-        //    this.SerialSession = serialSession;
-
-        //    System.Diagnostics.Debug.Assert( outputDevice.DeviceName == DeviceName);
-        //}
     }
 
 }

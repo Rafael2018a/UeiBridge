@@ -91,6 +91,7 @@ namespace UeiBridge
             _samplingTimer.Dispose();
             System.Threading.Thread.Sleep(200);
             _reader.Dispose();
+            _targetConsumer.Dispose();
             CloseSession(_ueiSession);
             base.Dispose();
         }

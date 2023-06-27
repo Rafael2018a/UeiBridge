@@ -272,10 +272,17 @@ namespace UeiBridgeTest
     public class SenderMock : ISend<SendObject>
     {
         public SendObject _sentObject;
+
+        public void Dispose()
+        {
+            
+        }
+
         public void Send(SendObject i)
         {
             _sentObject = i;
         }
+
     }
 
 }

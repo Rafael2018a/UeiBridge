@@ -1,4 +1,4 @@
-﻿#define blocksim1
+﻿//#define blocksim1 // block sensor simulation
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -315,7 +315,7 @@ namespace UeiBridge
             //pd.SerialSession = serialSession;
             pd.InputDeviceManager = id;
             pd.OutputDeviceManager = od;
-            pd.UdpWriter = uWriter;
+            //pd.UdpWriter = uWriter;
 
             _udpMessenger.SubscribeConsumer(od, realDevice.CubeId, realDevice.DeviceSlot);
             _udpReaderList.Add(ureader);
@@ -330,7 +330,7 @@ namespace UeiBridge
             AI201InputDeviceManager id = new AI201InputDeviceManager(uWriter, setup as AI201100Setup);
 
             var pd = new PerDeviceObjects(realDevice);
-            pd.UdpWriter = uWriter;
+            //pd.UdpWriter = uWriter;
             pd.InputDeviceManager = id;
 
             return new List<PerDeviceObjects>() { pd };
@@ -387,7 +387,7 @@ namespace UeiBridge
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
             pd.OutputDeviceManager = outDev;
             pd.InputDeviceManager = inDev;
-            pd.UdpWriter = udpWriter;
+            //pd.UdpWriter = udpWriter;
 
 
             return new List<PerDeviceObjects>() { pd };
@@ -477,7 +477,7 @@ namespace UeiBridge
                     {
                         entry.OutputDeviceManager?.Dispose();
                         entry.InputDeviceManager?.Dispose();
-                        entry.UdpWriter?.Dispose();
+                        //entry.UdpWriter?.Dispose();
                     })
                 );
                 //System.Threading.Thread.Sleep(50);

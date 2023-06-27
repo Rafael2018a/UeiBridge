@@ -152,7 +152,7 @@ namespace UeiBridge
 
             var waitall = _readerIAsyncResultList.Select(i => i.AsyncWaitHandle).ToArray();
             WaitHandle.WaitAll(waitall);
-
+            _targetConsumer.Dispose();
             //_logger.Debug($"Disposing {this.DeviceName}/Input, slot {_thisDeviceSetup.SlotNumber}");
             //if (_serialSession.IsRunning())
             try

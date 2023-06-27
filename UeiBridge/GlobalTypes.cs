@@ -17,7 +17,7 @@ namespace UeiBridge.Types
     {
         void Enqueue(Item i);
     }
-    public interface ISend<Item>
+    public interface ISend<Item>: IDisposable
     {
         void Send(Item i);
     }

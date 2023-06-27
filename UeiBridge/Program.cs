@@ -38,27 +38,9 @@ namespace UeiBridge
             {
                 DeviceCollection devColl = new DeviceCollection(url);
                 resultList.AddRange( UeiBridge.Library.StaticMethods.DeviceCollectionToDeviceInfoList(devColl, url));
-
-                //foreach (Device dev in devColl)
-                //{
-                //    if (dev == null) continue; // this for the last entry, which is null
-                //    resultList.Add(new UeiDeviceInfo(url, dev.GetIndex(), dev.GetDeviceName()));
-                //}
             }
             return resultList;
         }
-        //public static List<DeviceEx> BuildDeviceList(string cubeUrl)
-        //{
-        //    List<DeviceEx> resultList = new List<DeviceEx>();
-        //    DeviceCollection devColl = new DeviceCollection(cubeUrl);
-
-        //    foreach (Device dev in devColl)
-        //    {
-        //        if (dev == null) continue; // this for the last entry, which is null
-        //        resultList.Add(new DeviceEx(dev, cubeUrl));
-        //    }
-        //    return resultList;
-        //}
         private void Run()
         {
             // print current version
@@ -80,13 +62,6 @@ namespace UeiBridge
             {
                 _mainConfig = Config2.LoadConfig(cubeUrlList);
             }
-            //catch (FileNotFoundException )
-            //{
-            //    var t = Config2.BuildDefaultConfig(cubeUrlList);
-            //    t.SaveAs( new FileInfo( Config2.DafaultSettingsFilename), true);
-            //    _mainConfig = Config2.LoadConfigFromFile(new FileInfo(Config2.DafaultSettingsFilename));
-            //    Console.WriteLine($"New default settings file created. {Config2.DafaultSettingsFilename}.");
-            //}
             catch (InvalidOperationException ex)
             {
                 _logger.Warn($"Failed to load configuration. {ex.Message}. Any key to abort....");
@@ -101,7 +76,6 @@ namespace UeiBridge
             }
 
             List<UeiDeviceInfo> deviceList = BuildLinearDeviceList(cubeUrlList);
-            //DisplayDeviceList(deviceList);
 
             _programBuilder = new ProgramObjectsBuilder( _mainConfig);
             _programBuilder.CreateDeviceManagers(deviceList);

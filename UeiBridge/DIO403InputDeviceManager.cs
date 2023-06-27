@@ -82,6 +82,7 @@ namespace UeiBridge
             _logger.Debug($"Disposing {this.DeviceName}/Input, slot {_thisDeviceSetup.SlotNumber}");
             _samplingTimer?.Dispose();
             System.Threading.Thread.Sleep(200); // wait for callback to finish
+            _targetConsumer.Dispose();
             CloseSession(_ueiSession);
         }
 
