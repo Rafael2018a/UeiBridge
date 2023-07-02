@@ -50,7 +50,7 @@ namespace UeiBridgeSetup.ViewModels
             try
             {
                 MainConfig = Config2.LoadConfigFromFile(configFile);
-                MidStatusBarMessage = $"Setup file: {Config2.DafaultSettingsFilename}";
+                MidStatusBarMessage = $"Setup file: {Config2.DefaultSettingsFilename}";
             }
             catch (System.IO.FileNotFoundException ex)
             {
@@ -60,7 +60,7 @@ namespace UeiBridgeSetup.ViewModels
             catch (System.InvalidOperationException ex)
             {
                 MainConfig = new Config2();
-                MidStatusBarMessage = $"Setup file ({Config2.DafaultSettingsFilename}) parse error. {ex.Message}";
+                MidStatusBarMessage = $"Setup file ({Config2.DefaultSettingsFilename}) parse error. {ex.Message}";
             }
 
             _menuItemHeader_Save = $"Save {configFile.Name}";
@@ -95,7 +95,7 @@ namespace UeiBridgeSetup.ViewModels
 
         private void SaveFile(object param) 
         {
-            MainConfig.SaveAs(new FileInfo(Config2.DafaultSettingsFilename), true);
+            MainConfig.SaveAs(new FileInfo(Config2.DefaultSettingsFilename), true);
         }
         private void SaveFileAs(object param) { }
         private void CloseApp(object param) { }

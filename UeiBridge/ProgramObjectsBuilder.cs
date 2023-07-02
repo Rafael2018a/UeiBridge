@@ -351,8 +351,9 @@ namespace UeiBridge
             return new List<PerDeviceObjects>() { pd };
         }
 
-        private List<PerDeviceObjects> Build_DIO403(UeiDeviceInfo realDevice, DeviceSetup setup)
+        private List<PerDeviceObjects> Build_DIO403(UeiDeviceInfo realDevice, DeviceSetup devSetup)
         {
+            DIO403Setup setup = devSetup as DIO403Setup;
             // prepare output manager
             // ========================
             string outDevString = ComposeDio403DeviceString( realDevice, MessageWay.downstream);
@@ -360,9 +361,10 @@ namespace UeiBridge
             Session outSession = new Session();
             outSession.CreateDOChannel(cubeUrl);
             outSession.ConfigureTimingForSimpleIO();
-            DigitalWriterAdapter digitalWriter = new DigitalWriterAdapter(new UeiDaq.DigitalWriter(outSession.GetDataStream()));
+            //DigitalWriterAdapter digitalWriter = new DigitalWriterAdapter(new UeiDaq.DigitalWriter(outSession.GetDataStream()));
+            UeiSessionAdapter sa1 = new UeiSessionAdapter(outSession);
 
-            DIO403OutputDeviceManager outDev = new DIO403OutputDeviceManager(setup, digitalWriter, outSession);
+            DIO403OutputDeviceManager outDev = new DIO403OutputDeviceManager(setup, sa1);
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
             UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, outDev.InstanceName);
             _udpMessenger.SubscribeConsumer(outDev, realDevice.CubeId, realDevice.DeviceSlot);
@@ -378,9 +380,10 @@ namespace UeiBridge
             Session inSession = new Session();
             inSession.CreateDIChannel(inSessionUrl);
             inSession.ConfigureTimingForSimpleIO();
-            DigitalReaderAdapter digitalReader = new DigitalReaderAdapter(new DigitalReader( inSession.GetDataStream()));
+            UeiSessionAdapter sa2 = new UeiSessionAdapter(inSession);
+            //UeiDigitalReaderAdapter digitalReader = new UeiDigitalReaderAdapter(new DigitalReader( inSession.GetDataStream()));
 
-            DIO403InputDeviceManager inDev = new DIO403InputDeviceManager(setup, digitalReader, inSession, udpWriter);
+            DIO403InputDeviceManager inDev = new DIO403InputDeviceManager(setup, sa2, udpWriter);
 
             // register objects 
             // =================

@@ -65,11 +65,19 @@
   <ItemGroup>
     <Compile Include="Config2.cs" />
     <Compile Include="EthernetMessage.cs" />
+    <Compile Include="Interfaces\IChannel.cs" />
+    <Compile Include="Interfaces\IReaderAdapter.cs" />
+    <Compile Include="Interfaces\ISession.cs" />
+    <Compile Include="Interfaces\IWriterAdapter.cs" />
     <Compile Include="JsonStatusClass.cs" />
     <Compile Include="ProjectTypes.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StaticMethods.cs" />
     <Compile Include="DeviceMap.cs" />
+    <Compile Include="Adapters\UeiChannelAdapter.cs" />
+    <Compile Include="Adapters\UeiDigitalReaderAdapter.cs" />
+    <Compile Include="Adapters\UeiDigitalWriterAdapter.cs" />
+    <Compile Include="Adapters\UeiSessionAdapter.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

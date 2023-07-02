@@ -1,6 +1,6 @@
 {
   "Header": {
-    "EnablePlay": true,
+    "EnablePlay": false,
     "DestIp": "227.3.1.10",
     "DestPort": 50200,
     "NumberOfCycles": 20,

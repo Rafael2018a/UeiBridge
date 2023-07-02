@@ -234,10 +234,10 @@ namespace UeiBridge.Library
         {
         }
 
-        public DIO403Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base(localEndPoint, destEndPoint, device)
+        public DIO403Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device, int numberOfChannels) : base(localEndPoint, destEndPoint, device)
         {
             IOChannelList = new List<DIOChannel>();
-            for (byte ch = 0; ch < 6; ch++)
+            for (byte ch = 0; ch < numberOfChannels; ch++)
             {
                 MessageWay w = (ch % 2 == 0) ? MessageWay.upstream : MessageWay.downstream;
                 IOChannelList.Add(new DIOChannel(ch, w));
@@ -246,7 +246,7 @@ namespace UeiBridge.Library
     }
     public class SimuDIO64Setup: DIO403Setup
     {
-        public SimuDIO64Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base( localEndPoint, destEndPoint, device)
+        public SimuDIO64Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base( localEndPoint, destEndPoint, device, 4)
         {
             IOChannelList = new List<DIOChannel>();
             for (byte ch = 0; ch < 4; ch++)
@@ -292,6 +292,7 @@ namespace UeiBridge.Library
         public static string LocalIP => "227.3.1.10";
         public static string RemoteIp => "227.2.1.10";
         public const int PortNumberStart = 50000;
+        public const int DIO403NumberOfChannels = 6;
         public ConfigFactory(int initialPortNumber)
         {
             _portNumber = initialPortNumber;
@@ -303,13 +304,15 @@ namespace UeiBridge.Library
             if (null == ueiDevice.DeviceName)
                 throw new ArgumentNullException("device name");
 
+
+
             switch (ueiDevice.DeviceName)
             {
                 case DeviceMap2.AO308Literal:
                     result = new AO308Setup(new EndPoint(LocalIP, _portNumber++), ueiDevice);
                     break;
                 case DeviceMap2.DIO403Literal:
-                    result = new DIO403Setup(new EndPoint(LocalIP, _portNumber++), new EndPoint(RemoteIp, _portNumber++), ueiDevice);
+                    result = new DIO403Setup(new EndPoint(LocalIP, _portNumber++), new EndPoint(RemoteIp, _portNumber++), ueiDevice, DIO403NumberOfChannels);
                     break;
                 case DeviceMap2.DIO470Literal:
                     result = new DIO470Setup(new EndPoint(LocalIP, _portNumber++), ueiDevice);
@@ -461,8 +464,8 @@ namespace UeiBridge.Library
         public AppSetup AppSetup;
         public List<CubeSetup> CubeSetupList = new List<CubeSetup>();
 
-        public static string DafaultSettingsFilename => "UeiSettings2.config";
-        public static string SettingsFilename { get; private set; } = DafaultSettingsFilename;
+        public static string DefaultSettingsFilename => "UeiSettings2.config";
+        public static string SettingsFilename { get; private set; } = DefaultSettingsFilename;
 
         public Config2() { }// this is for serialization. 
         private Config2(List<CubeSetup> cubeSetups)

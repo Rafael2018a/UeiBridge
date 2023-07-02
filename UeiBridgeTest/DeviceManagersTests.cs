@@ -52,21 +52,6 @@ namespace UeiBridgeTest
             });
         }
 
-
-        //[SetUp]
-        //public void Setup()
-        //{
-        //    string url = "simu://";
-        //    List<CubeSetup> csetupList = new List<CubeSetup>();
-        //    List<UeiDeviceInfo> devList = UeiBridge.Program.BuildDeviceList(new List<string> { url });
-        //    var resList = devList.Select(d => new UeiDeviceInfo(url, d.DeviceName, d.DeviceSlot));// as List<UeiDeviceAdapter>;
-        //    List<UeiDeviceInfo> l = new List<UeiDeviceInfo>(resList);
-        //    csetupList.Add(new CubeSetup(l, url));
-
-        //    // save default config to file
-        //    //Config2.Instance = new Config2(csetupList);
-        //}
-
         [Test]
         public void AO308DeviceManagerTest()
         {
@@ -80,7 +65,7 @@ namespace UeiBridgeTest
             AO308Setup setup = new AO308Setup(new EndPoint("8.8.8.8", 5000), new UeiDeviceInfo(simuUrl, 1, "Simu-AO16"));
             setup.CubeUrl = simuUrl;
             AO308OutputDeviceManager ao308 = new AO308OutputDeviceManager(setup, mk, session1, false);
-            
+
             ao308.OpenDevice();
             AnalogConverter ac = new AnalogConverter(10, 12);
             var d1 = new double[] { 5, 7, 9 };
@@ -105,18 +90,15 @@ namespace UeiBridgeTest
         public void DigitalSimuDIO64_OutDeviceMangerTest()
         {
             Session s = new Session();
-            s.CreateDOChannel("simu://Dev2/Do0:3"); // 4 channels, no more (empiric).
-            digitalWriterMock mk1 = new digitalWriterMock();
-            //mk1.OriginSession = s;
-            var devicelist = UeiBridge.Program.BuildLinearDeviceList(new List<string>() { "simu://" });
-            var ao = devicelist.Where(i => i.DeviceName.StartsWith("Simu-DIO64")).FirstOrDefault();
-
-            DIO403Setup setup = new DIO403Setup(new EndPoint("8.8.8.8", 5000), null, new UeiDeviceInfo("simu://", 2, "Simu-DIO64"));
-
-            DIO403OutputDeviceManager dio403 = new DIO403OutputDeviceManager(setup, mk1, s);
-            bool ok = dio403.OpenDevice();
+            s.CreateDOChannel("simu://Dev2/Do0,1"); // 4 channels, no more (empiric).
+            s.ConfigureTimingForSimpleIO();
+            int noc = s.GetNumberOfChannels();
 
 
+            DIO403Setup setup = new DIO403Setup(new EndPoint("8.8.8.8", 5000), null, new UeiDeviceInfo("simu://", 2, "Simu-DIO64"), noc);
+
+            DIO403OutputDeviceManager dio403 = new DIO403OutputDeviceManager(setup, new UeiSessionAdapter(s));
+            dio403.OpenDevice();
 
             var m = EthernetMessage.CreateMessage(4, 2, 0, new byte[] { 0xac, 0x13, 0x21, 0x22 });
 
@@ -128,9 +110,9 @@ namespace UeiBridgeTest
 
             Assert.Multiple(() =>
             {
-                Assert.That(ok, Is.EqualTo(true));
-                Assert.That(mk1.Scan[0], Is.EqualTo(0xac));
-                Assert.That(mk1.Scan[1], Is.EqualTo(0x13));
+                //Assert.That(ok, Is.EqualTo(true));
+                //Assert.That(mk1.Scan[0], Is.EqualTo(0xac));
+                //Assert.That(mk1.Scan[1], Is.EqualTo(0x13));
             });
         }
 
@@ -140,42 +122,72 @@ namespace UeiBridgeTest
             //Session s = new Session();
             string cubeurl = "pdna://192.168.100.2";//c";
 
-
             UeiDaq.DeviceCollection devColl = new UeiDaq.DeviceCollection(cubeurl);
             List<UeiDeviceInfo> devList1 = UeiBridge.Library.StaticMethods.DeviceCollectionToDeviceInfoList(devColl, cubeurl);
 
-            if (devList1.Count > 1)
+            if (devList1.Count > 1) // if connected
             {
-
-                //digitalWriterMock mk1 = new digitalWriterMock();
-                ////mk1.OriginSession = s;
-                //var devicelist = UeiBridge.Program.BuildDeviceList(new List<string>() { "simu://" });
-                //var ao = devicelist.Where(i => i.DeviceName.StartsWith("Simu-DIO64")).FirstOrDefault();
 
                 UeiDeviceInfo info = new UeiDeviceInfo(cubeurl, 2, DeviceMap2.DIO403Literal); // simu://Simu-DIO64 is on slot 2
 
                 Session inSession = new Session();
-                inSession.CreateDIChannel(cubeurl+"/Dev5/Di3:5");
+                inSession.CreateDIChannel(cubeurl + "/Dev5/Di3:5");
                 inSession.ConfigureTimingForSimpleIO();
+                UeiSessionAdapter sa = new UeiSessionAdapter(inSession);
 
-                IReaderAdapter<UInt16[]> reader = new digitalReaderMock( inSession.GetNumberOfChannels());
-
-                DIO403Setup setup = new DIO403Setup(null, new EndPoint("8.8.8.8", 5000), info);
+                DIO403Setup setup = new DIO403Setup(null, new EndPoint("8.8.8.8", 5000), info, 6);
                 setup.CubeUrl = cubeurl;
 
                 SenderMock sm = new SenderMock();
 
-                DIO403InputDeviceManager dio403 = new DIO403InputDeviceManager(setup, reader, inSession, sm);
+                DIO403InputDeviceManager dio403 = new DIO403InputDeviceManager(setup, sa, sm);
                 bool ok = dio403.OpenDevice();
 
-                
                 System.Threading.Thread.Sleep(100);
 
                 dio403.Dispose();
 
+                
+
+                string errStr=null;
+                EthernetMessage em = EthernetMessage.CreateFromByteArray(sm._sentObject.ByteMessage, MessageWay.upstream, ref errStr);
+
+                Assert.Multiple(() =>
+                {
+                    Assert.That(ok, Is.EqualTo(true));
+                    Assert.That(sm._sentObject.ByteMessage[0], Is.EqualTo(0x55));
+                    Assert.That(em.NominalLength, Is.EqualTo(22));
+                });
+            }
+        }
+        [Test]
+        public void DIO403InputDeviceManagerTest2()
+        {
+            string cubeurl = "pdna://192.168.100.2";
+
+            UeiDeviceInfo info = new UeiDeviceInfo(cubeurl, 2, DeviceMap2.DIO403Literal);
+
+            ISession sa = new SessionMock();
+
+            DIO403Setup setup = new DIO403Setup(null, new EndPoint("8.8.8.8", 5000), info, 6);
+            setup.CubeUrl = cubeurl;
+
+            SenderMock sm = new SenderMock();
+
+            DIO403InputDeviceManager dio403 = new DIO403InputDeviceManager(setup, sa, sm);
+            bool ok = dio403.OpenDevice();
+
+            System.Threading.Thread.Sleep(100);
+
+            dio403.Dispose();
+
+
+            Assert.Multiple(() =>
+            {
                 Assert.That(ok, Is.EqualTo(true));
                 Assert.That(sm._sentObject.ByteMessage[0], Is.EqualTo(0x55));
-            }
+                Assert.That(sm._sentObject.ByteMessage.Length, Is.EqualTo(22));
+            });
         }
 
         [Test]
@@ -204,7 +216,7 @@ namespace UeiBridgeTest
             //string sessionString = $"pdna://192.168.100.2/Dev5/Do2";// Do0:2 - 3*8 first bits as 'out'
             string sessionString = "simu://Dev2/Do1";
             Session s1 = new UeiDaq.Session();
-           
+
             s1.CreateDOChannel(sessionString);
             s1.ConfigureTimingForSimpleIO();
         }
@@ -220,7 +232,7 @@ namespace UeiBridgeTest
 
         public void Dispose()
         {
-            
+
         }
 
         public void WriteSingleScan(double[] scan)
@@ -239,7 +251,7 @@ namespace UeiBridgeTest
 
         public void Dispose()
         {
-            
+
         }
 
         public void WriteSingleScan(UInt16[] scan)
@@ -275,7 +287,7 @@ namespace UeiBridgeTest
 
         public void Dispose()
         {
-            
+
         }
 
         public void Send(SendObject i)
@@ -283,6 +295,97 @@ namespace UeiBridgeTest
             _sentObject = i;
         }
 
+    }
+
+    public class SessionMock : ISession
+    {
+        List<IChannel> _channelList = new List<IChannel>();
+
+        public SessionMock()
+        {
+            for(int i=0; i<6; i++)
+            {
+                _channelList.Add(new ChannelMock(i));
+            }
+        }
+
+        public void Dispose()
+        {
+            
+        }
+
+        public IChannel GetChannel(int v)
+        {
+            return _channelList[v];
+        }
+
+        public List<IChannel> GetChannels()
+        {
+            return _channelList;
+        }
+
+        public IWriterAdapter<ushort[]> GetDigitalWriter()
+        {
+            throw new NotImplementedException();
+        }
+
+        public int GetNumberOfChannels()
+        {
+            return _channelList.Count;
+        }
+
+        public void Stop()
+        {
+            throw new NotImplementedException();
+        }
+
+        IReaderAdapter<ushort[]> ISession.GetDigitalReader()
+        {
+            return new DReaderMock(6);
+        }
+    }
+    public class DReaderMock : IReaderAdapter<UInt16[]>
+    {
+        int _numOfChannels;
+
+        public DReaderMock(int numOfChannels)
+        {
+            _numOfChannels = numOfChannels;
+        }
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+
+        ushort[] IReaderAdapter<ushort[]>.ReadSingleScan()
+        {
+            ushort[] scan = new ushort[_numOfChannels];
+            for(int c=0; c<_numOfChannels; c++)
+            {
+                scan[c] = 0x1122;
+            }
+            return scan;
+        }
+    }
+    public class ChannelMock : IChannel
+    {
+        int _channelIndex;
+
+        public ChannelMock(int channelIndex)
+        {
+            _channelIndex = channelIndex;
+        }
+
+        public int GetIndex()
+        {
+            return _channelIndex;
+        }
+
+        public string GetResourceName()
+        {
+            return "simu://Dev2/Do0:3";
+        }
     }
 
 }

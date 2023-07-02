@@ -125,7 +125,7 @@ namespace UeiBridge
         public override void Dispose()
         {
             _inDisposeState = true;
-            base.HaltMessageLoop();
+            //base.HaltMessageLoop();
             _analogWriter.Dispose();
             CloseSession(_ueiSession);
             base.Dispose();

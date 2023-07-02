@@ -1,5 +1,5 @@
 ﻿using System;
-using UeiDaq;
+//using UeiDaq;
 using UeiBridge.Types;
 using UeiBridge.Library;
 using System.Collections.Generic;
@@ -18,26 +18,26 @@ namespace UeiBridge
 
         //private DigitalReader _reader;
         private log4net.ILog _logger = StaticMethods.GetLogger();
-        private IConvert2<UInt16[]> _attachedConverter;
+        //private IConvert2<UInt16[]> _attachedConverter;
+        private DigitalConverter _digitalConverter = new DigitalConverter();
         private DIO403Setup _thisDeviceSetup;
         //private UInt16[] _lastScan;
         private System.Threading.Timer _samplingTimer;
         //private const string _channelsString = "Di1,3,5"; // 3 * 8 last bits as 'out'
-        private Session _ueiSession;
+        private ISession _ueiSession;
         private ISend<SendObject> _targetConsumer;
         private byte[] _fullBuffer8bit;
         private List<byte> _scanMask = new List<byte>();
-        private IReaderAdapter<UInt16[]> _digitalReader;
-        private const int _maxNumberOfChannels = 6; // fixed. by device spec.
+        //private IReaderAdapter<UInt16[]> _digitalReader;
+        //private const int _maxNumberOfChannels = 6; // fixed. by device spec.
+        private IReaderAdapter<UInt16[]> _ueiDigitalReader;
 
-        public DIO403InputDeviceManager(DeviceSetup setup, IReaderAdapter<UInt16[]> digitalReader, Session ueiSession, ISend<SendObject> targetConsumer): base (setup)
+        public DIO403InputDeviceManager(DIO403Setup setup, ISession ueiSession, ISend<SendObject> targetConsumer): base (setup)
         {
-            _thisDeviceSetup = setup as DIO403Setup;
-            _digitalReader = digitalReader;
+            _thisDeviceSetup = setup;
             _ueiSession = ueiSession;
             _targetConsumer = targetConsumer;
-
-            _attachedConverter = new DigitalConverter();// StaticMethods.CreateConverterInstance( setup);
+            _ueiDigitalReader = _ueiSession.GetDigitalReader();
 
             System.Diagnostics.Debug.Assert(null != setup);
             System.Diagnostics.Debug.Assert(DeviceName.Equals(setup.DeviceName));
@@ -47,11 +47,11 @@ namespace UeiBridge
         public override bool OpenDevice()
         {
             // build scan-mask
-            for(int i=0; i < _maxNumberOfChannels; i++)
-            {
-                _scanMask.Add(0);
-            }
-            foreach (Channel ch in _ueiSession.GetChannels())
+            int numOfCh = _thisDeviceSetup.IOChannelList.Count;
+            byte[] ba = new byte[numOfCh];
+            Array.Clear(ba, 0, ba.Length);
+            _scanMask = new List<byte>(ba);
+            foreach (IChannel ch in _ueiSession.GetChannels())
             {
                 int i = ch.GetIndex();
                 _scanMask[i] = 0xff;
@@ -83,28 +83,33 @@ namespace UeiBridge
             _samplingTimer?.Dispose();
             System.Threading.Thread.Sleep(200); // wait for callback to finish
             _targetConsumer.Dispose();
-            CloseSession(_ueiSession);
+
+            _ueiDigitalReader?.Dispose();
+
+            _ueiSession.Dispose();
+
+            base.Dispose();
         }
 
         public void DeviceScan_Callback(object state)
         {
-            ushort[] fullBuffer16bit = new ushort[_maxNumberOfChannels];
+            ushort[] fullBuffer16bit = new ushort[_thisDeviceSetup.IOChannelList.Count];
             Array.Clear(fullBuffer16bit, 0, fullBuffer16bit.Length);
 
             // read from device
             // ===============
             try
             {
-                UInt16[] singleScan = _digitalReader.ReadSingleScan();
+                UInt16[] singleScan = _ueiDigitalReader.ReadSingleScan();
             
                 // fix to full buffer
                 int i = 0;
-                foreach( Channel ch in _ueiSession.GetChannels())
+                foreach( IChannel ch in _ueiSession.GetChannels())
                 {
                     fullBuffer16bit[ch.GetIndex()] = singleScan[i++];
                 }
                 // make EthernetMessage
-                _fullBuffer8bit = _attachedConverter.UpstreamConvert(fullBuffer16bit);
+                _fullBuffer8bit = _digitalConverter.UpstreamConvert(fullBuffer16bit);
                 var ethMsg = StaticMethods.BuildEthernetMessageFromDevice( _fullBuffer8bit, _thisDeviceSetup);
                 // send
                 _targetConsumer.Send(new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), ethMsg.GetByteArray( MessageWay.upstream)));

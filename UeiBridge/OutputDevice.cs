@@ -144,6 +144,7 @@ namespace UeiBridge
 
         public virtual void Dispose()
         {
+            HaltMessageLoop();
             _logger.Debug($"Device manager {InstanceName} Disposed");
         }
         public virtual void HaltMessageLoop()
