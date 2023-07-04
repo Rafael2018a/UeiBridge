@@ -14,30 +14,21 @@ namespace UeiBridge
     public class DIO403InputDeviceManager : InputDevice
     {
         public override string DeviceName => "DIO-403";
-        public ISend<SendObject> TargetConsumer { get => _targetConsumer; set => _targetConsumer = value; }
 
-        //private DigitalReader _reader;
         private log4net.ILog _logger = StaticMethods.GetLogger();
-        //private IConvert2<UInt16[]> _attachedConverter;
         private DigitalConverter _digitalConverter = new DigitalConverter();
         private DIO403Setup _thisDeviceSetup;
-        //private UInt16[] _lastScan;
         private System.Threading.Timer _samplingTimer;
-        //private const string _channelsString = "Di1,3,5"; // 3 * 8 last bits as 'out'
-        private ISession _ueiSession;
-        private ISend<SendObject> _targetConsumer;
         private byte[] _fullBuffer8bit;
         private List<byte> _scanMask = new List<byte>();
-        //private IReaderAdapter<UInt16[]> _digitalReader;
-        //private const int _maxNumberOfChannels = 6; // fixed. by device spec.
         private IReaderAdapter<UInt16[]> _ueiDigitalReader;
 
         public DIO403InputDeviceManager(DIO403Setup setup, ISession ueiSession, ISend<SendObject> targetConsumer): base (setup)
         {
             _thisDeviceSetup = setup;
-            _ueiSession = ueiSession;
-            _targetConsumer = targetConsumer;
-            _ueiDigitalReader = _ueiSession.GetDigitalReader();
+            UeiSession = ueiSession;
+            TargetConsumer = targetConsumer;
+            _ueiDigitalReader = UeiSession.GetDigitalReader();
 
             System.Diagnostics.Debug.Assert(null != setup);
             System.Diagnostics.Debug.Assert(DeviceName.Equals(setup.DeviceName));
@@ -51,7 +42,7 @@ namespace UeiBridge
             byte[] ba = new byte[numOfCh];
             Array.Clear(ba, 0, ba.Length);
             _scanMask = new List<byte>(ba);
-            foreach (IChannel ch in _ueiSession.GetChannels())
+            foreach (IChannel ch in UeiSession.GetChannels())
             {
                 int i = ch.GetIndex();
                 _scanMask[i] = 0xff;
@@ -60,7 +51,7 @@ namespace UeiBridge
             try
             {
                 // emit log message
-                string res = _ueiSession.GetChannel(0).GetResourceName();
+                string res = UeiSession.GetChannel(0).GetResourceName();
                 string localpath = (new Uri(res)).LocalPath;
                 EmitInitMessage($"Init success: {DeviceName}. As {localpath}. Dest: {_thisDeviceSetup.DestEndPoint.ToIpEp()}"); // { noOfCh} output channels
 
@@ -73,7 +64,7 @@ namespace UeiBridge
             catch (Exception ex)
             {
                 _logger.Error(ex.Message);
-                _ueiSession = null;
+                UeiSession = null;
                 return false;
             }
         }
@@ -82,11 +73,7 @@ namespace UeiBridge
             _logger.Debug($"Disposing {this.DeviceName}/Input, slot {_thisDeviceSetup.SlotNumber}");
             _samplingTimer?.Dispose();
             System.Threading.Thread.Sleep(200); // wait for callback to finish
-            _targetConsumer.Dispose();
-
             _ueiDigitalReader?.Dispose();
-
-            _ueiSession.Dispose();
 
             base.Dispose();
         }
@@ -104,7 +91,7 @@ namespace UeiBridge
             
                 // fix to full buffer
                 int i = 0;
-                foreach( IChannel ch in _ueiSession.GetChannels())
+                foreach( IChannel ch in UeiSession.GetChannels())
                 {
                     fullBuffer16bit[ch.GetIndex()] = singleScan[i++];
                 }
@@ -112,14 +99,13 @@ namespace UeiBridge
                 _fullBuffer8bit = _digitalConverter.UpstreamConvert(fullBuffer16bit);
                 var ethMsg = StaticMethods.BuildEthernetMessageFromDevice( _fullBuffer8bit, _thisDeviceSetup);
                 // send
-                _targetConsumer.Send(new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), ethMsg.GetByteArray( MessageWay.upstream)));
+                TargetConsumer.Send(new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), ethMsg.GetByteArray( MessageWay.upstream)));
             }
             catch (Exception ex)
             {
                 _logger.Error(ex.Message);
             }
         }
-
         
         public override string [] GetFormattedStatus( TimeSpan interval)
         {

@@ -20,6 +20,8 @@ namespace UeiBridge
         public string InstanceName { get; private set; }
         //public int SlotNumber { get; private set; }
         private log4net.ILog _logger = StaticMethods.GetLogger();
+        protected ISession UeiSession { get; set; }
+        public ISend<SendObject> TargetConsumer { get ; set; }
 
         public InputDevice() { }
         protected InputDevice( DeviceSetup setup)
@@ -42,6 +44,8 @@ namespace UeiBridge
 
         public virtual void Dispose()
         {
+            UeiSession?.Dispose();
+            TargetConsumer?.Dispose();
             _logger.Debug($"Device manager {InstanceName} Disposed");
         }
 

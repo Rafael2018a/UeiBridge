@@ -42,7 +42,7 @@ namespace UeiBridge
             }
         }
     }
-
+#if dont
     public class SL508Session1 : IDisposable
     {
         private SL508892Setup _thisDeviceSetup;
@@ -183,6 +183,7 @@ namespace UeiBridge
             }
         }
     }
+#endif
 }
 // Allowed rates, from Brian:
 // DQ_SL501_BAUD_300           (1L)
