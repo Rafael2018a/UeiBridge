@@ -12,8 +12,8 @@ namespace UeiBridge
         public override string DeviceName => DeviceMap2.AO322Literal;
         AO332Setup _thisSetup;
         //UeiDaq.Session _udeSession;
-        public AO332OutputDeviceManager(DeviceSetup deviceSetup1, IWriterAdapter<double[]> analogWriter, UeiDaq.Session session)
-    : base(deviceSetup1, analogWriter, session, true)
+        public AO332OutputDeviceManager(DeviceSetup deviceSetup1, ISession session)
+    : base(deviceSetup1, session, true)
         {
             _thisSetup = deviceSetup1 as AO332Setup;
             _ueiSession = session;

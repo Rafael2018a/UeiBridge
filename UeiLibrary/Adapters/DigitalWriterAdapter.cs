@@ -3,11 +3,11 @@ using UeiDaq;
 
 namespace UeiBridge.Library
 {
-    public class UeiDigitalWriterAdapter : IWriterAdapter<UInt16[]>
+    public class DigitalWriterAdapter : IWriterAdapter<UInt16[]>
     {
         private DigitalWriter _digitalWriter;
 
-        public UeiDigitalWriterAdapter(DigitalWriter digitalWriter)
+        public DigitalWriterAdapter(DigitalWriter digitalWriter)
         {
             _digitalWriter = digitalWriter;
         }

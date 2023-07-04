@@ -2,11 +2,11 @@
 
 namespace UeiBridge.Library
 {
-    public class UeiChannelAdapter : IChannel
+    public class ChannelAdapter : IChannel
     {
         Channel _channel;
 
-        public UeiChannelAdapter(Channel channel)
+        public ChannelAdapter(Channel channel)
         {
             _channel = channel;
         }

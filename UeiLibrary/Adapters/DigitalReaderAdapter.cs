@@ -3,11 +3,11 @@ using UeiDaq;
 
 namespace UeiBridge.Library
 {
-    public class UeiDigitalReaderAdapter : IReaderAdapter<UInt16[]>
+    public class DigitalReaderAdapter : IReaderAdapter<UInt16[]>
     {
         private DigitalReader _digitalReader;
 
-        public UeiDigitalReaderAdapter(DigitalReader digitalReader)
+        public DigitalReaderAdapter(DigitalReader digitalReader)
         {
             this._digitalReader = digitalReader;
         }

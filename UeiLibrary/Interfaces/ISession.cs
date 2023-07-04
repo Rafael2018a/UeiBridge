@@ -12,6 +12,9 @@ namespace UeiBridge.Library
         IWriterAdapter<UInt16[]> GetDigitalWriter();
         //void Stop();
         int GetNumberOfChannels();
+        IDevice GetDevice();
+        IWriterAdapter<double[]> GetAnalogScaledReader();
+        IWriterAdapter<double[]> GetAnalogScaledWriter();
     }
 
 

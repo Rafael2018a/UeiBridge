@@ -200,9 +200,10 @@ namespace UeiBridge
             var c = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
             System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
             theSession.ConfigureTimingForSimpleIO();
-            var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()), theSession);
+            //var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()));
+            SessionAdapter tsa = new SessionAdapter(theSession);
 
-            AO308OutputDeviceManager ao308 = new AO308OutputDeviceManager(setup as AO308Setup, aWriter, theSession, bsActive);
+            AO308OutputDeviceManager ao308 = new AO308OutputDeviceManager(setup as AO308Setup, tsa, bsActive);
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
 
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
@@ -223,9 +224,11 @@ namespace UeiBridge
             var c = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
             System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
             theSession.ConfigureTimingForSimpleIO();
-            var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()), theSession);
+            //var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()));
+            SessionAdapter tsa = new SessionAdapter(theSession);
 
-            AO332OutputDeviceManager ao322 = new AO332OutputDeviceManager(setup as AO332Setup, aWriter, theSession);
+
+            AO332OutputDeviceManager ao322 = new AO332OutputDeviceManager(setup as AO332Setup, tsa);
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
 
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
@@ -246,9 +249,10 @@ namespace UeiBridge
             var c = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
             System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
             theSession.ConfigureTimingForSimpleIO();
-            var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()), theSession);
+            //var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()));
             System.Diagnostics.Debug.Assert(null != (setup as SimuAO16Setup));
-            SimuAO16OutputDeviceManager ao16 = new SimuAO16OutputDeviceManager(setup, aWriter, theSession);
+            SessionAdapter tsa = new SessionAdapter(theSession);
+            SimuAO16OutputDeviceManager ao16 = new SimuAO16OutputDeviceManager(setup, tsa);
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
 
             // set ao308 as consumer of udp-reader
@@ -362,7 +366,7 @@ namespace UeiBridge
             outSession.CreateDOChannel(cubeUrl);
             outSession.ConfigureTimingForSimpleIO();
             //DigitalWriterAdapter digitalWriter = new DigitalWriterAdapter(new UeiDaq.DigitalWriter(outSession.GetDataStream()));
-            UeiSessionAdapter sa1 = new UeiSessionAdapter(outSession);
+            SessionAdapter sa1 = new SessionAdapter(outSession);
 
             DIO403OutputDeviceManager outDev = new DIO403OutputDeviceManager(setup, sa1);
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
@@ -380,7 +384,7 @@ namespace UeiBridge
             Session inSession = new Session();
             inSession.CreateDIChannel(inSessionUrl);
             inSession.ConfigureTimingForSimpleIO();
-            UeiSessionAdapter sa2 = new UeiSessionAdapter(inSession);
+            SessionAdapter sa2 = new SessionAdapter(inSession);
             //UeiDigitalReaderAdapter digitalReader = new UeiDigitalReaderAdapter(new DigitalReader( inSession.GetDataStream()));
 
             DIO403InputDeviceManager inDev = new DIO403InputDeviceManager(setup, sa2, udpWriter);
@@ -433,9 +437,10 @@ namespace UeiBridge
                 var ch = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
                 System.Diagnostics.Debug.Assert(ch.GetMaximum() == AO308Setup.PeekVoltage_downstream);
                 theSession.ConfigureTimingForSimpleIO();
-                var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()), theSession);
+                //var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()), theSession);
+                SessionAdapter tsa = new SessionAdapter(theSession);
 
-                BlockSensorManager2 blockSensor = new BlockSensorManager2(bssetup, aWriter, theSession);
+                BlockSensorManager2 blockSensor = new BlockSensorManager2(bssetup, tsa);
 
 #if !blocksim
                 // redirect dio430/input to block-sensor.

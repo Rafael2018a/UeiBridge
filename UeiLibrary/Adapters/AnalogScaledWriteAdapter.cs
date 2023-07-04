@@ -2,21 +2,20 @@
 using UeiDaq;
 using UeiBridge.Library;
 
-namespace UeiBridge
+namespace UeiBridge.Library
 {
-#if dont
-    public class AnalogWriteAdapter : IWriterAdapter<double[]>
+    public class AnalogScaledWriteAdapter : IWriterAdapter<double[]>
     {
         AnalogScaledWriter _ueiAnalogWriter;
-        Session _originSession;
+        //Session _originSession;
 
-        public AnalogWriteAdapter(AnalogScaledWriter analogWriter, Session originSession)
+        public AnalogScaledWriteAdapter(AnalogScaledWriter analogWriter)
         {
             this._ueiAnalogWriter = analogWriter;
-            _originSession = originSession;
+            //_originSession = originSession;
         }
 
-        public Session OriginSession => _originSession;
+        //public Session OriginSession => _originSession;
 
         public void Dispose()
         {
@@ -28,5 +27,4 @@ namespace UeiBridge
             _ueiAnalogWriter.WriteSingleScan(scan);
         }
     }
-#endif
 }

@@ -19,7 +19,7 @@ namespace UeiBridge
         #region === publics ====
         public override string DeviceName => DeviceMap2.AO308Literal;
         public IWriterAdapter<double[]> AnalogWriter => _analogWriter;
-        public Session UeiSession { get => _ueiSession; }
+        public ISession UeiSession { get => _ueiSession; }
         public bool IsBlockSensorActive { get; private set; }
         #endregion
 
@@ -29,12 +29,12 @@ namespace UeiBridge
         protected bool _inDisposeState = false;
         protected AnalogConverter _attachedConverter;
 
-        protected Session _ueiSession;
+        protected ISession _ueiSession;
         private DeviceSetup _deviceSetup;
 
-        public AO308OutputDeviceManager(DeviceSetup deviceSetup1, IWriterAdapter<double[]> analogWriter, UeiDaq.Session session, bool isBlockSensorActive) : base(deviceSetup1)
+        public AO308OutputDeviceManager(DeviceSetup deviceSetup1, ISession session, bool isBlockSensorActive) : base(deviceSetup1)
         {
-            this._analogWriter = analogWriter;
+            //this._analogWriter = analogWriter;
             this._ueiSession = session;
             this.IsBlockSensorActive = isBlockSensorActive;
             this._deviceSetup = deviceSetup1;
@@ -45,10 +45,11 @@ namespace UeiBridge
         {
             try
             {
+                _analogWriter = _ueiSession.GetAnalogScaledWriter();
                 _attachedConverter = new AnalogConverter(AI201100Setup.PeekVoltage_upstream, AO308Setup.PeekVoltage_downstream);
 
                 int numOfCh = _ueiSession.GetNumberOfChannels();
-                System.Diagnostics.Debug.Assert(numOfCh == 8);
+                System.Diagnostics.Debug.Assert(numOfCh > 0);
 
                 Task.Factory.StartNew(() => OutputDeviceHandler_Task());
 
@@ -127,7 +128,7 @@ namespace UeiBridge
             _inDisposeState = true;
             //base.HaltMessageLoop();
             _analogWriter.Dispose();
-            CloseSession(_ueiSession);
+            _ueiSession.Dispose();
             base.Dispose();
         }
     }
