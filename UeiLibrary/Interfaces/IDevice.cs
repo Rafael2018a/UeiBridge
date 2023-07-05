@@ -1,7 +1,10 @@
-﻿namespace UeiBridge.Library
+﻿using UeiDaq;
+
+namespace UeiBridge.Library
 {
     public interface IDevice
     {
-        UeiDaq.Range[] GetAORanges();
+        Range[] GetAORanges();
+        Range[] GetAIRanges();
     }
 }

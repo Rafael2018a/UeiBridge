@@ -331,7 +331,16 @@ namespace UeiBridge
         {
             string instanceName = $"{realDevice.DeviceName}/Slot{realDevice.DeviceSlot}";
             UdpWriter uWriter = new UdpWriter( setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMCast);
-            AI201InputDeviceManager id = new AI201InputDeviceManager(uWriter, setup as AI201100Setup);
+
+
+            Session sess1 = new Session();
+            string url1 = $"{setup.CubeUrl}Dev{setup.SlotNumber}/Ai0: 23";
+            double peek = AI201100Setup.PeekVoltage_upstream;
+            sess1.CreateAIChannel( url1, -peek, peek, AIChannelInputMode.SingleEnded); // -15,15 means 'no gain'
+            //var numberOfChannels = _ueiSession.GetNumberOfChannels();
+            sess1.ConfigureTimingForSimpleIO();
+
+            AI201InputDeviceManager id = new AI201InputDeviceManager(setup as AI201100Setup, new SessionAdapter( sess1), uWriter );
 
             var pd = new PerDeviceObjects(realDevice);
             //pd.UdpWriter = uWriter;
@@ -358,44 +367,50 @@ namespace UeiBridge
         private List<PerDeviceObjects> Build_DIO403(UeiDeviceInfo realDevice, DeviceSetup devSetup)
         {
             DIO403Setup setup = devSetup as DIO403Setup;
+
             // prepare output manager
-            // ========================
+            // =======================
+
+            // build session
             string outDevString = ComposeDio403DeviceString( realDevice, MessageWay.downstream);
-            string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/{outDevString}";// Do0:2 - 3*8 first bits as 'out'
+            string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/{outDevString}";
             Session outSession = new Session();
             outSession.CreateDOChannel(cubeUrl);
             outSession.ConfigureTimingForSimpleIO();
-            //DigitalWriterAdapter digitalWriter = new DigitalWriterAdapter(new UeiDaq.DigitalWriter(outSession.GetDataStream()));
             SessionAdapter sa1 = new SessionAdapter(outSession);
 
+            // build device manager
             DIO403OutputDeviceManager outDev = new DIO403OutputDeviceManager(setup, sa1);
+
+            // build udp reader
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
             UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, outDev.InstanceName);
-            _udpMessenger.SubscribeConsumer(outDev, realDevice.CubeId, realDevice.DeviceSlot);
             _udpReaderList.Add(ureader);
 
+            // Subscribe device manager as consumer to incoming messages
+            _udpMessenger.SubscribeConsumer(outDev, realDevice.CubeId, realDevice.DeviceSlot);
+            
             // prepare input manager
             // =======================
-            //string instanceName = $"{realDevice.DeviceName}/Slot{realDevice.DeviceSlot}";
-            //DIO403InputDeviceManager id = new DIO403InputDeviceManager(udpWriter, setup);
+
+            // build udp writer
             UdpWriter udpWriter = new UdpWriter( setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMCast);
+
+            // build session
             string inDevString = ComposeDio403DeviceString(realDevice, MessageWay.upstream);
             string inSessionUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/{inDevString}";
             Session inSession = new Session();
             inSession.CreateDIChannel(inSessionUrl);
             inSession.ConfigureTimingForSimpleIO();
             SessionAdapter sa2 = new SessionAdapter(inSession);
-            //UeiDigitalReaderAdapter digitalReader = new UeiDigitalReaderAdapter(new DigitalReader( inSession.GetDataStream()));
-
+            
+            // build device manager
             DIO403InputDeviceManager inDev = new DIO403InputDeviceManager(setup, sa2, udpWriter);
 
-            // register objects 
-            // =================
+            // register in+out mangers
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
             pd.OutputDeviceManager = outDev;
             pd.InputDeviceManager = inDev;
-            //pd.UdpWriter = udpWriter;
-
 
             return new List<PerDeviceObjects>() { pd };
         }

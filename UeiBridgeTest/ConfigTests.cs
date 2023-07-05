@@ -75,7 +75,7 @@ namespace UeiBridgeTest
         [Test]
         public void LoadCubeSetupFromFileTest()
         {
-            UeiBridge.Library.CubeSetup cs = UeiBridge.Library.Config2.LoadCubeSetupFromFile("Cube2.ForTest.config");
+            UeiBridge.Library.CubeSetup cs = UeiBridge.Library.Config2.LoadCubeSetupFromFile("Cube.fortest.config");
             Assert.That(cs, Is.Not.Null);
         }
         [Test]

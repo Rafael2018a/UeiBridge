@@ -17,7 +17,7 @@ namespace UeiBridge
     {
         public override string DeviceName => "AI-201-100"; // 
 
-        private AnalogScaledReader _reader;
+        private IReaderAdapter<double[]> _reader;
         private log4net.ILog _logger = StaticMethods.GetLogger();
         private IConvert2<double[]> _attachedConverter;
         private AI201100Setup _thisDeviceSetup;
@@ -25,16 +25,16 @@ namespace UeiBridge
         private System.Threading.Timer _samplingTimer;
 
         const string _channelsString = "Ai0:23";
-        private Session _ueiSession;
+        private ISession _ueiSession;
         private ISend<SendObject> _targetConsumer;
 
-        public AI201InputDeviceManager(ISend<SendObject> targetConsumer, AI201100Setup setup) : base( setup)
+        public AI201InputDeviceManager(AI201100Setup setup, ISession session,  ISend<SendObject> targetConsumer ) : base( setup)
         {
-            
-            _attachedConverter = new AnalogConverter(AI201100Setup.PeekVoltage_upstream, AO308Setup.PeekVoltage_downstream);
-            
-            _targetConsumer = targetConsumer;
             _thisDeviceSetup = setup;
+            _ueiSession = session;
+            _targetConsumer = targetConsumer;
+
+            _attachedConverter = new AnalogConverter(AI201100Setup.PeekVoltage_upstream, AO308Setup.PeekVoltage_downstream);
             System.Diagnostics.Debug.Assert(this.DeviceName.Equals(setup.DeviceName));
         }
 
@@ -69,12 +69,13 @@ namespace UeiBridge
             try
             {
                 string url1 = $"{_thisDeviceSetup.CubeUrl}Dev{_thisDeviceSetup.SlotNumber}/{_channelsString}";
-                _ueiSession = new Session();
-                _ueiSession.CreateAIChannel(url1, -peek, peek, AIChannelInputMode.SingleEnded); // -15,15 means 'no gain'
+                //_ueiSession = new Session();
+                //_ueiSession.CreateAIChannel(url1, -peek, peek, AIChannelInputMode.SingleEnded); // -15,15 means 'no gain'
                 var numberOfChannels = _ueiSession.GetNumberOfChannels();
-                _ueiSession.ConfigureTimingForSimpleIO();
-                _reader = new AnalogScaledReader(_ueiSession.GetDataStream());
-                var r = _ueiSession.GetDevice().GetAIRanges();
+                //_ueiSession.ConfigureTimingForSimpleIO();
+                _reader = _ueiSession.GetAnalogScaledReader();
+                    //new AnalogScaledReader(_ueiSession.GetDataStream());
+                Range[] r = _ueiSession.GetDevice().GetAIRanges();
                 TimeSpan interval = TimeSpan.FromMilliseconds(_thisDeviceSetup.SamplingInterval);
                 _samplingTimer = new System.Threading.Timer(HandleResponse_Callback, null, TimeSpan.Zero, interval);
                 EmitInitMessage($"Init success. {DeviceName}. {_ueiSession.GetNumberOfChannels()} input channels. Dest:{_thisDeviceSetup.DestEndPoint.ToIpEp()}");
@@ -92,7 +93,7 @@ namespace UeiBridge
             System.Threading.Thread.Sleep(200);
             _reader.Dispose();
             _targetConsumer.Dispose();
-            CloseSession(_ueiSession);
+            _ueiSession.Dispose();
             base.Dispose();
         }
 

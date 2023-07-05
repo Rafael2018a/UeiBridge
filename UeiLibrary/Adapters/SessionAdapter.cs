@@ -8,10 +8,10 @@ namespace UeiBridge.Library
     public class SessionAdapter : ISession
     {
         Session _ueiSession;
-        DigitalReaderAdapter _digitalReader;
-        DigitalWriterAdapter _digitalWriter;
-        AnalogScaledWriteAdapter _analogScaledWriter;
-        //AnalogScaledReaderAdapter _analogScaledReader;
+        DigitalReaderAdapter _digitalReaderAd;
+        DigitalWriterAdapter _digitalWriterAd;
+        AnalogScaledWriteAdapter _analogWriterAd;
+        AnalogScaledReaderAdapter _analogReaderAd;
 
         public SessionAdapter(Session ueiSession)
         {
@@ -31,37 +31,40 @@ namespace UeiBridge.Library
             _ueiSession.Dispose();
         }
 
-        public IWriterAdapter<double[]> GetAnalogScaledReader()
+        public IReaderAdapter<double[]> GetAnalogScaledReader()
         {
-            //if (null==_analogScaledWriter)
-            throw new NotImplementedException();
+            if (null == _analogReaderAd)
+            {
+                _analogReaderAd = new AnalogScaledReaderAdapter( new AnalogScaledReader( _ueiSession.GetDataStream()));
+            }
+            return _analogReaderAd;
         }
 
         public IWriterAdapter<double[]> GetAnalogScaledWriter()
         {
-            if (null==_analogScaledWriter)
+            if (null==_analogWriterAd)
             {
-                _analogScaledWriter = new AnalogScaledWriteAdapter( new AnalogScaledWriter( _ueiSession.GetDataStream()));
+                _analogWriterAd = new AnalogScaledWriteAdapter( new AnalogScaledWriter( _ueiSession.GetDataStream()));
             }
-            return _analogScaledWriter;
+            return _analogWriterAd;
         }
 
         public IReaderAdapter<UInt16[]> GetDigitalReader()
         {
-            if (null==_digitalReader)
+            if (null==_digitalReaderAd)
             {
-                _digitalReader = new DigitalReaderAdapter( new DigitalReader(_ueiSession.GetDataStream()));
+                _digitalReaderAd = new DigitalReaderAdapter( new DigitalReader(_ueiSession.GetDataStream()));
             }
-            return _digitalReader;
+            return _digitalReaderAd;
         }
 
         public IWriterAdapter<UInt16[]> GetDigitalWriter()
         {
-            if (null==_digitalWriter)
+            if (null==_digitalWriterAd)
             {
-                _digitalWriter = new DigitalWriterAdapter(new DigitalWriter(_ueiSession.GetDataStream()));
+                _digitalWriterAd = new DigitalWriterAdapter(new DigitalWriter(_ueiSession.GetDataStream()));
             }
-            return _digitalWriter;
+            return _digitalWriterAd;
         }
 
         public int GetNumberOfChannels()

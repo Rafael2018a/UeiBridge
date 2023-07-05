@@ -63,6 +63,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Adapters\AnalogScaledReaderAdapter.cs" />
     <Compile Include="Adapters\AnalogScaledWriteAdapter.cs" />
     <Compile Include="Adapters\DeviceAdapter.cs" />
     <Compile Include="Config2.cs" />

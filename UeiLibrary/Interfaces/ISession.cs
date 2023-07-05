@@ -13,11 +13,7 @@ namespace UeiBridge.Library
         //void Stop();
         int GetNumberOfChannels();
         IDevice GetDevice();
-        IWriterAdapter<double[]> GetAnalogScaledReader();
+        IReaderAdapter<double[]> GetAnalogScaledReader();
         IWriterAdapter<double[]> GetAnalogScaledWriter();
     }
-
-
-
-
 }

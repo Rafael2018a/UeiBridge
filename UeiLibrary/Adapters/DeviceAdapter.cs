@@ -11,6 +11,11 @@ namespace UeiBridge.Library
             this._device = device;
         }
 
+        public Range[] GetAIRanges()
+        {
+            return this._device.GetAIRanges();
+        }
+
         public Range[] GetAORanges()
         {
             return this._device.GetAORanges();
