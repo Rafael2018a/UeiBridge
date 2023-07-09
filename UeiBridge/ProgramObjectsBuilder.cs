@@ -1,4 +1,4 @@
-﻿//#define blocksim1 // block sensor simulation
+﻿#define blocksim // block sensor simulation
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -200,6 +200,7 @@ namespace UeiBridge
             var c = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
             System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
             theSession.ConfigureTimingForSimpleIO();
+            theSession.Start();
             //var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()));
             SessionAdapter tsa = new SessionAdapter(theSession);
 
@@ -339,6 +340,7 @@ namespace UeiBridge
             sess1.CreateAIChannel( url1, -peek, peek, AIChannelInputMode.SingleEnded); // -15,15 means 'no gain'
             //var numberOfChannels = _ueiSession.GetNumberOfChannels();
             sess1.ConfigureTimingForSimpleIO();
+            sess1.Start();
 
             AI201InputDeviceManager id = new AI201InputDeviceManager(setup as AI201100Setup, new SessionAdapter( sess1), uWriter );
 
@@ -377,6 +379,7 @@ namespace UeiBridge
             Session outSession = new Session();
             outSession.CreateDOChannel(cubeUrl);
             outSession.ConfigureTimingForSimpleIO();
+            outSession.Start();
             SessionAdapter sa1 = new SessionAdapter(outSession);
 
             // build device manager
@@ -402,6 +405,7 @@ namespace UeiBridge
             Session inSession = new Session();
             inSession.CreateDIChannel(inSessionUrl);
             inSession.ConfigureTimingForSimpleIO();
+            inSession.Start();
             SessionAdapter sa2 = new SessionAdapter(inSession);
             
             // build device manager
@@ -452,6 +456,7 @@ namespace UeiBridge
                 var ch = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
                 System.Diagnostics.Debug.Assert(ch.GetMaximum() == AO308Setup.PeekVoltage_downstream);
                 theSession.ConfigureTimingForSimpleIO();
+                theSession.Start();
                 //var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()), theSession);
                 SessionAdapter tsa = new SessionAdapter(theSession);
 
@@ -480,8 +485,11 @@ namespace UeiBridge
                 //ureader.Start();
 
 #if blocksim
-                byte[] d403 = Library.StaticMethods.Make_Dio403_upstream_message(new byte[] { 0x5, 0, 0 });
-                blockSensor.Enqueue(d403);
+                // send single message to block sensor
+                //byte[] d403 = Library.StaticMethods.Make_Dio403_upstream_message(new byte[] { 0x5, 0, 0 });
+                string err=null;
+                var ethMsg = EthernetMessage.CreateMessage(DeviceMap2.GetCardIdFromCardName(DeviceMap2.DIO403Literal), 1,2, new byte[] { 0x5, 0, 0, 0, 0, 0 });
+                blockSensor.Enqueue(ethMsg.GetByteArray(MessageWay.upstream));
 #endif
                 _PerDeviceObjectsList.Add(pd);
 

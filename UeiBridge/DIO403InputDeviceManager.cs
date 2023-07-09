@@ -30,8 +30,8 @@ namespace UeiBridge
             TargetConsumer = targetConsumer;
             _ueiDigitalReader = UeiSession.GetDigitalReader();
 
-            System.Diagnostics.Debug.Assert(null != setup);
-            System.Diagnostics.Debug.Assert(DeviceName.Equals(setup.DeviceName));
+            //System.Diagnostics.Debug.Assert(null != setup);
+            //System.Diagnostics.Debug.Assert(DeviceName.Equals(setup.DeviceName));
 
         }
         public DIO403InputDeviceManager()  { }// must have default c-tor.
@@ -51,9 +51,9 @@ namespace UeiBridge
             try
             {
                 // emit log message
-                string res = UeiSession.GetChannel(0).GetResourceName();
-                string localpath = (new Uri(res)).LocalPath;
-                EmitInitMessage($"Init success: {DeviceName}. As {localpath}. Dest: {_thisDeviceSetup.DestEndPoint.ToIpEp()}"); // { noOfCh} output channels
+                //string res = UeiSession.GetChannel(0).GetResourceName();
+                //string localpath = (new Uri(res)).LocalPath;
+                EmitInitMessage($"Init success: {DeviceName}. Dest: {_thisDeviceSetup.DestEndPoint.ToIpEp()}"); // { noOfCh} output channels
 
                 // make sampling timer
                 TimeSpan interval = TimeSpan.FromMilliseconds(_thisDeviceSetup.SamplingInterval);
@@ -99,7 +99,7 @@ namespace UeiBridge
                 _fullBuffer8bit = _digitalConverter.UpstreamConvert(fullBuffer16bit);
                 var ethMsg = StaticMethods.BuildEthernetMessageFromDevice( _fullBuffer8bit, _thisDeviceSetup);
                 // send
-                TargetConsumer.Send(new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), ethMsg.GetByteArray( MessageWay.upstream)));
+                //TargetConsumer.Send(new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), ethMsg.GetByteArray( MessageWay.upstream)));
             }
             catch (Exception ex)
             {

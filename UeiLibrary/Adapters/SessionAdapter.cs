@@ -5,6 +5,10 @@ using UeiDaq;
 
 namespace UeiBridge.Library
 {
+    /// <summary>
+    /// This class wraps ueidaq.Session object
+    /// It also creates and return session readers/writers upon need.
+    /// </summary>
     public class SessionAdapter : ISession
     {
         Session _ueiSession;
@@ -15,9 +19,12 @@ namespace UeiBridge.Library
 
         public SessionAdapter(Session ueiSession)
         {
+            if (false == ueiSession.IsRunning())
+            {
+                Console.WriteLine($"Session not running");
+            }
             _ueiSession = ueiSession;
         }
-
         public void Dispose()
         {
             try
@@ -30,7 +37,6 @@ namespace UeiBridge.Library
             }
             _ueiSession.Dispose();
         }
-
         public IReaderAdapter<double[]> GetAnalogScaledReader()
         {
             if (null == _analogReaderAd)
@@ -39,7 +45,6 @@ namespace UeiBridge.Library
             }
             return _analogReaderAd;
         }
-
         public IWriterAdapter<double[]> GetAnalogScaledWriter()
         {
             if (null==_analogWriterAd)
@@ -48,7 +53,6 @@ namespace UeiBridge.Library
             }
             return _analogWriterAd;
         }
-
         public IReaderAdapter<UInt16[]> GetDigitalReader()
         {
             if (null==_digitalReaderAd)
@@ -57,7 +61,6 @@ namespace UeiBridge.Library
             }
             return _digitalReaderAd;
         }
-
         public IWriterAdapter<UInt16[]> GetDigitalWriter()
         {
             if (null==_digitalWriterAd)
@@ -66,24 +69,19 @@ namespace UeiBridge.Library
             }
             return _digitalWriterAd;
         }
-
         public int GetNumberOfChannels()
         {
             return _ueiSession.GetNumberOfChannels();
         }
-
-
         IChannel ISession.GetChannel(int v)
         {
             return new ChannelAdapter( _ueiSession.GetChannel(v));
         }
-
         List<IChannel> ISession.GetChannels()
         {
             var r = _ueiSession.GetChannels().Cast<Channel>().ToList().Select(i => new ChannelAdapter(i));
             return r.ToList<IChannel>();
         }
-
         IDevice ISession.GetDevice()
         {
             return new DeviceAdapter( _ueiSession.GetDevice());

@@ -11,6 +11,7 @@ namespace UeiBridge
     {
         public override string DeviceName => DeviceMap2.AO322Literal;
         AO332Setup _thisSetup;
+        private log4net.ILog _logger = StaticMethods.GetLogger();
         //UeiDaq.Session _udeSession;
         public AO332OutputDeviceManager(DeviceSetup deviceSetup1, ISession session)
     : base(deviceSetup1, session, true)

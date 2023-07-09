@@ -18,6 +18,7 @@ namespace UeiBridge
         private int _subaddress = -1;
         private double[] _scanToEmit;
         private BlockSensorSetup _thisDeviceSetup;
+        private log4net.ILog _logger = StaticMethods.GetLogger();
         //private bool _isInDispose = false;
         #endregion
         const int _payloadLength = 28;
@@ -63,7 +64,7 @@ namespace UeiBridge
             // downstream message aimed to block sensor
             if (byteMessage[EthernetMessage._cardTypeOffset] == DeviceMap2.GetCardIdFromCardName(DeviceMap2.BlocksensorLiteral))
             {
-                if (byteMessage.Length == 19) // is from digital card
+                if (byteMessage.Length == 22) // is from digital card
                 {
                     _subaddress = byteMessage[EthernetMessage._payloadOffset] & 0x7; // get lower 3 bits
                     return;
@@ -78,7 +79,7 @@ namespace UeiBridge
                 // verify length
                 if ((_payloadLength + EthernetMessage._payloadOffset) != byteMessage.Length)
                 {
-                    _logger.Warn($"Incoming message length {byteMessage.Length}not match. expecting {_payloadLength + EthernetMessage._payloadOffset + _payloadLength}, message rejected.");
+                    _logger.Warn($"Incoming message length {byteMessage.Length} not match. expecting {_payloadLength + EthernetMessage._payloadOffset + _payloadLength}, message rejected.");
                     return;
                 }
                 // select entries from block-sensor table.

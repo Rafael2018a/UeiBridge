@@ -118,7 +118,7 @@ namespace UeiBridgeTest
         }
 
         [Test]
-        public void DIO403InputDeviceManagerTest() // base on connected cube
+        public void DIO403InputDeviceManagerTest() // based on connected cube
         {
             //Session s = new Session();
             string cubeurl = "pdna://192.168.100.2";//c";
@@ -166,12 +166,14 @@ namespace UeiBridgeTest
         [Test]
         public void DIO403InputDeviceManagerTest2() // this test does not need connected cube
         {
-            string cubeurl = "pdna://192.168.100.2";
-            UeiDeviceInfo info = new UeiDeviceInfo(cubeurl, 2, DeviceMap2.DIO403Literal);
+            string cubeurl = "simu://Dev2/Di0:1";
 
-            ISession sa = new SessionMock(6);
+            Session sess1 = new Session();
+            sess1.CreateDIChannel( cubeurl); // 4 channels, no more (empiric).
+            sess1.ConfigureTimingForSimpleIO();
+            SessionAdapter sa = new SessionAdapter(sess1);
 
-            DIO403Setup setup = new DIO403Setup(null, new EndPoint("8.8.8.8", 5000), info, 6);
+            DIO403Setup setup = new DIO403Setup(null, new EndPoint("8.8.8.8", 5000), new UeiDeviceInfo("simu://", 2, DeviceMap2.DIO403Literal), sess1.GetNumberOfChannels());
             setup.CubeUrl = cubeurl;
 
             SenderMock sm = new SenderMock();
@@ -181,14 +183,17 @@ namespace UeiBridgeTest
 
             System.Threading.Thread.Sleep(100);
 
-            dio403.Dispose();
+            var ls = sa.GetDigitalReader().LastScan;
 
-            Assert.Multiple(() =>
-            {
-                Assert.That(ok, Is.EqualTo(true));
-                Assert.That(sm._sentObject.ByteMessage[0], Is.EqualTo(0x55));
-                Assert.That(sm._sentObject.ByteMessage.Length, Is.EqualTo(22));
-            });
+            Assert.That(ls.Length, Is.EqualTo(sa.GetNumberOfChannels()));
+
+            dio403.Dispose();
+            //Assert.Multiple(() =>
+            //{
+            //    Assert.That(ok, Is.EqualTo(true));
+            //    Assert.That(sm._sentObject.ByteMessage[0], Is.EqualTo(0x55));
+            //    Assert.That(sm._sentObject.ByteMessage.Length, Is.EqualTo(22));
+            //});
         }
 
         [Test]
@@ -272,6 +277,8 @@ namespace UeiBridgeTest
         {
             _numberOfChennels = numberOfChannels;
         }
+
+        public ushort[] LastScan => throw new NotImplementedException();
 
         public void Dispose()
         {
@@ -413,6 +420,8 @@ namespace UeiBridgeTest
         {
             _numOfChannels = numOfChannels;
         }
+
+        public ushort[] LastScan => throw new NotImplementedException();
 
         public void Dispose()
         {

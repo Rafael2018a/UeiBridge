@@ -24,7 +24,7 @@ namespace UeiBridge
         #endregion
 
         protected IWriterAdapter<double[]> _analogWriter;
-        protected log4net.ILog _logger = StaticMethods.GetLogger();
+        private log4net.ILog _logger = StaticMethods.GetLogger();
         protected List<ViewItem<double>> _viewerItemList = new List<ViewItem<double>>();
         protected bool _inDisposeState = false;
         protected AnalogConverter _attachedConverter;

@@ -62,9 +62,9 @@ namespace UeiBridge
                 _scanMask[ch.GetIndex()] = 0xff;
             }
 
-            string res = _ueiSession.GetChannel(0).GetResourceName();
-            string localpath = (new Uri(res)).LocalPath;
-            EmitInitMessage($"Init success: {DeviceName}. As {localpath}. Listening on {_thisDeviceSetup.LocalEndPoint.ToIpEp()}"); 
+            //string res = _ueiSession.GetChannel(0).GetResourceName();
+            //string localpath = (new Uri(res)).LocalPath;
+            EmitInitMessage($"Init success: {DeviceName}. Listening on {_thisDeviceSetup.LocalEndPoint.ToIpEp()}"); 
 
             Task.Factory.StartNew(() => OutputDeviceHandler_Task());
             _isDeviceReady = true;

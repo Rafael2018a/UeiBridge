@@ -162,7 +162,7 @@ namespace UeiBridge.Library
         public int DigitalCardSlot { get; set; }
         public BlockSensorSetup(EndPoint localEndPoint, string deviceName) : base(localEndPoint, null, deviceName)
         {
-            SlotNumber = AnalogCardSlot;
+            SlotNumber = BlockSensorSlotNumber;
         }
 
         protected BlockSensorSetup()
