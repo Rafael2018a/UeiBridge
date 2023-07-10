@@ -154,15 +154,15 @@ namespace UeiBridge.Library
         }
     }
 
-    public class BlockSensorSetup : DeviceSetup
+    public class BlockSensorSetup : AO308Setup
     {
-        public const int BlockSensorSlotNumber = 32;
+        //public const int BlockSensorSlotNumber = 32;
         public bool IsActive { get; set; }
-        public int AnalogCardSlot { get; set; }
+        //public int AnalogCardSlot { get; set; }
         public int DigitalCardSlot { get; set; }
-        public BlockSensorSetup(EndPoint localEndPoint, string deviceName) : base(localEndPoint, null, deviceName)
+        public BlockSensorSetup(EndPoint localEndPoint, UeiDeviceInfo deviceInfo) : base(localEndPoint, deviceInfo)
         {
-            SlotNumber = BlockSensorSlotNumber;
+            //SlotNumber = AnalogCardSlot;
         }
 
         protected BlockSensorSetup()
@@ -181,18 +181,18 @@ namespace UeiBridge.Library
         {
         }
     }
-    public class AO332Setup : DeviceSetup
-    {
-        [XmlIgnore]
-        public static double PeekVoltage_downstream => 10.0;
+    //public class AO332Setup : DeviceSetup
+    //{
+    //    [XmlIgnore]
+    //    public static double PeekVoltage_downstream => 10.0;
 
-        public AO332Setup()
-        {
-        }
-        public AO332Setup(EndPoint localEndPoint, UeiDeviceInfo device) : base(localEndPoint, null, device)
-        {
-        }
-    }
+    //    public AO332Setup()
+    //    {
+    //    }
+    //    public AO332Setup(EndPoint localEndPoint, UeiDeviceInfo device) : base(localEndPoint, null, device)
+    //    {
+    //    }
+    //}
     //public class AO16Setup : AO308Setup { }
     public class SimuAO16Setup : DeviceSetup
     {
@@ -309,6 +309,7 @@ namespace UeiBridge.Library
             switch (ueiDevice.DeviceName)
             {
                 case DeviceMap2.AO308Literal:
+                case DeviceMap2.AO322Literal:
                     result = new AO308Setup(new EndPoint(LocalIP, _portNumber++), ueiDevice);
                     break;
                 case DeviceMap2.DIO403Literal:
@@ -331,9 +332,9 @@ namespace UeiBridge.Library
                 case DeviceMap2.SimuAO16Literal:
                     result = new SimuAO16Setup(new EndPoint(LocalIP, _portNumber++), ueiDevice);
                     break;
-                case DeviceMap2.AO322Literal:
-                    result = new AO332Setup(new EndPoint(LocalIP, _portNumber++), ueiDevice);
-                    break;
+                //case DeviceMap2.AO322Literal:
+                //    result = new AO332Setup(new EndPoint(LocalIP, _portNumber++), ueiDevice);
+                //    break;
                 default:
                     Console.WriteLine($"Config: Device {ueiDevice.DeviceName} not supported.");
                     result = new DeviceSetup(null, null, ueiDevice);
@@ -349,7 +350,7 @@ namespace UeiBridge.Library
     [XmlInclude(typeof(DIO470Setup))]
     [XmlInclude(typeof(AI201100Setup))]
     [XmlInclude(typeof(SL508892Setup))]
-    [XmlInclude(typeof(AO332Setup))]
+    //[XmlInclude(typeof(AO332Setup))]
     [XmlInclude(typeof(BlockSensorSetup))]
     [XmlInclude(typeof(SimuAO16Setup))]
     public class CubeSetup : IEquatable<CubeSetup>
@@ -444,9 +445,10 @@ namespace UeiBridge.Library
             if ((dsa != null) && (dsd != null))
             {
                 //cf = new ConfigFactory();
-                BlockSensorSetup Blocksensor = new BlockSensorSetup(new EndPoint(ConfigFactory.LocalIP, 50105), "BlockSensor");
+                UeiDeviceInfo info = new UeiDeviceInfo(dsa.CubeUrl, dsa.SlotNumber, DeviceMap2.BlocksensorLiteral);
+                BlockSensorSetup Blocksensor = new BlockSensorSetup(new EndPoint(ConfigFactory.LocalIP, 50105), info);
 
-                Blocksensor.AnalogCardSlot = dsa.SlotNumber;
+                //Blocksensor.AnalogCardSlot = dsa.SlotNumber;
                 Blocksensor.DigitalCardSlot = dsd.SlotNumber;
                 return Blocksensor;
             }
@@ -535,6 +537,7 @@ namespace UeiBridge.Library
                         {
                             var serializer = new XmlSerializer(typeof(CubeSetup));
                             serializer.Serialize(fs, defaultSetup);
+                            Console.WriteLine($"Config: File {filename} created");
                         }
                     }
                     else
@@ -663,6 +666,26 @@ namespace UeiBridge.Library
                 return null;
             }
             var theSetups = selectedCube.DeviceSetupList.Where(d => d.SlotNumber == slotNumber);
+            DeviceSetup result = theSetups.FirstOrDefault();
+            if (null != result)
+            {
+                result.CubeUrl = cubeUrl;
+            }
+            return result;
+        }
+        public DeviceSetup GetDeviceSetupEntry(string cubeUrl, string deviceName)
+        {
+            if (this.CubeSetupList == null)
+            {
+                return null;
+            }
+            var cube = this.CubeSetupList.Where(e => e.CubeUrl == cubeUrl);
+            var selectedCube = cube.FirstOrDefault();
+            if (null == selectedCube)
+            {
+                return null;
+            }
+            var theSetups = selectedCube.DeviceSetupList.Where(d => d.DeviceName == deviceName);
             DeviceSetup result = theSetups.FirstOrDefault();
             if (null != result)
             {

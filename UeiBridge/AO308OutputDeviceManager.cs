@@ -18,7 +18,7 @@ namespace UeiBridge
     {
         #region === publics ====
         public override string DeviceName => DeviceMap2.AO308Literal;
-        public IWriterAdapter<double[]> AnalogWriter => _analogWriter;
+        //public IWriterAdapter<double[]> AnalogWriter => _analogWriter;
         public ISession UeiSession { get => _ueiSession; }
         public bool IsBlockSensorActive { get; private set; }
         #endregion
@@ -30,9 +30,9 @@ namespace UeiBridge
         protected AnalogConverter _attachedConverter;
 
         protected ISession _ueiSession;
-        private DeviceSetup _deviceSetup;
+        private AO308Setup _deviceSetup;
 
-        public AO308OutputDeviceManager(DeviceSetup deviceSetup1, ISession session, bool isBlockSensorActive) : base(deviceSetup1)
+        public AO308OutputDeviceManager(AO308Setup deviceSetup1, ISession session, bool isBlockSensorActive) : base(deviceSetup1)
         {
             //this._analogWriter = analogWriter;
             this._ueiSession = session;

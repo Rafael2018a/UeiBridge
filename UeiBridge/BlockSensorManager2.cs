@@ -17,20 +17,22 @@ namespace UeiBridge
         //private IWriterAdapter<double[]> _analogWriter;
         private int _subaddress = -1;
         private double[] _scanToEmit;
-        private BlockSensorSetup _thisDeviceSetup;
+        //private BlockSensorSetup _thisDeviceSetup;
         private log4net.ILog _logger = StaticMethods.GetLogger();
         //private bool _isInDispose = false;
+        BlockSensorSetup _thisDeviceSetup;
         #endregion
         const int _payloadLength = 28;
 
-        public BlockSensorManager2( DeviceSetup deviceSetup1, ISession session) 
-            : base( deviceSetup1, session, true)
+        public BlockSensorManager2( BlockSensorSetup deviceSetup1, ISession session) 
+            : base( deviceSetup1 as AO308Setup, session, true)
         {
+            _thisDeviceSetup = deviceSetup1;
             //System.Diagnostics.Debug.Assert(analogWriter != null);
             //this._analogWriter = analogWriter;
 
-            _thisDeviceSetup = deviceSetup1 as BlockSensorSetup;
-            System.Diagnostics.Debug.Assert(null != _thisDeviceSetup);
+            //_thisDeviceSetup = deviceSetup1 as BlockSensorSetup;
+            //System.Diagnostics.Debug.Assert(null != _thisDeviceSetup);
 
             int serial = 0;
             _blockSensorTable.Add(new BlockSensorEntry(serial++, "ps1", 4, 0));
@@ -123,7 +125,7 @@ namespace UeiBridge
                 byteMessage[0] = 0xaa;
                 byteMessage[1] = 0x55;
                 byteMessage[EthernetMessage._cardTypeOffset] = Convert.ToByte(DeviceMap2.GetCardIdFromCardName(DeviceMap2.BlocksensorLiteral));
-                byteMessage[EthernetMessage._slotNumberOffset] = BlockSensorSetup.BlockSensorSlotNumber;
+                byteMessage[EthernetMessage._slotNumberOffset] = Convert.ToByte( _thisDeviceSetup.SlotNumber);
             }
             base.Enqueue(byteMessage);
         }

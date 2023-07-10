@@ -152,6 +152,7 @@ namespace UeiBridge
                         return Build_SimuAO16_2(realDevice, setup);
                     }
                 case DeviceMap2.AO308Literal:
+                case DeviceMap2.AO322Literal:
                     {
                         return Build_AO308(realDevice, setup);
                     }
@@ -171,10 +172,10 @@ namespace UeiBridge
                     {
                         return Build_SL508(realDevice, setup);
                     }
-                case DeviceMap2.AO322Literal:
-                    {
-                        return Build_AO332(realDevice, setup);
-                    }
+                //case DeviceMap2.AO322Literal:
+                //    {
+                //        return Build_AO332(realDevice, setup);
+                //    }
                 default:
                     {
                         _logger.Warn($"Failed to build {realDevice.DeviceName}");
@@ -187,8 +188,8 @@ namespace UeiBridge
         {
             // if block-sensor is active, Do not build AO308,
             // since Block sensor takes control on the analog output. 
-            BlockSensorSetup bssetup = _mainConfig.GetDeviceSetupEntry(setup.CubeUrl, BlockSensorSetup.BlockSensorSlotNumber) as BlockSensorSetup;
-            bool bsActive = ((null != bssetup) && (true == bssetup.IsActive) && (bssetup.AnalogCardSlot == setup.SlotNumber)) ? true : false;
+            BlockSensorSetup bssetup = _mainConfig.GetDeviceSetupEntry(setup.CubeUrl, realDevice.DeviceSlot) as BlockSensorSetup;
+            bool bsActive = ((null != bssetup) && (true == bssetup.IsActive)) ? true : false;
             if (bsActive)
             {
                 return null;
@@ -204,43 +205,53 @@ namespace UeiBridge
             //var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()));
             SessionAdapter tsa = new SessionAdapter(theSession);
 
-            AO308OutputDeviceManager ao308 = new AO308OutputDeviceManager(setup as AO308Setup, tsa, bsActive);
+            OutputDevice analogOut=null;
+            if (realDevice.DeviceName == DeviceMap2.AO308Literal)
+            {
+                analogOut = new AO308OutputDeviceManager(setup as AO308Setup, tsa, bsActive);
+            }
+            if (realDevice.DeviceName == DeviceMap2.AO322Literal)
+            {
+                analogOut = new AO332OutputDeviceManager(setup as AO308Setup, tsa, bsActive);
+            }
+
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
 
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
-            UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, ao308.InstanceName);
-            _udpMessenger.SubscribeConsumer(ao308, setup.CubeId, setup.SlotNumber);
+            UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, analogOut.InstanceName);
+            _udpMessenger.SubscribeConsumer(analogOut, setup.CubeId, setup.SlotNumber);
             _udpReaderList.Add(ureader);
 
-            pd.OutputDeviceManager = ao308;
+            pd.OutputDeviceManager = analogOut;
 
             return new List<PerDeviceObjects>() { pd };
         }
 
-        private List<PerDeviceObjects> Build_AO332(UeiDeviceInfo realDevice, DeviceSetup setup)
-        {
-            // create uei entities
-            Session theSession = new Session();
-            string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/Ao0:31";
-            var c = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
-            System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
-            theSession.ConfigureTimingForSimpleIO();
-            //var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()));
-            SessionAdapter tsa = new SessionAdapter(theSession);
+        //private List<PerDeviceObjects> Build_AO332(UeiDeviceInfo realDevice, DeviceSetup setup)
+        //{
+        //    // create uei entities
+        //    Session theSession = new Session();
+        //    string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/Ao0:31";
+        //    var c = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
+        //    System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
+        //    theSession.ConfigureTimingForSimpleIO();
+        //    theSession.Start();
+        //    //var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()));
+        //    SessionAdapter tsa = new SessionAdapter(theSession);
 
 
-            AO332OutputDeviceManager ao322 = new AO332OutputDeviceManager(setup as AO332Setup, tsa);
-            PerDeviceObjects pd = new PerDeviceObjects(realDevice);
+        //    AO332OutputDeviceManager ao322 = new AO332OutputDeviceManager(setup as AO308Setup, tsa);
+        //    PerDeviceObjects pd = new PerDeviceObjects(realDevice);
 
-            var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
-            UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, ao322.InstanceName);
-            _udpMessenger.SubscribeConsumer(ao322, setup.CubeId, setup.SlotNumber);
-            _udpReaderList.Add(ureader);
+        //    var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
+        //    UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, ao322.InstanceName);
+        //    _udpMessenger.SubscribeConsumer(ao322, setup.CubeId, setup.SlotNumber);
+        //    _udpReaderList.Add(ureader);
 
-            pd.OutputDeviceManager = ao322;
+        //    pd.OutputDeviceManager = ao322;
 
-            return new List<PerDeviceObjects>() { pd };
-        }
+        //    return new List<PerDeviceObjects>() { pd };
+        //}
 
 
         List<PerDeviceObjects> Build_SimuAO16_2(UeiDeviceInfo realDevice, DeviceSetup setup)
@@ -251,9 +262,9 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
             theSession.ConfigureTimingForSimpleIO();
             //var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()));
-            System.Diagnostics.Debug.Assert(null != (setup as SimuAO16Setup));
+            //System.Diagnostics.Debug.Assert(null != (setup as SimuAO16Setup));
             SessionAdapter tsa = new SessionAdapter(theSession);
-            SimuAO16OutputDeviceManager ao16 = new SimuAO16OutputDeviceManager(setup, tsa);
+            SimuAO16OutputDeviceManager ao16 = new SimuAO16OutputDeviceManager(setup as AO308Setup, tsa);
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
 
             // set ao308 as consumer of udp-reader
@@ -442,17 +453,19 @@ namespace UeiBridge
 
         public void Build_BlockSensorManager(List<UeiDeviceInfo> realDeviceList)
         {
+            //DeviceSetup devSetup = null;
+
             foreach (CubeSetup csetup in _mainConfig.CubeSetupList)
             {
                 // check if block sensor is active for cube
-                BlockSensorSetup bssetup = _mainConfig.GetDeviceSetupEntry(csetup.CubeUrl, BlockSensorSetup.BlockSensorSlotNumber) as BlockSensorSetup;
+                BlockSensorSetup bssetup = _mainConfig.GetDeviceSetupEntry(csetup.CubeUrl, DeviceMap2.BlocksensorLiteral) as BlockSensorSetup;
                 if ((null == bssetup) || (false == bssetup.IsActive))
                 {
                     continue;
                 }
 
                 Session theSession = new Session();
-                string cubeUrl = $"{csetup.CubeUrl}Dev{bssetup.AnalogCardSlot}/Ao0:7";
+                string cubeUrl = $"{csetup.CubeUrl}Dev{bssetup.SlotNumber}/Ao0:7";
                 var ch = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
                 System.Diagnostics.Debug.Assert(ch.GetMaximum() == AO308Setup.PeekVoltage_downstream);
                 theSession.ConfigureTimingForSimpleIO();

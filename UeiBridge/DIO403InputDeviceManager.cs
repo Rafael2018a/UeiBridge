@@ -99,7 +99,7 @@ namespace UeiBridge
                 _fullBuffer8bit = _digitalConverter.UpstreamConvert(fullBuffer16bit);
                 var ethMsg = StaticMethods.BuildEthernetMessageFromDevice( _fullBuffer8bit, _thisDeviceSetup);
                 // send
-                //TargetConsumer.Send(new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), ethMsg.GetByteArray( MessageWay.upstream)));
+                TargetConsumer.Send(new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), ethMsg.GetByteArray( MessageWay.upstream)));
             }
             catch (Exception ex)
             {

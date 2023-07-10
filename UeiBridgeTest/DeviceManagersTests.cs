@@ -21,13 +21,15 @@ namespace UeiBridgeTest
             Session sess1 = new Session();
             sess1.CreateAOChannel("simu://Dev1/AO0:7", -10, +10);
             sess1.ConfigureTimingForSimpleIO();
+            sess1.Start();
 
-            BlockSensorSetup setup = new BlockSensorSetup(new EndPoint("192.168.19.2", 50455), "BlockSensor");
-            setup.SlotNumber = BlockSensorSetup.BlockSensorSlotNumber;
+            UeiDeviceInfo dinfo = new UeiDeviceInfo("", 0, "BlockSensor");
+            BlockSensorSetup setup = new BlockSensorSetup(new EndPoint("192.168.19.2", 50455), dinfo);
+            //setup.SlotNumber = BlockSensorSetup.devBlockSensorSlotNumber
             SessionAdapter sa = new SessionAdapter(sess1);
             BlockSensorManager2 blocksensor = new BlockSensorManager2(setup, sa);
             blocksensor.OpenDevice();
-            byte[] d403 = UeiBridge.Library.StaticMethods.Make_Dio403_upstream_message(new byte[] { 0x5, 0, 0 });
+            byte[] d403 = UeiBridge.Library.StaticMethods.Make_Dio403_upstream_message(new byte[] { 0x5, 0, 0, 0, 0, 0 });
             blocksensor.Enqueue(d403);
             
             Int16[] payload = new short[14];
@@ -37,14 +39,12 @@ namespace UeiBridgeTest
             payload[10] = AnalogConverter.PlusMinusVoltageToInt16(10.0, 7.0);
             EthernetMessage em = UeiBridge.Library.StaticMethods.Make_BlockSensor_downstream_message(payload);
             blocksensor.Enqueue(em.GetByteArray(MessageWay.downstream));
-            //s.Stop();
-
-            System.Threading.Thread.Sleep(1000);
-
-            blocksensor.Dispose();
-
+            
+            System.Threading.Thread.Sleep(500);
             var ls = sa.GetAnalogScaledWriter().LastScan;
             Assert.That(ls[2], Is.EqualTo(5.0));
+            System.Threading.Thread.Sleep(500);
+            blocksensor.Dispose();
         }
         [Test]
         public void AO308DeviceManagerTest()
@@ -148,10 +148,6 @@ namespace UeiBridgeTest
 
                 System.Threading.Thread.Sleep(100);
 
-                dio403.Dispose();
-
-
-
                 string errStr = null;
                 EthernetMessage em = EthernetMessage.CreateFromByteArray(sm._sentObject.ByteMessage, MessageWay.upstream, ref errStr);
 
@@ -161,6 +157,8 @@ namespace UeiBridgeTest
                     Assert.That(sm._sentObject.ByteMessage[0], Is.EqualTo(0x55));
                     Assert.That(em.NominalLength, Is.EqualTo(22));
                 });
+
+                dio403.Dispose();
             }
         }
         [Test]

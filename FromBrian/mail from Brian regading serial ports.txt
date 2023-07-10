@@ -1,0 +1,73 @@
+﻿Hi Rafi,
+
+ See the response below from UEI:
+
+---------------------------------------------------------------
+
+Hi Erez,
+
+ 
+
+This function was implemented for a customer who needs timestamp in their serial data.  
+The only mode that can give timestamp data is asynchronous event.
+
+With that said, it is a fairly new implementation, and I haven’t seen it documented in our Framework Users’ Manual.  
+
+I checked with our Engineering team on this implementation.  
+Basically the ‘watermark’ parameter is how many bytes of data you want in the FIFO to get an IN FIFO event.  
+The two important parameters in that call are the ‘watermark’ and the ‘timeout_us”.  
+
+ 
+
+For example, if you set watermark = 100 Bytes and timeout = 500ms.  
+If 100Bytes of data are in the FIFO before the 500ms timeout expires, then you’ll get a IN-FIFO event and you have 100 Bytes of data to read off of the FIFO.  
+
+If the timeout expired before 100 Bytes are in the FIFO, 
+then it would give you back whatever data that is available in the FIFO.  
+The timeout event starts counting from the last received byte.  
+So for example if you had a 100 byte transmission that took 1000ms and your timeout was set to 500ms, 
+you would still get the IN_FIFO event in this case.
+
+ 
+
+Hope this helps.
+
+mail from 1-dec-22
+=====================
+Hi Rafi,
+
+ 
+
+Thanks for your email.
+
+ 
+
+Yes, if I ran your SerialWriter code at 57600 baud, it ran fine the first time, but if I ran again, it would run into that error “An error occurred while accessing the device”.  This is only if I used the ConfigureTimingForMessagingIO() call.
+
+ 
+
+If I replaced:
+
+ 
+
+serialSession.ConfigureTimingForMessagingIO(100, 10.0);
+
+ 
+
+With:
+
+serialSession.ConfigureTimingForSimpleIO();
+
+ 
+
+I can get this code to run back to back to back without issue.
+
+ 
+
+Can you try this as a work around?  I’ll try to debug the other issue with Engineering, and I’ll let you know.
+
+ 
+
+Thanks 
+
+Brian Dao
