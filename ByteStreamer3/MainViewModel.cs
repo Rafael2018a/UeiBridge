@@ -12,9 +12,9 @@ using System.Windows.Data;
 
 namespace ByteStreamer3
 {
-    class MainViewModel : INotifyPropertyChanged
+    class MainViewModel : ViewModelBase
     {
-        public event PropertyChangedEventHandler PropertyChanged;
+        //public event PropertyChangedEventHandler PropertyChanged;
 
         #region === privates ======
         private string _playFolderBoxBorderColor;
@@ -39,7 +39,8 @@ namespace ByteStreamer3
             set
             {
                 _playFolderString = value;
-                RaisePropertyChangedEvent("PlayFolderString");
+                //RaisePropertyChangedEvent("PlayFolderString");
+                RaisePropertyChanged();
             }
         }
         public string PlayFolderBoxBorderColor
@@ -48,7 +49,8 @@ namespace ByteStreamer3
             set
             {
                 _playFolderBoxBorderColor = value;
-                RaisePropertyChangedEvent("PlayFolderBoxBorderColor");
+                //RaisePropertyChangedEvent("PlayFolderBoxBorderColor");
+                RaisePropertyChanged();
             }
         }
         public int SimpleCounter
@@ -57,7 +59,8 @@ namespace ByteStreamer3
             set
             {
                 _simpleCounter = value;
-                RaisePropertyChangedEvent("SimpleCounter");
+                //RaisePropertyChangedEvent("SimpleCounter");
+                RaisePropertyChanged();
             }
         }
         public bool NowPlaying
@@ -81,7 +84,8 @@ namespace ByteStreamer3
             set
             {
                 _playFileVMList = value;
-                RaisePropertyChangedEvent("PlayFileVMList");
+                //RaisePropertyChangedEvent("PlayFileVMList");
+                RaisePropertyChanged();
             }
         }
 
@@ -233,11 +237,11 @@ namespace ByteStreamer3
             //++SimpleCounter;
         }
 
-        void RaisePropertyChangedEvent(string propName)
-        {
-            if (PropertyChanged != null)
-                PropertyChanged(this, new PropertyChangedEventArgs(propName));
-        }
+        //void RaisePropertyChangedEvent(string propName)
+        //{
+        //    if (PropertyChanged != null)
+        //        PropertyChanged(this, new PropertyChangedEventArgs(propName));
+        //}
         private int _radBtnId = 1;
         public int IsSuccess
         {
@@ -343,6 +347,31 @@ namespace ByteStreamer3
 
             Task result = Task.Factory.ContinueWhenAll(playTaskList.ToArray(), z => NowPlaying = false);
             return result;
+        }
+
+        internal void OnClosing()
+        {
+            // Save Setting 
+            System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+            using (FileStream fs = new FileStream(_settingsFilename, FileMode.Create, System.IO.FileAccess.Write))
+            {
+                formatter.Serialize(fs, _settingBag);
+            }
+
+            // build persist-list
+            JStatePersist jsp = new JStatePersist();
+            foreach (var f in PlayFileVMList)
+            {
+                jsp.EntryStateList.Add(new EntryState(f.IsItemChecked, f.Filename));
+            }
+
+            string s = JsonConvert.SerializeObject(jsp, Formatting.Indented);
+            //string fn = Path.Combine(playFolder.FullName, filename);
+            using (StreamWriter fs = new StreamWriter("persist.json"))
+            {
+                fs.Write(s);
+            }
+
         }
     }
 }

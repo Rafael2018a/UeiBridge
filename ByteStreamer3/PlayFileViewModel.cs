@@ -10,10 +10,10 @@ namespace ByteStreamer3
     /// <summary>
     /// ViewModel for JFileAux object
     /// </summary>
-    class PlayFileViewModel : INotifyPropertyChanged
+    class PlayFileViewModel : ViewModelBase
     {
         #region === publics ===
-        public event PropertyChangedEventHandler PropertyChanged;
+        //public event PropertyChangedEventHandler PropertyChanged;
         public bool IsItemChecked
         {
             get => _isItemChecked;
@@ -21,7 +21,8 @@ namespace ByteStreamer3
             {
                 _isItemChecked = value;
                 PlayFile.JFileObject.Header.EnablePlay = value;
-                RaisePropertyChangedEvent("IsItemChecked");
+                //RaisePropertyChangedEvent("IsItemChecked");
+                RaisePropertyChanged();
             }
         }
         public JFileAux PlayFile { get; private set; }
@@ -31,7 +32,8 @@ namespace ByteStreamer3
             set
             {
                 _playedBlocksCount = value;
-                RaisePropertyChangedEvent("PlayedBlocksCount");
+                //RaisePropertyChangedEvent("PlayedBlocksCount");
+                RaisePropertyChanged();
             }
         }
         public string Filename { get; set; }
@@ -42,7 +44,8 @@ namespace ByteStreamer3
             set
             {
                 _varDesc = value;
-                RaisePropertyChangedEvent("VarDesc");
+                //RaisePropertyChangedEvent("VarDesc");
+                RaisePropertyChanged();
             }
         }
         public int NoOfCycles => PlayFile.JFileObject.Header.NumberOfCycles;
@@ -54,11 +57,11 @@ namespace ByteStreamer3
         private bool _isItemChecked = true;
         #endregion
 
-        void RaisePropertyChangedEvent(string propName)
-        {
-            if (PropertyChanged != null)
-                PropertyChanged(this, new PropertyChangedEventArgs(propName));
-        }
+        //void RaisePropertyChangedEvent(string propName)
+        //{
+        //    if (PropertyChanged != null)
+        //        PropertyChanged(this, new PropertyChangedEventArgs(propName));
+        //}
 
         public PlayFileViewModel(JFileAux playFile)
         {

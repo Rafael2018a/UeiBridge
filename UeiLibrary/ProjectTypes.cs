@@ -15,6 +15,7 @@ namespace UeiBridge.Library
         public int DeviceSlot { get; private set; }
         public string CubeUrl { get; set; }
         public int CubeId { get; private set; }
+        public const int SimuCubeId = 101;
         /// <summary>
         /// UeiDeviceInfo does NOT depends on UeiDaq namespace types
         /// </summary>
@@ -30,7 +31,7 @@ namespace UeiBridge.Library
             }
             else if (cubeUrl.ToLower().StartsWith("simu"))
             {
-                CubeId = -2;
+                CubeId = SimuCubeId;
             }
             else
             {

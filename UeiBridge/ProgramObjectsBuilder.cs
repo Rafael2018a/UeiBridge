@@ -147,12 +147,13 @@ namespace UeiBridge
         {
             switch (realDevice.DeviceName)
             {
-                case DeviceMap2.SimuAO16Literal:
-                    {
-                        return Build_SimuAO16_2(realDevice, setup);
-                    }
+                //case DeviceMap2.SimuAO16Literal:
+                //    {
+                //        return Build_SimuAO16_2(realDevice, setup);
+                //    }
                 case DeviceMap2.AO308Literal:
                 case DeviceMap2.AO322Literal:
+                case DeviceMap2.SimuAO16Literal:
                     {
                         return Build_AO308(realDevice, setup);
                     }
@@ -214,10 +215,14 @@ namespace UeiBridge
             {
                 analogOut = new AO332OutputDeviceManager(setup as AO308Setup, tsa, bsActive);
             }
+            if (realDevice.DeviceName == DeviceMap2.SimuAO16Literal)
+            {
+                analogOut = new SimuAO16OutputDeviceManager(setup as AO308Setup, tsa);
+            }
 
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
 
-            var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
+            var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMulticast);
             UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, analogOut.InstanceName);
             _udpMessenger.SubscribeConsumer(analogOut, setup.CubeId, setup.SlotNumber);
             _udpReaderList.Add(ureader);
@@ -254,30 +259,31 @@ namespace UeiBridge
         //}
 
 
-        List<PerDeviceObjects> Build_SimuAO16_2(UeiDeviceInfo realDevice, DeviceSetup setup)
-        {
-            Session theSession = new Session();
-            string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/Ao0:7";
-            var c = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
-            System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
-            theSession.ConfigureTimingForSimpleIO();
-            //var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()));
-            //System.Diagnostics.Debug.Assert(null != (setup as SimuAO16Setup));
-            SessionAdapter tsa = new SessionAdapter(theSession);
-            SimuAO16OutputDeviceManager ao16 = new SimuAO16OutputDeviceManager(setup as AO308Setup, tsa);
-            PerDeviceObjects pd = new PerDeviceObjects(realDevice);
+        //List<PerDeviceObjects> Build_SimuAO16_2(UeiDeviceInfo realDevice, DeviceSetup setup)
+        //{
+        //    Session theSession = new Session();
+        //    string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/Ao0:7";
+        //    var c = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
+        //    System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
+        //    theSession.ConfigureTimingForSimpleIO();
+        //    theSession.Start();
+        //    //var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()));
+        //    //System.Diagnostics.Debug.Assert(null != (setup as SimuAO16Setup));
+        //    SessionAdapter tsa = new SessionAdapter(theSession);
+        //    SimuAO16OutputDeviceManager ao16 = new SimuAO16OutputDeviceManager(setup as AO308Setup, tsa);
+        //    PerDeviceObjects pd = new PerDeviceObjects(realDevice);
 
-            // set ao308 as consumer of udp-reader
-            //if (_mainConfig.Blocksensor.IsActive == false)
-            //{
-            //    var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
-            //    UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, ao16, ao16.InstanceName);
-            //    pd.UdpReader = ureader;
-            //}
-            pd.OutputDeviceManager = ao16;
+        //    // set ao308 as consumer of udp-reader
+        //    //if (_mainConfig.Blocksensor.IsActive == false)
+        //    //{
+        //    //    var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
+        //    //    UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, ao16, ao16.InstanceName);
+        //    //    pd.UdpReader = ureader;
+        //    //}
+        //    pd.OutputDeviceManager = ao16;
 
-            return new List<PerDeviceObjects>() { pd };
-        }
+        //    return new List<PerDeviceObjects>() { pd };
+        //}
 
         private List<PerDeviceObjects> Build_SL508(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
@@ -309,11 +315,11 @@ namespace UeiBridge
             }
 
             string instanceName = setup.GetInstanceName();// $"{realDevice.DeviceName}/Slot{realDevice.DeviceSlot}";
-            UdpWriter uWriter = new UdpWriter( setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMCast);
+            UdpWriter uWriter = new UdpWriter( setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMulticast);
             SL508InputDeviceManager id = new SL508InputDeviceManager(uWriter, setup, serialSession);
 
             SL508OutputDeviceManager od = new SL508OutputDeviceManager(setup, serialSession);
-            var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
+            var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMulticast);
             UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, od.InstanceName);
              // each port
             {
@@ -342,7 +348,7 @@ namespace UeiBridge
         private List<PerDeviceObjects> Build_AI201(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
             string instanceName = $"{realDevice.DeviceName}/Slot{realDevice.DeviceSlot}";
-            UdpWriter uWriter = new UdpWriter( setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMCast);
+            UdpWriter uWriter = new UdpWriter( setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMulticast);
 
 
             Session sess1 = new Session();
@@ -365,7 +371,7 @@ namespace UeiBridge
         private List<PerDeviceObjects> Build_DIO470(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
             DIO470OutputDeviceManager od = new DIO470OutputDeviceManager(setup);
-            var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
+            var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMulticast);
             UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, od.InstanceName);
 
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
@@ -397,7 +403,7 @@ namespace UeiBridge
             DIO403OutputDeviceManager outDev = new DIO403OutputDeviceManager(setup, sa1);
 
             // build udp reader
-            var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
+            var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMulticast);
             UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, outDev.InstanceName);
             _udpReaderList.Add(ureader);
 
@@ -408,7 +414,7 @@ namespace UeiBridge
             // =======================
 
             // build udp writer
-            UdpWriter udpWriter = new UdpWriter( setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMCast);
+            UdpWriter udpWriter = new UdpWriter( setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMulticast);
 
             // build session
             string inDevString = ComposeDio403DeviceString(realDevice, MessageWay.upstream);
@@ -483,7 +489,7 @@ namespace UeiBridge
                 dio403.TargetConsumer = blockSensor;
 #endif
                 // define udp-reader for block sensor
-                var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
+                var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMulticast);
                 UdpReader ureader = new UdpReader(bssetup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, "BlockSensor");
 
                 // add block sensor to device list

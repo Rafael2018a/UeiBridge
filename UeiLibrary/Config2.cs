@@ -34,7 +34,7 @@ namespace UeiBridge.Library
             bool ok = IPAddress.TryParse(Address, out ip);
             if (ok)
             {
-                IPEndPoint ipep = new IPEndPoint( ip, Port);
+                IPEndPoint ipep = new IPEndPoint(ip, Port);
                 return ipep;
             }
             else
@@ -46,7 +46,7 @@ namespace UeiBridge.Library
         {
             EndPoint ep = new EndPoint(addressString, port);
 
-            if (null!=ep.ToIpEp())
+            if (null != ep.ToIpEp())
             {
                 return ep;
             }
@@ -79,8 +79,15 @@ namespace UeiBridge.Library
 
     public class AppSetup
     {
-        public string SelectedNicForMCast = "221.109.251.103";
+        public string SelectedNicForMulticast { get; private set; } = "221.109.251.103";
         public EndPoint StatusViewerEP = new EndPoint("239.10.10.17", 5093);
+
+        public AppSetup()
+        {
+            SelectedNicForMulticast = System.Configuration.ConfigurationManager.AppSettings["SelectedNicForMulticast"];
+        }
+
+
     }
     public class DeviceSetup : IEquatable<DeviceSetup>
     {
@@ -101,16 +108,22 @@ namespace UeiBridge.Library
                 int result = -1;
                 if (null != CubeUrl)
                 {
-                    IPAddress ipa = Config2.CubeUriToIpAddress(CubeUrl);
-                    if (null != ipa)
+                    if (CubeUrl.ToLower().StartsWith("simu"))
                     {
-                        result = ipa.GetAddressBytes()[3];
+                        result = UeiDeviceInfo.SimuCubeId;
+                    }
+                    else
+                    {
+                        IPAddress ipa = Config2.CubeUriToIpAddress(CubeUrl);
+                        if (null != ipa)
+                        {
+                            result = ipa.GetAddressBytes()[3];
+                        }
                     }
                 }
                 return result;
             }
         }
-
         public DeviceSetup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device)
         {
             LocalEndPoint = localEndPoint;
@@ -194,12 +207,12 @@ namespace UeiBridge.Library
     //    }
     //}
     //public class AO16Setup : AO308Setup { }
-    public class SimuAO16Setup : DeviceSetup
+    public class SimuAO16Setup : AO308Setup
     {
         public SimuAO16Setup()
         {
         }
-        public SimuAO16Setup(EndPoint localEndPoint, UeiDeviceInfo device) : base(localEndPoint, null, device)
+        public SimuAO16Setup(EndPoint localEndPoint, UeiDeviceInfo device) : base(localEndPoint, device)
         {
         }
     }
@@ -244,9 +257,9 @@ namespace UeiBridge.Library
             }
         }
     }
-    public class SimuDIO64Setup: DIO403Setup
+    public class SimuDIO64Setup : DIO403Setup
     {
-        public SimuDIO64Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base( localEndPoint, destEndPoint, device, 4)
+        public SimuDIO64Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base(localEndPoint, destEndPoint, device, 4)
         {
             IOChannelList = new List<DIOChannel>();
             for (byte ch = 0; ch < 4; ch++)
@@ -356,7 +369,7 @@ namespace UeiBridge.Library
     public class CubeSetup : IEquatable<CubeSetup>
     {
         public string CubeUrl { get; set; } // must be public for the  serializer
-        public List<DeviceSetup> DeviceSetupList { get; set; }
+        public List<DeviceSetup> DeviceSetupList { get; set; } // dont make private set
 
         public CubeSetup()
         {
@@ -462,7 +475,7 @@ namespace UeiBridge.Library
 
     public class Config2 : IEquatable<Config2>
     {
-
+        [XmlIgnore]
         public AppSetup AppSetup;
         public List<CubeSetup> CubeSetupList = new List<CubeSetup>();
 
@@ -525,7 +538,7 @@ namespace UeiBridge.Library
                 if (null != devInfoList && devInfoList.Count > 0)
                 {
                     int cube_id = devInfoList[0].CubeId;
-                    string filename = (cube_id == -2) ? "Cube.simu.config" : $"Cube{cube_id}.config";
+                    string filename = (cube_id == UeiDeviceInfo.SimuCubeId) ? "Cube.simu.config" : $"Cube{cube_id}.config";
                     CubeSetup csFromFile = LoadCubeSetupFromFile(filename);
                     if (null == csFromFile) // if failed to load from file
                     {
@@ -604,7 +617,7 @@ namespace UeiBridge.Library
         private static AppSetup LoadGeneralSetup()
         {
             AppSetup resultSetup = new AppSetup();
-            resultSetup.SelectedNicForMCast = "221.109.251.103";
+            //resultSetup.SelectedNicForMCast = "221.109.251.103";
             resultSetup.StatusViewerEP = new EndPoint("239.10.10.17", 5093);
             return resultSetup;
         }

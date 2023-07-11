@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,7 @@ namespace ByteStreamer3.Utilities
 {
     public class JFileHeader
     {
+        [JsonIgnore]
         public bool EnablePlay { get; set; } = false;
         public string DestIp { get; set; } = "227.10.20.30";
         public int DestPort { get; set; } = 50099;
@@ -15,9 +17,7 @@ namespace ByteStreamer3.Utilities
         public int WaitStateMs { get; set; }= 100;
         public string ConverterName { get; set; }
 
-        public JFileHeader()
-        {
-        }
+        public JFileHeader() {}
     }
     public class JFileBody
     {
@@ -40,8 +40,22 @@ namespace ByteStreamer3.Utilities
         {
             Header = header;
             Body = body;
-
         }
     }
 
+    public class EntryState
+    {
+        public bool IsChecked { get; set; }
+        public string Filename { get; set; }
+
+        public EntryState(bool isChecked, string filename)
+        {
+            IsChecked = isChecked;
+            Filename = filename;
+        }
+    }
+    public class JStatePersist
+    {
+        public List<EntryState> EntryStateList = new List<EntryState>();
+    }
 }
