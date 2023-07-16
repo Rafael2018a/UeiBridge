@@ -62,7 +62,8 @@ namespace UeiBridge
                 }
                 else
                 {
-                    EmitInitMessage($"Init success: {DeviceName} . { numOfCh} channels. Range {range[0].minimum},{range[0].maximum}V. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}");
+                    int deviceId = DeviceMap2.GetDeviceName(DeviceName);
+                    EmitInitMessage($"Init success: {DeviceName} (ID={deviceId}). { numOfCh} channels. Range {range[0].minimum},{range[0].maximum}V. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}");
                 }
 
                 _isDeviceReady = true;

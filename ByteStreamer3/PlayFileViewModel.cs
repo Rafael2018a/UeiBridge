@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UeiBridge.Library;
 
 namespace ByteStreamer3
 {
@@ -38,13 +39,12 @@ namespace ByteStreamer3
         }
         public string Filename { get; set; }
         public string FixedDesc { get; private set; }
-        public string VarDesc
+        public string EntryToolTip
         {
-            get => _varDesc;
+            get => _entryTooltip;
             set
             {
-                _varDesc = value;
-                //RaisePropertyChangedEvent("VarDesc");
+                _entryTooltip = value;
                 RaisePropertyChanged();
             }
         }
@@ -52,7 +52,7 @@ namespace ByteStreamer3
         #endregion
 
         #region === privates ===
-        private string _varDesc;
+        private string _entryTooltip;
         private int _playedBlocksCount;
         private bool _isItemChecked = true;
         #endregion
@@ -72,6 +72,9 @@ namespace ByteStreamer3
             var destEp = new System.Net.IPEndPoint(ip, PlayFile.JFileObject.Header.DestPort);
 
             FixedDesc = $"Dest: {destEp}";
+
+            string name = DeviceMap2.GetDeviceName(playFile.JFileObject.Body.CardType);
+            _entryTooltip = $"Device: {name} ({playFile.JFileObject.Body.CardType}) Slot:{playFile.JFileObject.Body.SlotNumber} Cube:{playFile.JFileObject.Body.CubeId}";
 
             IsItemChecked = playFile.JFileObject.Header.EnablePlay;
         }

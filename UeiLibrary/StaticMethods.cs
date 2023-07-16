@@ -59,7 +59,7 @@ namespace UeiBridge.Library
         }
         public static byte[] Make_Dio403_upstream_message( byte [] payload)
         {
-            int id = DeviceMap2.GetCardIdFromCardName(DeviceMap2.DIO403Literal);
+            int id = DeviceMap2.GetDeviceName(DeviceMap2.DIO403Literal);
             var b = EthernetMessage.CreateMessage(id, 0, 0, payload); //new byte[] { 0x5, 0, 0 });
             return b.GetByteArray(MessageWay.upstream);
         }

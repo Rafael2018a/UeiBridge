@@ -85,14 +85,14 @@
                                             <TextBlock Text="{Binding Filename}" FontWeight="Bold" VerticalAlignment="Center">
                                                 <TextBlock.ToolTip>
                                                     <ToolTip>
-                                                        <TextBlock Text="{Binding Filename}"/>
+                                                        <TextBlock Text="{Binding EntryToolTip}"/>
                                                     </ToolTip>
                                                 </TextBlock.ToolTip>
                                             </TextBlock>
                                             <ContentControl Width="10"/>
                                             <TextBlock Text="{Binding FixedDesc}" VerticalAlignment="Center" />
                                             <ContentControl Width="20"/>
-                                            <TextBlock Text="{Binding VarDesc}" VerticalAlignment="Center"/>
+                                            <!--<TextBlock Text="{Binding VarDesc}" VerticalAlignment="Center"/>-->
                                             <TextBlock Text="0" VerticalAlignment="Center"/>
                                             <ContentControl Width="2"/>
                                             <ProgressBar Minimum="0" Maximum="{Binding NoOfCycles}" Value="{Binding PlayedBlocksCount}" Width="100" Height="5" VerticalAlignment="Center"/>

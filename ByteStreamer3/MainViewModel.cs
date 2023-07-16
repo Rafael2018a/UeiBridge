@@ -18,8 +18,10 @@ namespace ByteStreamer3
 
         #region === privates ======
         private string _playFolderBoxBorderColor;
-        private const string _settingsFilename = "bytestreamer3.setting.bin";
-        private SettingBag _settingBag;
+        //private const string _settingsFilename = "bytestreamer3.setting.bin";
+        private const string _statePersistFilename = "ByteStreamerState.json";
+        //private SettingBag _settingBag;
+        private AppState _appState;
         private int _simpleCounter;
         private System.Windows.Threading.DispatcherTimer _guiUpdateTimer = new System.Windows.Threading.DispatcherTimer();
         private bool _nowPlaying = false;
@@ -122,8 +124,9 @@ namespace ByteStreamer3
         }
         void ReloadFiles(object obj)
         {
-            var dirInfo = new DirectoryInfo(_settingBag.PlayFolder);
-            LoadPlayList(dirInfo);
+            //var dirInfo = new DirectoryInfo(_settingCache.PlayFolder);
+            //_appState = LoadStateFile(_statePersistFilename);
+            UpdatePlayList(_appState);
         }
         bool CanReloadFiles(object obj)
         {
@@ -152,11 +155,10 @@ namespace ByteStreamer3
             if (result == CommonFileDialogResult.Ok)
             {
                 PlayFolderString = dialog.FileName;
-                _settingBag.PlayFolder = PlayFolderString;
+                _appState.PlayFolder = PlayFolderString;
+                UpdatePlayList(_appState);
                 var di = new DirectoryInfo(PlayFolderString);
-                
-                LoadPlayList( di);
-                PlayFolderBoxBorderColor = ( di.Exists) ? "Gray" : "Red";
+                PlayFolderBoxBorderColor = (di.Exists) ? "Gray" : "Red";
             }
         }
         bool CanSelectPlayFolder(object obj)
@@ -172,28 +174,19 @@ namespace ByteStreamer3
         }
         #endregion
 
-        void LoadPlayList(DirectoryInfo playFolder)
-        {
-            if (!playFolder.Exists)
-                return;
 
-            FileInfo[] jsonlist = playFolder.GetFiles("*.json");
-            var onlyValids = new List<JFileAux>(jsonlist.Select((FileInfo i) => new JFileAux(i)).Where((JFileAux i) => i.IsValidItem()));
-            var vmlist = onlyValids.Select(i => new PlayFileViewModel(i));
-            PlayFileVMList = new ObservableCollection<PlayFileViewModel>(vmlist);
 
-        }
-
-        private static void CreateSampleFile(DirectoryInfo playFolder)
+        private static void CreateSampleFile(string playFolder)
         {
             string filename = "sample.json";
-            var first = playFolder.GetFiles(filename).FirstOrDefault();
+            DirectoryInfo folderInfo = new DirectoryInfo(playFolder);
+            var first = folderInfo.GetFiles(filename).FirstOrDefault();
             // create sample file
             if (first == null)
             {
                 JFileClass jclass = new JFileClass(new JFileHeader(), new JFileBody(new int[] { 01, 02, 03 }));
                 string s = JsonConvert.SerializeObject(jclass, Formatting.Indented);
-                string fn = Path.Combine(playFolder.FullName, filename);
+                string fn = Path.Combine( folderInfo.FullName, filename);
                 using (StreamWriter fs = new StreamWriter(fn))
                 {
                     fs.Write(s);
@@ -201,16 +194,42 @@ namespace ByteStreamer3
             }
         }
 
+        AppState LoadStateFile(string filename)
+        {
+            // load persist file
+            FileInfo stateFile = new FileInfo(_statePersistFilename);
+            AppState jsp = new AppState( "."); // empty state object
+            if (stateFile.Exists)
+            {
+                using (StreamReader reader = stateFile.OpenText())
+                {
+                    jsp = JsonConvert.DeserializeObject<AppState>(reader.ReadToEnd());
+                }
+                if (null==jsp.PlayFolder)
+                {
+                    jsp.PlayFolder = ".";
+                }
+            }
+            return jsp;
+        }
+
+
         public MainViewModel(System.Windows.Window parentWindow)
         {
             LoadCommands();
-            _settingBag = LoadSetting();
+            //var dirInfo = new DirectoryInfo(_settingCache.PlayFolder);
+            _appState = LoadStateFile( _statePersistFilename);//LoadSetting();
+            UpdatePlayList(_appState);
+
             _parentWindow = parentWindow;
-            var dirInfo = new DirectoryInfo(_settingBag.PlayFolder);
-            PlayFolderString = _settingBag.PlayFolder;
-            LoadPlayList( dirInfo);
-            CreateSampleFile(dirInfo);
-            PlayFolderBoxBorderColor = ( dirInfo.Exists) ? "Gray" : "Red";
+
+            PlayFolderString = _appState.PlayFolder;
+
+            if (_appState.EntryStateList.Count == 0)
+            {
+                CreateSampleFile(_appState.PlayFolder);
+            }
+            PlayFolderBoxBorderColor = Directory.Exists( _appState.PlayFolder) ? "Gray" : "Red";
             // defaults
             IsPlayOneByOne = true;
             IsRepeat = false;
@@ -218,17 +237,45 @@ namespace ByteStreamer3
             var v = System.Reflection.Assembly.GetEntryAssembly().GetName().Version;
             parentWindow.Title = "ByteStreamer " + v.ToString(3);
         }
-        ~MainViewModel()
+        //~MainViewModel()
+        //{
+        //    // Save Setting 
+        //    System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+        //    using (FileStream fs = new FileStream(_settingsFilename, FileMode.Create, System.IO.FileAccess.Write))
+        //    {
+        //        formatter.Serialize(fs, _settingCache);
+        //    }
+        //    foreach( var f in PlayFileVMList)
+        //    {
+        //        f.PlayFile.Save();
+        //    }
+        //}
+        private void UpdatePlayList(AppState jsp)
         {
-            // Save Setting 
-            System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-            using (FileStream fs = new FileStream(_settingsFilename, FileMode.Create, System.IO.FileAccess.Write))
+            if (jsp.PlayFolder==null)
             {
-                formatter.Serialize(fs, _settingBag);
+                return;
             }
-            foreach( var f in PlayFileVMList)
+            var playFolderInfo = new DirectoryInfo(jsp.PlayFolder);
+            //var di = new DirectoryInfo(jsp.PlayFolder);
+            if (playFolderInfo.Exists)
             {
-                f.PlayFile.Save();
+                FileInfo[] jsonFilesInFolder = playFolderInfo.GetFiles("*.json");
+
+                // remove non-valid files and add 'isChecked'
+                List<JFileAux> validJsonFilesInFolder = jsonFilesInFolder.Select((FileInfo i) => new JFileAux(i)).Where((JFileAux i) => i.IsValidItem()).ToList();
+                foreach (JFileAux validJsonFile in validJsonFilesInFolder)
+                {
+                    var u = jsp.GetEntryState(validJsonFile.PlayFileInfo);
+                    if (null != u)
+                    {
+                        validJsonFile.JFileObject.Header.EnablePlay = u.IsChecked;
+                    }
+                }
+
+                // project
+                var vmlist = validJsonFilesInFolder.Select(i => new PlayFileViewModel(i));
+                PlayFileVMList = new ObservableCollection<PlayFileViewModel>(vmlist);
             }
         }
 
@@ -251,23 +298,22 @@ namespace ByteStreamer3
             { _radBtnId = value; }
         }
 
-        private SettingBag LoadSetting()
-        {
-            System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-            SettingBag sb;
-            try
-            {
-                System.IO.FileStream fs = new System.IO.FileStream(_settingsFilename, System.IO.FileMode.Open, System.IO.FileAccess.Read);
-                object o = formatter.Deserialize(fs);
-                sb = o as SettingBag;
-            }
-            catch (FileNotFoundException)
-            {
-                sb = new SettingBag();
-            }
-
-            return sb;
-        }
+        //private SettingBag LoadSetting()
+        //{
+        //    System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+        //    SettingBag sb;
+        //    try
+        //    {
+        //        System.IO.FileStream fs = new System.IO.FileStream(_settingsFilename, System.IO.FileMode.Open, System.IO.FileAccess.Read);
+        //        object o = formatter.Deserialize(fs);
+        //        sb = o as SettingBag;
+        //    }
+        //    catch (FileNotFoundException)
+        //    {
+        //        sb = new SettingBag();
+        //    }
+        //    return sb;
+        //}
         private Task StartPlayOneByOne(List<PlayFileViewModel> playList)
         {
             _playCancelSource = new System.Threading.CancellationTokenSource();
@@ -286,7 +332,7 @@ namespace ByteStreamer3
                             var destEp = new System.Net.IPEndPoint(ip, playfileVM.PlayFile.JFileObject.Header.DestPort);
                             var udpWriter = new UdpWriter(destEp);
 
-                            playfileVM.PlayedBlocksCount=0;
+                            playfileVM.PlayedBlocksCount = 0;
                             for (int i = 0; i < playfileVM.PlayFile.JFileObject.Header.NumberOfCycles; i++)
                             {
                                 // -- send block ....
@@ -352,22 +398,21 @@ namespace ByteStreamer3
         internal void OnClosing()
         {
             // Save Setting 
-            System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
-            using (FileStream fs = new FileStream(_settingsFilename, FileMode.Create, System.IO.FileAccess.Write))
-            {
-                formatter.Serialize(fs, _settingBag);
-            }
+            //System.Runtime.Serialization.IFormatter formatter = new System.Runtime.Serialization.Formatters.Binary.BinaryFormatter();
+            //using (FileStream fs = new FileStream(_settingsFilename, FileMode.Create, System.IO.FileAccess.Write))
+            //{
+            //    formatter.Serialize(fs, _settingBag);
+            //}
 
             // build persist-list
-            JStatePersist jsp = new JStatePersist();
+            AppState jsp = new AppState(_appState.PlayFolder);
             foreach (var f in PlayFileVMList)
             {
-                jsp.EntryStateList.Add(new EntryState(f.IsItemChecked, f.Filename));
+                jsp.EntryStateList.Add(new FileState(f.IsItemChecked, f.Filename));
             }
-
+            // save persist list
             string s = JsonConvert.SerializeObject(jsp, Formatting.Indented);
-            //string fn = Path.Combine(playFolder.FullName, filename);
-            using (StreamWriter fs = new StreamWriter("persist.json"))
+            using (StreamWriter fs = new StreamWriter(_statePersistFilename))
             {
                 fs.Write(s);
             }

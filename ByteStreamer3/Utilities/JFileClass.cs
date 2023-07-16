@@ -1,7 +1,5 @@
 ﻿using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -41,21 +39,5 @@ namespace ByteStreamer3.Utilities
             Header = header;
             Body = body;
         }
-    }
-
-    public class EntryState
-    {
-        public bool IsChecked { get; set; }
-        public string Filename { get; set; }
-
-        public EntryState(bool isChecked, string filename)
-        {
-            IsChecked = isChecked;
-            Filename = filename;
-        }
-    }
-    public class JStatePersist
-    {
-        public List<EntryState> EntryStateList = new List<EntryState>();
     }
 }
