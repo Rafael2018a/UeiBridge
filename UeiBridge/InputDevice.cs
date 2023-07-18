@@ -22,6 +22,7 @@ namespace UeiBridge
         private log4net.ILog _logger = StaticMethods.GetLogger();
         protected ISession UeiSession { get; set; }
         public ISend<SendObject> TargetConsumer { get ; set; }
+        protected bool _isDeviceReady = false;
 
         public InputDevice() { }
         protected InputDevice( DeviceSetup setup)

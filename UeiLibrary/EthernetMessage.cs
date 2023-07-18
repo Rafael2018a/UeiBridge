@@ -30,7 +30,7 @@ namespace UeiBridge.Library
         public const int _unitIdOffset = 4;
         public const int _cardTypeOffset = 5;// _cardTypeOffset;
         public const int _slotNumberOffset = 6;
-        public const int _serailChannelOffset = 7;
+        public const int _serialChannelOffset = 7;
         public const int _lengthOffset = 12;// _lengthOffset;
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace UeiBridge.Library
 
             messageBytes[_unitIdOffset] = (byte)UnitId;
             messageBytes[_cardTypeOffset] = (byte)CardType;
-            messageBytes[_serailChannelOffset] = (byte)SerialChannelNumber;
+            messageBytes[_serialChannelOffset] = (byte)SerialChannelNumber;
             messageBytes[_slotNumberOffset] = (byte)SlotNumber;
 
             // message length
@@ -125,7 +125,7 @@ namespace UeiBridge.Library
 
             resutlMessage.UnitId = byteMessage[_unitIdOffset];
             resutlMessage.CardType = byteMessage[_cardTypeOffset];
-            resutlMessage.SerialChannelNumber = byteMessage[_serailChannelOffset];
+            resutlMessage.SerialChannelNumber = byteMessage[_serialChannelOffset];
             resutlMessage.SlotNumber = byteMessage[_slotNumberOffset];
             resutlMessage.NominalLength = byteMessage.Length; 
 
@@ -219,6 +219,7 @@ namespace UeiBridge.Library
             msg.CardType = cardId;
             msg.SlotNumber = slotNumber;
             msg.UnitId = unitId;
+            //msg.SerialChannelNumber = serialChNumber;
             msg.NominalLength = payload.Length + _payloadOffset;
             return msg;
         }

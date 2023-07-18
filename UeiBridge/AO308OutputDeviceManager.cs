@@ -25,7 +25,9 @@ namespace UeiBridge
 
         protected IWriterAdapter<double[]> _analogWriter;
         private log4net.ILog _logger = StaticMethods.GetLogger();
-        protected List<ViewItem<double>> _viewerItemList = new List<ViewItem<double>>();
+        //protected List<ViewItem<double>> _viewerItemList = new List<ViewItem<double>>(); // old
+        protected ViewItem<List<double>> _viewerItemList2;
+        protected object _viewerItemListLockObject = new object();
         protected bool _inDisposeState = false;
         protected AnalogConverter _attachedConverter;
 
@@ -39,7 +41,7 @@ namespace UeiBridge
             this.IsBlockSensorActive = isBlockSensorActive;
             this._deviceSetup = deviceSetup1;
         }
-        public AO308OutputDeviceManager() {} // must have empty c-tor
+        public AO308OutputDeviceManager() { } // must have empty c-tor
 
         public override bool OpenDevice()
         {
@@ -56,15 +58,17 @@ namespace UeiBridge
                 var range = _ueiSession.GetDevice().GetAORanges();
                 AO308Setup ao308 = _deviceSetup as AO308Setup;
                 //System.Diagnostics.Debug.Assert(this.IsBlockSensorActive.HasValue);
-                if ( this.IsBlockSensorActive) 
+                if (this.IsBlockSensorActive)
                 {
-                    EmitInitMessage($"Init success: {DeviceName} . { numOfCh} channels. Range {range[0].minimum},{range[0].maximum}V. Listening on BlockSensor");
+                    EmitInitMessage($"Init success: {DeviceName} . {numOfCh} channels. Range {range[0].minimum},{range[0].maximum}V. Listening on BlockSensor");
                 }
                 else
                 {
                     int deviceId = DeviceMap2.GetDeviceName(DeviceName);
-                    EmitInitMessage($"Init success: {DeviceName} (ID={deviceId}). { numOfCh} channels. Range {range[0].minimum},{range[0].maximum}V. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}");
+                    EmitInitMessage($"Init success: {DeviceName} (ID={deviceId}). {numOfCh} channels. Range {range[0].minimum},{range[0].maximum}V. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}");
                 }
+
+                _viewerItemList2 = new ViewItem<List<double>>(new List<double>(new double[numOfCh]), TimeSpan.FromSeconds(5));
 
                 _isDeviceReady = true;
             }
@@ -92,37 +96,65 @@ namespace UeiBridge
 
             // update for GetFormattedStatus()
             List<double> ld = new List<double>(outscan);
-            lock (_viewerItemList)
+            //lock (_viewerItemList)
+            //{
+            //    _viewerItemList = ld.Select(t => new ViewItem<double>(t, TimeSpan.FromSeconds(5))).ToList();
+            //}
+            lock (_viewerItemListLockObject)
             {
-                _viewerItemList = ld.Select(t => new ViewItem<double>(t, timeToLiveMs: 5000)).ToList();
+                _viewerItemList2 = new ViewItem<List<double>>(ld, TimeSpan.FromMilliseconds(5000));
             }
         }
 
         public override string[] GetFormattedStatus(TimeSpan interval)
         {
-            System.Text.StringBuilder formattedString = new System.Text.StringBuilder("Output voltage: ");
+             System.Text.StringBuilder formattedString = null;
 
-            lock (_viewerItemList)
+            if ((null != _viewerItemList2) && (_viewerItemList2.TimeToLive > TimeSpan.Zero))
             {
-                foreach(var item in _viewerItemList)
+                formattedString = new System.Text.StringBuilder("Output voltage: ");
+                lock (_viewerItemListLockObject)
                 {
-                    formattedString.Append("  ");
-                    if (item == null)
+                    _viewerItemList2.DecreaseTimeToLive( interval);
+                    foreach (double item in _viewerItemList2.ReadValue)
                     {
-                        formattedString.Append("-.-");
-                    }
-                    else
-                    {
-                        if (item.timeToLive.Ticks > 0)
-                        {
-                            item.timeToLive -= interval;
-                            formattedString.Append( item.readValue.ToString("0.0"));
-                        }
+                        formattedString.Append("  ");
+                        formattedString.Append(item.ToString("0.0"));
+
                     }
                 }
+                return new string[] { formattedString.ToString() };
             }
-            return new string[] { formattedString.ToString() };
+            else
+            {
+                return null;
+            }
         }
+        //public string[] GetFormattedStatus_old(TimeSpan interval)
+        //{
+        //    System.Text.StringBuilder formattedString = new System.Text.StringBuilder("Output voltage: ");
+
+        //    lock (_viewerItemList)
+        //    {
+        //        foreach (var item in _viewerItemList)
+        //        {
+        //            formattedString.Append("  ");
+        //            if (item == null)
+        //            {
+        //                formattedString.Append("-.-");
+        //            }
+        //            else
+        //            {
+        //                if (item.TimeToLive > TimeSpan.Zero)
+        //                {
+        //                    item.DecreaseTimeToLive(interval);
+        //                    formattedString.Append(item.ReadValue.ToString("0.0"));
+        //                }
+        //            }
+        //        }
+        //    }
+        //    return new string[] { formattedString.ToString() };
+        //}
 
         public override void Dispose()
         {

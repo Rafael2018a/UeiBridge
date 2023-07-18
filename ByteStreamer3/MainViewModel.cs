@@ -336,7 +336,7 @@ namespace ByteStreamer3
                             for (int i = 0; i < playfileVM.PlayFile.JFileObject.Header.NumberOfCycles; i++)
                             {
                                 // -- send block ....
-                                var eth = JFileAux.JsonToEtherentMessage(playfileVM.PlayFile.JFileObject);
+                                var eth = JFileAux.JsonToEthernetMessage(playfileVM.PlayFile.JFileObject);
                                 udpWriter.Send(eth.GetByteArray(UeiBridge.Library.MessageWay.downstream));
 
                                 System.Threading.Thread.Sleep(playfileVM.PlayFile.JFileObject.Header.WaitStateMs);
@@ -379,7 +379,7 @@ namespace ByteStreamer3
                        playfileVM.PlayedBlocksCount = 0;
                        for (int i = 0; i < playfileVM.PlayFile.JFileObject.Header.NumberOfCycles; i++)
                        {
-                           var eth = JFileAux.JsonToEtherentMessage(playfileVM.PlayFile.JFileObject);
+                           var eth = JFileAux.JsonToEthernetMessage(playfileVM.PlayFile.JFileObject);
                            udpWriter.Send(eth.GetByteArray(UeiBridge.Library.MessageWay.downstream));
                            System.Threading.Thread.Sleep(playfileVM.PlayFile.JFileObject.Header.WaitStateMs);
                            playfileVM.PlayedBlocksCount++;

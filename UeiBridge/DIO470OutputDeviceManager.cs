@@ -74,8 +74,13 @@ namespace UeiBridge
                     sb.Append(Convert.ToString(val, 2).PadLeft(8, '0'));
                     sb.Append("  ");
                 }
+                return new string[] { sb.ToString() };
             }
-            return new string[] { sb.ToString() };
+            else
+            {
+                return null;
+            }
+            
         }
 
         protected override void HandleRequest(EthernetMessage request)

@@ -52,25 +52,35 @@ namespace UeiBridge
                 var item = _lastScanList[ch];
                 if (null != item)
                 {
-                    if (item.timeToLive.Ticks > 0)
+                    if (item.TimeToLive > TimeSpan.Zero)
                     {
-                        item.timeToLive -= interval;
-                        int len = (item.readValue.Length > 20) ? 20 : item.readValue.Length;
-                        string s = $"Ch{ch}: Payload=({item.readValue.Length}): {BitConverter.ToString(item.readValue).Substring(0, len * 3 - 1)}";
+                        item.DecreaseTimeToLive( interval);
+                        int len = (item.ReadValue.Length > 20) ? 20 : item.ReadValue.Length;
+                        string s = $"Ch{ch}: Payload=({item.ReadValue.Length}): {BitConverter.ToString(item.ReadValue).Substring(0, len * 3 - 1)}";
                         resultList.Add(s);
-                        //formattedString.Append(s);
                     }
                     else
                     {
-                        resultList.Add( $"Ch{ch}: <empty>");
+                        item = null;
                     }
+                    //else
+                    //{
+                    //    resultList.Add( $"Ch{ch}: <empty>");
+                    //}
                 }
-                else
-                {
-                    resultList.Add($"Ch{ch}: <empty>");
-                }
+                //else
+                //{
+                //    resultList.Add($"Ch{ch}: <empty>");
+                //}
             }
-            return resultList.ToArray();
+            if (resultList.Count > 0)
+            {
+                return resultList.ToArray();
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public void ReaderCallback(IAsyncResult ar)
@@ -84,7 +94,7 @@ namespace UeiBridge
 
                 // ex.Message = "An error occurred while accessing the device"
 
-                _lastScanList[channel] = new ViewItem<byte[]>(receiveBuffer, timeToLiveMs: 5000);
+                _lastScanList[channel] = new ViewItem<byte[]>(receiveBuffer, TimeSpan.FromSeconds(5));
                 byte [] payload = receiveBuffer;
                 EthernetMessage em = StaticMethods.BuildEthernetMessageFromDevice(payload, this._thisDeviceSetup, channel);
                 // forward to consumer (send by udp)

@@ -137,6 +137,7 @@ namespace UeiBridge
             // activate upward (input) objects
             foreach (PerDeviceObjects deviceObjects in _PerDeviceObjectsList)
             {
+                _logger.Debug($"Activating {deviceObjects.DeviceName}");
                 deviceObjects?.InputDeviceManager?.OpenDevice();
                 System.Threading.Thread.Sleep(10);
                 // (no need to activate udpWriter)
@@ -525,12 +526,14 @@ namespace UeiBridge
                 tl.Add(
                     Task.Factory.StartNew(() =>
                     {
+                        _logger.Debug($"Start Disposing {entry.DeviceName}");
                         entry.OutputDeviceManager?.Dispose();
                         entry.InputDeviceManager?.Dispose();
+                        _logger.Debug($"Finished Disposing {entry.DeviceName}");
                         //entry.UdpWriter?.Dispose();
                     })
                 );
-                //System.Threading.Thread.Sleep(50);
+                System.Threading.Thread.Sleep(10);
 
             }
             Task.WaitAll(tl.ToArray());

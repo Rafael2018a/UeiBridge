@@ -7,21 +7,19 @@ using UeiBridge.Library;
 
 namespace UeiBridge
 {
-    class AO332OutputDeviceManager: AO308OutputDeviceManager
+    class AO332OutputDeviceManager : AO308OutputDeviceManager
     {
         public override string DeviceName => DeviceMap2.AO322Literal;
         AO308Setup _thisSetup;
         private log4net.ILog _logger = StaticMethods.GetLogger();
         //UeiDaq.Session _udeSession;
-        public AO332OutputDeviceManager(AO308Setup deviceSetup1, ISession session, bool bsensor)
-    : base(deviceSetup1, session, bsensor)
+        public AO332OutputDeviceManager(AO308Setup deviceSetup1, ISession session, bool bsensor) : base(deviceSetup1, session, bsensor)
         {
             _thisSetup = deviceSetup1;// as AO332Setup;
             _ueiSession = session;
-        
         }
 
-        public AO332OutputDeviceManager(){}
+        public AO332OutputDeviceManager() { }
 
         //public override bool OpenDevice()
         //{

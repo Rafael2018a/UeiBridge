@@ -155,44 +155,56 @@ namespace UeiBridge
         }
         void PublishStatus_Task(List<PerDeviceObjects> deviceList)
         {
-            const int intervalMs = 100;
+            //const int intervalMs = 100;
             IPEndPoint destEP = _mainConfig.AppSetup.StatusViewerEP.ToIpEp();
             UdpWriter uw = new UdpWriter( destEP, _mainConfig.AppSetup.SelectedNicForMulticast);
-            TimeSpan interval = TimeSpan.FromMilliseconds(intervalMs);
+            TimeSpan interval = TimeSpan.FromMilliseconds(100);
             _logger.Info($"StatusViewer dest ep: {destEP.ToString()} (Local NIC {_mainConfig.AppSetup.SelectedNicForMulticast})");
 
             List<IDeviceManager> deviceListScan = new List<IDeviceManager>();
 
-            // prepare list
-            foreach (PerDeviceObjects deviceObjects in deviceList) //ProjectRegistry.Instance.OutputDevicesMap)
+            try
             {
-                if (deviceObjects.InputDeviceManager != null)
+
+                // prepare list
+                foreach (PerDeviceObjects deviceObjects in deviceList) //ProjectRegistry.Instance.OutputDevicesMap)
                 {
-                    deviceListScan.Add(deviceObjects.InputDeviceManager);
+                    if (deviceObjects.InputDeviceManager != null)
+                    {
+                        deviceListScan.Add(deviceObjects.InputDeviceManager);
+                    }
+
+                    if (deviceObjects?.OutputDeviceManager != null)
+                    {
+                        deviceListScan.Add(deviceObjects.OutputDeviceManager);
+                    }
                 }
 
-                if (deviceObjects?.OutputDeviceManager != null)
+                // get formatted string for each device in list
+                while (true)
                 {
-                    deviceListScan.Add(deviceObjects.OutputDeviceManager);
+                    foreach (IDeviceManager dm in deviceListScan)
+                    {
+                        string desc = $"{dm.InstanceName}";
+                        StatusTrait tr = StatusTrait.IsRegular;
+                        string[] stat = dm.GetFormattedStatus(interval);
+                        if (null == stat)
+                        {
+                            continue;
+                        }
+                        StatusEntryJson js = new StatusEntryJson(desc, stat, tr);
+                        string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
+                        byte[] send_buffer = Encoding.ASCII.GetBytes(s);
+                        SendObject so = new SendObject(destEP, send_buffer);
+                        uw.Send(so);
+                    }
+
+                    System.Threading.Thread.Sleep(interval);
                 }
             }
-
-            // get formatted string for each device in list
-            while (true)
+            catch ( Exception ex)
             {
-                foreach (IDeviceManager dm in deviceListScan)
-                {
-                    string desc = $"{dm.InstanceName}";
-                    StatusTrait tr = StatusTrait.IsRegular;
-                    string[] stat = dm.GetFormattedStatus(interval);
-                    StatusEntryJson js = new StatusEntryJson(desc, stat, tr);
-                    string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
-                    byte[] send_buffer = Encoding.ASCII.GetBytes(s);
-                    SendObject so = new SendObject(destEP, send_buffer);
-                    uw.Send(so);
-                }
-
-                System.Threading.Thread.Sleep(interval);
+                _logger.Warn(ex.Message);
             }
         }
 

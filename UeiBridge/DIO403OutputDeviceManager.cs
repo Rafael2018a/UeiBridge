@@ -74,18 +74,18 @@ namespace UeiBridge
         public override string[] GetFormattedStatus(TimeSpan interval)
         {
             StringBuilder sb = new System.Text.StringBuilder("Output bits: ");
-            if (null == _viewItem?.readValue)
+            if (null == _viewItem?.ReadValue)
             {
                 return null;
             }
-            if (_viewItem.timeToLive.Ticks > 0)
+            if (_viewItem.TimeToLive > TimeSpan.Zero)
             {
-                _viewItem.timeToLive -= interval;
-                for (int i = 0; i < _viewItem.readValue.Length; i++)
+                _viewItem.DecreaseTimeToLive( interval);
+                for (int i = 0; i < _viewItem.ReadValue.Length; i++)
                 {
                     if (_scanMask[i] > 0)
                     {
-                        sb.Append(Convert.ToString(_viewItem.readValue[i], 2).PadLeft(8, '0'));
+                        sb.Append(Convert.ToString(_viewItem.ReadValue[i], 2).PadLeft(8, '0'));
                         sb.Append(" ");
                     }
                     else
@@ -104,7 +104,7 @@ namespace UeiBridge
                 _logger.Warn($"Incoming message too short. {request.PayloadBytes.Length} while expecting {_thisDeviceSetup.IOChannelList.Count}. rejected");
                 return;
             }
-            _viewItem = new ViewItem<byte[]>(request.PayloadBytes, 5000);
+            _viewItem = new ViewItem<byte[]>(request.PayloadBytes, TimeSpan.FromSeconds(5));
 
             byte[] distilledBuffer = new byte[_ueiSession.GetNumberOfChannels()];
             for (int ch = 0; ch < _ueiSession.GetNumberOfChannels(); ch++)

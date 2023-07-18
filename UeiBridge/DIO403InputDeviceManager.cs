@@ -59,6 +59,7 @@ namespace UeiBridge
                 TimeSpan interval = TimeSpan.FromMilliseconds(_thisDeviceSetup.SamplingInterval);
                 _samplingTimer = new System.Threading.Timer(DeviceScan_Callback, null, TimeSpan.Zero, interval);
 
+                _isDeviceReady = true;
                 return true;
             }
             catch (Exception ex)
@@ -97,6 +98,7 @@ namespace UeiBridge
                 }
                 // make EthernetMessage
                 _fullBuffer8bit = _digitalConverter.UpstreamConvert(fullBuffer16bit);
+                System.Diagnostics.Debug.Assert(null != _fullBuffer8bit);
                 var ethMsg = StaticMethods.BuildEthernetMessageFromDevice( _fullBuffer8bit, _thisDeviceSetup);
                 // send
                 TargetConsumer.Send(new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), ethMsg.GetByteArray( MessageWay.upstream)));
@@ -109,6 +111,10 @@ namespace UeiBridge
         
         public override string [] GetFormattedStatus( TimeSpan interval)
         {
+            if ((false == _isDeviceReady)||(null == _fullBuffer8bit))
+            {
+                return null;
+            }
             System.Text.StringBuilder sb = new System.Text.StringBuilder("Input bits: ");
 
             for(int i=0; i< _fullBuffer8bit.Length; i++)

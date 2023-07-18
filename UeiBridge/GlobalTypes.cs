@@ -117,13 +117,24 @@ namespace UeiBridge.Types
     /// <typeparam name="T"></typeparam>
     public class ViewItem<T>
     {
-        public T readValue { get; private set; }
-        public TimeSpan timeToLive { get; set; }
-
-        public ViewItem(T readValue, int timeToLiveMs)
+        public T ReadValue { get; private set; }
+        public TimeSpan TimeToLive { get; private set; }
+        public void DecreaseTimeToLive( TimeSpan interval)
         {
-            this.readValue = readValue;
-            this.timeToLive = TimeSpan.FromMilliseconds(timeToLiveMs);
+            if (TimeToLive > interval)
+            {
+                TimeToLive -= interval;
+            }
+            else
+            {
+                TimeToLive = TimeSpan.Zero;
+            }
+        }
+
+        public ViewItem(T readValue, TimeSpan timeToLive)
+        {
+            this.ReadValue = readValue;
+            this.TimeToLive = timeToLive;
         }
     }
 

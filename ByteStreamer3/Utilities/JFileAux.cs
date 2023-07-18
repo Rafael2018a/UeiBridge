@@ -40,7 +40,7 @@ namespace ByteStreamer3
             }
         }
 
-        public static UeiBridge.Library.EthernetMessage JsonToEtherentMessage(JFileClass playItem)
+        public static UeiBridge.Library.EthernetMessage JsonToEthernetMessage(JFileClass playItem)
         {
             byte[] block = new byte[playItem.Body.Payload.Length];
             Buffer.BlockCopy(playItem.Body.Payload, 0, block, 0, block.Length);
