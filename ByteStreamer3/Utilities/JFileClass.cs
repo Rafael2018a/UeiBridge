@@ -2,6 +2,7 @@
 using System;
 using System.Text;
 using System.Threading.Tasks;
+using UeiBridge.Library;
 
 namespace ByteStreamer3.Utilities
 {
@@ -17,24 +18,24 @@ namespace ByteStreamer3.Utilities
 
         public JFileHeader() {}
     }
-    public class JFileBody
-    {
-        public int CardType { get; set; } = 2;
-        public int SlotNumber { get; set; } = 1;
-        public int CubeId { get; set; } = 2;
-        public int[] Payload { get; set; }
+    //public class JFileBody
+    //{
+    //    public int CardType { get; set; } = 2;
+    //    public int SlotNumber { get; set; } = 1;
+    //    public int CubeId { get; set; } = 2;
+    //    public int[] Payload { get; set; }
 
-        public JFileBody(int[] payload)
-        {
-            this.Payload = payload;
-        }
-    }
+    //    public JFileBody(int[] payload)
+    //    {
+    //        this.Payload = payload;
+    //    }
+    //}
     public class JFileClass
     {
         public JFileHeader Header { get; set; }
-        public JFileBody Body { get; set; }
+        public EthernetMessage Body { get; set; }
 
-        public JFileClass(JFileHeader header, JFileBody body)
+        public JFileClass(JFileHeader header, EthernetMessage body)
         {
             Header = header;
             Body = body;

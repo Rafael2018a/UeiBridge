@@ -1,4 +1,4 @@
-﻿#define blocksim // block sensor simulation
+﻿//#define blocksim // block sensor simulation
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -507,7 +507,7 @@ namespace UeiBridge
 #if blocksim
                 // send single message to block sensor
                 //byte[] d403 = Library.StaticMethods.Make_Dio403_upstream_message(new byte[] { 0x5, 0, 0 });
-                string err=null;
+                //string err=null;
                 var ethMsg = EthernetMessage.CreateMessage(DeviceMap2.GetDeviceName(DeviceMap2.DIO403Literal), 1,2, new byte[] { 0x5, 0, 0, 0, 0, 0 });
                 blockSensor.Enqueue(ethMsg.GetByteArray(MessageWay.upstream));
 #endif

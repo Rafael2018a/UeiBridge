@@ -75,10 +75,10 @@ namespace UeiBridge
                     continue;
                 }
 
-                var consumerList = _consumersList.Where(consumer1 => ((consumer1.CubeId == ethMag.UnitId) && ( consumer1.SlotNumber == ethMag.SlotNumber )));
+                var consumerList = _consumersList.Where(consumer1 => ((consumer1.CubeId == ethMag.CubeId) && ( consumer1.SlotNumber == ethMag.SlotNumber )));
                 if (consumerList.Count()==0) // no subs
                 {
-                    _logger.Warn($"No consumer to message aimed to slot{ethMag.SlotNumber} /cube{ethMag.UnitId} ({incomingMessage.TargetEndPoint})");
+                    _logger.Warn($"No consumer to message aimed to slot{ethMag.SlotNumber} /cube{ethMag.CubeId} ({incomingMessage.TargetEndPoint})");
                     continue;
                 }
 

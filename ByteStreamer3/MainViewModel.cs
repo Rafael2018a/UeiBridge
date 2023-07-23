@@ -9,6 +9,7 @@ using System.Collections.ObjectModel;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Newtonsoft.Json;
 using System.Windows.Data;
+using UeiBridge.Library;
 
 namespace ByteStreamer3
 {
@@ -184,7 +185,8 @@ namespace ByteStreamer3
             // create sample file
             if (first == null)
             {
-                JFileClass jclass = new JFileClass(new JFileHeader(), new JFileBody(new int[] { 01, 02, 03 }));
+                EthernetMessage em = EthernetMessage.CreateMessage(10, 11, 12, new byte[] { 01, 02, 03 });
+                JFileClass jclass = new JFileClass(new JFileHeader(), em);
                 string s = JsonConvert.SerializeObject(jclass, Formatting.Indented);
                 string fn = Path.Combine( folderInfo.FullName, filename);
                 using (StreamWriter fs = new StreamWriter(fn))
@@ -336,11 +338,13 @@ namespace ByteStreamer3
                             for (int i = 0; i < playfileVM.PlayFile.JFileObject.Header.NumberOfCycles; i++)
                             {
                                 // -- send block ....
-                                var eth = JFileAux.JsonToEthernetMessage(playfileVM.PlayFile.JFileObject);
-                                udpWriter.Send(eth.GetByteArray(UeiBridge.Library.MessageWay.downstream));
-
-                                System.Threading.Thread.Sleep(playfileVM.PlayFile.JFileObject.Header.WaitStateMs);
-                                playfileVM.PlayedBlocksCount++;
+                                var eth = playfileVM.PlayFile.JFileObject.Body.GetByteArray(MessageWay.downstream);
+                                if (null != eth)
+                                {
+                                    udpWriter.Send(eth);
+                                    System.Threading.Thread.Sleep(playfileVM.PlayFile.JFileObject.Header.WaitStateMs);
+                                    playfileVM.PlayedBlocksCount++;
+                                }
 
                                 _playCancelSource.Token.ThrowIfCancellationRequested();
                             }
@@ -379,7 +383,7 @@ namespace ByteStreamer3
                        playfileVM.PlayedBlocksCount = 0;
                        for (int i = 0; i < playfileVM.PlayFile.JFileObject.Header.NumberOfCycles; i++)
                        {
-                           var eth = JFileAux.JsonToEthernetMessage(playfileVM.PlayFile.JFileObject);
+                           var eth = playfileVM.PlayFile.JFileObject.Body;
                            udpWriter.Send(eth.GetByteArray(UeiBridge.Library.MessageWay.downstream));
                            System.Threading.Thread.Sleep(playfileVM.PlayFile.JFileObject.Header.WaitStateMs);
                            playfileVM.PlayedBlocksCount++;

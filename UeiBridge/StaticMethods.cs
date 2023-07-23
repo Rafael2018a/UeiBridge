@@ -96,10 +96,10 @@ namespace UeiBridge
             }
 
             msg.SlotNumber = setup.SlotNumber;
-            msg.UnitId = 0; 
+            msg.CubeId = 0; 
             msg.CardType = (byte)key;
             msg.PayloadBytes = payload;
-            msg.NominalLength = payload.Length + EthernetMessage._payloadOffset;
+            //msg.NominalLength = payload.Length + EthernetMessage._payloadOffset;
 
             System.Diagnostics.Debug.Assert(msg.InternalValidityTest());
 
