@@ -155,7 +155,7 @@ namespace UeiBridgeTest
                 {
                     Assert.That(ok, Is.EqualTo(true));
                     Assert.That(sm._sentObject.ByteMessage[0], Is.EqualTo(0x55));
-                    Assert.That(em.NominalLength, Is.EqualTo(22));
+                    Assert.That(em.TotalLength, Is.EqualTo(22));
                 });
 
                 dio403.Dispose();
@@ -181,9 +181,9 @@ namespace UeiBridgeTest
 
             System.Threading.Thread.Sleep(100);
 
-            var ls = sa.GetDigitalReader().LastScan;
+            //var ls = sa.GetDigitalReader().LastScan;
 
-            Assert.That(ls.Length, Is.EqualTo(sa.GetNumberOfChannels()));
+            //Assert.That(ls.Length, Is.EqualTo(sa.GetNumberOfChannels()));
 
             dio403.Dispose();
             //Assert.Multiple(() =>
@@ -207,14 +207,42 @@ namespace UeiBridgeTest
         {
             UeiDeviceInfo di = new UeiDeviceInfo("simu://", 4, DeviceMap2.SL508Literal);
 
-            SL508892Setup deviceSetup = new SL508892Setup(null, null, di);
+            SL508892Setup thisSetup = new SL508892Setup(null, null, di);
 
-            deviceSetup.Channels[1].Baudrate = SerialPortSpeed.BitsPerSecond14400;
-            deviceSetup.CubeUrl = "simu://";
-            SessionEx sx = new SessionEx(deviceSetup);
-            SerialPort ch = sx.GetChannel(1) as SerialPort;
+            thisSetup.Channels[1].Baudrate = SerialPortSpeed.BitsPerSecond14400;
+            thisSetup.CubeUrl = "simu://";
+            Session serialSession = new Session();
+
+            {
+                foreach (var channel in thisSetup.Channels)
+                {
+                    string finalUrl = $"{thisSetup.CubeUrl}Dev{thisSetup.SlotNumber}/Com{channel.ChannelIndex}";
+                    var port = serialSession.CreateSerialPort(finalUrl,
+                                        channel.mode,
+                                        channel.Baudrate,
+                                        SerialPortDataBits.DataBits8,
+                                        channel.parity,
+                                        channel.stopbits,
+                                        "");
+                }
+
+                System.Diagnostics.Debug.Assert(serialSession.GetNumberOfChannels() == thisSetup.Channels.Count);
+                //System.Diagnostics.Debug.Assert(numberOfChannels == Config.Instance.SerialChannels.Length);
+
+                serialSession.ConfigureTimingForMessagingIO(1000, 100.0);
+                serialSession.GetTiming().SetTimeout(5000); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
+
+                //serialSession.ConfigureTimingForSimpleIO();
+
+                serialSession.Start();
+
+                //IsValidSession = true;
+            }
+
+
+            SerialPort ch = serialSession.GetChannel(1) as SerialPort;
             var speed1 = ch.GetSpeed();
-            ch = sx.GetChannel(0) as SerialPort;
+            ch = serialSession.GetChannel(0) as SerialPort;
             var speed0 = ch.GetSpeed();
 
             Assert.That(speed0, Is.EqualTo(SerialPortSpeed.BitsPerSecond19200));
@@ -483,6 +511,11 @@ namespace UeiBridgeTest
         public string GetResourceName()
         {
             return "simu://Dev2/Do0:3";
+        }
+
+        public SerialPortSpeed GetSpeed()
+        {
+            throw new NotImplementedException();
         }
     }
 

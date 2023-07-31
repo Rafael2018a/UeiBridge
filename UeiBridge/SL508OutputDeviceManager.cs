@@ -19,14 +19,14 @@ namespace UeiBridge
         log4net.ILog _logger = StaticMethods.GetLogger();
         //IConvert _attachedConverter;
         List<ViewItem<byte[]>> _ViewItemList = new List<ViewItem<byte[]>>(); 
-        SessionEx _serialSession;
+        Session _serialSession;
         int _sentBytesAcc = 0;
         int _numberOfSentMessages = 0;
         List<SerialWriter> _serialWriterList = new List<SerialWriter>();
         Dictionary<SerialPortSpeed, int> _serialSpeedDic = new Dictionary<SerialPortSpeed, int>();
         bool _inDisposeState = false;
         private DeviceSetup _deviceSetup;
-        public SL508OutputDeviceManager(DeviceSetup setup, SessionEx serialSession) : base(setup)
+        public SL508OutputDeviceManager(DeviceSetup setup, Session serialSession) : base(setup)
         {
 
             if ((setup==null)||(serialSession == null))

@@ -291,10 +291,32 @@ namespace UeiBridge
 
             SL508892Setup thisSetup = setup as SL508892Setup;
 
-            SessionEx serialSession = null;
+            Session serialSession = null;
             try
             {
-                serialSession = new SessionEx(thisSetup);
+                serialSession = new Session();
+
+                {
+                    foreach (var channel in thisSetup.Channels)
+                    {
+                        string finalUrl = $"{thisSetup.CubeUrl}Dev{thisSetup.SlotNumber}/Com{channel.ChannelIndex}";
+                        var port = serialSession.CreateSerialPort(finalUrl,
+                                            channel.mode,
+                                            channel.Baudrate,
+                                            SerialPortDataBits.DataBits8,
+                                            channel.parity,
+                                            channel.stopbits,
+                                            "");
+                    }
+
+                    System.Diagnostics.Debug.Assert(serialSession.GetNumberOfChannels() == thisSetup.Channels.Count);
+
+                    serialSession.ConfigureTimingForMessagingIO(1000, 100.0);
+                    serialSession.GetTiming().SetTimeout(5000); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
+
+                    serialSession.Start();
+                }
+
             }
             catch (UeiDaqException ex)
             {
@@ -315,6 +337,7 @@ namespace UeiBridge
                 _logger.Debug($"CH:{ueiPort.GetIndex()}, Rate {s2} bps, Mode {ueiPort.GetMode()}. Listening port {portnum}");
             }
 
+            //SessionAdapter serAd = new SessionAdapter(serialSession);
             string instanceName = setup.GetInstanceName();// $"{realDevice.DeviceName}/Slot{realDevice.DeviceSlot}";
             UdpWriter uWriter = new UdpWriter( setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMulticast);
             SL508InputDeviceManager id = new SL508InputDeviceManager(uWriter, setup, serialSession);

@@ -61,6 +61,7 @@ namespace UeiBridge.Library
             }
             return _digitalReaderAd;
         }
+
         public IWriterAdapter<UInt16[]> GetDigitalWriter()
         {
             if (null==_digitalWriterAd)
@@ -73,11 +74,7 @@ namespace UeiBridge.Library
         {
             return _ueiSession.GetNumberOfChannels();
         }
-        IChannel ISession.GetChannel(int v)
-        {
-            return new ChannelAdapter( _ueiSession.GetChannel(v));
-        }
-        List<IChannel> ISession.GetChannels()
+       public List<IChannel> GetChannels() 
         {
             var r = _ueiSession.GetChannels().Cast<Channel>().ToList().Select(i => new ChannelAdapter(i));
             return r.ToList<IChannel>();
@@ -86,6 +83,12 @@ namespace UeiBridge.Library
         {
             return new DeviceAdapter( _ueiSession.GetDevice());
         }
+
+        public IChannel GetChannel(int serialChannelNumber)
+        {
+            return new ChannelAdapter(_ueiSession.GetChannel( serialChannelNumber));
+        }
+
     }
 
 

@@ -25,12 +25,12 @@ namespace UeiBridge
         private List<ViewItem<byte[]>> _lastScanList = new List<ViewItem<byte[]>>();
         private readonly SL508892Setup _thisDeviceSetup;
         private ISend<SendObject> _targetConsumer;
-        private SessionEx _serialSession;
+        private Session _serialSession;
         private List<IAsyncResult> _readerIAsyncResultList;
         private const int minLen = 200;
         
 
-        public SL508InputDeviceManager(ISend<SendObject> targetConsumer, DeviceSetup setup, SessionEx serialSession) : base( setup)
+        public SL508InputDeviceManager(ISend<SendObject> targetConsumer, DeviceSetup setup, Session serialSession) : base( setup)
         {
             _targetConsumer = targetConsumer;
             _thisDeviceSetup = setup as SL508892Setup;
@@ -139,6 +139,7 @@ namespace UeiBridge
             for (int ch = 0; ch < _serialSession.GetNumberOfChannels(); ch++)
             {
                 var sr = new SerialReader(_serialSession.GetDataStream(), _serialSession.GetChannel(ch).GetIndex());
+                //SerialReaderAdapter sra = _serialSession.GetSerialReader(ch);
                 _serialReaderList.Add(sr);
             }
             System.Threading.Thread.Sleep(10);
