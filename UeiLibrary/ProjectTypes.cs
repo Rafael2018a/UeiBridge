@@ -35,7 +35,7 @@ namespace UeiBridge.Library
             }
             else
             {
-                IPAddress ipa = Config2.CubeUriToIpAddress(this.CubeUrl);
+                IPAddress ipa = StaticMethods.CubeUrlToIpAddress(this.CubeUrl);
                 CubeId = (null != ipa) ? ipa.GetAddressBytes()[3] : -1;
             }
         }

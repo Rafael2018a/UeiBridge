@@ -57,20 +57,22 @@ namespace UeiBridge
                 return;
             }
 
-            // open or create settings file
+            // new
             try
             {
-                _mainConfig = Config2.LoadConfig(cubeUrlList);
+                List<CubeSetup> cubeSetupList = Config2.GetSetupForConnectedCubes(cubeUrlList);
+                foreach (CubeSetup cs in cubeSetupList)
+                {
+                    if (null == cs.OriginFileFullName)
+                    {
+                        cs.Serialize();
+                    }
+                }
+                _mainConfig = new Config2(cubeUrlList);
             }
-            catch (InvalidOperationException ex)
+            catch( Exception ex)
             {
-                _logger.Warn($"Failed to load configuration. {ex.Message}. Any key to abort....");
-                Console.ReadKey();
-                return;
-            }
-            catch (Exception ex)
-            {
-                _logger.Warn($"Failed to load configuration. {ex.Message}. Any key to abort....");
+                _logger.Warn($"Error loading setup. {ex.Message}. Any key to abort....");
                 Console.ReadKey();
                 return;
             }

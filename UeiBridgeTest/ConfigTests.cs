@@ -18,7 +18,7 @@ namespace UeiBridgeTest
         [Test]
         public void NoConfigFile()
         {
-            Assert.Throws<System.IO.FileNotFoundException>(() => 
+            Assert.Throws<System.IO.FileNotFoundException>(() =>
             {
                 var c2 = Config2.LoadConfigFromFile(new System.IO.FileInfo("nofile.config"));
             });
@@ -26,8 +26,8 @@ namespace UeiBridgeTest
         [Test]
         public void BadConfigTest()
         {
-            Assert.Throws<System.InvalidOperationException>(() => 
-            { 
+            Assert.Throws<System.InvalidOperationException>(() =>
+            {
                 var c2 = Config2.LoadConfigFromFile(new System.IO.FileInfo("UeiBridgeTest.exe.config"));
             });
         }
@@ -53,7 +53,7 @@ namespace UeiBridgeTest
             string bad_url = "ksjdlkfjlaks";
             UeiBridge.Library.Config2 c3 = UeiBridge.Library.Config2.LoadConfig(new List<string>() { simu_url, existing_cube, non_existing_cube, bad_url });
 
-            IPAddress ip = UeiBridge.Library.Config2.CubeUriToIpAddress("pdna://192.168.100.2");
+            IPAddress ip = UeiBridge.Library.StaticMethods.CubeUrlToIpAddress("pdna://192.168.100.2");
             if (null == CubeSeeker.TryIP(ip))
             {
                 Assert.That(c3.CubeSetupList.Count, Is.EqualTo(1));
@@ -149,9 +149,9 @@ namespace UeiBridgeTest
         public void CubeSetupTest1()
         {
             List<UeiDeviceInfo> devList = new List<UeiDeviceInfo>();
-            devList.Add(new UeiDeviceInfo("cubeurl", 51,"devicename1"));
+            devList.Add(new UeiDeviceInfo("cubeurl", 51, "devicename1"));
             CubeSetup cs = new CubeSetup(devList);
-            Assert.That( cs.DeviceSetupList.Count, Is.EqualTo(1));
+            Assert.That(cs.DeviceSetupList.Count, Is.EqualTo(1));
         }
         /// <summary>
         /// Verify that CubeSetup does generate device-setup for a known device.
@@ -160,9 +160,9 @@ namespace UeiBridgeTest
         public void CubeSetupTest2()
         {
             List<UeiDeviceInfo> devList = new List<UeiDeviceInfo>();
-            devList.Add(new UeiDeviceInfo("cubeurl", 101,"AO-308"));
+            devList.Add(new UeiDeviceInfo("cubeurl", 101, "AO-308"));
             CubeSetup cs = new CubeSetup(devList);
-            Assert.That( cs.DeviceSetupList.Count, Is.EqualTo(1));
+            Assert.That(cs.DeviceSetupList.Count, Is.EqualTo(1));
             Assert.That(cs.DeviceSetupList[0], Is.Not.Null);
         }
 
@@ -170,9 +170,9 @@ namespace UeiBridgeTest
         public void BuildDefaultSimuConfigTest()
         {
             Config2 c2 = new Config2();
-            Config2 c3 = Config2.BuildDefaultConfig(new List<string>{ "simu://" });
-            Assert.That( c3.AppSetup.StatusViewerEP, Is.Not.Null);
-            Assert.That( c3.CubeSetupList[0].DeviceSetupList.Count, Is.EqualTo(11)); // only one simulation device setup is defined.
+            Config2 c3 = Config2.BuildDefaultConfig(new List<string> { "simu://" });
+            Assert.That(c3.AppSetup.StatusViewerEP, Is.Not.Null);
+            Assert.That(c3.CubeSetupList[0].DeviceSetupList.Count, Is.EqualTo(11)); // only one simulation device setup is defined.
         }
 
         [Test]
@@ -181,7 +181,7 @@ namespace UeiBridgeTest
             string filename = "setupForTest.config";
 
             Config2 c1 = Config2.BuildDefaultConfig(new List<string> { "simu://" });
-            c1.SaveAs( new FileInfo(filename), true);
+            c1.SaveAs(new FileInfo(filename), true);
 
             Config2 c2 = Config2.LoadConfigFromFile(new FileInfo(filename));
             Config2 c3 = Config2.LoadConfigFromFile(new FileInfo(filename));
@@ -189,6 +189,47 @@ namespace UeiBridgeTest
             Assert.That(c2.Equals(c3), Is.False);
         }
 
+        [Test]
+        public void LoadConnectedCubesSetup_NoFile()
+        {
+            string fn = CubeSetup.GetSelfFilename(UeiDeviceInfo.SimuCubeId);
+            if (File.Exists(fn))
+            {
+                File.Delete(fn);
+            }
+            List<string> urlList = new List<string>() { "simu://" };
+            List<CubeSetup> list = Config2.GetSetupForConnectedCubes(urlList);
+            list[0].Serialize();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(File.Exists(fn), Is.EqualTo(true));
+                Assert.That(list[0].DeviceSetupList.Count, Is.EqualTo(11));
+                Assert.That(list[0].OriginFileFullName, Is.Null);
+            });
+        }
+        [Test]
+        public void LoadConnectedCubesSetup_badFile()
+        {
+            List<string> urlList = new List<string>() { "simu://" };
+            FileInfo fi = new FileInfo("Cube.simu.config");
+            using (var t = fi.CreateText())
+            {
+                t.WriteLine("bad-xml");
+            }
+
+            Assert.Throws<System.InvalidOperationException>(() =>
+            {
+                List<CubeSetup> list = Config2.GetSetupForConnectedCubes(urlList);
+            });
+        }
+        [Test]
+        public void LoadConnectedCubesSetup_badUrl()
+        {
+            List<string> urlList = new List<string>() { "aaa" };
+            List<CubeSetup> list = Config2.GetSetupForConnectedCubes(urlList);
+            Assert.That(list.Count, Is.EqualTo(0));
+        }
         private static void CreateBackupFile(FileInfo fi)
         {
             string barename = Path.GetFileNameWithoutExtension(fi.Name);

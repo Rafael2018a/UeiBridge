@@ -20,7 +20,7 @@ namespace UeiBridgeSetup.ViewModels
         {
             this.CubeSetup = cubesetup;
             this.IsCubeConnected = isCubeConnected;
-            this.CubeAddress = Config2.CubeUriToIpAddress(CubeSetup.CubeUrl);
+            this.CubeAddress = StaticMethods.CubeUrlToIpAddress(CubeSetup.CubeUrl);
         }
     }
 }

@@ -225,7 +225,7 @@ namespace UeiBridge
 
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMulticast);
             UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, analogOut.InstanceName);
-            _udpMessenger.SubscribeConsumer(analogOut, setup.CubeId, setup.SlotNumber);
+            _udpMessenger.SubscribeConsumer(analogOut, setup.GetCubeId(), setup.SlotNumber);
             _udpReaderList.Add(ureader);
 
             pd.OutputDeviceManager = analogOut;
@@ -520,7 +520,7 @@ namespace UeiBridge
                 PerDeviceObjects pd = new PerDeviceObjects(blockSensor.DeviceName, -1, "no_cube");
                 pd.OutputDeviceManager = blockSensor;
 
-                int cubeid = Config2.CubeUriToIpAddress( csetup.CubeUrl).GetAddressBytes()[3]; // tbd. result of CubeUriToIpAddress might be null
+                int cubeid = UeiBridge.Library.StaticMethods.CubeUrlToIpAddress( csetup.CubeUrl).GetAddressBytes()[3]; // tbd. result of CubeUriToIpAddress might be null
                 _udpMessenger.SubscribeConsumer(blockSensor, cubeid, 32);
                 _udpReaderList.Add(ureader);
 
