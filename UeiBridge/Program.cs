@@ -113,6 +113,7 @@ namespace UeiBridge
 
             if (cubelistFile.Exists)
             {
+                Console.WriteLine("Using cubelist.txt file");
                 using (StreamReader fs = new StreamReader(cubelistFile.OpenRead()))
                 {
                     while (true)
@@ -122,15 +123,18 @@ namespace UeiBridge
                         {
                             break;
                         }
+                        Console.WriteLine($"Cube {l}");
                         result.Add(l);
                     }
                 }
             }
             else
             {
+                Console.WriteLine("Scanning for cubes...");
                 List<IPAddress> iplist = CubeSeeker.FindCubesInRange(IPAddress.Parse("192.168.100.2"), 100);
                 foreach (IPAddress ip in iplist)
                 {
+                    Console.WriteLine($"Found cube {ip.ToString()}");
                     result.Add($"pdna://{ip.ToString()}/");
                 }
             }

@@ -101,7 +101,11 @@ namespace UeiBridge
                 _targetConsumer.Send(new SendObject( _thisDeviceSetup.DestEndPoint.ToIpEp(), em.GetByteArray( MessageWay.upstream)));
 
                 // restart reader
-                _readerIAsyncResultList[channel] = _serialReaderList[channel].BeginRead(minLen, this.ReaderCallback, channel);
+                if (_InDisposeState == false)
+                {
+                    System.Diagnostics.Debug.Assert(true == _serialSession.IsRunning());
+                    _readerIAsyncResultList[channel] = _serialReaderList[channel].BeginRead(minLen, this.ReaderCallback, channel);
+                }
             }
             catch (UeiDaqException ex)
             {
@@ -111,6 +115,7 @@ namespace UeiBridge
                     // clicked on fast enough!
                     if (_InDisposeState == false)
                     {
+                        System.Diagnostics.Debug.Assert(true == _serialSession.IsRunning());
                         _readerIAsyncResultList[channel] = _serialReaderList[channel].BeginRead(minLen, this.ReaderCallback, channel);
                     }
                     else
