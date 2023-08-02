@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace UeiBridge.Library
 {
@@ -17,20 +18,23 @@ namespace UeiBridge.Library
         //const int _cardTypeOffset = 5; // 1 byte
         //const int _lengthOffset = 12; // 2 bytes
 
-        public int UnitId { get; set; }
+        public int CubeId { get; set; }
         public int CardType { get; set; }
         public int SlotNumber { get; set; }
         public int SerialChannelNumber { get; set; }
+        [JsonProperty("Payload")]
         public byte[] PayloadBytes { get; set; }
+        //public List<byte> SomeBytes { get; set; } 
         //public byte[] HeaderBytes { get; set; }
         //public int _debugSerial { get; set; } // serial number of message
-        public int NominalLength { get; set; }
+        [JsonIgnore]
+        public int TotalLength => (_payloadOffset + PayloadBytes.Length);
 
         public const int _payloadOffset = 16;// _payloadOffset;
         public const int _unitIdOffset = 4;
         public const int _cardTypeOffset = 5;// _cardTypeOffset;
         public const int _slotNumberOffset = 6;
-        public const int _serailChannelOffset = 7;
+        public const int _serialChannelOffset = 7;
         public const int _lengthOffset = 12;// _lengthOffset;
 
         /// <summary>
@@ -45,9 +49,9 @@ namespace UeiBridge.Library
             byte[] messageBytes = new byte[_payloadOffset + PayloadBytes.Length];
             Array.Clear(messageBytes, 0, messageBytes.Length);
 
-            messageBytes[_unitIdOffset] = (byte)UnitId;
+            messageBytes[_unitIdOffset] = (byte)CubeId;
             messageBytes[_cardTypeOffset] = (byte)CardType;
-            messageBytes[_serailChannelOffset] = (byte)SerialChannelNumber;
+            messageBytes[_serialChannelOffset] = (byte)SerialChannelNumber;
             messageBytes[_slotNumberOffset] = (byte)SlotNumber;
 
             // message length
@@ -93,11 +97,10 @@ namespace UeiBridge.Library
             if ((PayloadBytes==null) || (PayloadBytes.Length == 0))
                 return false;
 
-            if (PayloadBytes.Length != NominalLength-_payloadOffset)
-            {
-                return false;
-            }
-
+            //if (PayloadBytes.Length != NominalLength-_payloadOffset)
+            //{
+            //    return false;
+            //}
             return true;
         }
         /// <summary>
@@ -123,11 +126,11 @@ namespace UeiBridge.Library
             resutlMessage.PayloadBytes = new byte[byteMessage.Length - _payloadOffset];
             Array.Copy(byteMessage, _payloadOffset, resutlMessage.PayloadBytes, 0, byteMessage.Length - EthernetMessage._payloadOffset);
 
-            resutlMessage.UnitId = byteMessage[_unitIdOffset];
+            resutlMessage.CubeId = byteMessage[_unitIdOffset];
             resutlMessage.CardType = byteMessage[_cardTypeOffset];
-            resutlMessage.SerialChannelNumber = byteMessage[_serailChannelOffset];
+            resutlMessage.SerialChannelNumber = byteMessage[_serialChannelOffset];
             resutlMessage.SlotNumber = byteMessage[_slotNumberOffset];
-            resutlMessage.NominalLength = byteMessage.Length; 
+            //resutlMessage.NominalLength = byteMessage.Length; 
 
             return resutlMessage;
         }
@@ -218,8 +221,12 @@ namespace UeiBridge.Library
             msg.PayloadBytes = payload;
             msg.CardType = cardId;
             msg.SlotNumber = slotNumber;
-            msg.UnitId = unitId;
-            msg.NominalLength = payload.Length + _payloadOffset;
+            msg.CubeId = unitId;
+            //msg.SerialChannelNumber = serialChNumber;
+            //msg.NominalLength = payload.Length + _payloadOffset;
+
+            //msg.SomeBytes = new List<byte>(payload);
+
             return msg;
         }
 

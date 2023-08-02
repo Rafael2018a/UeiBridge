@@ -85,7 +85,7 @@ namespace UeiBridge
             //ILog _logger = log4net.LogManager.GetLogger("Root");
 
             //int key = //ProjectRegistry.Instance.GetDeviceKeyFromDeviceString(deviceName);
-            int key = DeviceMap2.GetCardIdFromCardName(setup.DeviceName);
+            int key = DeviceMap2.GetDeviceName(setup.DeviceName);
 
             System.Diagnostics.Debug.Assert(key >= 0);
 
@@ -96,10 +96,10 @@ namespace UeiBridge
             }
 
             msg.SlotNumber = setup.SlotNumber;
-            msg.UnitId = 0; 
+            msg.CubeId = 0; 
             msg.CardType = (byte)key;
             msg.PayloadBytes = payload;
-            msg.NominalLength = payload.Length + EthernetMessage._payloadOffset;
+            //msg.NominalLength = payload.Length + EthernetMessage._payloadOffset;
 
             System.Diagnostics.Debug.Assert(msg.InternalValidityTest());
 

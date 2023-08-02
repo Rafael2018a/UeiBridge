@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using UeiDaq;
@@ -57,9 +58,9 @@ namespace UeiBridge.Library
 
             return msg.GetByteArray(MessageWay.downstream);
         }
-        public static byte[] Make_Dio403_upstream_message( byte [] payload)
+        public static byte[] Make_Dio403_upstream_message(byte[] payload)
         {
-            int id = DeviceMap2.GetCardIdFromCardName(DeviceMap2.DIO403Literal);
+            int id = DeviceMap2.GetDeviceName(DeviceMap2.DIO403Literal);
             var b = EthernetMessage.CreateMessage(id, 0, 0, payload); //new byte[] { 0x5, 0, 0 });
             return b.GetByteArray(MessageWay.upstream);
         }
@@ -76,7 +77,7 @@ namespace UeiBridge.Library
                 result[i * 2 + 1] = two[1];
             }
 
-            return EthernetMessage.CreateMessage( 32, 32, 0, result);
+            return EthernetMessage.CreateMessage(32, 0, 2, result);
         }
 
 
@@ -116,30 +117,67 @@ namespace UeiBridge.Library
             return msgs;
         }
 
-    }
-
-    public static class ExtMethods
-    {
-        /// <summary>
-        /// Build default config from cube-url-list
-        /// </summary>
-        public static Config2 BuildDefaultConfig2( this Config2 c2, List<string> cubeUrlList) 
+        public static List<UeiDeviceInfo> DeviceCollectionToDeviceInfoList(DeviceCollection devColl, string cubeurl)
         {
-            List<CubeSetup> csetupList = new List<CubeSetup>();
-            foreach (var url in cubeUrlList)
+            try
             {
-                DeviceCollection devColl = new DeviceCollection(url);
-                List<UeiDeviceInfo> rl = new List<UeiDeviceInfo>();
-                foreach (Device dev in devColl)
+                var l1 = devColl.Cast<UeiDaq.Device>().ToList();
+                var devList = l1.Select((UeiDaq.Device i) =>
                 {
-                    if (dev == null) continue; // this for the last entry, which is null
-                    rl.Add(new UeiDeviceInfo(url, dev.GetIndex(), dev.GetDeviceName()));
-                }
-                csetupList.Add(new CubeSetup(rl, url));
+                    if (i == null)
+                        return null;
+                    //Uri url = new Uri(i.GetResourceName());
+                    //string curl = url.LocalPath;
+                    return new UeiDeviceInfo(cubeurl, i.GetIndex(), i.GetDeviceName());
+                });
+                var l2 = devList.ToList();
+                l2.Remove(null); // remove last null item
+                return l2;
             }
-
-            Config2 res = new Config2(csetupList);
-            return res;
+            catch (UeiDaq.UeiDaqException)
+            {
+                return null;
+            }
         }
+
+        internal static int CubeUrlToCubeId(string cubeUrl)
+        {
+            int result = -1;
+            if (null != cubeUrl)
+            {
+                if (cubeUrl.ToLower().StartsWith("simu"))
+                {
+                    result = UeiDeviceInfo.SimuCubeId;
+                }
+                else
+                {
+                    IPAddress ipa = CubeUrlToIpAddress(cubeUrl);
+                    if (null != ipa)
+                    {
+                        result = ipa.GetAddressBytes()[3];
+                    }
+                }
+            }
+            return result;
+        }
+
+
+        public static System.Net.IPAddress CubeUrlToIpAddress(string url)
+        {
+            //m.Net.IPAddress result = null;
+            Uri resutlUri;
+            bool ok1 = Uri.TryCreate(url, UriKind.Absolute, out resutlUri);
+            if (ok1)
+            {
+                IPAddress resutlIp;
+                bool ok2 = System.Net.IPAddress.TryParse(resutlUri.Host, out resutlIp);
+                if (ok2)
+                {
+                    return resutlIp;
+                }
+            }
+            return null;
+        }
+
     }
 }

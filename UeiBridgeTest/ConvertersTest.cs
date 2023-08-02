@@ -89,7 +89,7 @@ namespace UeiBridgeTest
 
         }
         [Test]
-        public void VoltageinputConvertTest()
+        public void VoltageInputConvertTest()
         {
             Int16 i16 = AnalogConverter.PlusMinusVoltageToInt16(12.0, 12.0);
             Assert.That(i16, Is.InRange(32760, 32770));

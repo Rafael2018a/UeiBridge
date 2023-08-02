@@ -56,7 +56,7 @@ namespace UeiBridge
 
             int noOfbits = 10;// _deviceSession.GetNumberOfChannels() * 8;
             int firstBit = 0;// _deviceSession.GetChannel(0).GetIndex() * 8;
-            EmitInitMessage( $"Init success: {DeviceName}. Bits {firstBit}..{firstBit + noOfbits - 1} as output. Dest{_deviceSetup.LocalEndPoint?.ToIpEp().ToString()}"); 
+            EmitInitMessage( $"Init success: {DeviceName}. Bits {firstBit}..{firstBit + noOfbits - 1} as output. Listening on {_deviceSetup.LocalEndPoint?.ToIpEp().ToString()}"); 
             //_logger.Info($"Init success: {InstanceName}. Bits {firstBit}..{firstBit + noOfbits - 1} as output"); // { noOfCh} output channels
 
             Task.Factory.StartNew(() => OutputDeviceHandler_Task());
@@ -74,8 +74,13 @@ namespace UeiBridge
                     sb.Append(Convert.ToString(val, 2).PadLeft(8, '0'));
                     sb.Append("  ");
                 }
+                return new string[] { sb.ToString() };
             }
-            return new string[] { sb.ToString() };
+            else
+            {
+                return null;
+            }
+            
         }
 
         protected override void HandleRequest(EthernetMessage request)

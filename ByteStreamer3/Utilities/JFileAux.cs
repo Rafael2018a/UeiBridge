@@ -17,7 +17,7 @@ namespace ByteStreamer3
 
         public bool IsValidItem()
         {
-            return ((JFileObject != null) && (JFileObject.Body != null) && (JFileObject.Header != null) && (JFileObject.Body.Payload != null));
+            return ((JFileObject != null) && (JFileObject.Body != null) && (JFileObject.Header != null) && (JFileObject.Body.PayloadBytes != null));
         }
 
         public JFileAux(FileInfo fileToPlay)
@@ -40,17 +40,17 @@ namespace ByteStreamer3
             }
         }
 
-        public static UeiBridge.Library.EthernetMessage JsonToEtherentMessage(JFileClass playItem)
-        {
-            byte[] block = new byte[playItem.Body.Payload.Length];
-            Buffer.BlockCopy(playItem.Body.Payload, 0, block, 0, block.Length);
-            for(int i=0; i< playItem.Body.Payload.Length; i++)
-            {
-                block[i] = Convert.ToByte(playItem.Body.Payload[i]);
-            }
-            UeiBridge.Library.EthernetMessage resultMessage = UeiBridge.Library.EthernetMessage.CreateMessage(playItem.Body.CardType, playItem.Body.SlotNumber, playItem.Body.CubeId, block);
-            return resultMessage;
-        }
+        //public static UeiBridge.Library.EthernetMessage JsonToEthernetMessage(JFileClass playItem)
+        //{
+        //    byte[] block = new byte[playItem.Body.PayloadBytes.Length];
+        //    Buffer.BlockCopy(playItem.Body.PayloadBytes, 0, block, 0, block.Length);
+        //    for(int i=0; i< playItem.Body.PayloadBytes.Length; i++)
+        //    {
+        //        block[i] = Convert.ToByte(playItem.Body.PayloadBytes[i]);
+        //    }
+        //    UeiBridge.Library.EthernetMessage resultMessage = UeiBridge.Library.EthernetMessage.CreateMessage(playItem.Body.CardType, playItem.Body.SlotNumber, playItem.Body.CubeId, block);
+        //    return resultMessage;
+        //}
 
         internal void Save()
         {

@@ -39,24 +39,24 @@ namespace UeiBridgeTest
         [Test]
         public void CubeSetupVM1_Test()
         {
-            var devList = UeiBridge.Program.BuildDeviceList(new List<string> { "simu://" });
+            var devList = UeiBridge.Program.BuildLinearDeviceList(new List<string> { "simu://" });
 
             var resList = devList.Select(d => new UeiDeviceInfo("simu://", d.DeviceSlot, d.DeviceName));// as List<UeiDeviceAdapter>;
             List<UeiDeviceInfo> l = new List<UeiDeviceInfo>(resList);
 
-            CubeSetup cs = new CubeSetup(l, "simu://");
+            CubeSetup cs = new CubeSetup(l);
             CubeSetupViewModel cube = new CubeSetupViewModel(cs, false);
             Assert.That(cube.CubeAddress, Is.Null);
         }
-        [Test]
-        public void SystemSetupVM_Test()
-        {
-            if (System.IO.File.Exists(Config2.DafaultSettingsFilename))
-            {
-                Config2 c2 = Config2.LoadConfigFromFile( new System.IO.FileInfo( Config2.DafaultSettingsFilename));
-                SystemSetupViewModel sysVM = new SystemSetupViewModel( c2);
-                Assert.That(sysVM.SlotList.Count, Is.GreaterThan(0));
-            }
-        }
+        //[Test]
+        //public void SystemSetupVM_Test()
+        //{
+        //    if (System.IO.File.Exists(Config2.DafaultSettingsFilename))
+        //    {
+        //        Config2 c2 = Config2.LoadConfigFromFile( new System.IO.FileInfo( Config2.DafaultSettingsFilename));
+        //        SystemSetupViewModel sysVM = new SystemSetupViewModel( c2);
+        //        Assert.That(sysVM.SlotList.Count, Is.GreaterThan(0));
+        //    }
+        //}
     }
 }

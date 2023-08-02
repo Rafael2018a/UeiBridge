@@ -31,7 +31,7 @@ namespace UeiBridgeSetup
             this.DataContext = _mainVM;
             _mainVM.OnNewSystemViewModel += SetSystemViewModel;
 
-            _mainVM.LoadSetupFile(new System.IO.FileInfo(Config2.DafaultSettingsFilename));
+            _mainVM.LoadSetupFile(new System.IO.FileInfo(Config2.DefaultSettingsFilename));
             
         }
         private void SetSystemViewModel(SystemSetupViewModel sysVM)

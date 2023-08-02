@@ -4,6 +4,7 @@ using UeiBridge.Library;
 
 namespace UeiBridge
 {
+#if dont
     public class AnalogWriteAdapter : IWriterAdapter<double[]>
     {
         AnalogScaledWriter _ueiAnalogWriter;
@@ -27,4 +28,5 @@ namespace UeiBridge
             _ueiAnalogWriter.WriteSingleScan(scan);
         }
     }
+#endif
 }

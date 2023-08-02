@@ -13,13 +13,16 @@ namespace UeiBridge
     public abstract class InputDevice : IDeviceManager, IDisposable
     {
         public abstract string [] GetFormattedStatus( TimeSpan interval);
-        public abstract void OpenDevice();
+        public abstract bool OpenDevice();
         public abstract string DeviceName { get; }
 
         public UeiDeviceInfo DeviceInfo { get; private set; }
         public string InstanceName { get; private set; }
         //public int SlotNumber { get; private set; }
         private log4net.ILog _logger = StaticMethods.GetLogger();
+        protected ISession UeiSession { get; set; }
+        public ISend<SendObject> TargetConsumer { get ; set; }
+        protected bool _isDeviceReady = false;
 
         public InputDevice() { }
         protected InputDevice( DeviceSetup setup)
@@ -42,6 +45,8 @@ namespace UeiBridge
 
         public virtual void Dispose()
         {
+            UeiSession?.Dispose();
+            TargetConsumer?.Dispose();
             _logger.Debug($"Device manager {InstanceName} Disposed");
         }
 

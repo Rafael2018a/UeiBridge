@@ -1,5 +1,4 @@
-﻿#define blocksim1
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -76,19 +75,17 @@ namespace UeiBridge
                     continue;
                 }
 
-                var clist = _consumersList.Where(consumer1 => ((consumer1.CubeId == ethMag.UnitId) && ( consumer1.SlotNumber == ethMag.SlotNumber )));
-                if (clist.Count()==0) // no subs
+                var consumerList = _consumersList.Where(consumer1 => ((consumer1.CubeId == ethMag.CubeId) && ( consumer1.SlotNumber == ethMag.SlotNumber )));
+                if (consumerList.Count()==0) // no subs
                 {
-                    _logger.Warn($"No consumer to message aimed to slot{ethMag.SlotNumber} /cube{ethMag.UnitId} ({incomingMessage.TargetEndPoint})");
+                    _logger.Warn($"No consumer to message aimed to slot{ethMag.SlotNumber} /cube{ethMag.CubeId} ({incomingMessage.TargetEndPoint})");
                     continue;
                 }
-                if (clist.Count() > 1) // 2 subs with same parameters
-                {
-                    throw new ArgumentException();
-                }
 
-                ConsumerEntry consumer = clist.FirstOrDefault();
-                consumer.Consumer.Enqueue(incomingMessage.ByteMessage);
+                foreach (ConsumerEntry ce in consumerList)
+                {
+                    ce.Consumer.Enqueue(incomingMessage.ByteMessage);
+                }
             }
         }
 

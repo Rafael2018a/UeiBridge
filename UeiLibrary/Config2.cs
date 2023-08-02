@@ -7,8 +7,6 @@ using System.Xml.Serialization;
 using System.IO;
 using System.Net;
 
-//using UeiDaq;
-
 /// <summary>
 /// All classes in this file MUST NOT depend on any other module in the project
 /// </summary>
@@ -26,23 +24,36 @@ namespace UeiBridge.Library
             Address = addressString;
             Port = port;
         }
-
         public bool Equals(EndPoint other)
         {
             return (this.Address == other.Address) && (this.Port == other.Port);
         }
-
         public IPEndPoint ToIpEp() // should be cast operator
         {
-            //try
+            IPAddress ip;
+            bool ok = IPAddress.TryParse(Address, out ip);
+            if (ok)
             {
-                IPEndPoint ipep = new IPEndPoint(IPAddress.Parse(Address), Port);
+                IPEndPoint ipep = new IPEndPoint(ip, Port);
                 return ipep;
             }
-            //catch (Exception ex)
-            //{
-            //    return null;
-            //}
+            else
+            {
+                return null;
+            }
+        }
+        public static EndPoint MakeEndPoint(string addressString, int port)
+        {
+            EndPoint ep = new EndPoint(addressString, port);
+
+            if (null != ep.ToIpEp())
+            {
+                return ep;
+            }
+            else
+            {
+                return null;
+            }
         }
     }
     public class SerialChannelSetup
@@ -68,13 +79,19 @@ namespace UeiBridge.Library
 
     public class AppSetup
     {
-        //[XmlElement(ElementName = "AppSetup")]
-        public string SelectedNicForMCast = "221.109.251.103";
+        public string SelectedNicForMulticast { get; private set; } = "221.109.251.103";
         public EndPoint StatusViewerEP = new EndPoint("239.10.10.17", 5093);
+
+        public AppSetup()
+        {
+            SelectedNicForMulticast = System.Configuration.ConfigurationManager.AppSettings["SelectedNicForMulticast"];
+        }
+
+
     }
     public class DeviceSetup : IEquatable<DeviceSetup>
     {
-        [XmlAttribute("Slot")]
+        [XmlElement(ElementName = "DeviceSlot")]
         public int SlotNumber;
         public string DeviceName;
         public EndPoint LocalEndPoint;
@@ -82,25 +99,12 @@ namespace UeiBridge.Library
         [XmlIgnore]
         public int SamplingInterval => 100; // ms
         [XmlIgnore]
-        public string CubeUrl { get; set; } 
-        [XmlIgnore]
-        public int CubeId // lsb of cube address
+        public string CubeUrl { get; set; }
+        //[XmlIgnore]
+        public int GetCubeId() // lsb of cube address
         {
-            get
-            {
-                int result = -1;
-                if (null != CubeUrl)
-                {
-                    IPAddress ipa = Config2.CubeUriToIpAddress(CubeUrl);
-                    if (null != ipa)
-                    {
-                        result = ipa.GetAddressBytes()[3];
-                    }
-                }
-                return result;
-            }
+            return StaticMethods.CubeUrlToCubeId(CubeUrl);
         }
-
         public DeviceSetup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device)
         {
             LocalEndPoint = localEndPoint;
@@ -111,8 +115,6 @@ namespace UeiBridge.Library
         /// <summary>
         /// This c-tor for block sensor which does not have a 'uei device'
         /// </summary>
-        /// <param name="localEndPoint"></param>
-        /// <param name="destEndPoint"></param>
         public DeviceSetup(EndPoint localEndPoint, EndPoint destEndPoint, string deviceName)
         {
             LocalEndPoint = localEndPoint;
@@ -136,27 +138,25 @@ namespace UeiBridge.Library
 
             return f1 && f2 && f3 && f4;
         }
-        //private string cubeUrl;
-        //public string CubeUrl { get => cubeUrl; set => cubeUrl = value; }
         public string GetInstanceName()
         {
-            return $"{this.DeviceName}/Cube{this.CubeId}/Slot{this.SlotNumber}";
+            return $"{this.DeviceName}/Cube{this.GetCubeId()}/Slot{this.SlotNumber}";
         }
         public UeiDeviceInfo GetDeviceInfo()
         {
             return new UeiDeviceInfo(CubeUrl, SlotNumber, DeviceName);
         }
     }
-    
-    public class BlockSensorSetup : DeviceSetup
+
+    public class BlockSensorSetup : AO308Setup
     {
-        public const int BlockSensorSlotNumber = 32;
+        //public const int BlockSensorSlotNumber = 32;
         public bool IsActive { get; set; }
-        public int AnalogCardSlot { get; set; }
+        //public int AnalogCardSlot { get; set; }
         public int DigitalCardSlot { get; set; }
-        public BlockSensorSetup(EndPoint localEndPoint, string deviceName) : base(localEndPoint, null, deviceName)
+        public BlockSensorSetup(EndPoint localEndPoint, UeiDeviceInfo deviceInfo) : base(localEndPoint, deviceInfo)
         {
-            SlotNumber = AnalogCardSlot;
+            //SlotNumber = AnalogCardSlot;
         }
 
         protected BlockSensorSetup()
@@ -175,25 +175,25 @@ namespace UeiBridge.Library
         {
         }
     }
-    public class AO332Setup : DeviceSetup
-    {
-        [XmlIgnore]
-        public static double PeekVoltage_downstream => 10.0;
+    //public class AO332Setup : DeviceSetup
+    //{
+    //    [XmlIgnore]
+    //    public static double PeekVoltage_downstream => 10.0;
 
-        public AO332Setup()
-        {
-        }
-        public AO332Setup(EndPoint localEndPoint, UeiDeviceInfo device) : base(localEndPoint, null, device)
-        {
-        }
-    }
+    //    public AO332Setup()
+    //    {
+    //    }
+    //    public AO332Setup(EndPoint localEndPoint, UeiDeviceInfo device) : base(localEndPoint, null, device)
+    //    {
+    //    }
+    //}
     //public class AO16Setup : AO308Setup { }
-    public class SimuAO16Setup : DeviceSetup
+    public class SimuAO16Setup : AO308Setup
     {
         public SimuAO16Setup()
         {
         }
-        public SimuAO16Setup(EndPoint localEndPoint, UeiDeviceInfo device) : base(localEndPoint, null, device)
+        public SimuAO16Setup(EndPoint localEndPoint, UeiDeviceInfo device) : base(localEndPoint, device)
         {
         }
     }
@@ -208,15 +208,47 @@ namespace UeiBridge.Library
         {
         }
     }
+    public class DIOChannel
+    {
+        [XmlAttribute()]
+        public byte OctetIndex { get; set; }
+        public MessageWay Way { get; set; }
+        public DIOChannel(byte octetNumber, MessageWay way)
+        {
+            OctetIndex = octetNumber;
+            Way = way;
+        }
+        public DIOChannel() { }
+    }
     public class DIO403Setup : DeviceSetup
     {
+        public List<DIOChannel> IOChannelList { get; set; }
         //public Direction[] BitOctets;
         public DIO403Setup()
         {
         }
 
-        public DIO403Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base(localEndPoint, destEndPoint, device)
+        public DIO403Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device, int numberOfChannels) : base(localEndPoint, destEndPoint, device)
         {
+            IOChannelList = new List<DIOChannel>();
+            for (byte ch = 0; ch < numberOfChannels; ch++)
+            {
+                MessageWay w = (ch % 2 == 0) ? MessageWay.upstream : MessageWay.downstream;
+                IOChannelList.Add(new DIOChannel(ch, w));
+            }
+        }
+    }
+    public class SimuDIO64Setup : DIO403Setup
+    {
+        public SimuDIO64Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base(localEndPoint, destEndPoint, device, 4)
+        {
+            IOChannelList = new List<DIOChannel>();
+            for (byte ch = 0; ch < 4; ch++)
+            {
+                MessageWay w = (ch % 2 == 0) ? MessageWay.upstream : MessageWay.downstream;
+                IOChannelList.Add(new DIOChannel(ch, w));
+            }
+
         }
     }
     public class DIO470Setup : DeviceSetup
@@ -243,51 +275,60 @@ namespace UeiBridge.Library
 
             for (int chIndex = 0; chIndex < _numberOfSerialChannels; chIndex++)
             {
-                Channels.Add( new SerialChannelSetup(chIndex, UeiDaq.SerialPortSpeed.BitsPerSecond19200));
+                Channels.Add(new SerialChannelSetup(chIndex, UeiDaq.SerialPortSpeed.BitsPerSecond19200));
             }
         }
     }
 
-    public static class ConfigFactory
+    public class ConfigFactory
     {
-        static int portNumber = 50035;
+        int _portNumber = 50035;
         public static string LocalIP => "227.3.1.10";
         public static string RemoteIp => "227.2.1.10";
+        public const int PortNumberStart = 50000;
+        public const int DIO403NumberOfChannels = 6;
+        public ConfigFactory(int initialPortNumber)
+        {
+            _portNumber = initialPortNumber;
+        }
 
-        public static DeviceSetup DeviceSetupFactory(UeiDeviceInfo ueiDevice)
+        public DeviceSetup BuildDefaultSetup(UeiDeviceInfo ueiDevice)
         {
             DeviceSetup result = null;
             if (null == ueiDevice.DeviceName)
                 throw new ArgumentNullException("device name");
 
+
+
             switch (ueiDevice.DeviceName)
             {
                 case DeviceMap2.AO308Literal:
-                    result = new AO308Setup(new EndPoint(LocalIP, portNumber++), ueiDevice);
+                case DeviceMap2.AO322Literal:
+                    result = new AO308Setup(new EndPoint(LocalIP, _portNumber++), ueiDevice);
                     break;
                 case DeviceMap2.DIO403Literal:
-                    result = new DIO403Setup(new EndPoint(LocalIP, portNumber++), new EndPoint(RemoteIp, portNumber++), ueiDevice);
+                    result = new DIO403Setup(new EndPoint(LocalIP, _portNumber++), new EndPoint(RemoteIp, _portNumber++), ueiDevice, DIO403NumberOfChannels);
                     break;
                 case DeviceMap2.DIO470Literal:
-                    result = new DIO470Setup(new EndPoint(LocalIP, portNumber++), ueiDevice);
+                    result = new DIO470Setup(new EndPoint(LocalIP, _portNumber++), ueiDevice);
                     break;
                 case DeviceMap2.AI201Literal:
-                    result = new AI201100Setup(new EndPoint(RemoteIp, portNumber++), ueiDevice);
+                    result = new AI201100Setup(new EndPoint(RemoteIp, _portNumber++), ueiDevice);
                     break;
                 case DeviceMap2.SL508Literal:
-                    var sl508 = new SL508892Setup(new EndPoint(LocalIP, portNumber++), new EndPoint(RemoteIp, portNumber++), ueiDevice);
+                    var sl508 = new SL508892Setup(new EndPoint(LocalIP, _portNumber++), new EndPoint(RemoteIp, _portNumber++), ueiDevice);
                     foreach (var ch in sl508.Channels)
                     {
-                        ch.LocalUdpPort = portNumber++;
+                        ch.LocalUdpPort = _portNumber++;
                     }
                     result = sl508;
                     break;
                 case DeviceMap2.SimuAO16Literal:
-                    result = new SimuAO16Setup(new EndPoint(LocalIP, portNumber++), ueiDevice);
+                    result = new SimuAO16Setup(new EndPoint(LocalIP, _portNumber++), ueiDevice);
                     break;
-                case DeviceMap2.AO322Literal:
-                    result = new AO332Setup(new EndPoint(LocalIP, portNumber++), ueiDevice);
-                    break;
+                //case DeviceMap2.AO322Literal:
+                //    result = new AO332Setup(new EndPoint(LocalIP, _portNumber++), ueiDevice);
+                //    break;
                 default:
                     Console.WriteLine($"Config: Device {ueiDevice.DeviceName} not supported.");
                     result = new DeviceSetup(null, null, ueiDevice);
@@ -303,43 +344,50 @@ namespace UeiBridge.Library
     [XmlInclude(typeof(DIO470Setup))]
     [XmlInclude(typeof(AI201100Setup))]
     [XmlInclude(typeof(SL508892Setup))]
-    [XmlInclude(typeof(AO332Setup))]
+    //[XmlInclude(typeof(AO332Setup))]
     [XmlInclude(typeof(BlockSensorSetup))]
     [XmlInclude(typeof(SimuAO16Setup))]
     public class CubeSetup : IEquatable<CubeSetup>
     {
-        [XmlAttribute("Url")]
-        public string CubeUrl { get; set; }
-        //[XmlIgnore]
-        //public int CubeId 
-        //{ 
-        //    get; 
-        //    private set; 
-        //}  = 0;
-        public List<DeviceSetup> DeviceSetupList = new List<DeviceSetup>();
-
-        //private List<Device> _ueiDeviceList;
+        public string CubeUrl { get; set; } // must be public for the  serializer
+        public List<DeviceSetup> DeviceSetupList { get; set; } // dont make private set
+        public string OriginFileFullName { get; set; }
 
         public CubeSetup()
         {
         }
 
-        public CubeSetup(List<UeiDeviceInfo> deviceList, string cubeUrl)
+        public static string GetSelfFilename(int cube_id)
         {
-            CubeUrl = cubeUrl;
+            string filename = (cube_id == UeiDeviceInfo.SimuCubeId) ? "Cube.simu.config" : $"Cube{cube_id}.config";
+            return filename;
+        }
+        /// <summary>
+        /// Build default cube setup
+        /// </summary>
+        /// <param name="deviceList"></param>
+        public CubeSetup(List<UeiDeviceInfo> deviceList)
+        {
+            CubeUrl = deviceList[0].CubeUrl;
+            int cubeId = deviceList[0].CubeId;
+            ConfigFactory cf = new ConfigFactory(ConfigFactory.PortNumberStart + cubeId * 100);
 
+
+            DeviceSetupList = new List<DeviceSetup>();
             foreach (var dev in deviceList)
             {
                 if (null == dev)
-                    throw new ArgumentNullException("null device");
-
-                var dv = ConfigFactory.DeviceSetupFactory(dev);
-                if (null != dv)
                 {
-                    DeviceSetupList.Add(dv);
+                    continue;
+                }
+
+                DeviceSetup ds = cf.BuildDefaultSetup(dev);
+                if (null != ds)
+                {
+                    DeviceSetupList.Add(ds);
                 }
             }
-            BlockSensorSetup bsSetup = BuildBlockSensorSetup( DeviceSetupList);
+            BlockSensorSetup bsSetup = BuildBlockSensorSetup(DeviceSetupList);
             if (null != bsSetup)
             {
                 DeviceSetupList.Add(bsSetup);
@@ -396,9 +444,11 @@ namespace UeiBridge.Library
 
             if ((dsa != null) && (dsd != null))
             {
-                BlockSensorSetup Blocksensor = new BlockSensorSetup(new EndPoint(ConfigFactory.LocalIP, 50105), "BlockSensor");
+                //cf = new ConfigFactory();
+                UeiDeviceInfo info = new UeiDeviceInfo(dsa.CubeUrl, dsa.SlotNumber, DeviceMap2.BlocksensorLiteral);
+                BlockSensorSetup Blocksensor = new BlockSensorSetup(new EndPoint(ConfigFactory.LocalIP, 50105), info);
 
-                Blocksensor.AnalogCardSlot = dsa.SlotNumber;
+                //Blocksensor.AnalogCardSlot = dsa.SlotNumber;
                 Blocksensor.DigitalCardSlot = dsd.SlotNumber;
                 return Blocksensor;
             }
@@ -408,22 +458,34 @@ namespace UeiBridge.Library
             }
         }
 
+        public void Serialize()
+        {
+            string filename = GetSelfFilename( StaticMethods.CubeUrlToCubeId(this.CubeUrl));
+            using (FileStream fs = new FileStream(filename, FileMode.Create, FileAccess.Write))
+            {
+                var serializer = new XmlSerializer(this.GetType());
+                serializer.Serialize(fs, this);
+                Console.WriteLine($"Config: File {filename} created");
+            }
+        }
     }
 
-    
-    
-    
     public class Config2 : IEquatable<Config2>
     {
-
+        [XmlIgnore]
         public AppSetup AppSetup;
         public List<CubeSetup> CubeSetupList = new List<CubeSetup>();
 
-        public static string DafaultSettingsFilename => "UeiSettings2.config";
-        public static string SettingsFilename { get; private set; } = DafaultSettingsFilename;
+        public static string DefaultSettingsFilename => "UeiSettings2.config";
+        public static string SettingsFilename { get; private set; } = DefaultSettingsFilename;
 
-        public Config2() { }// this is for serialization. 
-        public Config2(List<CubeSetup> cubeSetups)
+        public Config2(List<string> cubeUrlList)
+        { 
+            AppSetup = LoadGeneralSetup();
+            this.CubeSetupList = GetSetupForConnectedCubes(cubeUrlList);
+        }
+        public Config2() { } // empty c-tor must exist for serialization.
+        private Config2(List<CubeSetup> cubeSetups) // for default config
         {
             AppSetup = new AppSetup();
             this.CubeSetupList.AddRange(cubeSetups);
@@ -433,6 +495,7 @@ namespace UeiBridge.Library
         /// Load config from file
         /// </summary>
         /// <returns></returns>
+        [Obsolete]
         public static Config2 LoadConfigFromFile(FileInfo configFile)
         {
             var serializer = new XmlSerializer(typeof(Config2));
@@ -454,6 +517,128 @@ namespace UeiBridge.Library
             }
             return resultConfig;
         }
+        /// <summary>
+        /// for each cube url, load unique config-file,
+        /// if config-file not exists, use default. 
+        /// save the default config as new config.
+        /// </summary>
+        /// <param name="cubeUrlList"></param>
+        /// <returns></returns>
+        public static Config2 LoadConfig(List<string> cubeUrlList)
+        {
+            // load global setting from app-config
+            Config2 resultConfig = new Config2();
+            resultConfig.AppSetup = LoadGeneralSetup();
+
+            // load settings per cube
+            foreach (string cubeurl in cubeUrlList)
+            {
+                UeiDaq.DeviceCollection devColl = new UeiDaq.DeviceCollection(cubeurl);
+                List<UeiDeviceInfo> devInfoList = StaticMethods.DeviceCollectionToDeviceInfoList(devColl, cubeurl);
+
+                // if cube connected, load/create setup
+                if (null != devInfoList && devInfoList.Count > 0)
+                {
+                    int cube_id = devInfoList[0].CubeId;
+                    string filename = (cube_id == UeiDeviceInfo.SimuCubeId) ? "Cube.simu.config" : $"Cube{cube_id}.config";
+                    CubeSetup csFromFile = LoadCubeSetupFromFile(filename);
+                    if (null == csFromFile) // if failed to load from file
+                    {
+                        CubeSetup defaultSetup = new CubeSetup(devInfoList); // create default
+                        resultConfig.CubeSetupList.Add(defaultSetup);
+
+                        // save default to file
+                        using (FileStream fs = new FileStream(filename, FileMode.Create, FileAccess.Write))
+                        {
+                            var serializer = new XmlSerializer(typeof(CubeSetup));
+                            serializer.Serialize(fs, defaultSetup);
+                            Console.WriteLine($"Config: File {filename} created");
+                        }
+                    }
+                    else
+                    {
+                        resultConfig.CubeSetupList.Add(csFromFile);
+                    }
+                }
+            }
+
+            return resultConfig;
+        }
+        /// <summary>
+        /// 1. get config from app config
+        /// 2. load config from cubeX.config files
+        /// 3. Build&Save config per missing cubeX.config 
+        /// </summary>
+        //public static CubeSetup GetCubeSetup(List<UeiDeviceInfo> deviceInfoList)
+        //{
+        //    CubeSetup resutlCubeSetup = null;
+        //    //foreach (List<UeiDeviceInfo> cubeDeviceList in cubeListList)
+
+        //    int cubeid = deviceInfoList[0].CubeId;
+        //    string filename = (cubeid == -2) ? "Cube.simu.config" : $"Cube{cubeid}.config";
+        //    CubeSetup cs = LoadCubeSetupFromFile(filename);
+
+        //    if (null == cs) // if can't load from file
+        //    {
+        //        CubeSetup resutlSetup = new CubeSetup(deviceInfoList);
+
+        //        using (FileStream fs = new FileStream(filename, FileMode.Create, FileAccess.Write))
+        //        {
+        //            var serializer = new XmlSerializer(typeof(CubeSetup));
+        //            serializer.Serialize(fs, resutlSetup);
+        //        }
+
+        //    }
+        //    resutlCubeSetup = cs;
+
+        //    return resutlCubeSetup;
+        //}
+
+        //private static CubeSetup BuildDefaultCubeSetup(List<UeiDeviceInfo> deviceList)
+        //{
+        //    CubeSetup resutlSetup = new CubeSetup(deviceList);
+
+        //}
+
+        public static CubeSetup LoadCubeSetupFromFile(string filename)
+        {
+            var serializer = new XmlSerializer(typeof(CubeSetup));
+            CubeSetup resultConfig = null;
+            FileInfo configFile = new FileInfo(filename);
+
+            if (configFile.Exists)
+            {
+                using (StreamReader sr = configFile.OpenText())
+                {
+                    resultConfig = serializer.Deserialize(sr) as CubeSetup;
+                    resultConfig.OriginFileFullName = configFile.FullName;
+                }
+            }
+            return resultConfig;
+        }
+
+        private static AppSetup LoadGeneralSetup()
+        {
+            AppSetup resultSetup = new AppSetup();
+            //resultSetup.SelectedNicForMCast = "221.109.251.103";
+            resultSetup.StatusViewerEP = new EndPoint("239.10.10.17", 5093);
+            return resultSetup;
+        }
+
+        public void SavePerCube(string basefilename, bool overwrite)
+        {
+            foreach (CubeSetup cstp in this.CubeSetupList)
+            {
+                int cubeid = StaticMethods.CubeUrlToCubeId(cstp.CubeUrl);
+                FileInfo newfile = new FileInfo($"{basefilename}.cube{cubeid}.config");
+                var serializer = new XmlSerializer(typeof(CubeSetup));
+                using (var writer = newfile.OpenWrite()) // new StreamWriter(filename))
+                {
+                    serializer.Serialize(writer, cstp);
+                }
+            }
+        }
+
         public static Config2 BuildDefaultConfig(List<string> cubeUrlList)
         {
             List<CubeSetup> csetupList = new List<CubeSetup>();
@@ -465,9 +650,9 @@ namespace UeiBridge.Library
                 {
                     if (dev == null)
                         continue; // this for the last entry, which is null
-                    rl.Add(new UeiDeviceInfo(url, dev.GetIndex(), dev.GetDeviceName() ));
+                    rl.Add(new UeiDeviceInfo(url, dev.GetIndex(), dev.GetDeviceName()));
                 }
-                csetupList.Add(new CubeSetup(rl, url));
+                csetupList.Add(new CubeSetup(rl));
             }
 
             Config2 res = new Config2(csetupList);
@@ -475,6 +660,10 @@ namespace UeiBridge.Library
 
         }
 
+        public T GetDeviceSetupEntry<T>(UeiDeviceInfo devInfo) where T : DeviceSetup
+        {
+            return GetDeviceSetupEntry(devInfo.CubeUrl, devInfo.DeviceSlot) as T;
+        }
         public DeviceSetup GetDeviceSetupEntry(string cubeUrl, int slotNumber)
         {
             if (this.CubeSetupList == null)
@@ -489,6 +678,30 @@ namespace UeiBridge.Library
             }
             var theSetups = selectedCube.DeviceSetupList.Where(d => d.SlotNumber == slotNumber);
             DeviceSetup result = theSetups.FirstOrDefault();
+            if (null != result)
+            {
+                result.CubeUrl = cubeUrl;
+            }
+            return result;
+        }
+        public DeviceSetup GetDeviceSetupEntry(string cubeUrl, string deviceName)
+        {
+            if (this.CubeSetupList == null)
+            {
+                return null;
+            }
+            var cube = this.CubeSetupList.Where(e => e.CubeUrl == cubeUrl);
+            var selectedCube = cube.FirstOrDefault();
+            if (null == selectedCube)
+            {
+                return null;
+            }
+            var theSetups = selectedCube.DeviceSetupList.Where(d => d.DeviceName == deviceName);
+            DeviceSetup result = theSetups.FirstOrDefault();
+            if (null != result)
+            {
+                result.CubeUrl = cubeUrl;
+            }
             return result;
         }
         public void SaveAs(FileInfo fileToSave, bool overwrite)
@@ -518,38 +731,36 @@ namespace UeiBridge.Library
             return CubeSetupList.SequenceEqual(other.CubeSetupList);
         }
 
-        public static System.Net.IPAddress CubeUriToIpAddress(string url)
+
+        /// <summary>
+        /// Result list shall contain entries only for connected cubes
+        /// </summary>
+        /// <param name="cubeUrlList"></param>
+        /// <returns></returns>
+        /// <exception cref="NotImplementedException"></exception>
+        public static List<CubeSetup> GetSetupForConnectedCubes(List<string> cubeUrlList)
         {
-            System.Net.IPAddress result = null;
-            UriHostNameType ht = Uri.CheckHostName(url);
-            //bool ok1 = ;
-            if (Uri.IsWellFormedUriString(url, UriKind.Absolute))
+            List<CubeSetup> cubeSetupList = new List<CubeSetup>();
+            // load settings per cube
+            foreach (string cubeurl in cubeUrlList)
             {
-                Uri u1 = new Uri(url);
+                UeiDaq.DeviceCollection devColl = new UeiDaq.DeviceCollection(cubeurl);
+                List<UeiDeviceInfo> devInfoList = StaticMethods.DeviceCollectionToDeviceInfoList(devColl, cubeurl);
 
-                bool ok = System.Net.IPAddress.TryParse(u1.Host, out result);
-                return (ok) ? result : null;
+                // if cube connected, load/create setup
+                if (null != devInfoList && devInfoList.Count > 0)
+                {
+                    int cube_id = devInfoList[0].CubeId;
+                    string filename = CubeSetup.GetSelfFilename(cube_id); //(cube_id == UeiDeviceInfo.SimuCubeId) ? "Cube.simu.config" : $"Cube{cube_id}.config";
+                    CubeSetup cs = LoadCubeSetupFromFile(filename);
+                    if (null == cs) // if failed to load from file
+                    {
+                        cs = new CubeSetup(devInfoList); // create default
+                    }
+                    cubeSetupList.Add(cs);
+                }
             }
-            else
-            {
-                return null;
-            }
+            return cubeSetupList;
         }
-
     }
-    //public class ValidValuesClass
-    //{
-    //    public string ValidSerialModes;
-    //    public string ValidBaudRates;
-    //    public string ValidStopBitsValues;
-    //    public string ValidParityValues;
-
-    //    public ValidValuesClass()
-    //    {
-    //        ValidSerialModes = UeiBridge.Library.StaticMethods.GetEnumValues<UeiDaq.SerialPortMode>();
-    //        ValidBaudRates = UeiBridge.Library.StaticMethods.GetEnumValues<UeiDaq.SerialPortSpeed>();
-    //        ValidStopBitsValues = UeiBridge.Library.StaticMethods.GetEnumValues<UeiDaq.SerialPortStopBits>();
-    //        ValidParityValues = UeiBridge.Library.StaticMethods.GetEnumValues<UeiDaq.SerialPortParity>();
-    //    }
-    //}
 }

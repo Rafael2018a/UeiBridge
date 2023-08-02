@@ -1,8 +1,7 @@
 {
   "Header": {
-    "EnablePlay": false,
     "DestIp": "227.3.1.10",
-    "DestPort": 50035,
+    "DestPort": 50212,
     "NumberOfCycles": 20,
     "WaitStateMs": 100,
     "ConverterName": null
@@ -13,7 +12,11 @@
     "CubeId": 2,
     "Payload": [
       0,
-      0
+      1,
+      2,
+      4,
+      8,
+      16
     ]
   }
 }

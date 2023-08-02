@@ -45,11 +45,11 @@ namespace UeiBridge
     {
         log4net.ILog _logger = StaticMethods.GetLogger();
         Socket _sendSocket;
-        string _instanceName;
-        public UdpWriter( string instnceName, IPEndPoint destEp, string localBindAddress)
+        //string _instanceName;
+        public UdpWriter( IPEndPoint destEp, string localBindAddress)
         {
 
-            this._instanceName = instnceName;
+            //this._instanceName = instnceName;
             System.Diagnostics.Debug.Assert(null != localBindAddress);
             try
             {
@@ -79,7 +79,7 @@ namespace UeiBridge
                     }
                     catch(Exception ex)
                     {
-                        _logger.Warn($"{instnceName}: Failed to bind to local NIC {localBindAddress}. {ex.Message}");
+                        _logger.Warn($" Failed to bind to local NIC {localBindAddress}. {ex.Message}");
                     }
                 }
                 else

@@ -90,12 +90,14 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="UdpWriter.cs" />
+    <Compile Include="Utilities\AppState.cs" />
     <Compile Include="Utilities\JFileAux.cs" />
     <Compile Include="PlayFileViewModel.cs" />
     <Compile Include="Utilities\Converters.cs" />
     <Compile Include="Utilities\JFileClass.cs" />
     <Compile Include="Utilities\ProjectTypes.cs" />
     <Compile Include="Utilities\RelayCommand.cs" />
+    <Compile Include="ViewModelBase.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

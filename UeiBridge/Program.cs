@@ -31,33 +31,16 @@ namespace UeiBridge
         /// Build linear device list.
         /// This method assumes that the indicates cubes exists.
         /// </summary>
-        public static List<UeiDeviceInfo> BuildDeviceList(List<string> cubesUrl)
+        public static List<UeiDeviceInfo> BuildLinearDeviceList(List<string> cubesUrl)
         {
             List<UeiDeviceInfo> resultList = new List<UeiDeviceInfo>();
             foreach (string url in cubesUrl)
             {
                 DeviceCollection devColl = new DeviceCollection(url);
-
-                foreach (Device dev in devColl)
-                {
-                    if (dev == null) continue; // this for the last entry, which is null
-                    resultList.Add(new UeiDeviceInfo(url, dev.GetIndex(), dev.GetDeviceName()));
-                }
+                resultList.AddRange( UeiBridge.Library.StaticMethods.DeviceCollectionToDeviceInfoList(devColl, url));
             }
             return resultList;
         }
-        //public static List<DeviceEx> BuildDeviceList(string cubeUrl)
-        //{
-        //    List<DeviceEx> resultList = new List<DeviceEx>();
-        //    DeviceCollection devColl = new DeviceCollection(cubeUrl);
-
-        //    foreach (Device dev in devColl)
-        //    {
-        //        if (dev == null) continue; // this for the last entry, which is null
-        //        resultList.Add(new DeviceEx(dev, cubeUrl));
-        //    }
-        //    return resultList;
-        //}
         private void Run()
         {
             // print current version
@@ -74,33 +57,27 @@ namespace UeiBridge
                 return;
             }
 
-            // open or create settings file
+            // new
             try
             {
-                _mainConfig = Config2.LoadConfigFromFile(new FileInfo(Config2.DafaultSettingsFilename));
+                List<CubeSetup> cubeSetupList = Config2.GetSetupForConnectedCubes(cubeUrlList);
+                foreach (CubeSetup cs in cubeSetupList)
+                {
+                    if (null == cs.OriginFileFullName)
+                    {
+                        cs.Serialize();
+                    }
+                }
+                _mainConfig = new Config2(cubeUrlList);
             }
-            catch (FileNotFoundException )
+            catch( Exception ex)
             {
-                var t = Config2.BuildDefaultConfig(cubeUrlList);
-                t.SaveAs( new FileInfo( Config2.DafaultSettingsFilename), true);
-                _mainConfig = Config2.LoadConfigFromFile(new FileInfo(Config2.DafaultSettingsFilename));
-                Console.WriteLine($"New default settings file created. {Config2.DafaultSettingsFilename}.");
-            }
-            catch (InvalidOperationException ex)
-            {
-                _logger.Warn($"Failed to load configuration. {ex.Message}. Any key to abort....");
-                Console.ReadKey();
-                return;
-            }
-            catch (Exception ex)
-            {
-                _logger.Warn($"Failed to load configuration. {ex.Message}. Any key to abort....");
+                _logger.Warn($"Error loading setup. {ex.Message}. Any key to abort....");
                 Console.ReadKey();
                 return;
             }
 
-            List<UeiDeviceInfo> deviceList = BuildDeviceList(cubeUrlList);
-            //DisplayDeviceList(deviceList);
+            List<UeiDeviceInfo> deviceList = BuildLinearDeviceList(cubeUrlList);
 
             _programBuilder = new ProgramObjectsBuilder( _mainConfig);
             _programBuilder.CreateDeviceManagers(deviceList);
@@ -136,6 +113,7 @@ namespace UeiBridge
 
             if (cubelistFile.Exists)
             {
+                Console.WriteLine("Using cubelist.txt file");
                 using (StreamReader fs = new StreamReader(cubelistFile.OpenRead()))
                 {
                     while (true)
@@ -145,15 +123,18 @@ namespace UeiBridge
                         {
                             break;
                         }
+                        Console.WriteLine($"Cube {l}");
                         result.Add(l);
                     }
                 }
             }
             else
             {
+                Console.WriteLine("Scanning for cubes...");
                 List<IPAddress> iplist = CubeSeeker.FindCubesInRange(IPAddress.Parse("192.168.100.2"), 100);
                 foreach (IPAddress ip in iplist)
                 {
+                    Console.WriteLine($"Found cube {ip.ToString()}");
                     result.Add($"pdna://{ip.ToString()}/");
                 }
             }
@@ -180,44 +161,56 @@ namespace UeiBridge
         }
         void PublishStatus_Task(List<PerDeviceObjects> deviceList)
         {
-            const int intervalMs = 100;
+            //const int intervalMs = 100;
             IPEndPoint destEP = _mainConfig.AppSetup.StatusViewerEP.ToIpEp();
-            UdpWriter uw = new UdpWriter("To-StatusViewer", destEP, _mainConfig.AppSetup.SelectedNicForMCast);
-            TimeSpan interval = TimeSpan.FromMilliseconds(intervalMs);
-            _logger.Info($"StatusViewer dest ep: {destEP.ToString()} (Local NIC {_mainConfig.AppSetup.SelectedNicForMCast})");
+            UdpWriter uw = new UdpWriter( destEP, _mainConfig.AppSetup.SelectedNicForMulticast);
+            TimeSpan interval = TimeSpan.FromMilliseconds(100);
+            _logger.Info($"StatusViewer dest ep: {destEP.ToString()} (Local NIC {_mainConfig.AppSetup.SelectedNicForMulticast})");
 
             List<IDeviceManager> deviceListScan = new List<IDeviceManager>();
 
-            // prepare list
-            foreach (PerDeviceObjects deviceObjects in deviceList) //ProjectRegistry.Instance.OutputDevicesMap)
+            try
             {
-                if (deviceObjects.InputDeviceManager != null)
+
+                // prepare list
+                foreach (PerDeviceObjects deviceObjects in deviceList) //ProjectRegistry.Instance.OutputDevicesMap)
                 {
-                    deviceListScan.Add(deviceObjects.InputDeviceManager);
+                    if (deviceObjects.InputDeviceManager != null)
+                    {
+                        deviceListScan.Add(deviceObjects.InputDeviceManager);
+                    }
+
+                    if (deviceObjects?.OutputDeviceManager != null)
+                    {
+                        deviceListScan.Add(deviceObjects.OutputDeviceManager);
+                    }
                 }
 
-                if (deviceObjects?.OutputDeviceManager != null)
+                // get formatted string for each device in list
+                while (true)
                 {
-                    deviceListScan.Add(deviceObjects.OutputDeviceManager);
+                    foreach (IDeviceManager dm in deviceListScan)
+                    {
+                        string desc = $"{dm.InstanceName}";
+                        StatusTrait tr = StatusTrait.IsRegular;
+                        string[] stat = dm.GetFormattedStatus(interval);
+                        if (null == stat)
+                        {
+                            continue;
+                        }
+                        StatusEntryJson js = new StatusEntryJson(desc, stat, tr);
+                        string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
+                        byte[] send_buffer = Encoding.ASCII.GetBytes(s);
+                        SendObject so = new SendObject(destEP, send_buffer);
+                        uw.Send(so);
+                    }
+
+                    System.Threading.Thread.Sleep(interval);
                 }
             }
-
-            // get formatted string for each device in list
-            while (true)
+            catch ( Exception ex)
             {
-                foreach (IDeviceManager dm in deviceListScan)
-                {
-                    string desc = $"{dm.InstanceName}";
-                    StatusTrait tr = StatusTrait.IsRegular;
-                    string[] stat = dm.GetFormattedStatus(interval);
-                    StatusEntryJson js = new StatusEntryJson(desc, stat, tr);
-                    string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
-                    byte[] send_buffer = Encoding.ASCII.GetBytes(s);
-                    SendObject so = new SendObject(destEP, send_buffer);
-                    uw.Send(so);
-                }
-
-                System.Threading.Thread.Sleep(interval);
+                _logger.Warn(ex.Message);
             }
         }
 

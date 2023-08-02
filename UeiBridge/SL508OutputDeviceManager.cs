@@ -18,15 +18,15 @@ namespace UeiBridge
         // privates
         log4net.ILog _logger = StaticMethods.GetLogger();
         //IConvert _attachedConverter;
-        List<ViewItem<byte[]>> _lastScanList = new List<ViewItem<byte[]>>(); // todo. rename
-        SessionEx _serialSession;
+        List<ViewItem<byte[]>> _ViewItemList = new List<ViewItem<byte[]>>(); 
+        Session _serialSession;
         int _sentBytesAcc = 0;
         int _numberOfSentMessages = 0;
         List<SerialWriter> _serialWriterList = new List<SerialWriter>();
         Dictionary<SerialPortSpeed, int> _serialSpeedDic = new Dictionary<SerialPortSpeed, int>();
         bool _inDisposeState = false;
         private DeviceSetup _deviceSetup;
-        public SL508OutputDeviceManager(DeviceSetup setup, SessionEx serialSession) : base(setup)
+        public SL508OutputDeviceManager(DeviceSetup setup, Session serialSession) : base(setup)
         {
 
             if ((setup==null)||(serialSession == null))
@@ -41,7 +41,7 @@ namespace UeiBridge
             // init message list
             for (int i = 0; i < serialSession.GetNumberOfChannels(); i++)
             {
-                _lastScanList.Add(null);
+                _ViewItemList.Add(null);
             }
         }
         public SL508OutputDeviceManager() { } // (default c-tor must be present)
@@ -119,15 +119,16 @@ namespace UeiBridge
             //StringBuilder formattedString = new StringBuilder();
             List<string> resultList = new List<string>();
 
-            for (int ch = 0; ch < _lastScanList.Count; ch++) // do NOT use foreach since collection might be updated in other thread
+            for (int ch = 0; ch < _ViewItemList.Count; ch++) // do NOT use foreach since collection might be updated in other thread
             {
-                if (null == _lastScanList[ch])
+                if (null == _ViewItemList[ch])
                     continue;
 
-                _lastScanList[ch].timeToLive -= interval;
+                _ViewItemList[ch].DecreaseTimeToLive( interval);
 
-                byte[] last = _lastScanList[ch].readValue;
-                if ((null != last) && (_lastScanList[ch].timeToLive.Ticks > 0))
+                byte[] last = _ViewItemList[ch].ReadValue;
+                System.Diagnostics.Debug.Assert(last != null);
+                if ((_ViewItemList[ch].TimeToLive > TimeSpan.Zero))
                 {
                     int len = (last.Length > 20) ? 20 : last.Length;
                     string s = $"Ch{ch}: Payload=({last.Length}): {BitConverter.ToString(last).Substring(0, len * 3 - 1)}";
@@ -135,12 +136,21 @@ namespace UeiBridge
                 }
                 else
                 {
-                    resultList.Add($"Ch{ch}: null");
+                    _ViewItemList[ch] = null;
+                    //resultList.Add($"Ch{ch}: null");
                 }
             }
-            resultList.Add($"Total: {_numberOfSentMessages} messages, {_sentBytesAcc} bytes ");
+            if (resultList.Count > 0)
+            {
+                //resultList.Add($"Total: {_numberOfSentMessages} messages, {_sentBytesAcc} bytes ");
+                return resultList.ToArray();
+            }
+            else
+            {
+                return null;
+            }
 
-            return resultList.ToArray();
+            
         }
 
         protected override void HandleRequest(EthernetMessage request)
@@ -177,7 +187,7 @@ namespace UeiBridge
                 //_logger.Debug($"Sent ch{request.SerialChannel} {BitConverter.ToString(incomingMessage)}");
                 _sentBytesAcc += sentBytes;
                 _numberOfSentMessages++;
-                _lastScanList[request.SerialChannelNumber] = new ViewItem<byte[]>(request.PayloadBytes, 5000);
+                _ViewItemList[request.SerialChannelNumber] = new ViewItem<byte[]>(request.PayloadBytes, TimeSpan.FromSeconds(5));
             }
             catch (UeiDaqException ex)
             {

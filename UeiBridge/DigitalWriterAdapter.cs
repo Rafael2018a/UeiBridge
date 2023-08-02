@@ -5,6 +5,7 @@ using UeiDaq;
 
 namespace UeiBridge
 {
+#if dont
     public class DigitalWriterAdapter : IWriterAdapter<UInt16[]>
     {
         UeiDaq.DigitalWriter _ueiDigitalWriter;
@@ -24,5 +25,6 @@ namespace UeiBridge
             _ueiDigitalWriter.Dispose();
         }
     }
+#endif
 }
 

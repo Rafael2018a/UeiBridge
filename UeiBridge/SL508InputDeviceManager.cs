@@ -25,12 +25,12 @@ namespace UeiBridge
         private List<ViewItem<byte[]>> _lastScanList = new List<ViewItem<byte[]>>();
         private readonly SL508892Setup _thisDeviceSetup;
         private ISend<SendObject> _targetConsumer;
-        private SessionEx _serialSession;
+        private Session _serialSession;
         private List<IAsyncResult> _readerIAsyncResultList;
         private const int minLen = 200;
         
 
-        public SL508InputDeviceManager(ISend<SendObject> targetConsumer, DeviceSetup setup, SessionEx serialSession) : base( setup)
+        public SL508InputDeviceManager(ISend<SendObject> targetConsumer, DeviceSetup setup, Session serialSession) : base( setup)
         {
             _targetConsumer = targetConsumer;
             _thisDeviceSetup = setup as SL508892Setup;
@@ -52,25 +52,35 @@ namespace UeiBridge
                 var item = _lastScanList[ch];
                 if (null != item)
                 {
-                    if (item.timeToLive.Ticks > 0)
+                    if (item.TimeToLive > TimeSpan.Zero)
                     {
-                        item.timeToLive -= interval;
-                        int len = (item.readValue.Length > 20) ? 20 : item.readValue.Length;
-                        string s = $"Ch{ch}: Payload=({item.readValue.Length}): {BitConverter.ToString(item.readValue).Substring(0, len * 3 - 1)}";
+                        item.DecreaseTimeToLive( interval);
+                        int len = (item.ReadValue.Length > 20) ? 20 : item.ReadValue.Length;
+                        string s = $"Ch{ch}: Payload=({item.ReadValue.Length}): {BitConverter.ToString(item.ReadValue).Substring(0, len * 3 - 1)}";
                         resultList.Add(s);
-                        //formattedString.Append(s);
                     }
                     else
                     {
-                        resultList.Add( $"Ch{ch}: <empty>");
+                        item = null;
                     }
+                    //else
+                    //{
+                    //    resultList.Add( $"Ch{ch}: <empty>");
+                    //}
                 }
-                else
-                {
-                    resultList.Add($"Ch{ch}: <empty>");
-                }
+                //else
+                //{
+                //    resultList.Add($"Ch{ch}: <empty>");
+                //}
             }
-            return resultList.ToArray();
+            if (resultList.Count > 0)
+            {
+                return resultList.ToArray();
+            }
+            else
+            {
+                return null;
+            }
         }
 
         public void ReaderCallback(IAsyncResult ar)
@@ -84,14 +94,18 @@ namespace UeiBridge
 
                 // ex.Message = "An error occurred while accessing the device"
 
-                _lastScanList[channel] = new ViewItem<byte[]>(receiveBuffer, timeToLiveMs: 5000);
+                _lastScanList[channel] = new ViewItem<byte[]>(receiveBuffer, TimeSpan.FromSeconds(5));
                 byte [] payload = receiveBuffer;
                 EthernetMessage em = StaticMethods.BuildEthernetMessageFromDevice(payload, this._thisDeviceSetup, channel);
                 // forward to consumer (send by udp)
                 _targetConsumer.Send(new SendObject( _thisDeviceSetup.DestEndPoint.ToIpEp(), em.GetByteArray( MessageWay.upstream)));
 
                 // restart reader
-                _readerIAsyncResultList[channel] = _serialReaderList[channel].BeginRead(minLen, this.ReaderCallback, channel);
+                if (_InDisposeState == false)
+                {
+                    System.Diagnostics.Debug.Assert(true == _serialSession.IsRunning());
+                    _readerIAsyncResultList[channel] = _serialReaderList[channel].BeginRead(minLen, this.ReaderCallback, channel);
+                }
             }
             catch (UeiDaqException ex)
             {
@@ -101,6 +115,7 @@ namespace UeiBridge
                     // clicked on fast enough!
                     if (_InDisposeState == false)
                     {
+                        System.Diagnostics.Debug.Assert(true == _serialSession.IsRunning());
                         _readerIAsyncResultList[channel] = _serialReaderList[channel].BeginRead(minLen, this.ReaderCallback, channel);
                     }
                     else
@@ -121,7 +136,7 @@ namespace UeiBridge
                 _logger.Warn($"ReaderCallback: {InstanceName}. {ex.Message}");
             }
         }
-        public override void OpenDevice()
+        public override bool OpenDevice()
         {
             _lastScanList = new List<ViewItem<byte[]>>(new ViewItem<byte[]>[_serialSession.GetNumberOfChannels()]);
             _readerIAsyncResultList = new List<IAsyncResult>(new IAsyncResult[_thisDeviceSetup.Channels.Count]);
@@ -129,6 +144,7 @@ namespace UeiBridge
             for (int ch = 0; ch < _serialSession.GetNumberOfChannels(); ch++)
             {
                 var sr = new SerialReader(_serialSession.GetDataStream(), _serialSession.GetChannel(ch).GetIndex());
+                //SerialReaderAdapter sra = _serialSession.GetSerialReader(ch);
                 _serialReaderList.Add(sr);
             }
             System.Threading.Thread.Sleep(10);
@@ -144,6 +160,7 @@ namespace UeiBridge
 
             EmitInitMessage( $"Init success {DeviceName}. {_serialSession.GetNumberOfChannels()} channels. Dest:{ _thisDeviceSetup.DestEndPoint.ToIpEp()}");
 
+            return true;
         }
         public override void Dispose()
         {
@@ -151,7 +168,7 @@ namespace UeiBridge
 
             var waitall = _readerIAsyncResultList.Select(i => i.AsyncWaitHandle).ToArray();
             WaitHandle.WaitAll(waitall);
-
+            _targetConsumer.Dispose();
             //_logger.Debug($"Disposing {this.DeviceName}/Input, slot {_thisDeviceSetup.SlotNumber}");
             //if (_serialSession.IsRunning())
             try

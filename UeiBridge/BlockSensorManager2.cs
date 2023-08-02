@@ -17,19 +17,22 @@ namespace UeiBridge
         //private IWriterAdapter<double[]> _analogWriter;
         private int _subaddress = -1;
         private double[] _scanToEmit;
-        private BlockSensorSetup _thisDeviceSetup;
+        //private BlockSensorSetup _thisDeviceSetup;
+        private log4net.ILog _logger = StaticMethods.GetLogger();
         //private bool _isInDispose = false;
+        BlockSensorSetup _thisDeviceSetup;
         #endregion
         const int _payloadLength = 28;
 
-        public BlockSensorManager2( DeviceSetup deviceSetup1, IWriterAdapter<double[]> analogWriter, UeiDaq.Session session) 
-            : base( deviceSetup1, analogWriter, session, true)
+        public BlockSensorManager2( BlockSensorSetup deviceSetup1, ISession session) 
+            : base( deviceSetup1 as AO308Setup, session, true)
         {
-            System.Diagnostics.Debug.Assert(analogWriter != null);
-            this._analogWriter = analogWriter;
+            _thisDeviceSetup = deviceSetup1;
+            //System.Diagnostics.Debug.Assert(analogWriter != null);
+            //this._analogWriter = analogWriter;
 
-            _thisDeviceSetup = deviceSetup1 as BlockSensorSetup;
-            System.Diagnostics.Debug.Assert(null != _thisDeviceSetup);
+            //_thisDeviceSetup = deviceSetup1 as BlockSensorSetup;
+            //System.Diagnostics.Debug.Assert(null != _thisDeviceSetup);
 
             int serial = 0;
             _blockSensorTable.Add(new BlockSensorEntry(serial++, "ps1", 4, 0));
@@ -61,9 +64,9 @@ namespace UeiBridge
             }
 
             // downstream message aimed to block sensor
-            if (byteMessage[EthernetMessage._cardTypeOffset] == DeviceMap2.GetCardIdFromCardName(DeviceMap2.BlocksensorLiteral))
+            if (byteMessage[EthernetMessage._cardTypeOffset] == DeviceMap2.GetDeviceName(DeviceMap2.BlocksensorLiteral))
             {
-                if (byteMessage.Length == 19) // is from digital card
+                if (byteMessage.Length == 22) // is from digital card
                 {
                     _subaddress = byteMessage[EthernetMessage._payloadOffset] & 0x7; // get lower 3 bits
                     return;
@@ -78,7 +81,7 @@ namespace UeiBridge
                 // verify length
                 if ((_payloadLength + EthernetMessage._payloadOffset) != byteMessage.Length)
                 {
-                    _logger.Warn($"Incoming message length {byteMessage.Length}not match. expecting {_payloadLength + EthernetMessage._payloadOffset + _payloadLength}, message rejected.");
+                    _logger.Warn($"Incoming message length {byteMessage.Length} not match. expecting {_payloadLength + EthernetMessage._payloadOffset + _payloadLength}, message rejected.");
                     return;
                 }
                 // select entries from block-sensor table.
@@ -116,13 +119,13 @@ namespace UeiBridge
         public override void Enqueue(byte[] byteMessage)
         {
             // upstream message from digital/input card
-            if (byteMessage[EthernetMessage._cardTypeOffset] == DeviceMap2.GetCardIdFromCardName(DeviceMap2.DIO403Literal)) //"DIO-403"))
+            if (byteMessage[EthernetMessage._cardTypeOffset] == DeviceMap2.GetDeviceName(DeviceMap2.DIO403Literal)) //"DIO-403"))
             {
                 // just fix message. to make it looks like downward message;
                 byteMessage[0] = 0xaa;
                 byteMessage[1] = 0x55;
-                byteMessage[EthernetMessage._cardTypeOffset] = Convert.ToByte(DeviceMap2.GetCardIdFromCardName(DeviceMap2.BlocksensorLiteral));
-                byteMessage[EthernetMessage._slotNumberOffset] = BlockSensorSetup.BlockSensorSlotNumber;
+                byteMessage[EthernetMessage._cardTypeOffset] = Convert.ToByte(DeviceMap2.GetDeviceName(DeviceMap2.BlocksensorLiteral));
+                byteMessage[EthernetMessage._slotNumberOffset] = Convert.ToByte( _thisDeviceSetup.SlotNumber);
             }
             base.Enqueue(byteMessage);
         }

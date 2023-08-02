@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,6 +21,7 @@ namespace ByteStreamer3
     /// </summary>
     public partial class MainWindow : Window
     {
+        MainViewModel _vm;
         public MainWindow()
         {
             InitializeComponent();
@@ -30,7 +32,13 @@ namespace ByteStreamer3
                 //items.Add(new User() { Name = "Sammy Doe", Age = 13 });
                 //lvDataBinding.ItemsSource = items;
             }
-            DataContext = new MainViewModel( this);
+            _vm = new MainViewModel( this);
+            DataContext = _vm;
+        }
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            _vm.OnClosing();
+            base.OnClosing(e);
         }
     }
 }
