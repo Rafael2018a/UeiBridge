@@ -17,7 +17,7 @@ namespace UeiBridgeSetup.ViewModels
         private ViewModelBase _selectedViewModel;
         private EndPointViewModel _destinationEndPointViewModel;
         private EndPointViewModel _localEndPointViewModel;
-        private Config2 _mainConfig;
+        private CubeSetup _cubeSetup;
         #endregion
         #region === publics ===
         public EndPointViewModel LocalEndPointViewModel
@@ -94,7 +94,7 @@ namespace UeiBridgeSetup.ViewModels
             switch (_selectedSlot.DeviceName)
             {
                 case DeviceMap2.SL508Literal:
-                    return new SL508ViewModel(_mainConfig, selectedSlot);
+                    return new SL508ViewModel(_cubeSetup, selectedSlot);
                 case DeviceMap2.AO308Literal:
                     return new AO308ViewModel();
                 case DeviceMap2.DIO403Literal:
@@ -122,10 +122,10 @@ namespace UeiBridgeSetup.ViewModels
         public DelegateCommand AddCubeCommand { get; }
         #endregion
 
-        public SystemSetupViewModel(Config2 mainConfig)
+        public SystemSetupViewModel(CubeSetup cubeConfig)
         {
-            _mainConfig = mainConfig;
-            LoadCubeList( mainConfig);
+            _cubeSetup = cubeConfig;
+            LoadCubeList( cubeConfig);
             if (CubeList.Count > 0)
             {
                 SelectedCube = CubeList[0];
@@ -163,15 +163,16 @@ namespace UeiBridgeSetup.ViewModels
             //CubeList.Add(new CubeSetupViewModel(cs, false));
         }
 
-        private void LoadCubeList(Config2 mainConfig)
+        private void LoadCubeList(CubeSetup cubeConfig)
         {
-            foreach (CubeSetup cubesetup in mainConfig.CubeSetupList)
-            {
-                //if (!cubesetup.CubeUrl.ToLower().StartsWith("simu"))
-                {
-                    CubeList.Add(new CubeSetupViewModel(cubesetup, true));
-                }
-            }
+            CubeList.Add(new CubeSetupViewModel(cubeConfig, false));
+            //foreach (CubeSetup cubesetup in mainConfig.CubeSetupList)
+            //{
+            //    //if (!cubesetup.CubeUrl.ToLower().StartsWith("simu"))
+            //    {
+            //        CubeList.Add(new CubeSetupViewModel(cubesetup, true));
+            //    }
+            //}
         }
         public CubeSetupViewModel SelectedCube
         {

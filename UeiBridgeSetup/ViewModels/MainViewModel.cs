@@ -22,7 +22,7 @@ namespace UeiBridgeSetup.ViewModels
         public DelegateCommand SaveFileAsCommand { get; }
         public DelegateCommand CloseAppCommand { get; }
 
-        public Config2 MainConfig { get; set; }
+        public CubeSetup CubeSetup1 { get; set; }
 
         public string MenuItemHeader_Save { get => _menuItemHeader_Save; set => _menuItemHeader_Save = value; }
         public string MenuItemHeader_SaveAs { get => _menuItemHeader_SaveAs; set => _menuItemHeader_SaveAs = value; }
@@ -49,24 +49,24 @@ namespace UeiBridgeSetup.ViewModels
         {
             try
             {
-                MainConfig = Config2.LoadConfigFromFile(configFile);
+                CubeSetup1 = Config2.LoadCubeSetupFromFile( configFile.Name);
                 MidStatusBarMessage = $"Setup file: {Config2.DefaultSettingsFilename}";
             }
             catch (System.IO.FileNotFoundException ex)
             {
-                MainConfig = new Config2();
+                CubeSetup1 = new CubeSetup();
                 MidStatusBarMessage = $"{ex.Message}";
             }
             catch (System.InvalidOperationException ex)
             {
-                MainConfig = new Config2();
+                CubeSetup1 = new CubeSetup();
                 MidStatusBarMessage = $"Setup file ({Config2.DefaultSettingsFilename}) parse error. {ex.Message}";
             }
 
             _menuItemHeader_Save = $"Save {configFile.Name}";
             _menuItemHeader_SaveAs = _menuItemHeader_Save + " As";
 
-            var sysVM = new SystemSetupViewModel(MainConfig);
+            var sysVM = new SystemSetupViewModel(CubeSetup1);
             OnNewSystemViewModel?.Invoke(sysVM);
         }
 
@@ -95,7 +95,7 @@ namespace UeiBridgeSetup.ViewModels
 
         private void SaveFile(object param) 
         {
-            MainConfig.SaveAs(new FileInfo(Config2.DefaultSettingsFilename), true);
+            CubeSetup1.Serialize();//  As(new FileInfo(Config2.DefaultSettingsFilename), true);
         }
         private void SaveFileAs(object param) { }
         private void CloseApp(object param) { }

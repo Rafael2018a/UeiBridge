@@ -468,6 +468,31 @@ namespace UeiBridge.Library
                 Console.WriteLine($"Config: File {filename} created");
             }
         }
+        public T GetDeviceSetupEntry<T>(UeiDeviceInfo devInfo) where T : DeviceSetup
+        {
+            return GetDeviceSetupEntry( devInfo.DeviceSlot) as T;
+        }
+        public DeviceSetup GetDeviceSetupEntry( int slotNumber)
+        {
+            //if (this.CubeSetupList == null)
+            //{
+            //    return null;
+            //}
+            //var cube = this.CubeSetupList.Where(e => e.CubeUrl == cubeUrl);
+            var selectedCube = this;
+            if (null == selectedCube)
+            {
+                return null;
+            }
+            var theSetups = selectedCube.DeviceSetupList.Where(d => d.SlotNumber == slotNumber);
+            DeviceSetup devSetup = theSetups.FirstOrDefault();
+            if (null != devSetup)
+            {
+                devSetup.CubeUrl = this.CubeUrl;
+            }
+            return devSetup;
+        }
+
     }
 
     public class Config2 : IEquatable<Config2>
@@ -476,7 +501,7 @@ namespace UeiBridge.Library
         public AppSetup AppSetup;
         public List<CubeSetup> CubeSetupList = new List<CubeSetup>();
 
-        public static string DefaultSettingsFilename => "UeiSettings2.config";
+        public static string DefaultSettingsFilename => "Cube2.config"; // to be removed
         public static string SettingsFilename { get; private set; } = DefaultSettingsFilename;
 
         public Config2(List<string> cubeUrlList)
@@ -496,7 +521,7 @@ namespace UeiBridge.Library
         /// </summary>
         /// <returns></returns>
         [Obsolete]
-        public static Config2 LoadConfigFromFile(FileInfo configFile)
+        public static Config2 LoadConfigFromFile_notInUse(FileInfo configFile)
         {
             var serializer = new XmlSerializer(typeof(Config2));
             Config2 resultConfig = null;

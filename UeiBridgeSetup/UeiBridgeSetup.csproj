@@ -212,36 +212,22 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Images\uei_product_io_dna_sl_508.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\uei_product_io_dna_ao_308.png" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Images\uei_product_chassis_dna_ppc8_1g.jpg" />
     <Resource Include="Images\uei_product_chassis_dna_ppc8_1g.png" />
     <Resource Include="Images\uei_product_io_dna_ai_201_100.jpg" />
     <Resource Include="Images\uei_product_io_dna_ai_201_100.orig.jpg" />
-    <Resource Include="Images\uei_product_io_dna_ao_308.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\uei_product_io_dna_dio_403.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\uei_product_io_dna_dio_470.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\uei_product_io_dna_dio_470.orig.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\uei_product_io_dna_sl_508.orig.jpg" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\uei_product_io_dna_ao_308.orig.png" />
-    <Resource Include="Images\uei_product_io_dna_dio_403.orig.jpg" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\dot_net_system_folder_icon_250657.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\uei_product_io_dna_ai_201_100-no_bg.png" />
+    <Resource Include="Images\uei_product_io_dna_ao_308-no_bg.png" />
+    <Resource Include="Images\uei_product_io_dna_ao_332-no_bg.png" />
+    <Resource Include="Images\uei_product_io_dna_can_503-no_bg.png" />
+    <Resource Include="Images\uei_product_io_dna_dio_403-no_bg.png" />
+    <Resource Include="Images\uei_product_io_dna_dio_470-no_bg.png" />
+    <Resource Include="Images\uei_product_io_dna_sl_508-no_bg.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

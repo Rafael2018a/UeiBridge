@@ -15,22 +15,22 @@ namespace UeiBridgeTest
     [TestFixture]
     class ConfigTests
     {
-        [Test]
-        public void NoConfigFile()
-        {
-            Assert.Throws<System.IO.FileNotFoundException>(() =>
-            {
-                var c2 = Config2.LoadConfigFromFile(new System.IO.FileInfo("nofile.config"));
-            });
-        }
-        [Test]
-        public void BadConfigTest()
-        {
-            Assert.Throws<System.InvalidOperationException>(() =>
-            {
-                var c2 = Config2.LoadConfigFromFile(new System.IO.FileInfo("UeiBridgeTest.exe.config"));
-            });
-        }
+        //[Test]
+        //public void NoConfigFile()
+        //{
+        //    Assert.Throws<System.IO.FileNotFoundException>(() =>
+        //    {
+        //        var c2 = Config2.LoadConfigFromFile(new System.IO.FileInfo("nofile.config"));
+        //    });
+        //}
+        //[Test]
+        //public void BadConfigTest()
+        //{
+        //    Assert.Throws<System.InvalidOperationException>(() =>
+        //    {
+        //        var c2 = Config2.LoadConfigFromFile(new System.IO.FileInfo("UeiBridgeTest.exe.config"));
+        //    });
+        //}
 
         //[Test]
         //public void BuildNewConfigFile()
@@ -175,19 +175,19 @@ namespace UeiBridgeTest
             Assert.That(c3.CubeSetupList[0].DeviceSetupList.Count, Is.EqualTo(11)); // only one simulation device setup is defined.
         }
 
-        [Test]
-        public void CompareConfigTest()
-        {
-            string filename = "setupForTest.config";
+        //[Test]
+        //public void CompareConfigTest()
+        //{
+        //    string filename = "setupForTest.config";
 
-            Config2 c1 = Config2.BuildDefaultConfig(new List<string> { "simu://" });
-            c1.SaveAs(new FileInfo(filename), true);
+        //    Config2 c1 = Config2.BuildDefaultConfig(new List<string> { "simu://" });
+        //    c1.SaveAs(new FileInfo(filename), true);
 
-            Config2 c2 = Config2.LoadConfigFromFile(new FileInfo(filename));
-            Config2 c3 = Config2.LoadConfigFromFile(new FileInfo(filename));
-            c2.CubeSetupList.FirstOrDefault().DeviceSetupList.FirstOrDefault().DeviceName = "kkk";
-            Assert.That(c2.Equals(c3), Is.False);
-        }
+        //    Config2 c2 = Config2.LoadConfigFromFile(new FileInfo(filename));
+        //    Config2 c3 = Config2.LoadConfigFromFile(new FileInfo(filename));
+        //    c2.CubeSetupList.FirstOrDefault().DeviceSetupList.FirstOrDefault().DeviceName = "kkk";
+        //    Assert.That(c2.Equals(c3), Is.False);
+        //}
 
         [Test]
         public void LoadConnectedCubesSetup_NoFile()

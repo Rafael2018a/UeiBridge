@@ -13,8 +13,6 @@
         <Image Source="/Images/uei_product_io_dna_ao_308.png" Height="150" />
     </GroupBox>-->
     <Grid>
-        <Border BorderThickness="1" BorderBrush="LightGray" CornerRadius="5">
-        <Image Source="/Images/uei_product_io_dna_ao_308.png" Height="200" />
-        </Border>
+        <Image Source="/Images/uei_product_io_dna_ao_308-no_bg.png" />
     </Grid>
 </UserControl>

@@ -11,7 +11,7 @@ namespace UeiBridgeSetup.ViewModels
     public class SL508ViewModel : ViewModelBase
     {
         private SerialPortMode _serialMode;
-        private Config2 _mainConfig;
+        private CubeSetup _cubeSetup;
         private SlotDeviceModel _selectedSlot;
         private int _selectedPortIndex = 0;
         private SerialPortSpeed _baudrate;
@@ -34,7 +34,7 @@ namespace UeiBridgeSetup.ViewModels
             set
             {
                 _selectedPortIndex = value;
-                SL508892Setup setup = _mainConfig.GetDeviceSetupEntry(_selectedSlot.ThisDeviceSetup.CubeUrl, _selectedSlot.SlotNumber) as SL508892Setup;
+                SL508892Setup setup = _cubeSetup.GetDeviceSetupEntry( _selectedSlot.SlotNumber) as SL508892Setup;
                 SerialMode = setup.Channels[_selectedPortIndex].mode;
                 Baudrate = setup.Channels[_selectedPortIndex].Baudrate;
             }
@@ -45,7 +45,7 @@ namespace UeiBridgeSetup.ViewModels
             set
             {
                 _baudrate = value;
-                SL508892Setup setup = _mainConfig.GetDeviceSetupEntry(_selectedSlot.ThisDeviceSetup.CubeUrl, _selectedSlot.SlotNumber) as SL508892Setup;
+                SL508892Setup setup = _cubeSetup.GetDeviceSetupEntry( _selectedSlot.SlotNumber) as SL508892Setup;
                 setup.Channels[_selectedPortIndex].Baudrate = _baudrate;
                 RaisePropertyChanged();
             }
@@ -57,15 +57,15 @@ namespace UeiBridgeSetup.ViewModels
             set
             {
                 _serialMode = value;
-                SL508892Setup setup = _mainConfig.GetDeviceSetupEntry(_selectedSlot.ThisDeviceSetup.CubeUrl, _selectedSlot.SlotNumber) as SL508892Setup;
+                SL508892Setup setup = _cubeSetup.GetDeviceSetupEntry( _selectedSlot.SlotNumber) as SL508892Setup;
                 setup.Channels[_selectedPortIndex].mode = _serialMode;
                 RaisePropertyChanged();
             }
         }
 
-        public SL508ViewModel(Config2 mainConfig, SlotDeviceModel selectedSlot)
+        public SL508ViewModel(CubeSetup mainConfig, SlotDeviceModel selectedSlot)
         {
-            this._mainConfig = mainConfig;
+            this._cubeSetup = mainConfig;
             this._selectedSlot = selectedSlot;
 
             SL508892Setup _thisDeviceSetup;

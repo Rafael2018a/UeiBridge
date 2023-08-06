@@ -50,7 +50,8 @@
             <!--</StackPanel>-->
             <!--<TextBlock Grid.Row="0" Grid.Column="0" Text="SL-508" FontSize="18"/>-->
             <!--<TextBlock Grid.Row="1" Grid.Column="1" Text="SL-508" FontSize="18"/>-->
-            <Image Grid.Row="1" Grid.Column="1" Grid.RowSpan="4" Source="/Images/uei_product_io_dna_sl_508.jpg" Height="100" />
+            <Image Grid.Row="1" Grid.Column="1" Grid.RowSpan="4" Source="/Images/uei_product_io_dna_sl_508-no_bg.png" />
+<Image  />
 
 
         </Grid>
