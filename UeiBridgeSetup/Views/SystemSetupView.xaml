@@ -52,7 +52,7 @@
             </Button>
             <Button Content="Remove"/>
         </StackPanel>
-        <ListView x:Name="Cubes" Grid.Row="1" Margin="5 0 5 5" ItemsSource="{Binding CubeList}" SelectedItem="{Binding SelectedCube, Mode=TwoWay}">
+        <ListView x:Name="Cubes" Grid.Row="1" Margin="5 0 5 5" ItemsSource="{Binding CubeSetupVMList}" SelectedItem="{Binding SelectedCube, Mode=TwoWay}">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <StackPanel>

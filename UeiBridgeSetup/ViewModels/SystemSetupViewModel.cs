@@ -38,7 +38,7 @@ namespace UeiBridgeSetup.ViewModels
                 RaisePropertyChanged();
             }
         }// = new EndPointViewModel(EndPointLocation.Local);
-        public List<CubeSetupViewModel> CubeList { get; set; } = new List<CubeSetupViewModel>();
+        public List<CubeSetupViewModel> CubeSetupVMList { get; set; } = new List<CubeSetupViewModel>();
         public ObservableCollection<SlotDeviceModel> SlotList
         {
             get => _slotList;
@@ -126,9 +126,9 @@ namespace UeiBridgeSetup.ViewModels
         {
             _cubeSetup = cubeConfig;
             LoadCubeList( cubeConfig);
-            if (CubeList.Count > 0)
+            if (CubeSetupVMList.Count > 0)
             {
-                SelectedCube = CubeList[0];
+                SelectedCube = CubeSetupVMList[0];
             }
             //SelectedViewModel = new SL508ViewModel();
 
@@ -165,7 +165,7 @@ namespace UeiBridgeSetup.ViewModels
 
         private void LoadCubeList(CubeSetup cubeConfig)
         {
-            CubeList.Add(new CubeSetupViewModel(cubeConfig, false));
+            CubeSetupVMList.Add(new CubeSetupViewModel(cubeConfig, false));
             //foreach (CubeSetup cubesetup in mainConfig.CubeSetupList)
             //{
             //    //if (!cubesetup.CubeUrl.ToLower().StartsWith("simu"))
