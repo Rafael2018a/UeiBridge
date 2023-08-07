@@ -20,17 +20,17 @@ namespace UeiBridge
         public override string DeviceName => "SL-508-892";
 
         private log4net.ILog _logger = StaticMethods.GetLogger();
-        private readonly List<SerialReader> _serialReaderList = new List<SerialReader>();
+        private readonly List<SerialReaderAdapter> _serialReaderList = new List<SerialReaderAdapter>();
         private bool _InDisposeState = false;
         private List<ViewItem<byte[]>> _lastScanList = new List<ViewItem<byte[]>>();
         private readonly SL508892Setup _thisDeviceSetup;
         private ISend<SendObject> _targetConsumer;
-        private Session _serialSession;
+        private SessionAdapter _serialSession;
         private List<IAsyncResult> _readerIAsyncResultList;
         private const int minLen = 200;
         
 
-        public SL508InputDeviceManager(ISend<SendObject> targetConsumer, DeviceSetup setup, Session serialSession) : base( setup)
+        public SL508InputDeviceManager(ISend<SendObject> targetConsumer, DeviceSetup setup, SessionAdapter serialSession) : base( setup)
         {
             _targetConsumer = targetConsumer;
             _thisDeviceSetup = setup as SL508892Setup;
@@ -88,7 +88,9 @@ namespace UeiBridge
             int channel = (int)ar.AsyncState;
             try
             {
-                byte[] receiveBuffer = _serialReaderList[channel].EndRead(ar);
+                SerialReaderAdapter sra = _serialReaderList[channel];
+                //SerialReaderAdapter sra = new SerialReaderAdapter(sr);
+                byte[] receiveBuffer = sra.EndRead(ar); //_serialReaderList[channel].EndRead(ar);
                 // this api might throw UeiDaqException exception with message "The device is not responding, check the connection and the device's status"
                 // in this case, the session must be closed/disposed and open again.
 
@@ -141,11 +143,11 @@ namespace UeiBridge
             _lastScanList = new List<ViewItem<byte[]>>(new ViewItem<byte[]>[_serialSession.GetNumberOfChannels()]);
             _readerIAsyncResultList = new List<IAsyncResult>(new IAsyncResult[_thisDeviceSetup.Channels.Count]);
 
+            // build reader list 
             for (int ch = 0; ch < _serialSession.GetNumberOfChannels(); ch++)
             {
-                var sr = new SerialReader(_serialSession.GetDataStream(), _serialSession.GetChannel(ch).GetIndex());
-                //SerialReaderAdapter sra = _serialSession.GetSerialReader(ch);
-                _serialReaderList.Add(sr);
+                var sr = _serialSession.GetSerialReader(ch);
+                _serialReaderList.Add( sr);
             }
             System.Threading.Thread.Sleep(10);
 

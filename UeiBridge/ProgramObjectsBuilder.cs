@@ -337,10 +337,12 @@ namespace UeiBridge
                 _logger.Debug($"CH:{ueiPort.GetIndex()}, Rate {s2} bps, Mode {ueiPort.GetMode()}. Listening port {portnum}");
             }
 
+            SessionAdapter ssAdapter = new SessionAdapter(serialSession);
+
             //SessionAdapter serAd = new SessionAdapter(serialSession);
             string instanceName = setup.GetInstanceName();// $"{realDevice.DeviceName}/Slot{realDevice.DeviceSlot}";
             UdpWriter uWriter = new UdpWriter( setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMulticast);
-            SL508InputDeviceManager id = new SL508InputDeviceManager(uWriter, setup, serialSession);
+            SL508InputDeviceManager id = new SL508InputDeviceManager(uWriter, setup, ssAdapter);
 
             SL508OutputDeviceManager od = new SL508OutputDeviceManager(setup, serialSession);
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMulticast);

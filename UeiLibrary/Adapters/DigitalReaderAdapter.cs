@@ -22,8 +22,4 @@ namespace UeiBridge.Library
             this._digitalReader.Dispose();
         }
     }
-
-
-
-
 }

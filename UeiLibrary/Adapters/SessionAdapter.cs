@@ -89,6 +89,26 @@ namespace UeiBridge.Library
             return new ChannelAdapter(_ueiSession.GetChannel( serialChannelNumber));
         }
 
+        public bool IsRunning()
+        {
+            return _ueiSession.IsRunning();
+        }
+
+        public DataStream GetDataStream()
+        {
+            return _ueiSession.GetDataStream();
+        }
+
+        public void Stop()
+        {
+            _ueiSession.Stop();
+        }
+
+        public SerialReaderAdapter GetSerialReader(int ch)
+        {
+           var sr = new SerialReader(_ueiSession.GetDataStream(), _ueiSession.GetChannel(ch).GetIndex());
+           return new SerialReaderAdapter(sr);
+        }
     }
 
 
