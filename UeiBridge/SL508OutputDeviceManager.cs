@@ -19,7 +19,7 @@ namespace UeiBridge
         log4net.ILog _logger = StaticMethods.GetLogger();
         //IConvert _attachedConverter;
         List<ViewItem<byte[]>> _ViewItemList = new List<ViewItem<byte[]>>(); 
-        Session _serialSession;
+        SessionAdapter _serialSession;
         int _sentBytesAcc = 0;
         int _numberOfSentMessages = 0;
         List<SerialWriter> _serialWriterList = new List<SerialWriter>();
@@ -34,7 +34,7 @@ namespace UeiBridge
                 return;
             }
             System.Diagnostics.Debug.Assert(null != serialSession);
-            _serialSession = serialSession;
+            _serialSession = new SessionAdapter( serialSession);
             //_attachedConverter = StaticMethods.CreateConverterInstance(setup);
             System.Diagnostics.Debug.Assert(null != serialSession);
             this._deviceSetup = setup;
@@ -63,7 +63,7 @@ namespace UeiBridge
             Task.Factory.StartNew(() => OutputDeviceHandler_Task());
 
             bool firstIteration = true;
-            foreach (SerialPort port in _serialSession.GetChannels())
+            foreach (IChannel port in _serialSession.GetChannels())
             {
                 if (firstIteration)
                 {
@@ -175,7 +175,7 @@ namespace UeiBridge
 
                 // wait
                 {
-                    SerialPort sPort = (SerialPort)_serialSession.GetChannel(request.SerialChannelNumber);
+                    IChannel sPort = _serialSession.GetChannel(request.SerialChannelNumber);
                     SerialPortSpeed x = sPort.GetSpeed();
                     int bpsPossibe = (int)(_serialSpeedDic[x] * 0.8);
                     int bpsActual = request.PayloadBytes.Length * 8;
