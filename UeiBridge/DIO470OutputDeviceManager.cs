@@ -38,7 +38,7 @@ namespace UeiBridge
         {
             _writer.Dispose();
             CloseSession(_ueiSession);
-			base.Dispose();
+            base.TerminateMessageLoop();
         }
 
         public override bool OpenDevice()

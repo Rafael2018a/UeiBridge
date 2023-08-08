@@ -142,12 +142,12 @@ namespace UeiBridge
             }
         }
 
-        public virtual void Dispose()
-        {
-            HaltMessageLoop();
-            _logger.Debug($"Device manager {InstanceName} Disposed");
-        }
-        public virtual void HaltMessageLoop()
+        public abstract void Dispose();
+        //{
+        //    HaltMessageLoop();
+        //    _logger.Debug($"Device manager {InstanceName} Disposed");
+        //}
+        public virtual void TerminateMessageLoop()
         {
             _dataItemsQueue2.Add(null); // end task token (first, free Take() api and then apply CompleteAdding()
             Thread.Sleep(100);

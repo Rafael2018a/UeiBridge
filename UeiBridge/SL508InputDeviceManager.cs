@@ -9,7 +9,35 @@ using System.Linq;
 
 namespace UeiBridge
 {
+    class CAN503InputDeviceManager: InputDevice
+    {
+        private SessionAdapter ssAdapter;
+        private UdpWriter uWriter;
+        private log4net.ILog _logger = StaticMethods.GetLogger();
 
+        public CAN503InputDeviceManager()
+        {
+        }
+
+        public CAN503InputDeviceManager(DeviceSetup setup, SessionAdapter ssAdapter, UdpWriter uWriter) : base(setup)
+        {
+            this.ssAdapter = ssAdapter;
+            this.uWriter = uWriter;
+        }
+
+        public override string DeviceName => DeviceMap2.CAN503Literal;
+
+        public override string[] GetFormattedStatus(TimeSpan interval)
+        {
+            return null;
+        }
+
+        public override bool OpenDevice()
+        {
+            _logger.Warn("CAN503 OpenDevice not implemented");
+            return false;
+        }
+    }
     /// <summary>
     /// "SL-508-892" manager.
     /// R&R: Reads from serial device and sends the result to 'targetConsumer'
@@ -17,7 +45,7 @@ namespace UeiBridge
     /// </summary>
     class SL508InputDeviceManager : InputDevice
     {
-        public override string DeviceName => "SL-508-892";
+        public override string DeviceName => DeviceMap2.SL508Literal; //"SL-508-892";
 
         private log4net.ILog _logger = StaticMethods.GetLogger();
         private readonly List<SerialReaderAdapter> _serialReaderList = new List<SerialReaderAdapter>();

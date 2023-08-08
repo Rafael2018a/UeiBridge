@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using System.IO;
 using System.Net;
+using UeiDaq;
 
 /// <summary>
 /// All classes in this file MUST NOT depend on any other module in the project
@@ -76,7 +77,22 @@ namespace UeiBridge.Library
         {
         }
     }
+    public class CANChannelSetup
+    {
+        public CANChannelSetup()
+        {
+        }
 
+        public CANChannelSetup(int channelIndex)
+        {
+            this.ChannelIndex = channelIndex;
+        }
+
+        public int ChannelIndex { set; get; }
+        public CANPortSpeed Speed { get; set; } = CANPortSpeed.BitsPerSecond100K;
+        public CANFrameFormat FrameFormat { get; set; } = CANFrameFormat.Extended;
+        public CANPortMode PortMode { get; set; } = CANPortMode.Normal;
+    }
     public class AppSetup
     {
         public string SelectedNicForMulticast { get; private set; } = "221.109.251.103";
@@ -280,6 +296,28 @@ namespace UeiBridge.Library
         }
     }
 
+    public class CAN503Setup : DeviceSetup
+    {
+        public List<CANChannelSetup> Channels;
+        const int _numberOfChannels = 4;
+
+        public CAN503Setup()
+        {
+        }
+
+        public CAN503Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base(localEndPoint, destEndPoint, device)
+        {
+            Channels = new List<CANChannelSetup>();
+
+            for (int chIndex = 0; chIndex < _numberOfChannels; chIndex++)
+            {
+                Channels.Add(new CANChannelSetup(chIndex));
+            }
+
+        }
+
+    }
+
     public class ConfigFactory
     {
         int _portNumber = 50035;
@@ -326,9 +364,9 @@ namespace UeiBridge.Library
                 case DeviceMap2.SimuAO16Literal:
                     result = new SimuAO16Setup(new EndPoint(LocalIP, _portNumber++), ueiDevice);
                     break;
-                //case DeviceMap2.AO322Literal:
-                //    result = new AO332Setup(new EndPoint(LocalIP, _portNumber++), ueiDevice);
-                //    break;
+                case DeviceMap2.CAN503Literal:
+                    result = new CAN503Setup(new EndPoint(LocalIP, _portNumber++), new EndPoint(RemoteIp, _portNumber++), ueiDevice);
+                    break;
                 default:
                     Console.WriteLine($"Config: Device {ueiDevice.DeviceName} not supported.");
                     result = new DeviceSetup(null, null, ueiDevice);
@@ -347,10 +385,11 @@ namespace UeiBridge.Library
     //[XmlInclude(typeof(AO332Setup))]
     [XmlInclude(typeof(BlockSensorSetup))]
     [XmlInclude(typeof(SimuAO16Setup))]
+    [XmlInclude(typeof(CAN503Setup))]
     public class CubeSetup : IEquatable<CubeSetup>
     {
         public string CubeUrl { get; set; } // must be public for the  serializer
-        public List<DeviceSetup> DeviceSetupList { get; set; } // dont make private set
+        public List<DeviceSetup> DeviceSetupList { get; set; } // don't make private set
         public string OriginFileFullName { get; set; }
 
         public CubeSetup()

@@ -174,6 +174,10 @@ namespace UeiBridge
                     {
                         return Build_SL508(realDevice, setup);
                     }
+                case DeviceMap2.CAN503Literal:
+                    {
+                        return Build_CAN503(realDevice, setup);
+                    }
                 //case DeviceMap2.AO322Literal:
                 //    {
                 //        return Build_AO332(realDevice, setup);
@@ -300,13 +304,14 @@ namespace UeiBridge
                     foreach (var channel in thisSetup.Channels)
                     {
                         string finalUrl = $"{thisSetup.CubeUrl}Dev{thisSetup.SlotNumber}/Com{channel.ChannelIndex}";
-                        var port = serialSession.CreateSerialPort(finalUrl,
+                        SerialPort sport = serialSession.CreateSerialPort(finalUrl,
                                             channel.mode,
                                             channel.Baudrate,
                                             SerialPortDataBits.DataBits8,
                                             channel.parity,
                                             channel.stopbits,
                                             "");
+                        System.Diagnostics.Debug.Assert(null != sport);
                     }
 
                     System.Diagnostics.Debug.Assert(serialSession.GetNumberOfChannels() == thisSetup.Channels.Count);
@@ -364,6 +369,90 @@ namespace UeiBridge
             pd.InputDeviceManager = id;
             pd.OutputDeviceManager = od;
             //pd.UdpWriter = uWriter;
+
+            _udpMessenger.SubscribeConsumer(od, realDevice.CubeId, realDevice.DeviceSlot);
+            _udpReaderList.Add(ureader);
+
+            return new List<PerDeviceObjects>() { pd };
+        }
+
+        private List<PerDeviceObjects> Build_CAN503(UeiDeviceInfo realDevice, DeviceSetup setup)
+        {
+
+            CAN503Setup thisSetup = setup as CAN503Setup;
+
+            Session canSession = null;
+            try
+            {
+                canSession = new Session();
+
+                {
+                    foreach (CANChannelSetup channelSetup in thisSetup.Channels)
+                    {
+                        string finalUrl = $"{thisSetup.CubeUrl}Dev{thisSetup.SlotNumber}/CAN{channelSetup.ChannelIndex}";
+                        CANPort cport = canSession.CreateCANPort(finalUrl,
+                                            channelSetup.Speed,
+                                            channelSetup.FrameFormat,
+                                            channelSetup.PortMode,
+                                            0xFFFFFFFF,
+                                            0);
+                        System.Diagnostics.Debug.Assert(null != cport);
+                    }
+
+                    System.Diagnostics.Debug.Assert(canSession.GetNumberOfChannels() == thisSetup.Channels.Count);
+
+                    canSession.ConfigureTimingForMessagingIO(1,0);
+                    canSession.GetTiming().SetTimeout(100); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
+
+                    canSession.Start();
+                }
+
+            }
+            catch (UeiDaqException ex)
+            {
+                _logger.Warn($"Failed to init serial card mananger.Slot {setup.SlotNumber}. {ex.Message}. Might be invalid baud rate");
+                return null;
+            }
+
+            // emit info log
+            _logger.Debug($" == Serial channels for cube {setup.CubeUrl}, slot {setup.SlotNumber}");
+            foreach (UeiDaq.Channel ueiChannel in canSession.GetChannels())
+            {
+                //SerialPort ueiPort = ueiChannel as SerialPort;
+                //string s1 = ueiPort.GetSpeed().ToString();
+                //string s2 = s1.Replace("BitsPerSecond", "");
+                //SL508892Setup s508 = setup as SL508892Setup;
+                //int chIndex = ueiPort.GetIndex();
+                //int portnum = s508.Channels.Where(i => i.ChannelIndex == chIndex).Select(i => i.LocalUdpPort).FirstOrDefault();
+                CANPort cport = ueiChannel as CANPort;
+                _logger.Debug($"CAN CH:{cport.GetIndex()}");
+                
+            }
+
+            SessionAdapter ssAdapter = new SessionAdapter(canSession);
+
+            //SessionAdapter serAd = new SessionAdapter(serialSession);
+            string instanceName = setup.GetInstanceName();// $"{realDevice.DeviceName}/Slot{realDevice.DeviceSlot}";
+            UdpWriter uWriter = new UdpWriter(setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMulticast);
+            CAN503InputDeviceManager id = new CAN503InputDeviceManager( setup, ssAdapter, uWriter);
+
+            CAN503OutputDeviceManager od = new CAN503OutputDeviceManager(setup, ssAdapter);
+            var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMulticast);
+            UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, od.InstanceName);
+            // each port
+            {
+                //var add = IPAddress.Parse(setup.LocalEndPoint.Address);
+                //foreach (SerialChannelSetup chSetup in thisSetup.Channels)
+                //{
+                //    IPEndPoint ep = new IPEndPoint(add, chSetup.LocalUdpPort);
+                //    UdpReader ureader2 = new UdpReader(ep, nic, _udpMessenger, $"{od.InstanceName}/{chSetup.LocalUdpPort}");
+                //    _udpReaderList.Add(ureader2);
+                //}
+            }
+
+            var pd = new PerDeviceObjects(realDevice);
+            pd.InputDeviceManager = id;
+            pd.OutputDeviceManager = od;
 
             _udpMessenger.SubscribeConsumer(od, realDevice.CubeId, realDevice.DeviceSlot);
             _udpReaderList.Add(ureader);

@@ -42,7 +42,7 @@ namespace UeiBridge
 
             _ueiSession.Dispose();
 
-            base.Dispose();
+            base.TerminateMessageLoop();
 
         }
 

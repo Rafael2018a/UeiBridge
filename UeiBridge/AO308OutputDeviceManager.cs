@@ -162,7 +162,7 @@ namespace UeiBridge
             //base.HaltMessageLoop();
             _analogWriter.Dispose();
             _ueiSession.Dispose();
-            base.Dispose();
+            base.TerminateMessageLoop();
         }
     }
 }
