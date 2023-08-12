@@ -66,7 +66,7 @@ namespace UeiBridgeSetup.ViewModels
             _menuItemHeader_Save = $"Save {configFile.Name}";
             _menuItemHeader_SaveAs = _menuItemHeader_Save + " As";
 
-            var sysVM = new SystemSetupViewModel(CubeSetup1);
+            var sysVM = new SystemSetupViewModel( new List<CubeSetup>() { CubeSetup1 });
             OnNewSystemViewModel?.Invoke(sysVM);
         }
 

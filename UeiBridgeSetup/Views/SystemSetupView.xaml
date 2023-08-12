@@ -75,7 +75,7 @@
             </Button>
             <Button Content="Remove"/>
         </StackPanel>
-        <ListView x:Name="Devices" Grid.Row="1" Grid.Column="1" Margin="5 0 5 5" ItemsSource="{Binding SlotList}" SelectedItem="{Binding SelectedSlot, Mode=TwoWay}">
+        <ListView x:Name="Devices" Grid.Row="1" Grid.Column="1" Margin="5 0 5 5" ItemsSource="{Binding PhDeviceList}" SelectedItem="{Binding SelectedPhDevice, Mode=TwoWay}">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
@@ -99,13 +99,13 @@
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal" Margin="10" Grid.ColumnSpan="2">
-                    <TextBlock Text="{Binding SelectedSlot.EnclosingCubeAddress, StringFormat={}Cube {0}}" FontSize="18" FontWeight="DemiBold"/>
+                    <TextBlock Text="{Binding SelectedPhDevice.EnclosingCubeAddress, StringFormat={}Cube {0}}" FontSize="18" FontWeight="DemiBold"/>
                     <ContentControl Width="30"/>
-                    <TextBlock Text="{Binding SelectedSlot.SlotNumber, StringFormat={}Slot {0} }" FontSize="18" FontWeight="DemiBold"/>
+                    <TextBlock Text="{Binding SelectedPhDevice.SlotNumber, StringFormat={}Slot {0} }" FontSize="18" FontWeight="DemiBold"/>
                     <ContentControl Width="30"/>
-                    <TextBlock Text="{Binding SelectedSlot.DeviceName, StringFormat={}Device {0}}" FontSize="18" FontWeight="DemiBold"/>
+                    <TextBlock Text="{Binding SelectedPhDevice.DeviceName, StringFormat={}Device {0}}" FontSize="18" FontWeight="DemiBold"/>
                     <ContentControl Width="30"/>
-                    <TextBlock Text="{Binding SelectedSlot.DeviceDesc}" FontSize="18" FontWeight="DemiBold"/>
+                    <TextBlock Text="{Binding SelectedPhDevice.DeviceDesc}" FontSize="18" FontWeight="DemiBold"/>
                 </StackPanel>
                 <Separator Grid.Row="1" Grid.ColumnSpan="2"/>
                 <local:EndPointView Grid.Row="2" Grid.Column="0" Margin="10" x:Name="localEndPoint" DataContext="{Binding LocalEndPointViewModel}" Visibility="{Binding IsVisible, Converter={StaticResource VisibleIfTrueConv}}"/>
