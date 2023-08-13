@@ -119,7 +119,7 @@ namespace UeiBridge.Library
         //[XmlIgnore]
         public int GetCubeId() // lsb of cube address
         {
-            return StaticMethods.CubeUrlToCubeId(CubeUrl);
+            return StaticMethods.GetCubeId(CubeUrl);
         }
         public DeviceSetup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device)
         {
@@ -433,7 +433,6 @@ namespace UeiBridge.Library
             }
         }
 
-
         public bool Equals(CubeSetup other)
         {
             bool f1 = this.CubeUrl.Equals(other.CubeUrl);
@@ -441,6 +440,10 @@ namespace UeiBridge.Library
             return f1 && f2;
         }
 
+        public int GetCubeId()
+        {
+            return StaticMethods.GetCubeId( this.CubeUrl);
+        }
         /// <summary>
         /// Build DeviceSetupList
         /// </summary>
@@ -499,7 +502,7 @@ namespace UeiBridge.Library
 
         public void Serialize()
         {
-            string filename = GetSelfFilename( StaticMethods.CubeUrlToCubeId(this.CubeUrl));
+            string filename = GetSelfFilename( StaticMethods.GetCubeId(this.CubeUrl));
             using (FileStream fs = new FileStream(filename, FileMode.Create, FileAccess.Write))
             {
                 var serializer = new XmlSerializer(this.GetType());
@@ -693,7 +696,7 @@ namespace UeiBridge.Library
         {
             foreach (CubeSetup cstp in this.CubeSetupList)
             {
-                int cubeid = StaticMethods.CubeUrlToCubeId(cstp.CubeUrl);
+                int cubeid = StaticMethods.GetCubeId(cstp.CubeUrl);
                 FileInfo newfile = new FileInfo($"{basefilename}.cube{cubeid}.config");
                 var serializer = new XmlSerializer(typeof(CubeSetup));
                 using (var writer = newfile.OpenWrite()) // new StreamWriter(filename))

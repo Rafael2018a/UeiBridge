@@ -19,7 +19,7 @@ namespace UeiBridgeSetup.ViewModels
         public CubeSetupViewModel(CubeSetup cubesetup, bool isCubeConnected)
         {
             this.CubeSetup = cubesetup;
-            this.IsCubeConnected = isCubeConnected;
+            this.IsCubeConnected = true;// isCubeConnected;
             this.CubeAddress = StaticMethods.CubeUrlToIpAddress(CubeSetup.CubeUrl);
         }
     }

@@ -12,7 +12,7 @@ namespace UeiBridgeSetup.ViewModels
     {
         private SerialPortMode _serialMode;
         private CubeSetup _cubeSetup;
-        private SlotDeviceModel _selectedSlot;
+        private PhysicalDevice _selectedPhDevice;
         private int _selectedPortIndex = 0;
         private SerialPortSpeed _baudrate;
 
@@ -34,7 +34,7 @@ namespace UeiBridgeSetup.ViewModels
             set
             {
                 _selectedPortIndex = value;
-                SL508892Setup setup = _cubeSetup.GetDeviceSetupEntry( _selectedSlot.SlotNumber) as SL508892Setup;
+                SL508892Setup setup = _cubeSetup.GetDeviceSetupEntry(_selectedPhDevice.SlotNumber) as SL508892Setup;
                 SerialMode = setup.Channels[_selectedPortIndex].mode;
                 Baudrate = setup.Channels[_selectedPortIndex].Baudrate;
             }
@@ -45,7 +45,7 @@ namespace UeiBridgeSetup.ViewModels
             set
             {
                 _baudrate = value;
-                SL508892Setup setup = _cubeSetup.GetDeviceSetupEntry( _selectedSlot.SlotNumber) as SL508892Setup;
+                SL508892Setup setup = _cubeSetup.GetDeviceSetupEntry(_selectedPhDevice.SlotNumber) as SL508892Setup;
                 setup.Channels[_selectedPortIndex].Baudrate = _baudrate;
                 RaisePropertyChanged();
             }
@@ -57,35 +57,30 @@ namespace UeiBridgeSetup.ViewModels
             set
             {
                 _serialMode = value;
-                SL508892Setup setup = _cubeSetup.GetDeviceSetupEntry( _selectedSlot.SlotNumber) as SL508892Setup;
+                SL508892Setup setup = _cubeSetup.GetDeviceSetupEntry(_selectedPhDevice.SlotNumber) as SL508892Setup;
                 setup.Channels[_selectedPortIndex].mode = _serialMode;
                 RaisePropertyChanged();
             }
         }
 
-        public SL508ViewModel(CubeSetup mainConfig, SlotDeviceModel selectedSlot)
+        public SL508ViewModel(List<CubeSetup> cubeSetupList, PhysicalDevice selectedPhDevice)
         {
-            this._cubeSetup = mainConfig;
-            this._selectedSlot = selectedSlot;
+            this._selectedPhDevice = selectedPhDevice;
+            // find setup entry for 'selectedPhDevice'
+            var csl = cubeSetupList.Where(cs => cs.GetCubeId() == selectedPhDevice.GetCubeId());
+            this._cubeSetup = csl.FirstOrDefault();
+            
+            System.Diagnostics.Debug.Assert(this._cubeSetup != null);
 
-            SL508892Setup _thisDeviceSetup;
+            SL508892Setup thisDeviceSetup = selectedPhDevice.ThisDeviceSetup as SL508892Setup;
+            System.Diagnostics.Debug.Assert(null != thisDeviceSetup);
 
-            _thisDeviceSetup = selectedSlot.ThisDeviceSetup as SL508892Setup;
-            if (null == _thisDeviceSetup)
+            foreach (var channel in thisDeviceSetup.Channels)
             {
-                throw new ArgumentNullException();
+                ChannelList.Add($"Com{channel.ChannelIndex}");
             }
-            //mainConfig.GetSetupEntryForDevice(selectedSlot.ThisDeviceSetup.CubeId, selectedSlot.DeviceName);
-            if (_thisDeviceSetup.Channels.Count > 0)
-            {
-                foreach (var channel in _thisDeviceSetup.Channels)
-                {
-                    ChannelList.Add( $"Com{channel.ChannelIndex}");
-                }
 
-                SelectedPortIndex = 0;
-            }
-            //SerialMode = UeiDaq.SerialPortMode.RS485HalfDuplex;
+            SelectedPortIndex = 0;
 
         }
     }
