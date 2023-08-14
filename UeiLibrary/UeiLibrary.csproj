@@ -86,6 +86,7 @@
     <Compile Include="Adapters\DigitalReaderAdapter.cs" />
     <Compile Include="Adapters\DigitalWriterAdapter.cs" />
     <Compile Include="Adapters\SessionAdapter.cs" />
+    <Compile Include="UeiDeviceInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

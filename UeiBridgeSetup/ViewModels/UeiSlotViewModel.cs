@@ -6,36 +6,25 @@ namespace UeiBridgeSetup.ViewModels
     /// <summary>
     /// This model represents a uei-device which is laid in a specific cube-slot.
     /// </summary>
-    public class PhysicalDevice 
+    public class DeviceSetupViewModel
     {
-        //private IPAddress _cubeIPAddress;
-        //private DeviceSetup _deviceSetup;
-
         public int SlotNumber => ThisDeviceSetup.SlotNumber;
         public IPAddress EnclosingCubeAddress { get; private set; }
         public int GetCubeId() 
         {
-            return StaticMethods.GetCubeId(this.EnclosingCubeAddress); 
-            
+            return ThisDeviceSetup.GetCubeId();
         }
         public string DeviceName => ThisDeviceSetup.DeviceName;
-        public DeviceSetup ThisDeviceSetup { get; private set; }// => this._deviceSetup;
-        public PhysicalDevice(IPAddress cubeIp, DeviceSetup dev)
+        public DeviceSetup ThisDeviceSetup { get; private set; }
+
+        public DeviceSetupViewModel(IPAddress cubeIp, DeviceSetup devSetup)
         {
-            this.ThisDeviceSetup = dev;
+            this.ThisDeviceSetup = devSetup;
             this.EnclosingCubeAddress = cubeIp;
-
-            //CubeId = cubeIp.GetAddressBytes()[3];
+            this._deviceDesc = DeviceMap2.GetDeviceDesc( ThisDeviceSetup.DeviceName);
         }
-
-        public string DeviceDesc
-        {
-            get
-            {
-                return DeviceMap2.GetDeviceDesc( ThisDeviceSetup.DeviceName);
-            }
-            set { }
-        }
+        string _deviceDesc;
+        public string DeviceDesc => _deviceDesc;
 
     }
 }
