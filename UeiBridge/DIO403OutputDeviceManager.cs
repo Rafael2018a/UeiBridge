@@ -22,7 +22,7 @@ namespace UeiBridge
         private DigitalConverter _digitalConverter = new DigitalConverter();
         private IWriterAdapter<UInt16[]> _digitalWriter;
         private ViewItem<byte[]> _viewItem;
-        private ISession _ueiSession;
+        //private ISession _ueiSession;
         private DIO403Setup _thisDeviceSetup;
         private List<byte> _scanMask = new List<byte>();
         

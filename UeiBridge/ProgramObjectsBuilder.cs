@@ -425,7 +425,8 @@ namespace UeiBridge
                 //int chIndex = ueiPort.GetIndex();
                 //int portnum = s508.Channels.Where(i => i.ChannelIndex == chIndex).Select(i => i.LocalUdpPort).FirstOrDefault();
                 CANPort cport = ueiChannel as CANPort;
-                _logger.Debug($"CAN CH:{cport.GetIndex()}");
+                
+                _logger.Debug($"CAN CH:{cport.GetIndex()} - {cport.GetMode()} - {cport.GetSpeed()} - {cport.GetType()}");
                 
             }
 
@@ -433,8 +434,8 @@ namespace UeiBridge
 
             //SessionAdapter serAd = new SessionAdapter(serialSession);
             string instanceName = setup.GetInstanceName();// $"{realDevice.DeviceName}/Slot{realDevice.DeviceSlot}";
-            UdpWriter uWriter = new UdpWriter(setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMulticast);
-            CAN503InputDeviceManager id = new CAN503InputDeviceManager( setup, ssAdapter, uWriter);
+            //UdpWriter uWriter = new UdpWriter(setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMulticast);
+            //CAN503InputDeviceManager id = new CAN503InputDeviceManager( setup, ssAdapter, uWriter);
 
             CAN503OutputDeviceManager od = new CAN503OutputDeviceManager(setup, ssAdapter);
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMulticast);
@@ -451,7 +452,7 @@ namespace UeiBridge
             }
 
             var pd = new PerDeviceObjects(realDevice);
-            pd.InputDeviceManager = id;
+            //pd.InputDeviceManager = id;
             pd.OutputDeviceManager = od;
 
             _udpMessenger.SubscribeConsumer(od, realDevice.CubeId, realDevice.DeviceSlot);

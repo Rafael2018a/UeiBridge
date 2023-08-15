@@ -83,6 +83,7 @@
     <Compile Include="AO308OutputDeviceManager.cs" />
     <Compile Include="AO332OutputDeviceManager.cs" />
     <Compile Include="BlockSensorManager2.cs" />
+    <Compile Include="CAN503OutputDeviceManager.cs" />
     <Compile Include="Converters.cs" />
     <Compile Include="CubeSeeker.cs" />
     <Compile Include="DigitalWriterAdapter.cs" />

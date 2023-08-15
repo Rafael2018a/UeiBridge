@@ -62,6 +62,16 @@ namespace UeiBridge.Library
             return _digitalReaderAd;
         }
 
+        public CANWriterAdapter GetCANWriter(int ch)
+        {
+            return new CANWriterAdapter(new CANWriter(_ueiSession.GetDataStream(), _ueiSession.GetChannel(ch).GetIndex()));
+        }
+
+        public CANReaderAdapter GetCANReader(int ch)
+        {
+            return new CANReaderAdapter( new CANReader(_ueiSession.GetDataStream(), _ueiSession.GetChannel(ch).GetIndex()));
+        }
+
         public IWriterAdapter<UInt16[]> GetDigitalWriter()
         {
             if (null==_digitalWriterAd)

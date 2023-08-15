@@ -25,7 +25,7 @@ namespace UeiBridge
         private System.Threading.Timer _samplingTimer;
 
         const string _channelsString = "Ai0:23";
-        private ISession _ueiSession;
+        //private ISession _ueiSession;
         private ISend<SendObject> _targetConsumer;
 
         public AI201InputDeviceManager(AI201100Setup setup, ISession session,  ISend<SendObject> targetConsumer ) : base( setup)

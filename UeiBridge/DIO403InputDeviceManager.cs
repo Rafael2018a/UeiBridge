@@ -26,9 +26,9 @@ namespace UeiBridge
         public DIO403InputDeviceManager(DIO403Setup setup, ISession ueiSession, ISend<SendObject> targetConsumer): base (setup)
         {
             _thisDeviceSetup = setup;
-            UeiSession = ueiSession;
+            _ueiSession = ueiSession;
             TargetConsumer = targetConsumer;
-            _ueiDigitalReader = UeiSession.GetDigitalReader();
+            _ueiDigitalReader = _ueiSession.GetDigitalReader();
 
             //System.Diagnostics.Debug.Assert(null != setup);
             //System.Diagnostics.Debug.Assert(DeviceName.Equals(setup.DeviceName));
@@ -42,7 +42,7 @@ namespace UeiBridge
             byte[] ba = new byte[numOfCh];
             Array.Clear(ba, 0, ba.Length);
             _scanMask = new List<byte>(ba);
-            foreach (IChannel ch in UeiSession.GetChannels())
+            foreach (IChannel ch in _ueiSession.GetChannels())
             {
                 int i = ch.GetIndex();
                 _scanMask[i] = 0xff;
@@ -65,7 +65,7 @@ namespace UeiBridge
             catch (Exception ex)
             {
                 _logger.Error(ex.Message);
-                UeiSession = null;
+                _ueiSession = null;
                 return false;
             }
         }
@@ -92,7 +92,7 @@ namespace UeiBridge
             
                 // fix to full buffer
                 int i = 0;
-                foreach( IChannel ch in UeiSession.GetChannels())
+                foreach( IChannel ch in _ueiSession.GetChannels())
                 {
                     fullBuffer16bit[ch.GetIndex()] = singleScan[i++];
                 }

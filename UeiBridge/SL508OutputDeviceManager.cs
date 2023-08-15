@@ -11,49 +11,6 @@ using System.Timers;
 
 namespace UeiBridge
 {
-    class CAN503OutputDeviceManager: OutputDevice
-    {
-        private SessionAdapter _canSession;
-        log4net.ILog _logger = StaticMethods.GetLogger();
-        private CAN503Setup _thisSetup;
-
-        public CAN503OutputDeviceManager()
-        {
-        }
-
-        public CAN503OutputDeviceManager(DeviceSetup deviceSetup, SessionAdapter canSession) : base(deviceSetup)
-        {
-            this._canSession = canSession;
-            this._thisSetup = deviceSetup as CAN503Setup;
-        }
-
-        public override string DeviceName => DeviceMap2.CAN503Literal;
-
-        public override void Dispose()
-        {
-            base.TerminateMessageLoop();
-            _logger.Warn("Dispose not impl");
-        }
-
-        public override string[] GetFormattedStatus(TimeSpan interval)
-        {
-            return null;
-        }
-
-        public override bool OpenDevice()
-        {
-            _logger.Warn("CAN503 OpenDevice not implemented");
-            EmitInitMessage($"Init success {DeviceName}. Listening on {_thisSetup.LocalEndPoint.ToIpEp()}");
-            Task.Factory.StartNew(() => OutputDeviceHandler_Task());
-            _isDeviceReady = true;
-            return false;
-        }
-
-        protected override void HandleRequest(EthernetMessage request)
-        {
-            _logger.Warn("Unhandled req");
-        }
-    }
 
     class SL508OutputDeviceManager : OutputDevice
     {
@@ -68,7 +25,7 @@ namespace UeiBridge
         int _numberOfSentMessages = 0;
         List<SerialWriter> _serialWriterList = new List<SerialWriter>();
         Dictionary<SerialPortSpeed, int> _serialSpeedDic = new Dictionary<SerialPortSpeed, int>();
-        bool _inDisposeState = false;
+        
         private DeviceSetup _deviceSetup;
         public SL508OutputDeviceManager(DeviceSetup setup, Session serialSession) : base(setup)
         {

@@ -26,8 +26,10 @@ namespace UeiBridge
         public UeiDeviceInfo DeviceInfo { get; private set; }
         
         protected bool _isDeviceReady = false;
+        protected bool _inDisposeState = false;
         private BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
         private log4net.ILog _logger = StaticMethods.GetLogger();
+        protected ISession _ueiSession;
 
         protected OutputDevice() { }
         protected OutputDevice(DeviceSetup deviceSetup)
@@ -82,50 +84,58 @@ namespace UeiBridge
         /// </summary>
         protected void OutputDeviceHandler_Task()
         {
+            
             // message loop
             while (false == _dataItemsQueue2.IsCompleted)
             {
-                EthernetMessage incomingMessage = _dataItemsQueue2.Take(); // get from q
+                try
+                {
+                    EthernetMessage incomingMessage = _dataItemsQueue2.Take(); // get from q
 
-                if (null == incomingMessage) // end task token
-                {
-                    _dataItemsQueue2.CompleteAdding();
-                    break;
-                }
+                    if (null == incomingMessage) // end task token
+                    {
+                        _dataItemsQueue2.CompleteAdding();
+                        break;
+                    }
 
-                // verify internal consistency
-                if (false == incomingMessage.InternalValidityTest())
-                {
-                    _logger.Warn("Invalid message. rejected");
-                    continue;
-                }
-                // verify valid card type
-                int cardId = DeviceMap2.GetDeviceName(this.DeviceName);
-                if (cardId != incomingMessage.CardType)
-                {
-                    _logger.Warn($"{InstanceName} wrong card id {incomingMessage.CardType} while expecting {cardId}. message dropped.");
-                    continue;
-                }
-                // verify slot number
-                if (incomingMessage.SlotNumber != this.DeviceInfo.DeviceSlot)
-                {
-                    _logger.Warn($"{InstanceName} wrong slot number ({incomingMessage.SlotNumber}). incoming message dropped.");
-                    continue;
-                }
-                // alert if items lost
-                if (_dataItemsQueue2.Count == _dataItemsQueue2.BoundedCapacity)
-                {
-                    _logger.Warn($"Input queue items = {_dataItemsQueue2.Count}");
-                }
+                    // verify internal consistency
+                    if (false == incomingMessage.InternalValidityTest())
+                    {
+                        _logger.Warn("Invalid message. rejected");
+                        continue;
+                    }
+                    // verify valid card type
+                    int cardId = DeviceMap2.GetDeviceName(this.DeviceName);
+                    if (cardId != incomingMessage.CardType)
+                    {
+                        _logger.Warn($"{InstanceName} wrong card id {incomingMessage.CardType} while expecting {cardId}. message dropped.");
+                        continue;
+                    }
+                    // verify slot number
+                    if (incomingMessage.SlotNumber != this.DeviceInfo.DeviceSlot)
+                    {
+                        _logger.Warn($"{InstanceName} wrong slot number ({incomingMessage.SlotNumber}). incoming message dropped.");
+                        continue;
+                    }
+                    // alert if items lost
+                    if (_dataItemsQueue2.Count == _dataItemsQueue2.BoundedCapacity)
+                    {
+                        _logger.Warn($"Input queue items = {_dataItemsQueue2.Count}");
+                    }
 
-                // finally, Handle message
-                if (_isDeviceReady)
-                {
-                    HandleRequest(incomingMessage);
+                    // finally, Handle message
+                    if (_isDeviceReady)
+                    {
+                        HandleRequest(incomingMessage);
+                    }
+                    else
+                    {
+                        _logger.Warn($"Device {DeviceName} not ready. message rejected.");
+                    }
                 }
-                else
+                catch( Exception ex)
                 {
-                    _logger.Warn($"Device {DeviceName} not ready. message rejected.");
+                    _logger.Warn(ex.Message);
                 }
             }
         }

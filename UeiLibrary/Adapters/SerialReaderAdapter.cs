@@ -3,7 +3,7 @@ using UeiDaq;
 
 namespace UeiBridge.Library
 {
-    public class SerialReaderAdapter// : IReaderAdapter<byte[]>
+    public class SerialReaderAdapter : IReaderAdapter<byte[]>
     {
         private SerialReader sl;
 
