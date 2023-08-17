@@ -434,8 +434,8 @@ namespace UeiBridge
 
             //SessionAdapter serAd = new SessionAdapter(serialSession);
             string instanceName = setup.GetInstanceName();// $"{realDevice.DeviceName}/Slot{realDevice.DeviceSlot}";
-            //UdpWriter uWriter = new UdpWriter(setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMulticast);
-            //CAN503InputDeviceManager id = new CAN503InputDeviceManager( setup, ssAdapter, uWriter);
+            UdpWriter uWriter = new UdpWriter(setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMulticast);
+            CAN503InputDeviceManager id = new CAN503InputDeviceManager( thisSetup, ssAdapter, uWriter);
 
             CAN503OutputDeviceManager od = new CAN503OutputDeviceManager(setup, ssAdapter);
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMulticast);
@@ -452,7 +452,7 @@ namespace UeiBridge
             }
 
             var pd = new PerDeviceObjects(realDevice);
-            //pd.InputDeviceManager = id;
+            pd.InputDeviceManager = id;
             pd.OutputDeviceManager = od;
 
             _udpMessenger.SubscribeConsumer(od, realDevice.CubeId, realDevice.DeviceSlot);
@@ -602,7 +602,7 @@ namespace UeiBridge
                 IEnumerable<PerDeviceObjects> inputDevices = _PerDeviceObjectsList.Where(i => i.InputDeviceManager != null).Where(i => i.InputDeviceManager.DeviceName == DeviceMap2.DIO403Literal).Where(i => i.InputDeviceManager.DeviceInfo.DeviceSlot == bssetup.DigitalCardSlot);
                 DIO403InputDeviceManager dio403 = inputDevices.Select(i => i.InputDeviceManager).FirstOrDefault() as DIO403InputDeviceManager;
                 System.Diagnostics.Debug.Assert(dio403 != null);
-                dio403.TargetConsumer = blockSensor;
+                dio403.SetTargetConsumer(blockSensor);
 #endif
                 // define udp-reader for block sensor
                 var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMulticast);

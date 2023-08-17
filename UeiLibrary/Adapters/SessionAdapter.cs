@@ -27,14 +27,6 @@ namespace UeiBridge.Library
         }
         public void Dispose()
         {
-            try
-            {
-                _ueiSession.Stop();
-            }
-            catch (UeiDaq.UeiDaqException ex)
-            {
-                Console.WriteLine($"Session stop() failed. {ex.Message}");
-            }
             _ueiSession.Dispose();
         }
         public IReaderAdapter<double[]> GetAnalogScaledReader()
@@ -111,7 +103,17 @@ namespace UeiBridge.Library
 
         public void Stop()
         {
-            _ueiSession.Stop();
+            try
+            {
+                if (_ueiSession.IsRunning())
+                {
+                    _ueiSession.Stop();
+                }
+            }
+            catch (UeiDaq.UeiDaqException ex)
+            {
+                Console.WriteLine($"Session stop() failed. {ex.Message}");
+            }
         }
 
         public SerialReaderAdapter GetSerialReader(int ch)

@@ -76,6 +76,11 @@ namespace UeiBridge
             return null;
         }
 
+        public static EthernetMessage BuildEthernetMessageFromDevice(UeiDaq.CANFrame[] payload, CAN503Setup setup, int serialChannel)
+        {
+            return null;
+        }
+
         /// <summary>
         /// Create EthernetMessage from device result.
         /// Might return null.

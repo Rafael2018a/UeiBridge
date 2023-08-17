@@ -15,5 +15,8 @@ namespace UeiBridge.Library
         IDevice GetDevice();
         IReaderAdapter<double[]> GetAnalogScaledReader();
         IWriterAdapter<double[]> GetAnalogScaledWriter();
+        CANReaderAdapter GetCANReader(int ch);
+        bool IsRunning();
+        void Stop();
     }
 }

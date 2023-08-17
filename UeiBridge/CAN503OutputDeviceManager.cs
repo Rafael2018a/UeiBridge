@@ -33,7 +33,7 @@ namespace UeiBridge
             {
                 _canWriterList[ch].Dispose();
             }
-            _canSession.Dispose();
+            //_canSession.Dispose();
             
         }
 

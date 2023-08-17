@@ -5,18 +5,18 @@ namespace UeiBridge.Library
 {
     public class SerialReaderAdapter : IReaderAdapter<byte[]>
     {
-        private SerialReader sl;
+        private SerialReader _serialReader;
 
         public SerialReaderAdapter(SerialReader sl)
         {
-            this.sl = sl;
+            this._serialReader = sl;
         }
 
         public byte[] LastScan => throw new NotImplementedException();
 
         public void Dispose()
         {
-            throw new NotImplementedException();
+            _serialReader.Dispose();
         }
 
         public byte[] ReadSingleScan()
@@ -26,12 +26,12 @@ namespace UeiBridge.Library
 
         public IAsyncResult BeginRead(int minLen, AsyncCallback readerAsyncCallback, int ch1)
         {
-            return sl.BeginRead(minLen, readerAsyncCallback, ch1);
+            return _serialReader.BeginRead(minLen, readerAsyncCallback, ch1);
         }
 
         public byte[] EndRead(IAsyncResult ar)
         {
-            return sl.EndRead(ar);
+            return _serialReader.EndRead(ar);
         }
     }
 

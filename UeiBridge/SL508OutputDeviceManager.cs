@@ -102,18 +102,12 @@ namespace UeiBridge
         public override void Dispose()
         {
             _inDisposeState = true;
-            //base.CloseCurrentSession(); tbd. see what to do with Serial session
-            //return;
             for (int ch = 0; ch < _serialWriterList.Count; ch++)
             {
                 _serialWriterList[ch].Dispose();
             }
-            //if (_serialSession.IsRunning())
-            //{
-            //    _serialSession?.Stop();
-            //}
-            //_serialSession.Dispose();
-            //_logger.Debug("_serialSession?.Dispose();");
+            base.TerminateMessageLoop();
+            _logger.Debug($"{this.DeviceName}/Input, slot {_deviceSetup.SlotNumber}, Disposed");
         }
         public override string[] GetFormattedStatus(TimeSpan interval)
         {
