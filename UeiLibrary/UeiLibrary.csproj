@@ -69,7 +69,10 @@
   <ItemGroup>
     <Compile Include="Adapters\AnalogScaledReaderAdapter.cs" />
     <Compile Include="Adapters\AnalogScaledWriteAdapter.cs" />
+    <Compile Include="Adapters\CANReaderAdapter.cs" />
+    <Compile Include="Adapters\CANWriterAdapter.cs" />
     <Compile Include="Adapters\DeviceAdapter.cs" />
+    <Compile Include="Adapters\SerialReaderAdapter.cs" />
     <Compile Include="Config2.cs" />
     <Compile Include="EthernetMessage.cs" />
     <Compile Include="Interfaces\IChannel.cs" />
@@ -86,6 +89,7 @@
     <Compile Include="Adapters\DigitalReaderAdapter.cs" />
     <Compile Include="Adapters\DigitalWriterAdapter.cs" />
     <Compile Include="Adapters\SessionAdapter.cs" />
+    <Compile Include="UeiDeviceInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -140,7 +140,7 @@ namespace UeiBridge.Library
             }
         }
 
-        internal static int CubeUrlToCubeId(string cubeUrl)
+        public static int GetCubeId(string cubeUrl)
         {
             int result = -1;
             if (null != cubeUrl)
@@ -160,7 +160,17 @@ namespace UeiBridge.Library
             }
             return result;
         }
-
+        public static int GetCubeId(IPAddress cubeIp)
+        {
+            if (null == cubeIp)
+            {
+                return -1;
+            }
+            else
+            {
+                return cubeIp.GetAddressBytes()[3];
+            }    
+        }
 
         public static System.Net.IPAddress CubeUrlToIpAddress(string url)
         {

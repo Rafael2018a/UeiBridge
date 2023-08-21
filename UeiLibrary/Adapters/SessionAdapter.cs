@@ -27,14 +27,6 @@ namespace UeiBridge.Library
         }
         public void Dispose()
         {
-            try
-            {
-                _ueiSession.Stop();
-            }
-            catch (UeiDaq.UeiDaqException ex)
-            {
-                Console.WriteLine($"Session stop() failed. {ex.Message}");
-            }
             _ueiSession.Dispose();
         }
         public IReaderAdapter<double[]> GetAnalogScaledReader()
@@ -60,6 +52,16 @@ namespace UeiBridge.Library
                 _digitalReaderAd = new DigitalReaderAdapter( new DigitalReader(_ueiSession.GetDataStream()));
             }
             return _digitalReaderAd;
+        }
+
+        public CANWriterAdapter GetCANWriter(int ch)
+        {
+            return new CANWriterAdapter(new CANWriter(_ueiSession.GetDataStream(), _ueiSession.GetChannel(ch).GetIndex()));
+        }
+
+        public CANReaderAdapter GetCANReader(int ch)
+        {
+            return new CANReaderAdapter( new CANReader(_ueiSession.GetDataStream(), _ueiSession.GetChannel(ch).GetIndex()));
         }
 
         public IWriterAdapter<UInt16[]> GetDigitalWriter()
@@ -89,6 +91,36 @@ namespace UeiBridge.Library
             return new ChannelAdapter(_ueiSession.GetChannel( serialChannelNumber));
         }
 
+        public bool IsRunning()
+        {
+            return _ueiSession.IsRunning();
+        }
+
+        public DataStream GetDataStream()
+        {
+            return _ueiSession.GetDataStream();
+        }
+
+        public void Stop()
+        {
+            try
+            {
+                if (_ueiSession.IsRunning())
+                {
+                    _ueiSession.Stop();
+                }
+            }
+            catch (UeiDaq.UeiDaqException ex)
+            {
+                Console.WriteLine($"Session stop() failed. {ex.Message}");
+            }
+        }
+
+        public SerialReaderAdapter GetSerialReader(int ch)
+        {
+           var sr = new SerialReader(_ueiSession.GetDataStream(), _ueiSession.GetChannel(ch).GetIndex());
+           return new SerialReaderAdapter(sr);
+        }
     }
 
 

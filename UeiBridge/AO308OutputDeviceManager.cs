@@ -28,10 +28,10 @@ namespace UeiBridge
         //protected List<ViewItem<double>> _viewerItemList = new List<ViewItem<double>>(); // old
         protected ViewItem<List<double>> _viewerItemList2;
         protected object _viewerItemListLockObject = new object();
-        protected bool _inDisposeState = false;
+        
         protected AnalogConverter _attachedConverter;
 
-        protected ISession _ueiSession;
+        
         private AO308Setup _deviceSetup;
 
         public AO308OutputDeviceManager(AO308Setup deviceSetup1, ISession session, bool isBlockSensorActive) : base(deviceSetup1)
@@ -162,7 +162,7 @@ namespace UeiBridge
             //base.HaltMessageLoop();
             _analogWriter.Dispose();
             _ueiSession.Dispose();
-            base.Dispose();
+            base.TerminateMessageLoop();
         }
     }
 }

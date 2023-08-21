@@ -11,20 +11,21 @@ using System.Timers;
 
 namespace UeiBridge
 {
+
     class SL508OutputDeviceManager : OutputDevice
     {
         // publics
-        public override string DeviceName => "SL-508-892";
+        public override string DeviceName => DeviceMap2.SL508Literal;
         // privates
         log4net.ILog _logger = StaticMethods.GetLogger();
         //IConvert _attachedConverter;
         List<ViewItem<byte[]>> _ViewItemList = new List<ViewItem<byte[]>>(); 
-        Session _serialSession;
+        SessionAdapter _serialSession;
         int _sentBytesAcc = 0;
         int _numberOfSentMessages = 0;
         List<SerialWriter> _serialWriterList = new List<SerialWriter>();
         Dictionary<SerialPortSpeed, int> _serialSpeedDic = new Dictionary<SerialPortSpeed, int>();
-        bool _inDisposeState = false;
+        
         private DeviceSetup _deviceSetup;
         public SL508OutputDeviceManager(DeviceSetup setup, Session serialSession) : base(setup)
         {
@@ -34,7 +35,7 @@ namespace UeiBridge
                 return;
             }
             System.Diagnostics.Debug.Assert(null != serialSession);
-            _serialSession = serialSession;
+            _serialSession = new SessionAdapter( serialSession);
             //_attachedConverter = StaticMethods.CreateConverterInstance(setup);
             System.Diagnostics.Debug.Assert(null != serialSession);
             this._deviceSetup = setup;
@@ -63,7 +64,7 @@ namespace UeiBridge
             Task.Factory.StartNew(() => OutputDeviceHandler_Task());
 
             bool firstIteration = true;
-            foreach (SerialPort port in _serialSession.GetChannels())
+            foreach (IChannel port in _serialSession.GetChannels())
             {
                 if (firstIteration)
                 {
@@ -101,18 +102,12 @@ namespace UeiBridge
         public override void Dispose()
         {
             _inDisposeState = true;
-            //base.CloseCurrentSession(); tbd. see what to do with Serial session
-            //return;
             for (int ch = 0; ch < _serialWriterList.Count; ch++)
             {
                 _serialWriterList[ch].Dispose();
             }
-            //if (_serialSession.IsRunning())
-            //{
-            //    _serialSession?.Stop();
-            //}
-            //_serialSession.Dispose();
-            //_logger.Debug("_serialSession?.Dispose();");
+            base.TerminateMessageLoop();
+            _logger.Debug($"{this.DeviceName}/Input, slot {_deviceSetup.SlotNumber}, Disposed");
         }
         public override string[] GetFormattedStatus(TimeSpan interval)
         {
@@ -175,7 +170,7 @@ namespace UeiBridge
 
                 // wait
                 {
-                    SerialPort sPort = (SerialPort)_serialSession.GetChannel(request.SerialChannelNumber);
+                    IChannel sPort = _serialSession.GetChannel(request.SerialChannelNumber);
                     SerialPortSpeed x = sPort.GetSpeed();
                     int bpsPossibe = (int)(_serialSpeedDic[x] * 0.8);
                     int bpsActual = request.PayloadBytes.Length * 8;

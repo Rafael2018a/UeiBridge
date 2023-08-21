@@ -9,7 +9,6 @@ using System.Linq;
 
 namespace UeiBridge
 {
-
     /// <summary>
     /// "SL-508-892" manager.
     /// R&R: Reads from serial device and sends the result to 'targetConsumer'
@@ -17,27 +16,27 @@ namespace UeiBridge
     /// </summary>
     class SL508InputDeviceManager : InputDevice
     {
-        public override string DeviceName => "SL-508-892";
+        public override string DeviceName => DeviceMap2.SL508Literal; //"SL-508-892";
 
         private log4net.ILog _logger = StaticMethods.GetLogger();
-        private readonly List<SerialReader> _serialReaderList = new List<SerialReader>();
+        private readonly List<SerialReaderAdapter> _serialReaderList = new List<SerialReaderAdapter>();
         private bool _InDisposeState = false;
         private List<ViewItem<byte[]>> _lastScanList = new List<ViewItem<byte[]>>();
-        private readonly SL508892Setup _thisDeviceSetup;
-        private ISend<SendObject> _targetConsumer;
-        private Session _serialSession;
+        private readonly SL508892Setup _thisSetup;
+        //private ISend<SendObject> _targetConsumer;
+        private SessionAdapter _serialSession;
         private List<IAsyncResult> _readerIAsyncResultList;
         private const int minLen = 200;
         
 
-        public SL508InputDeviceManager(ISend<SendObject> targetConsumer, DeviceSetup setup, Session serialSession) : base( setup)
+        public SL508InputDeviceManager(ISend<SendObject> targetConsumer, DeviceSetup setup, SessionAdapter serialSession) : base( setup)
         {
             _targetConsumer = targetConsumer;
-            _thisDeviceSetup = setup as SL508892Setup;
+            _thisSetup = setup as SL508892Setup;
             _serialSession = serialSession;
 
             System.Diagnostics.Debug.Assert(null != _targetConsumer);
-            System.Diagnostics.Debug.Assert(null != _thisDeviceSetup);
+            System.Diagnostics.Debug.Assert(null != _thisSetup);
             System.Diagnostics.Debug.Assert(null != serialSession);
             System.Diagnostics.Debug.Assert(this.DeviceName.Equals(setup.DeviceName));
         }
@@ -88,17 +87,14 @@ namespace UeiBridge
             int channel = (int)ar.AsyncState;
             try
             {
-                byte[] receiveBuffer = _serialReaderList[channel].EndRead(ar);
+                SerialReaderAdapter sra = _serialReaderList[channel];
+                byte[] receiveBuffer = sra.EndRead(ar); 
                 // this api might throw UeiDaqException exception with message "The device is not responding, check the connection and the device's status"
                 // in this case, the session must be closed/disposed and open again.
 
-                // ex.Message = "An error occurred while accessing the device"
-
                 _lastScanList[channel] = new ViewItem<byte[]>(receiveBuffer, TimeSpan.FromSeconds(5));
-                byte [] payload = receiveBuffer;
-                EthernetMessage em = StaticMethods.BuildEthernetMessageFromDevice(payload, this._thisDeviceSetup, channel);
-                // forward to consumer (send by udp)
-                _targetConsumer.Send(new SendObject( _thisDeviceSetup.DestEndPoint.ToIpEp(), em.GetByteArray( MessageWay.upstream)));
+                EthernetMessage em = StaticMethods.BuildEthernetMessageFromDevice(receiveBuffer, this._thisSetup, channel);
+                _targetConsumer.Send(new SendObject( _thisSetup.DestEndPoint.ToIpEp(), em.GetByteArray( MessageWay.upstream)));
 
                 // restart reader
                 if (_InDisposeState == false)
@@ -111,8 +107,6 @@ namespace UeiBridge
             {
                 if (Error.Timeout == ex.Error)
                 {
-                    // Ignore timeout error, they will occur if the send button is not
-                    // clicked on fast enough!
                     if (_InDisposeState == false)
                     {
                         System.Diagnostics.Debug.Assert(true == _serialSession.IsRunning());
@@ -127,8 +121,6 @@ namespace UeiBridge
                 else
                 {
                     _logger.Warn($"ReaderCallback:  {InstanceName}. {ex.Message}.");
-
-                    // tbd. Dispose session here?
                 }
             }
             catch(Exception ex)
@@ -139,13 +131,13 @@ namespace UeiBridge
         public override bool OpenDevice()
         {
             _lastScanList = new List<ViewItem<byte[]>>(new ViewItem<byte[]>[_serialSession.GetNumberOfChannels()]);
-            _readerIAsyncResultList = new List<IAsyncResult>(new IAsyncResult[_thisDeviceSetup.Channels.Count]);
+            _readerIAsyncResultList = new List<IAsyncResult>(new IAsyncResult[_thisSetup.Channels.Count]);
 
+            // build reader list 
             for (int ch = 0; ch < _serialSession.GetNumberOfChannels(); ch++)
             {
-                var sr = new SerialReader(_serialSession.GetDataStream(), _serialSession.GetChannel(ch).GetIndex());
-                //SerialReaderAdapter sra = _serialSession.GetSerialReader(ch);
-                _serialReaderList.Add(sr);
+                var sr = _serialSession.GetSerialReader(ch);
+                _serialReaderList.Add( sr);
             }
             System.Threading.Thread.Sleep(10);
 
@@ -158,28 +150,24 @@ namespace UeiBridge
                 ch1++;
             }
 
-            EmitInitMessage( $"Init success {DeviceName}. {_serialSession.GetNumberOfChannels()} channels. Dest:{ _thisDeviceSetup.DestEndPoint.ToIpEp()}");
+            EmitInitMessage( $"Init success {DeviceName}. {_serialSession.GetNumberOfChannels()} channels. Dest:{ _thisSetup.DestEndPoint.ToIpEp()}");
 
             return true;
         }
         public override void Dispose()
         {
             _InDisposeState = true;
-
+            _serialSession.Stop();
             var waitall = _readerIAsyncResultList.Select(i => i.AsyncWaitHandle).ToArray();
             WaitHandle.WaitAll(waitall);
-            _targetConsumer.Dispose();
-            //_logger.Debug($"Disposing {this.DeviceName}/Input, slot {_thisDeviceSetup.SlotNumber}");
-            //if (_serialSession.IsRunning())
-            try
+            for (int ch = 0; ch < _serialReaderList.Count; ch++)
             {
-                _serialSession.Stop();
-            }
-            catch (UeiDaq.UeiDaqException ex)
-            {
-                _logger.Debug($"Session stop() failed. {ex.Message}");
+                _serialReaderList[ch].Dispose();
             }
             _serialSession.Dispose();
+            _targetConsumer.Dispose();
+
+            _logger.Debug($"{this.DeviceName}/Input, slot {_thisSetup.SlotNumber}, Disposed");
         }
     }
 }

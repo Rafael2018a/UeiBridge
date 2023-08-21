@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using System.IO;
 using System.Net;
+using UeiDaq;
 
 /// <summary>
 /// All classes in this file MUST NOT depend on any other module in the project
@@ -76,7 +77,22 @@ namespace UeiBridge.Library
         {
         }
     }
+    public class CANChannelSetup
+    {
+        public CANChannelSetup()
+        {
+        }
 
+        public CANChannelSetup(int channelIndex)
+        {
+            this.ChannelIndex = channelIndex;
+        }
+
+        public int ChannelIndex { set; get; }
+        public CANPortSpeed Speed { get; set; } = CANPortSpeed.BitsPerSecond100K;
+        public CANFrameFormat FrameFormat { get; set; } = CANFrameFormat.Extended;
+        public CANPortMode PortMode { get; set; } = CANPortMode.Normal;
+    }
     public class AppSetup
     {
         public string SelectedNicForMulticast { get; private set; } = "221.109.251.103";
@@ -103,7 +119,7 @@ namespace UeiBridge.Library
         //[XmlIgnore]
         public int GetCubeId() // lsb of cube address
         {
-            return StaticMethods.CubeUrlToCubeId(CubeUrl);
+            return StaticMethods.GetCubeId(CubeUrl);
         }
         public DeviceSetup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device)
         {
@@ -280,6 +296,28 @@ namespace UeiBridge.Library
         }
     }
 
+    public class CAN503Setup : DeviceSetup
+    {
+        public List<CANChannelSetup> Channels;
+        const int _numberOfChannels = 4;
+
+        public CAN503Setup()
+        {
+        }
+
+        public CAN503Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base(localEndPoint, destEndPoint, device)
+        {
+            Channels = new List<CANChannelSetup>();
+
+            for (int chIndex = 0; chIndex < _numberOfChannels; chIndex++)
+            {
+                Channels.Add(new CANChannelSetup(chIndex));
+            }
+
+        }
+
+    }
+
     public class ConfigFactory
     {
         int _portNumber = 50035;
@@ -326,9 +364,9 @@ namespace UeiBridge.Library
                 case DeviceMap2.SimuAO16Literal:
                     result = new SimuAO16Setup(new EndPoint(LocalIP, _portNumber++), ueiDevice);
                     break;
-                //case DeviceMap2.AO322Literal:
-                //    result = new AO332Setup(new EndPoint(LocalIP, _portNumber++), ueiDevice);
-                //    break;
+                case DeviceMap2.CAN503Literal:
+                    result = new CAN503Setup(new EndPoint(LocalIP, _portNumber++), new EndPoint(RemoteIp, _portNumber++), ueiDevice);
+                    break;
                 default:
                     Console.WriteLine($"Config: Device {ueiDevice.DeviceName} not supported.");
                     result = new DeviceSetup(null, null, ueiDevice);
@@ -347,10 +385,11 @@ namespace UeiBridge.Library
     //[XmlInclude(typeof(AO332Setup))]
     [XmlInclude(typeof(BlockSensorSetup))]
     [XmlInclude(typeof(SimuAO16Setup))]
+    [XmlInclude(typeof(CAN503Setup))]
     public class CubeSetup : IEquatable<CubeSetup>
     {
         public string CubeUrl { get; set; } // must be public for the  serializer
-        public List<DeviceSetup> DeviceSetupList { get; set; } // dont make private set
+        public List<DeviceSetup> DeviceSetupList { get; set; } // don't make private set
         public string OriginFileFullName { get; set; }
 
         public CubeSetup()
@@ -394,7 +433,6 @@ namespace UeiBridge.Library
             }
         }
 
-
         public bool Equals(CubeSetup other)
         {
             bool f1 = this.CubeUrl.Equals(other.CubeUrl);
@@ -402,6 +440,10 @@ namespace UeiBridge.Library
             return f1 && f2;
         }
 
+        public int GetCubeId()
+        {
+            return StaticMethods.GetCubeId( this.CubeUrl);
+        }
         /// <summary>
         /// Build DeviceSetupList
         /// </summary>
@@ -460,7 +502,7 @@ namespace UeiBridge.Library
 
         public void Serialize()
         {
-            string filename = GetSelfFilename( StaticMethods.CubeUrlToCubeId(this.CubeUrl));
+            string filename = GetSelfFilename( StaticMethods.GetCubeId(this.CubeUrl));
             using (FileStream fs = new FileStream(filename, FileMode.Create, FileAccess.Write))
             {
                 var serializer = new XmlSerializer(this.GetType());
@@ -468,6 +510,31 @@ namespace UeiBridge.Library
                 Console.WriteLine($"Config: File {filename} created");
             }
         }
+        public T GetDeviceSetupEntry<T>(UeiDeviceInfo devInfo) where T : DeviceSetup
+        {
+            return GetDeviceSetupEntry( devInfo.DeviceSlot) as T;
+        }
+        public DeviceSetup GetDeviceSetupEntry( int slotNumber)
+        {
+            //if (this.CubeSetupList == null)
+            //{
+            //    return null;
+            //}
+            //var cube = this.CubeSetupList.Where(e => e.CubeUrl == cubeUrl);
+            var selectedCube = this;
+            if (null == selectedCube)
+            {
+                return null;
+            }
+            var theSetups = selectedCube.DeviceSetupList.Where(d => d.SlotNumber == slotNumber);
+            DeviceSetup devSetup = theSetups.FirstOrDefault();
+            if (null != devSetup)
+            {
+                devSetup.CubeUrl = this.CubeUrl;
+            }
+            return devSetup;
+        }
+
     }
 
     public class Config2 : IEquatable<Config2>
@@ -476,7 +543,7 @@ namespace UeiBridge.Library
         public AppSetup AppSetup;
         public List<CubeSetup> CubeSetupList = new List<CubeSetup>();
 
-        public static string DefaultSettingsFilename => "UeiSettings2.config";
+        public static string DefaultSettingsFilename => "Cube2.config"; // to be removed
         public static string SettingsFilename { get; private set; } = DefaultSettingsFilename;
 
         public Config2(List<string> cubeUrlList)
@@ -496,7 +563,7 @@ namespace UeiBridge.Library
         /// </summary>
         /// <returns></returns>
         [Obsolete]
-        public static Config2 LoadConfigFromFile(FileInfo configFile)
+        public static Config2 LoadConfigFromFile_notInUse(FileInfo configFile)
         {
             var serializer = new XmlSerializer(typeof(Config2));
             Config2 resultConfig = null;
@@ -629,7 +696,7 @@ namespace UeiBridge.Library
         {
             foreach (CubeSetup cstp in this.CubeSetupList)
             {
-                int cubeid = StaticMethods.CubeUrlToCubeId(cstp.CubeUrl);
+                int cubeid = StaticMethods.GetCubeId(cstp.CubeUrl);
                 FileInfo newfile = new FileInfo($"{basefilename}.cube{cubeid}.config");
                 var serializer = new XmlSerializer(typeof(CubeSetup));
                 using (var writer = newfile.OpenWrite()) // new StreamWriter(filename))

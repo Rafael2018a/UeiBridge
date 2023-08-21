@@ -12,12 +12,12 @@ namespace UeiBridgeSetup.ViewModels
     {
         #region === privates ===
         private CubeSetupViewModel _selectedCube;
-        private ObservableCollection<SlotDeviceModel> _slotList = new ObservableCollection<SlotDeviceModel>();
-        private SlotDeviceModel _selectedSlot;
+        private ObservableCollection<DeviceSetupViewModel> _deviceSetupVMList = new ObservableCollection<DeviceSetupViewModel>();
+        private DeviceSetupViewModel _deviceSetupViewModel;
         private ViewModelBase _selectedViewModel;
         private EndPointViewModel _destinationEndPointViewModel;
         private EndPointViewModel _localEndPointViewModel;
-        private Config2 _mainConfig;
+        private List<CubeSetup> _cubeSetupList;
         #endregion
         #region === publics ===
         public EndPointViewModel LocalEndPointViewModel
@@ -38,63 +38,38 @@ namespace UeiBridgeSetup.ViewModels
                 RaisePropertyChanged();
             }
         }// = new EndPointViewModel(EndPointLocation.Local);
-        public List<CubeSetupViewModel> CubeList { get; set; } = new List<CubeSetupViewModel>();
-        public ObservableCollection<SlotDeviceModel> SlotList
+        public ObservableCollection<CubeSetupViewModel> CubeSetupVMList { get; set; } = new ObservableCollection<CubeSetupViewModel>();
+        public ObservableCollection<DeviceSetupViewModel> DeviceSetupVMList
         {
-            get => _slotList;
+            get => _deviceSetupVMList;
             set
             {
-                _slotList = value;
+                _deviceSetupVMList = value;
                 RaisePropertyChanged();
             }
         }
-        public SlotDeviceModel SelectedSlot
+        public DeviceSetupViewModel SelectedDeviceSetupVM
         {
-            get => _selectedSlot;
+            get => _deviceSetupViewModel;
             set
             {
-                _selectedSlot = value;
+                _deviceSetupViewModel = value;
                 RaisePropertyChanged();
-                if (_selectedSlot != null)
+                if (_deviceSetupViewModel != null)
                 {
-                    LocalEndPointViewModel = new EndPointViewModel(EndPointLocation.Local, _selectedSlot.ThisDeviceSetup.LocalEndPoint);
-                    DestinationEndPointViewModel = new EndPointViewModel(EndPointLocation.Dest, _selectedSlot.ThisDeviceSetup.DestEndPoint);
-                    SelectedViewModel = GetViewModelBySlot2(_selectedSlot);
+                    LocalEndPointViewModel = new EndPointViewModel(EndPointLocation.Local, _deviceSetupViewModel.ThisDeviceSetup.LocalEndPoint);
+                    DestinationEndPointViewModel = new EndPointViewModel(EndPointLocation.Dest, _deviceSetupViewModel.ThisDeviceSetup.DestEndPoint);
+                    SelectedDeviceViewModel = GetDeviceViewModel(_deviceSetupViewModel);
                 }
             }
         }
 
-        //private ViewModelBase GetViewModelBySlot(SlotDeviceModel selectedSlot)
-        //{
-        //    string devicename = _selectedSlot.DeviceName.ToLower();
-        //    if (devicename.StartsWith("sl-508"))
-        //    {
-        //        return new SL508ViewModel();
-        //    }
-        //    if (devicename == DeviceMap2.AO308Literal.ToLower())
-        //    {
-        //        return new AO308ViewModel();
-        //    }
-        //    if (devicename.StartsWith("dio-403"))
-        //    {
-        //        return new DIO403ViewModel();
-        //    }
-        //    if (devicename.StartsWith("ai-201"))
-        //    {
-        //        return new AI201ViewModel();
-        //    }
-        //    if (devicename.StartsWith("dio-470"))
-        //    {
-        //        return new DIO470ViewModel();
-        //    }
-        //    return null;
-        //}
-        private ViewModelBase GetViewModelBySlot2(SlotDeviceModel selectedSlot)
+        private ViewModelBase GetDeviceViewModel(DeviceSetupViewModel selectedDevice)
         {
-            switch (_selectedSlot.DeviceName)
+            switch (_deviceSetupViewModel.DeviceName)
             {
                 case DeviceMap2.SL508Literal:
-                    return new SL508ViewModel(_mainConfig, selectedSlot);
+                    return new SL508ViewModel( selectedDevice);
                 case DeviceMap2.AO308Literal:
                     return new AO308ViewModel();
                 case DeviceMap2.DIO403Literal:
@@ -108,7 +83,7 @@ namespace UeiBridgeSetup.ViewModels
             }
         }
 
-        public ViewModelBase SelectedViewModel
+        public ViewModelBase SelectedDeviceViewModel
         {
             get => _selectedViewModel;
             set
@@ -122,13 +97,17 @@ namespace UeiBridgeSetup.ViewModels
         public DelegateCommand AddCubeCommand { get; }
         #endregion
 
-        public SystemSetupViewModel(Config2 mainConfig)
+        public SystemSetupViewModel(List<CubeSetup> cubeSetupList)
         {
-            _mainConfig = mainConfig;
-            LoadCubeList( mainConfig);
-            if (CubeList.Count > 0)
+            _cubeSetupList = cubeSetupList;
+           
+            foreach (CubeSetup cs in _cubeSetupList)
             {
-                SelectedCube = CubeList[0];
+                CubeSetupVMList.Add(new CubeSetupViewModel( cs, false));
+            }
+            if (CubeSetupVMList.Count > 0)
+            {
+                SelectedCube = CubeSetupVMList[0];
             }
             //SelectedViewModel = new SL508ViewModel();
 
@@ -145,31 +124,14 @@ namespace UeiBridgeSetup.ViewModels
         private void AddCubeCmd(object obj)
         {
             //throw new NotImplementedException();
-            Views.AddCubeDialog d1 = new Views.AddCubeDialog();
-            if (true == d1.ShowDialog())
+            //Views.AddCubeDialog d1 = new Views.AddCubeDialog();
+            //if (true == d1.ShowDialog())
             {
-
-            }
-        }
-
-        void AddCube(IPAddress cubeIp)
-        {
-            throw new NotImplementedException();
-
-            //string uri = $"pdna://{cubeIp.ToString()}";
-            //var cs = new CubeSetup(new List<UeiDeviceAdapter>(), uri);
-            //_mainConfig.UeiCubes.Add(cs);
-
-            //CubeList.Add(new CubeSetupViewModel(cs, false));
-        }
-
-        private void LoadCubeList(Config2 mainConfig)
-        {
-            foreach (CubeSetup cubesetup in mainConfig.CubeSetupList)
-            {
-                //if (!cubesetup.CubeUrl.ToLower().StartsWith("simu"))
+                CubeSetup cs = Config2.LoadCubeSetupFromFile("Cube3.config");
+                if (null != cs)
                 {
-                    CubeList.Add(new CubeSetupViewModel(cubesetup, true));
+                    _cubeSetupList.Add(cs);
+                    CubeSetupVMList.Add(new CubeSetupViewModel(cs, false));
                 }
             }
         }
@@ -183,18 +145,17 @@ namespace UeiBridgeSetup.ViewModels
                 RaisePropertyChanged();
             }
         }
-
         private void LoadDeviceList(CubeSetupViewModel selectedCube)
         {
-            _slotList.Clear();
-            foreach (var dev in selectedCube.CubeSetup.DeviceSetupList)
+            _deviceSetupVMList.Clear();
+            foreach (DeviceSetup devSetup in selectedCube.CubeSetup.DeviceSetupList)
             {
-                _slotList.Add(new SlotDeviceModel(selectedCube.CubeAddress, dev));
+                _deviceSetupVMList.Add(new DeviceSetupViewModel(selectedCube.CubeAddress, devSetup));
             }
 
             if (selectedCube.CubeSetup.DeviceSetupList.Count > 0)
             {
-                SelectedSlot = _slotList[0];
+                SelectedDeviceSetupVM = _deviceSetupVMList[0];
             }
         }
     }

@@ -1,0 +1,44 @@
+
+
+From: Dao, Brian <BDao@ueidaq.com>
+Sent: Wednesday, July 19, 2023 4:50 PM
+To: Rafael Ne'eman <rafi.neeman@gmail.com>
+Cc: Erez Ram <erez.ram@reciotec.com>; Rafi Neeman <rn74600@iai.co.il>; Reuven Shaulov <rshaulov@iai.co.il>; Gil Ben-Ami <gbenami@iai.co.il>
+Subject: RE: UeiDaqException
+
+ 
+
+Hi Rafi,
+
+
+That’s strange.  It could be that you is disposing of the session while an asynchronous call is being executed.
+
+In the callback, you should verify that the session is still valid and running
+
+
+            if (SrlSession!=null && SrlSession.IsRunning())
+
+            {
+               readerIAsyncResult = SrlReader.BeginRead(200, readerAsyncCallback, null);
+            }
+
+And when stopping, you should wait for the last callback to complete before disposing
+
+               SrlSession.Stop();
+
+               // wait for current async call to complete
+
+               // before destroying the session
+
+               readerIAsyncResult.AsyncWaitHandle.WaitOne();
+
+               SrlSession.Displose();
+
+
+Please give this a try and let me know.
+
+ 
+
+Thanks 
+
+Brian Dao

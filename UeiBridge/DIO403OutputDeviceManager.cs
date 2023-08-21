@@ -22,8 +22,8 @@ namespace UeiBridge
         private DigitalConverter _digitalConverter = new DigitalConverter();
         private IWriterAdapter<UInt16[]> _digitalWriter;
         private ViewItem<byte[]> _viewItem;
-        private ISession _ueiSession;
-        private DIO403Setup _thisDeviceSetup;
+        //private ISession _ueiSession;
+        private DIO403Setup _thisSetup;
         private List<byte> _scanMask = new List<byte>();
         
         //private const int _maxNumberOfChannels = 6; // fixed. by device spec.
@@ -32,7 +32,7 @@ namespace UeiBridge
         {
             this._digitalWriter = session.GetDigitalWriter();
             this._ueiSession = session;
-            this._thisDeviceSetup = setup;// as DIO403Setup;
+            this._thisSetup = setup;// as DIO403Setup;
         }
         public DIO403OutputDeviceManager() { }// must have default c-tor
 
@@ -42,13 +42,13 @@ namespace UeiBridge
 
             _ueiSession.Dispose();
 
-            base.Dispose();
+            base.TerminateMessageLoop();
 
         }
 
         public override bool OpenDevice()
         {
-            int numOfCh = _thisDeviceSetup.IOChannelList.Count;
+            int numOfCh = _thisSetup.IOChannelList.Count;
             // build scan-mask
             byte[] ba = new byte[numOfCh];
             Array.Clear(ba, 0, ba.Length);
@@ -64,7 +64,7 @@ namespace UeiBridge
 
             //string res = _ueiSession.GetChannel(0).GetResourceName();
             //string localpath = (new Uri(res)).LocalPath;
-            EmitInitMessage($"Init success: {DeviceName}. Listening on {_thisDeviceSetup.LocalEndPoint.ToIpEp()}"); 
+            EmitInitMessage($"Init success: {DeviceName}. Listening on {_thisSetup.LocalEndPoint.ToIpEp()}"); 
 
             Task.Factory.StartNew(() => OutputDeviceHandler_Task());
             _isDeviceReady = true;
@@ -99,9 +99,9 @@ namespace UeiBridge
 
         protected override void HandleRequest(EthernetMessage request)
         {
-            if (request.PayloadBytes.Length < (_thisDeviceSetup.IOChannelList.Count))
+            if (request.PayloadBytes.Length < (_thisSetup.IOChannelList.Count))
             {
-                _logger.Warn($"Incoming message too short. {request.PayloadBytes.Length} while expecting {_thisDeviceSetup.IOChannelList.Count}. rejected");
+                _logger.Warn($"Incoming message too short. {request.PayloadBytes.Length} while expecting {_thisSetup.IOChannelList.Count}. rejected");
                 return;
             }
             _viewItem = new ViewItem<byte[]>(request.PayloadBytes, TimeSpan.FromSeconds(5));

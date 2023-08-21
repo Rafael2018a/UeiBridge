@@ -17,7 +17,7 @@ namespace UeiBridge
 
         private log4net.ILog _logger = StaticMethods.GetLogger();
         private DigitalConverter _digitalConverter = new DigitalConverter();
-        private DIO403Setup _thisDeviceSetup;
+        private DIO403Setup _thisSetup;
         private System.Threading.Timer _samplingTimer;
         private byte[] _fullBuffer8bit;
         private List<byte> _scanMask = new List<byte>();
@@ -25,10 +25,10 @@ namespace UeiBridge
 
         public DIO403InputDeviceManager(DIO403Setup setup, ISession ueiSession, ISend<SendObject> targetConsumer): base (setup)
         {
-            _thisDeviceSetup = setup;
-            UeiSession = ueiSession;
-            TargetConsumer = targetConsumer;
-            _ueiDigitalReader = UeiSession.GetDigitalReader();
+            _thisSetup = setup;
+            _ueiSession = ueiSession;
+            _targetConsumer = targetConsumer;
+            _ueiDigitalReader = _ueiSession.GetDigitalReader();
 
             //System.Diagnostics.Debug.Assert(null != setup);
             //System.Diagnostics.Debug.Assert(DeviceName.Equals(setup.DeviceName));
@@ -38,11 +38,11 @@ namespace UeiBridge
         public override bool OpenDevice()
         {
             // build scan-mask
-            int numOfCh = _thisDeviceSetup.IOChannelList.Count;
+            int numOfCh = _thisSetup.IOChannelList.Count;
             byte[] ba = new byte[numOfCh];
             Array.Clear(ba, 0, ba.Length);
             _scanMask = new List<byte>(ba);
-            foreach (IChannel ch in UeiSession.GetChannels())
+            foreach (IChannel ch in _ueiSession.GetChannels())
             {
                 int i = ch.GetIndex();
                 _scanMask[i] = 0xff;
@@ -53,35 +53,35 @@ namespace UeiBridge
                 // emit log message
                 //string res = UeiSession.GetChannel(0).GetResourceName();
                 //string localpath = (new Uri(res)).LocalPath;
-                EmitInitMessage($"Init success: {DeviceName}. Dest: {_thisDeviceSetup.DestEndPoint.ToIpEp()}"); // { noOfCh} output channels
+                EmitInitMessage($"Init success: {DeviceName}. Dest: {_thisSetup.DestEndPoint.ToIpEp()}"); // { noOfCh} output channels
 
                 // make sampling timer
-                TimeSpan interval = TimeSpan.FromMilliseconds(_thisDeviceSetup.SamplingInterval);
+                TimeSpan interval = TimeSpan.FromMilliseconds(_thisSetup.SamplingInterval);
                 _samplingTimer = new System.Threading.Timer(DeviceScan_Callback, null, TimeSpan.Zero, interval);
 
-                _isDeviceReady = true;
+                //_isDeviceReady = true;
                 return true;
             }
             catch (Exception ex)
             {
                 _logger.Error(ex.Message);
-                UeiSession = null;
+                _ueiSession = null;
                 return false;
             }
         }
         public override void Dispose()
         {
-            _logger.Debug($"Disposing {this.DeviceName}/Input, slot {_thisDeviceSetup.SlotNumber}");
             _samplingTimer?.Dispose();
-            System.Threading.Thread.Sleep(200); // wait for callback to finish
             _ueiDigitalReader?.Dispose();
-
-            base.Dispose();
+            System.Threading.Thread.Sleep(200); // wait for callback to finish
+            _ueiSession.Dispose();
+            
+            _logger.Debug($"{this.DeviceName}/Input, slot {_thisSetup.SlotNumber}. Disposed.");
         }
 
         public void DeviceScan_Callback(object state)
         {
-            ushort[] fullBuffer16bit = new ushort[_thisDeviceSetup.IOChannelList.Count];
+            ushort[] fullBuffer16bit = new ushort[_thisSetup.IOChannelList.Count];
             Array.Clear(fullBuffer16bit, 0, fullBuffer16bit.Length);
 
             // read from device
@@ -92,16 +92,16 @@ namespace UeiBridge
             
                 // fix to full buffer
                 int i = 0;
-                foreach( IChannel ch in UeiSession.GetChannels())
+                foreach( IChannel ch in _ueiSession.GetChannels())
                 {
                     fullBuffer16bit[ch.GetIndex()] = singleScan[i++];
                 }
                 // make EthernetMessage
                 _fullBuffer8bit = _digitalConverter.UpstreamConvert(fullBuffer16bit);
                 System.Diagnostics.Debug.Assert(null != _fullBuffer8bit);
-                var ethMsg = StaticMethods.BuildEthernetMessageFromDevice( _fullBuffer8bit, _thisDeviceSetup);
+                var ethMsg = StaticMethods.BuildEthernetMessageFromDevice( _fullBuffer8bit, _thisSetup);
                 // send
-                TargetConsumer.Send(new SendObject(_thisDeviceSetup.DestEndPoint.ToIpEp(), ethMsg.GetByteArray( MessageWay.upstream)));
+                _targetConsumer.Send(new SendObject(_thisSetup.DestEndPoint.ToIpEp(), ethMsg.GetByteArray( MessageWay.upstream)));
             }
             catch (Exception ex)
             {
@@ -111,7 +111,7 @@ namespace UeiBridge
         
         public override string [] GetFormattedStatus( TimeSpan interval)
         {
-            if ((false == _isDeviceReady)||(null == _fullBuffer8bit))
+            if (null == _fullBuffer8bit)
             {
                 return null;
             }
@@ -130,6 +130,11 @@ namespace UeiBridge
                 }
             }
             return new string[]{ sb.ToString() };
+        }
+
+        internal void SetTargetConsumer(BlockSensorManager2 blockSensor)
+        {
+            _targetConsumer = blockSensor;
         }
     }
 }

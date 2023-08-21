@@ -24,7 +24,7 @@ namespace UeiBridge
         //UeiDaq.Session _deviceSession;
         UeiDaq.DigitalWriter _writer;
         UInt16[] _lastScan;
-        private Session _ueiSession;
+        private new Session _ueiSession; // tbd. replace with session-adapter
         private DeviceSetup _deviceSetup;
         public DIO470OutputDeviceManager(DeviceSetup setup) : base(setup)
         {
@@ -38,7 +38,7 @@ namespace UeiBridge
         {
             _writer.Dispose();
             CloseSession(_ueiSession);
-			base.Dispose();
+            base.TerminateMessageLoop();
         }
 
         public override bool OpenDevice()

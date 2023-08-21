@@ -20,6 +20,12 @@ namespace UeiBridge.Library
         {
             return _channel.GetResourceName();
         }
+
+        public SerialPortSpeed GetSpeed()
+        {
+            SerialPort sp = (SerialPort)_channel;
+            return sp.GetSpeed();
+        }
     }
 
 

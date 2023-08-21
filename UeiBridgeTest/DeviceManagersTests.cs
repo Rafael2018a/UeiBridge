@@ -422,6 +422,16 @@ namespace UeiBridgeTest
         {
             throw new NotImplementedException();
         }
+
+        public CANReaderAdapter GetCANReader(int ch)
+        {
+            throw new NotImplementedException();
+        }
+
+        public bool IsRunning()
+        {
+            throw new NotImplementedException();
+        }
     }
     public class DeviceMock : IDevice
     {
