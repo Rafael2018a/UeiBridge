@@ -45,13 +45,19 @@ namespace UeiBridge.Library
             return x.ToList<IPAddress>();
 
         }
+
+        public static List<string> GetDeviceNames(IPAddress cubeIp)
+        {
+            throw new NotImplementedException();
+        }
+
         void f()
         {
             IPAddress ip = new IPAddress(new byte[] { 10, 20, 30, 40 });
             //ip++;
 
         }
-        public static IPAddress TryIP(Object obj)
+        public static IPAddress TryIP(object obj)
         {
             IPAddress ipAddress = (IPAddress)obj;
             //Console.WriteLine($"checking {ipAddress}");
