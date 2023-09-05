@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using System.IO;
+using UeiDaq;
 
 namespace UeiBridge.Library
 {
@@ -46,9 +47,16 @@ namespace UeiBridge.Library
 
         }
 
-        public static List<string> GetDeviceNames(IPAddress cubeIp)
+        public static List<UeiDeviceInfo> GetDeviceList(IPAddress cubeIp)
         {
-            throw new NotImplementedException();
+            string url = StaticMethods.GetCubeUrl(cubeIp);
+            if (null != url)
+            {
+                DeviceCollection devColl = new DeviceCollection(url);
+                List<UeiDeviceInfo> l = StaticMethods.DeviceCollectionToDeviceInfoList(devColl, url);
+                return l;
+            }
+            return null;
         }
 
         void f()
@@ -73,8 +81,6 @@ namespace UeiBridge.Library
                 writer.Write((ushort)IPAddress.HostToNetworkOrder(0));
                 writer.Write((uint)IPAddress.HostToNetworkOrder(unchecked((int)0x104)));
                 writer.Write((uint)IPAddress.HostToNetworkOrder(0));
-
-
 
                 IPEndPoint ep = new IPEndPoint(ipAddress, 6334);
                 udpClient.Send(sendBuffer, (int)writer.BaseStream.Length, ep);

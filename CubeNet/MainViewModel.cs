@@ -12,13 +12,22 @@ namespace UeiBridge.CubeNet
 {
     class MainViewModel : ViewModelBase
     {
+        #region == commands ==
+        public RelayCommand CreateEmptyRepositoryCommand { get; set; }
         public RelayCommand GetFreeIpCommand { get; set; }
         public RelayCommand GetCubeSignatureCommand { get; set; }
-        public RelayCommand UpdateLocalRepCommand { get; set; }
-
+        public RelayCommand AddCubeToRepositoryCommand { get; set; }
+        #endregion
+        #region == privates ==
         string _cubeSignature;
         IPAddress _cubeAddress;
         string _messageToUser;
+        //FileInfo _repositoryFile;
+        const string _repositoryFileName = "CubeRepository.json";
+        CubeRepositoryProxy _repositoryProxy = new CubeRepositoryProxy();
+        string _repositoryFullName;
+        #endregion
+        #region == publics ==
         public string CubeSignature
         {
             get => _cubeSignature;
@@ -37,7 +46,6 @@ namespace UeiBridge.CubeNet
                 RaisePropertyChanged();
             }
         }
-
         public IPAddress CubeAddress
         {
             get => _cubeAddress;
@@ -47,17 +55,72 @@ namespace UeiBridge.CubeNet
                 RaisePropertyChanged();
             }
         }
+        //public FileInfo RepositoryFile
+        //{
+        //    get => _repositoryFile;
+        //    set
+        //    {
+        //        _repositoryFile = value;
+        //        RaisePropertyChanged();
+        //    }
+        //}
 
-        CubeRepositoryProxy _repProxy = new CubeRepositoryProxy();
+        /// <summary>
+        /// Indicates that repository exists
+        /// </summary>
+        public string RepositoryFullName
+        {
+            get => _repositoryFullName;
+            set { _repositoryFullName = value; RaisePropertyChanged(); }
+        }
+        #endregion
+
         //IPAddress _cubeIp;
         public MainViewModel()
         {
             LoadCommands();
+
+            var repFile = new FileInfo(_repositoryFileName);
+            RepositoryFullName = "<no repository loaded>";
+            if (repFile.Exists)
+            {
+                if (true == _repositoryProxy.LoadRepository(repFile))
+                {
+                    RepositoryFullName = repFile.FullName;
+                }
+            }
         }
         private void LoadCommands()
         {
+            CreateEmptyRepositoryCommand = new RelayCommand(CreateEmptyRepository, CanCreateEmptyRepository);
             GetFreeIpCommand = new RelayCommand(GetFreeIp, CanGetFreeIp);
             GetCubeSignatureCommand = new RelayCommand(GetCubeSignature, CanGetCubeSignature);
+            AddCubeToRepositoryCommand = new RelayCommand(AddCubeToRepository, CanAddCubeToRepository);
+        }
+
+        private bool CanCreateEmptyRepository(object obj)
+        {
+            return true;
+        }
+
+        private void CreateEmptyRepository(object obj)
+        {
+            var repFile = new FileInfo(_repositoryFileName);
+            _repositoryProxy.CreateEmptyRepository();
+            if (true == _repositoryProxy.SaveRepository(repFile))
+            {
+                RepositoryFullName = repFile.FullName;
+            }
+        }
+
+        private bool CanAddCubeToRepository(object obj)
+        {
+            return true;
+        }
+
+        private void AddCubeToRepository(object obj)
+        {
+            throw new NotImplementedException();
         }
 
         private bool CanGetCubeSignature(object obj)
@@ -72,13 +135,18 @@ namespace UeiBridge.CubeNet
                 return;
             }
 
-            if (null!=CubeSeeker.TryIP(_cubeAddress))
+            if (null != CubeSeeker.TryIP(_cubeAddress))
             {
-                List<string> devList = CubeSeeker.GetDeviceNames(_cubeAddress);
+                List<UeiDeviceInfo> devList = CubeSeeker.GetDeviceList(_cubeAddress);
+                StringBuilder sb = new StringBuilder();
+                foreach (UeiDeviceInfo udi in devList)
+                {
+                    sb.Append(udi.DeviceName);
+                    sb.Append("/");
+                }
+                //sb.Remove(sb.Length - 1, 1);
+                CubeSignature = sb.ToString();
             }
-
-            //bool cubeExist = CubePing(_cubeIp);
-            CubeSignature = "a-b-c";
         }
 
         private bool CanGetFreeIp(object obj)
@@ -88,18 +156,20 @@ namespace UeiBridge.CubeNet
 
         private void GetFreeIp(object obj)
         {
-            FileInfo repFile = null;
-            CubeRepository rep = _repProxy.LoadRepository(repFile);
-            List<IPAddress> ipList = _repProxy.GetAllPertainedCubes();
-            //List<IPAddress> ipList = ipStrList.Select(i => IPAddress.Parse(i)).ToList();
-            List<byte> lsbList = ipList.Select(i => i.GetAddressBytes()[3]).ToList();
-            //lsbList.Sort();
-            byte max = lsbList.Max();
-            max++;
-            byte last = lsbList[lsbList.Count - 1];
-            IPAddress ipa = new IPAddress( new byte[] { 192, 168, 100, max });
 
-            CubeAddress = ipa;
+            if (_repositoryProxy.IsRepositoryExist)
+            {
+
+                List<IPAddress> ipList = _repositoryProxy.GetAllPertainedCubes();
+                List<byte> lsbList = ipList.Select(i => i.GetAddressBytes()[3]).ToList();
+                //lsbList.Sort();
+                int max = (lsbList.Count>0) ? lsbList.Max() : 1;
+                ++max;
+                //byte last = lsbList[lsbList.Count - 1];
+                IPAddress ipa = new IPAddress(new byte[] { 192, 168, 100, (byte)max });
+
+                CubeAddress = ipa;
+            }
         }
     }
 }

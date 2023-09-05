@@ -173,6 +173,17 @@ namespace UeiBridge.Library
                 return cubeIp.GetAddressBytes()[3];
             }    
         }
+        public static string GetCubeUrl(IPAddress ip)
+        {
+            if (null==ip)
+            {
+                return null;
+            }
+            StringBuilder sb = new StringBuilder("pdna://");
+            sb.Append(ip.ToString());
+            sb.Append("/");
+            return sb.ToString();
+        }
 
         public static System.Net.IPAddress CubeUrlToIpAddress(string url)
         {

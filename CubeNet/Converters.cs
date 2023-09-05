@@ -5,6 +5,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Globalization;
+using System.IO;
 
 namespace UeiBridge.CubeNet
 {
@@ -26,7 +27,6 @@ namespace UeiBridge.CubeNet
                 return ip.ToString();
             }
         }
-
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             string ipstring = value as string;
@@ -41,6 +41,23 @@ namespace UeiBridge.CubeNet
                 return null;
             }
 
+        }
+    }
+    public class FileInfoToStringConverter : System.Windows.Data.IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            FileInfo fi = value as FileInfo;
+            if (fi==null)
+            {
+                return null;
+            }
+            return fi.FullName;
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
         }
     }
 
