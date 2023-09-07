@@ -128,12 +128,15 @@ namespace UeiBridge.Library
                 {
                     if (i == null)
                         return null;
+                    if (i.GetDeviceName().ToLower().StartsWith("dnrp"))
+                        return null;
                     //Uri url = new Uri(i.GetResourceName());
                     //string curl = url.LocalPath;
                     return new UeiDeviceInfo(cubeurl, i.GetIndex(), i.GetDeviceName());
                 });
                 var l2 = devList.ToList();
-                l2.Remove(null); // remove last null item
+                //l2.Remove(null); // remove last null item
+                l2.RemoveAll(StaticMethods.IsNullPredicate);
                 return l2;
             }
             catch (UeiDaq.UeiDaqException)
@@ -201,6 +204,12 @@ namespace UeiBridge.Library
             }
             return null;
         }
+
+        static bool IsNullPredicate(object u)
+        {
+            return (u == null) ? true : false;
+        }
+
 
     }
 }

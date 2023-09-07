@@ -12,7 +12,7 @@ namespace UeiBridge.Library
 {
     public class CubeSeeker
     {
-        IPAddress SearchCube_TM( object state)
+        IPAddress SearchCube_TM(object state)
         {
             IPAddress ip = (IPAddress)state;
             System.Diagnostics.Debug.Assert(null != ip);
@@ -33,15 +33,15 @@ namespace UeiBridge.Library
             List<Task<IPAddress>> taskList = new List<Task<IPAddress>>();
 
             //uint b3 = 1;
-            for (uint b3 = b3first; b3<b3last; b3++)
+            for (uint b3 = b3first; b3 < b3last; b3++)
             {
                 byte[] ab = addressBytes;
                 ab[3] = (byte)b3;
 
-                taskList.Add( Task.Factory.StartNew(new Func<object, IPAddress>(TryIP), new IPAddress(ab), TaskCreationOptions.LongRunning));
+                taskList.Add(Task.Factory.StartNew(new Func<object, IPAddress>(TryIP), new IPAddress(ab), TaskCreationOptions.LongRunning));
             }
 
-            var x = taskList.Where(t => t.Result != null).Select( t=> t.Result);
+            var x = taskList.Where(t => t.Result != null).Select(t => t.Result);
 
             return x.ToList<IPAddress>();
 
@@ -57,6 +57,12 @@ namespace UeiBridge.Library
                 return l;
             }
             return null;
+        }
+        public static List<UeiDeviceInfo> GetDeviceList(string url)
+        {
+            DeviceCollection devColl = new DeviceCollection(url);
+            List<UeiDeviceInfo> l = StaticMethods.DeviceCollectionToDeviceInfoList(devColl, url);
+            return l;
         }
 
         void f()
@@ -101,7 +107,7 @@ namespace UeiBridge.Library
                 else
                     return null;
             }
-            catch (SocketException )
+            catch (SocketException)
             {
                 //Console.WriteLine(ex.ToString());
                 return null;

@@ -31,6 +31,7 @@ namespace UeiBridge.CubeNet
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             MessageBox.Show("Please use PowerDNA explorer to change the physical cube address\nAfter that, click \"Get cube signature\"", "Cube IP", MessageBoxButton.OK);
+            SuggestedIp.IsEnabled = false;
         }
     }
 }

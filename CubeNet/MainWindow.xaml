@@ -16,7 +16,7 @@
             <MenuItem Header="_File">
                 <MenuItem Header="Load repository file"/>
                 <MenuItem Header="Create empty repository" Command="{Binding CreateEmptyRepositoryCommand}"/>
-                <MenuItem Header="Save repository" />
+                <MenuItem Header="Save repository" Command="{Binding SaveRepositoryCommand}"/>
                 <MenuItem Header="Save repository as"/>
                 <MenuItem Header="Close"/>
             </MenuItem>
@@ -32,7 +32,7 @@
                 <Border Margin="5" Grid.Row="0" BorderBrush="LightBlue" BorderThickness="1">
                     <StackPanel x:Name="buttonsPanel" Grid.Row="0" Orientation="Horizontal">
                         <!--<ContentControl Width="10"/>-->
-                        <Button Content="Find free address for new cube" Padding="10,0,10,0" Command="{Binding GetFreeIpCommand}"/>
+                        <Button Content="Find free address" Padding="10,0,10,0" Command="{Binding GetFreeIpCommand}"/>
                         <ContentControl Width="10"/>
                         <Button Content="Get cube signature" Padding="10,0,10,0" Command="{Binding GetCubeSignatureCommand}"/>
                         <ContentControl Width="10"/>
@@ -41,11 +41,23 @@
                 </Border>
                 <Border x:Name="Dialogs" Grid.Row="1" Margin="5" BorderBrush="LightBlue" BorderThickness="1">
                     <StackPanel>
-                        <TextBlock Text="Suggested address"/>
-                        <TextBox x:Name="SuggestedIp" Width="100" HorizontalAlignment="Left" Text="{Binding Path=CubeAddress, Converter={StaticResource IpAddressToStringConverter}}" />
-                        <Button Content="Accept" Width="100" HorizontalAlignment="Left" Click="Button_Click"/>
-                        <TextBlock Text="Cube signature"/>
-                        <TextBlock Text="{Binding Path=CubeSignature}"/>
+                        <StackPanel Orientation="Horizontal" Margin="3">
+                            <TextBlock Text="Suggested address "/>
+                            <TextBox x:Name="SuggestedIp" Width="100" HorizontalAlignment="Left" Text="{Binding Path=CubeAddress, Converter={StaticResource IpAddressToStringConverter}}" IsEnabled="{Binding IsAddressLocked}" />
+                            <Button  Content="Accept" Width="100" HorizontalAlignment="Left" Click="Button_Click"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="3">
+                            <TextBlock Text="Cube signature "/>
+                            <TextBlock Text="{Binding Path=CubeSignature}"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="3">
+                            <TextBlock Text="Cube nickname "/>
+                            <TextBox Width="100"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="3">
+                            <TextBlock Text="Cube description "/>
+                            <TextBox Width="500"/>
+                        </StackPanel>
                     </StackPanel>
                 </Border>
                 <!--<Border x:Name="MessageToUser" Grid.Row="2" Margin="5" BorderBrush="LightBlue" BorderThickness="1">
@@ -53,12 +65,14 @@
                         <TextBlock Text="{Binding Path=MessageToUser}"/>
                     </StackPanel>
                 </Border>-->
-                <StatusBar Grid.Row="2">
-                    <StatusBarItem Content="{Binding Path=RepositoryFullName}">
+                <StatusBar Grid.Row="2" Background="LightGray">
+                    <StatusBarItem Content="{Binding Path=RepositoryState}">
                         <!--<StatusBarItem.Content>
                             <TextBlock Text="/>
                         </StatusBarItem.Content>-->
                     </StatusBarItem>
+                    <Separator/>
+                    <StatusBarItem Content="line 2"/>
                 </StatusBar>
 
             </Grid>

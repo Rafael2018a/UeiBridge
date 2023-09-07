@@ -9,7 +9,7 @@ namespace UeiBridge.CubeNet
 {
     class CubeType
     {
-        public string SlotSignature { get; private set; }
+        public string CubeSignature { get; private set; }
         public string NickName { get; private set; }
         public int TypeId { get; private set; }
         public string Desc { get; private set; }
@@ -25,10 +25,15 @@ namespace UeiBridge.CubeNet
         {
             PertainCubeList.Add(cubeIp);
         }
+
+        internal void SetSignature(string cubeSignature)
+        {
+            CubeSignature = cubeSignature;
+        }
     }
     class CubeRepository
     {
-        public List<CubeType> CubeTypeList { get; private set; }
+        public List<CubeType> CubeTypeList { get; set; }
         public CubeRepository()
         {
             CubeTypeList = new List<CubeType>();
