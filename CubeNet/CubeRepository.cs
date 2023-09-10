@@ -13,17 +13,18 @@ namespace UeiBridge.CubeNet
         public string NickName { get; private set; }
         public int TypeId { get; private set; }
         public string Desc { get; private set; }
-        public List<System.Net.IPAddress> PertainCubeList { get; private set; }
+        //public List<System.Net.IPAddress> PertainCubeList { get; private set; }
+        public List<string> PertainCubeList { get; private set; }
 
         public CubeType(string nickName, string desc)
         {
             NickName = nickName;
             Desc = desc;
-            PertainCubeList = new List<IPAddress>();
+            PertainCubeList = new List<string>();
         }
         public void AddCube( System.Net.IPAddress cubeIp)
         {
-            PertainCubeList.Add(cubeIp);
+            PertainCubeList.Add(cubeIp.ToString());
         }
 
         internal void SetSignature(string cubeSignature)

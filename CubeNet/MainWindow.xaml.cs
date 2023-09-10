@@ -28,10 +28,10 @@ namespace UeiBridge.CubeNet
             DataContext = _vm;
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
-        {
-            MessageBox.Show("Please use PowerDNA explorer to change the physical cube address\nAfter that, click \"Get cube signature\"", "Cube IP", MessageBoxButton.OK);
-            SuggestedIp.IsEnabled = false;
-        }
+        //private void Button_Click(object sender, RoutedEventArgs e)
+        //{
+        //    MessageBox.Show("Please use PowerDNA explorer to change the physical cube address\nAfter that, click \"Get cube signature\"", "Cube IP", MessageBoxButton.OK);
+        //    SuggestedIp.IsEnabled = false;
+        //}
     }
 }

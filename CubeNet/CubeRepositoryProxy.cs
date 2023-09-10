@@ -72,12 +72,19 @@ namespace UeiBridge.CubeNet
             List<IPAddress> linearCubeList = new List<IPAddress>();
             foreach (CubeType ct in _cubeRepositroy.CubeTypeList)
             {
-                foreach (IPAddress ip in ct.PertainCubeList)
+                foreach (string ip in ct.PertainCubeList)
                 {
-                    linearCubeList.Add(ip);
+                    linearCubeList.Add( IPAddress.Parse(ip));
                 }
             }
             return linearCubeList;
+        }
+
+        void f()
+        {
+            IPAddress ip;
+            //ip.GetAddressBytes();
+            //IPAddress ip1 = new IPAddress()
         }
 
         void AddCubeTypeEntry(CubeType ct)
@@ -91,12 +98,13 @@ namespace UeiBridge.CubeNet
             return l.ToList();
         }
 
-        internal void AddCubeType( string nickName, string desc, string cubeSignature)
+        internal CubeType AddCubeType( string nickName, string desc, string cubeSignature)
         {
             CubeType ct = new CubeType(nickName, desc);
             ct.SetSignature(cubeSignature);
 
             _cubeRepositroy.CubeTypeList.Add(ct);
+            return ct;
         }
     }
 }

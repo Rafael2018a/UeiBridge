@@ -10,6 +10,7 @@ using System.Net;
 using System.Globalization;
 using UeiBridge.Library;
 using System.Windows;
+using System.Collections.ObjectModel;
 
 namespace UeiBridge.CubeNet
 {
@@ -19,8 +20,11 @@ namespace UeiBridge.CubeNet
         public RelayCommand CreateEmptyRepositoryCommand { get; set; }
         public RelayCommand GetFreeIpCommand { get; set; }
         public RelayCommand GetCubeSignatureCommand { get; set; }
-        public RelayCommand AddCubeToRepositoryCommand { get; set; }
+        
+        public RelayCommand AddCubeToNewEntryCommand { get; set; }
+        public RelayCommand AddCubeToExistingEntryCommand { get; set; }
         public RelayCommand SaveRepositoryCommand { get; set; }
+        public RelayCommand AcceptAddressCommand { get; set; }
         #endregion
         #region == privates ==
         string _cubeSignature;
@@ -31,7 +35,8 @@ namespace UeiBridge.CubeNet
         //FileInfo _repositoryFile;
         const string _repositoryFileName = "CubeRepository.json";
         CubeRepositoryProxy _repositoryProxy = new CubeRepositoryProxy();
-        string _repositoryState;
+        string _panelLogMessage;
+        private bool _isAddressEnabled=true;
         #endregion
         #region == publics ==
         public string CubeSignature
@@ -61,11 +66,20 @@ namespace UeiBridge.CubeNet
                 RaisePropertyChanged();
             }
         }
-
-        public string RepositoryState { get => _repositoryState; set { _repositoryState = value; RaisePropertyChanged(); } }
-
+        //List<string> _cubeTypeList;
+        public string PanelLogMessage { get => _panelLogMessage; set { _panelLogMessage = value; RaisePropertyChanged(); } }
+        public string PanelLogToolTip { get; set; }
         public string CubeNickname { get; set; }
         public string CubeDesc { get; set; }
+        
+
+        public ObservableCollection<string> CubeTypeList { get; set; }
+        public bool IsAddressEnabled { 
+            get => _isAddressEnabled; 
+            set { 
+                _isAddressEnabled = value; 
+                RaisePropertyChanged(); 
+            } }
 
         //public FileInfo RepositoryFile
         //{
@@ -99,26 +113,59 @@ namespace UeiBridge.CubeNet
                 try
                 {
                     _repositoryProxy.LoadRepository(repFile);
-                    RepositoryState = $"Backing file {_repositoryProxy.RepositoryBackingFile.FullName} loaded";
+                    PanelLogMessage = $"Repository file {_repositoryProxy.RepositoryBackingFile.Name} loaded";
+                    PanelLogToolTip = _repositoryProxy.RepositoryBackingFile.FullName;
                 }
                 catch (Exception ex)
                 {
-                    RepositoryState = $"Failed to load file {repFile.FullName}. {ex.Message}";
+                    PanelLogMessage = $"Failed to load file {repFile.FullName}. {ex.Message}";
                 }
             }
             else
             {
-                RepositoryState = $"Backing file {repFile.FullName} doesn't exist.";
+                PanelLogMessage = $"Repository file {repFile.FullName} doesn't exist.";
             }
-
+            CubeTypeList = new ObservableCollection<string>();
+            CubeTypeList.Add("ct1");
+            CubeTypeList.Add("ct2");
         }
         private void LoadCommands()
         {
             CreateEmptyRepositoryCommand = new RelayCommand(CreateEmptyRepository, CanCreateEmptyRepository);
             GetFreeIpCommand = new RelayCommand(GetFreeIp, CanGetFreeIp);
+            AcceptAddressCommand = new RelayCommand(AcceptAddress, CanAcceptAddress);
             GetCubeSignatureCommand = new RelayCommand(GetCubeSignature, CanGetCubeSignature);
-            AddCubeToRepositoryCommand = new RelayCommand(AddCubeToRepository, CanAddCubeToRepository);
+            AddCubeToNewEntryCommand = new RelayCommand(AddCubeToNewEntry, CanAddCubeToNewEntry);
+            AddCubeToExistingEntryCommand = new RelayCommand(AddCubeToExistingEntry, CanAddCubeToExistingEntry);
             SaveRepositoryCommand = new RelayCommand( SaveRepository, CanSaveRepository);
+            
+        }
+
+        private bool CanAcceptAddress(object obj)
+        {
+            return true;
+        }
+
+        private void AcceptAddress(object obj)
+        {
+            List<IPAddress> cubes = _repositoryProxy.GetAllPertainedCubes();
+            bool ipExists = cubes.Any( i => i.Equals(CubeAddress));
+            if (ipExists)
+            {
+                MessageBox.Show("ip already exists in repository", "Error", MessageBoxButton.OK);
+                return;
+            }
+            IsAddressEnabled = false;
+        }
+
+        private bool CanAddCubeToExistingEntry(object obj)
+        {
+            return true;
+        }
+
+        private void AddCubeToExistingEntry(object obj)
+        {
+            throw new NotImplementedException();
         }
 
         private bool CanSaveRepository(object obj)
@@ -146,17 +193,17 @@ namespace UeiBridge.CubeNet
             _repositoryProxy.CreateEmptyRepository();
             if (true == _repositoryProxy.SaveRepository(repFile))
             {
-                RepositoryState = $"Backing file {repFile.FullName} loaded.";
+                PanelLogMessage = $"Backing file {repFile.FullName} loaded.";
                 //RepositoryFullName = repFile.FullName;
             }
         }
 
-        private bool CanAddCubeToRepository(object obj)
+        private bool CanAddCubeToNewEntry(object obj)
         {
             return true;
         }
 
-        private void AddCubeToRepository(object obj)
+        private void AddCubeToNewEntry(object obj)
         {
             if (_repositoryProxy.IsRepositoryExist)
             {
@@ -166,7 +213,15 @@ namespace UeiBridge.CubeNet
 
 
                 // add new cube-type
-                _repositoryProxy.AddCubeType( CubeNickname, CubeDesc, CubeSignature);
+                if ((null == CubeNickname) || (null == CubeDesc))
+                {
+                    MessageBox.Show("Must fill both name and desc");
+                }
+                else
+                {
+                    CubeType ct = _repositoryProxy.AddCubeType(CubeNickname, CubeDesc, CubeSignature);
+                    ct.PertainCubeList.Add( CubeAddress.ToString());
+                }
 
             }
 
@@ -234,7 +289,7 @@ namespace UeiBridge.CubeNet
                 ++max;
                 //byte last = lsbList[lsbList.Count - 1];
                 IPAddress ipa = new IPAddress(new byte[] { 192, 168, 100, (byte)max });
-
+                IsAddressEnabled = true;
                 CubeAddress = ipa;
             }
         }

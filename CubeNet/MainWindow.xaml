@@ -25,59 +25,56 @@
         <Border Margin="5,30,5,5" BorderBrush="Navy" BorderThickness="1" CornerRadius="1">
             <Grid>
                 <Grid.RowDefinitions>
-                    <RowDefinition Height="40"/>
                     <RowDefinition Height="*"/>
-                    <RowDefinition Height="50"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="auto"/>
                 </Grid.RowDefinitions>
-                <Border Margin="5" Grid.Row="0" BorderBrush="LightBlue" BorderThickness="1">
-                    <StackPanel x:Name="buttonsPanel" Grid.Row="0" Orientation="Horizontal">
+
+                <GroupBox Margin="5" Grid.Row="0" BorderBrush="LightBlue" BorderThickness="2" Header="Cube details">
+                    <StackPanel x:Name="buttonsPanel" Grid.Row="0" >
+                        <Button Content="Find free address" Width="200" HorizontalAlignment="Left" Padding="10,0,10,0" Command="{Binding GetFreeIpCommand}"/>
                         <!--<ContentControl Width="10"/>-->
-                        <Button Content="Find free address" Padding="10,0,10,0" Command="{Binding GetFreeIpCommand}"/>
-                        <ContentControl Width="10"/>
-                        <Button Content="Get cube signature" Padding="10,0,10,0" Command="{Binding GetCubeSignatureCommand}"/>
-                        <ContentControl Width="10"/>
-                        <Button Content="Add cube to repository" Padding="10,0,10,0" Command="{Binding AddCubeToRepositoryCommand}"/>
-                    </StackPanel>
-                </Border>
-                <Border x:Name="Dialogs" Grid.Row="1" Margin="5" BorderBrush="LightBlue" BorderThickness="1">
-                    <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="3">
                             <TextBlock Text="Suggested address "/>
-                            <TextBox x:Name="SuggestedIp" Width="100" HorizontalAlignment="Left" Text="{Binding Path=CubeAddress, Converter={StaticResource IpAddressToStringConverter}}" IsEnabled="{Binding IsAddressLocked}" />
-                            <Button  Content="Accept" Width="100" HorizontalAlignment="Left" Click="Button_Click"/>
+                            <TextBox x:Name="SuggestedIp" Width="100" HorizontalAlignment="Left" Text="{Binding Path=CubeAddress, Converter={StaticResource IpAddressToStringConverter}}" IsEnabled="{Binding IsAddressEnabled}" />
                         </StackPanel>
+                        <Button  Content="Accept" Width="100" HorizontalAlignment="Left" Command="{Binding AcceptAddressCommand}" />
+                        <Button Content="Get cube signature" Width="200" HorizontalAlignment="Left" Padding="10,0,10,0" Command="{Binding GetCubeSignatureCommand}"/>
                         <StackPanel Orientation="Horizontal" Margin="3">
                             <TextBlock Text="Cube signature "/>
                             <TextBlock Text="{Binding Path=CubeSignature}"/>
                         </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Margin="5" Grid.Row="1" BorderBrush="LightBlue" BorderThickness="1" Header="Repository update">
+                    <StackPanel Margin="3">
                         <StackPanel Orientation="Horizontal" Margin="3">
                             <TextBlock Text="Cube nickname "/>
-                            <TextBox Width="100"/>
+                            <TextBox Width="100" Text="{Binding CubeNickname}" HorizontalAlignment="Left"/>
                         </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="3">
                             <TextBlock Text="Cube description "/>
-                            <TextBox Width="500"/>
+                            <TextBox Width="500" Text="{Binding CubeDesc}"/>
                         </StackPanel>
+                        <Button Width="200" HorizontalAlignment="Left" Margin="3" Content="Add cube as new cube-type" Padding="10,0,10,0" Command="{Binding AddCubeToNewEntryCommand}"/>
+                        <Button Width="200" HorizontalAlignment="Left" Margin="3"  Content="Add cube to existing cube-type" Padding="10,0,10,0" Command="{Binding AddCubeToExistingEntryCommand}"/>
+                        <ListBox Width="200" HorizontalAlignment="Left" ItemsSource="{Binding CubeTypeList}" Margin="3"/>
                     </StackPanel>
-                </Border>
-                <!--<Border x:Name="MessageToUser" Grid.Row="2" Margin="5" BorderBrush="LightBlue" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock Text="{Binding Path=MessageToUser}"/>
-                    </StackPanel>
-                </Border>-->
-                <StatusBar Grid.Row="2" Background="LightGray">
-                    <StatusBarItem Content="{Binding Path=RepositoryState}">
-                        <!--<StatusBarItem.Content>
-                            <TextBlock Text="/>
-                        </StatusBarItem.Content>-->
+                </GroupBox>
+
+                <StatusBar Grid.Row="2" Background="LightGray" Height="25">
+                    <StatusBarItem Content="{Binding Path=PanelLogMessage}">
+                        <StatusBarItem.ToolTip>
+                            <ToolTip>
+                                <TextBlock Text="{Binding PanelLogToolTip}"/>
+                            </ToolTip>
+                        </StatusBarItem.ToolTip>
                     </StatusBarItem>
                     <Separator/>
                     <StatusBarItem Content="line 2"/>
                 </StatusBar>
-
             </Grid>
-            <!--<GroupBox Grid.Row="1" BorderBrush="Gray" Margin="5" BorderThickness="1" Header="Control">-->
-            <!--</GroupBox>-->
         </Border>
     </Grid>
 </Window>
