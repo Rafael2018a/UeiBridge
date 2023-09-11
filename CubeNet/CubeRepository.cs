@@ -9,12 +9,12 @@ namespace UeiBridge.CubeNet
 {
     class CubeType
     {
-        public string CubeSignature { get; private set; }
-        public string NickName { get; private set; }
-        public int TypeId { get; private set; }
-        public string Desc { get; private set; }
+        public string CubeSignature { get; set; }
+        public string NickName { get; set; }
+        public int TypeId { get; set; }
+        public string Desc { get; set; }
         //public List<System.Net.IPAddress> PertainCubeList { get; private set; }
-        public List<string> PertainCubeList { get; private set; }
+        public List<string> PertainCubeList { get; set; }
 
         public CubeType(string nickName, string desc)
         {

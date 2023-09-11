@@ -15,9 +15,12 @@ namespace UeiBridge.CubeNet
     /// </summary>
     class CubeRepositoryProxy
     {
-        CubeRepository _cubeRepositroy;
+        //CubeRepository _cubeRepositroy;
         public bool IsRepositoryExist { get; private set; } = false;
         public FileInfo RepositoryBackingFile { get; private set; } = null;
+        //internal CubeRepository CubeRepositroy { get => _cubeRepositroy; private set => _cubeRepositroy = value; }
+        internal CubeRepository CubeRepositroy { get; set; }
+
         /// <summary>
         /// Load from backing file.
         /// this method might throw
@@ -31,7 +34,7 @@ namespace UeiBridge.CubeNet
             {
                 using (StreamReader reader = repFile.OpenText())
                 {
-                    _cubeRepositroy = JsonConvert.DeserializeObject<CubeRepository>(reader.ReadToEnd());
+                    CubeRepositroy = JsonConvert.DeserializeObject<CubeRepository>(reader.ReadToEnd());
                     IsRepositoryExist = true;
                     RepositoryBackingFile = repFile;
                     rv = true;
@@ -43,7 +46,7 @@ namespace UeiBridge.CubeNet
         {
             if (!IsRepositoryExist)
             {
-                _cubeRepositroy = new CubeRepository();
+                CubeRepositroy = new CubeRepository();
                 IsRepositoryExist = true;
                 RepositoryBackingFile = null;
             }
@@ -58,7 +61,7 @@ namespace UeiBridge.CubeNet
         internal bool SaveRepository(FileInfo repFile)
         {
             bool rc = false;
-            string s = JsonConvert.SerializeObject(_cubeRepositroy, Formatting.Indented);
+            string s = JsonConvert.SerializeObject(CubeRepositroy, Formatting.Indented);
             using (StreamWriter fs = repFile.CreateText())
             {
                 fs.Write(s);
@@ -70,7 +73,7 @@ namespace UeiBridge.CubeNet
         internal List<IPAddress> GetAllPertainedCubes()
         {
             List<IPAddress> linearCubeList = new List<IPAddress>();
-            foreach (CubeType ct in _cubeRepositroy.CubeTypeList)
+            foreach (CubeType ct in CubeRepositroy.CubeTypeList)
             {
                 foreach (string ip in ct.PertainCubeList)
                 {
@@ -79,7 +82,7 @@ namespace UeiBridge.CubeNet
             }
             return linearCubeList;
         }
-
+        
         void f()
         {
             IPAddress ip;
@@ -89,12 +92,12 @@ namespace UeiBridge.CubeNet
 
         void AddCubeTypeEntry(CubeType ct)
         {
-            _cubeRepositroy.CubeTypeList.Add(ct);
+            CubeRepositroy.CubeTypeList.Add(ct);
         }
 
         internal List<CubeType> GetCubeTypesBySignature(string cubeSignature)
         {
-            var l = _cubeRepositroy.CubeTypeList.Where(i => i.CubeSignature == cubeSignature);
+            var l = CubeRepositroy.CubeTypeList.Where(i => i.CubeSignature == cubeSignature);
             return l.ToList();
         }
 
@@ -103,7 +106,7 @@ namespace UeiBridge.CubeNet
             CubeType ct = new CubeType(nickName, desc);
             ct.SetSignature(cubeSignature);
 
-            _cubeRepositroy.CubeTypeList.Add(ct);
+            CubeRepositroy.CubeTypeList.Add(ct);
             return ct;
         }
     }

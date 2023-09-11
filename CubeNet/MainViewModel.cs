@@ -21,8 +21,8 @@ namespace UeiBridge.CubeNet
         public RelayCommand GetFreeIpCommand { get; set; }
         public RelayCommand GetCubeSignatureCommand { get; set; }
         
-        public RelayCommand AddCubeToNewEntryCommand { get; set; }
-        public RelayCommand AddCubeToExistingEntryCommand { get; set; }
+        public RelayCommand AddCubeToRepositoryCommand { get; set; }
+        //public RelayCommand AddCubeToExistingEntryCommand { get; set; }
         public RelayCommand SaveRepositoryCommand { get; set; }
         public RelayCommand AcceptAddressCommand { get; set; }
         #endregion
@@ -37,6 +37,8 @@ namespace UeiBridge.CubeNet
         CubeRepositoryProxy _repositoryProxy = new CubeRepositoryProxy();
         string _panelLogMessage;
         private bool _isAddressEnabled=true;
+        bool _canAddCubeToRepository = false;
+        bool _canGetCubeSignature = false;
         #endregion
         #region == publics ==
         public string CubeSignature
@@ -71,9 +73,9 @@ namespace UeiBridge.CubeNet
         public string PanelLogToolTip { get; set; }
         public string CubeNickname { get; set; }
         public string CubeDesc { get; set; }
-        
 
-        public ObservableCollection<string> CubeTypeList { get; set; }
+
+        private ObservableCollection<CubeType> _matchingCubeTypeList;
         public bool IsAddressEnabled { 
             get => _isAddressEnabled; 
             set { 
@@ -81,6 +83,25 @@ namespace UeiBridge.CubeNet
                 RaisePropertyChanged(); 
             } }
 
+        public ObservableCollection<CubeType> MatchingCubeTypeList
+        {
+            get => _matchingCubeTypeList;
+            set 
+            { 
+                _matchingCubeTypeList = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public CubeType SelectedCubeType { get; set; }
+
+        bool _addAsNewCubeFlagValue;
+        bool _addAsNewCubeFlagEnabled;
+
+        public bool AddAsNewCubeFlagValue { get => _addAsNewCubeFlagValue; set { _addAsNewCubeFlagValue = value; RaisePropertyChanged(); } }
+        public bool AddAsNewCubeFlagEnabled { get => _addAsNewCubeFlagEnabled; set { _addAsNewCubeFlagEnabled = value; RaisePropertyChanged(); } }
+
+        
         //public FileInfo RepositoryFile
         //{
         //    get => _repositoryFile;
@@ -125,9 +146,9 @@ namespace UeiBridge.CubeNet
             {
                 PanelLogMessage = $"Repository file {repFile.FullName} doesn't exist.";
             }
-            CubeTypeList = new ObservableCollection<string>();
-            CubeTypeList.Add("ct1");
-            CubeTypeList.Add("ct2");
+            //CubeTypeList = new ObservableCollection<string>();
+            //CubeTypeList.Add("ct1");
+            //CubeTypeList.Add("ct2");
         }
         private void LoadCommands()
         {
@@ -135,8 +156,8 @@ namespace UeiBridge.CubeNet
             GetFreeIpCommand = new RelayCommand(GetFreeIp, CanGetFreeIp);
             AcceptAddressCommand = new RelayCommand(AcceptAddress, CanAcceptAddress);
             GetCubeSignatureCommand = new RelayCommand(GetCubeSignature, CanGetCubeSignature);
-            AddCubeToNewEntryCommand = new RelayCommand(AddCubeToNewEntry, CanAddCubeToNewEntry);
-            AddCubeToExistingEntryCommand = new RelayCommand(AddCubeToExistingEntry, CanAddCubeToExistingEntry);
+            AddCubeToRepositoryCommand = new RelayCommand(AddCubeToRepository, CanAddCubeToRepository);
+            //AddCubeToExistingEntryCommand = new RelayCommand(AddCubeToExistingEntry, CanAddCubeToExistingEntry);
             SaveRepositoryCommand = new RelayCommand( SaveRepository, CanSaveRepository);
             
         }
@@ -156,17 +177,18 @@ namespace UeiBridge.CubeNet
                 return;
             }
             IsAddressEnabled = false;
+            MessageBox.Show("Please use PowerDNA explorer to change the physical cube address\nAfter that, click \"Get cube signature\"", "Cube IP", MessageBoxButton.OK);
         }
 
-        private bool CanAddCubeToExistingEntry(object obj)
-        {
-            return true;
-        }
+        //private bool CanAddCubeToExistingEntry1(object obj)
+        //{
+        //    return true;
+        //}
 
-        private void AddCubeToExistingEntry(object obj)
-        {
-            throw new NotImplementedException();
-        }
+        //private void AddCubeToExistingEntry1(object obj)
+        //{
+        //    var c = SelectedCubeType;
+        //}
 
         private bool CanSaveRepository(object obj)
         {
@@ -198,52 +220,59 @@ namespace UeiBridge.CubeNet
             }
         }
 
-        private bool CanAddCubeToNewEntry(object obj)
+        private bool CanAddCubeToRepository(object obj)
         {
-            return true;
+            return _canAddCubeToRepository;
         }
 
-        private void AddCubeToNewEntry(object obj)
+        private void AddCubeToRepository(object obj)
         {
             if (_repositoryProxy.IsRepositoryExist)
             {
-                List<CubeType> cubeTypes = _repositoryProxy.GetCubeTypesBySignature(CubeSignature);
-
-                // select to which cube-type to add current cube
-
-
-                // add new cube-type
-                if ((null == CubeNickname) || (null == CubeDesc))
+                // add to existing
+                if ((MatchingCubeTypeList.Count > 0) && (false == AddAsNewCubeFlagValue))
                 {
-                    MessageBox.Show("Must fill both name and desc");
+                    SelectedCubeType.AddCube(CubeAddress);
+                    PanelLogMessage = $"Cube {CubeAddress.ToString()} added to {SelectedCubeType.NickName}";
                 }
-                else
+                else // add new cube type
                 {
+                    // add new cube-type
+                    if ((null == CubeNickname) || (null == CubeDesc))
+                    {
+                        MessageBox.Show("Must fill both name and desc");
+                        return;
+                    }
+                    if (_repositoryProxy.CubeRepositroy.CubeTypeList.Any( i => i.NickName == CubeNickname))
+                    {
+                        MessageBox.Show("Nickname already exists");
+                        return;
+                    }
+
                     CubeType ct = _repositoryProxy.AddCubeType(CubeNickname, CubeDesc, CubeSignature);
-                    ct.PertainCubeList.Add( CubeAddress.ToString());
+                    ct.PertainCubeList.Add(CubeAddress.ToString());
+                    PanelLogMessage = $"Cube {CubeAddress.ToString()} added as new entry - {CubeNickname}";
                 }
-
             }
-
         }
 
         private bool CanGetCubeSignature(object obj)
         {
-            return true;
+            return _canGetCubeSignature;
         }
 
         private void GetCubeSignature(object obj)
         {
             if (null == _cubeAddress)
             {
-                return;
+                goto exit;
             }
             List<UeiDeviceInfo> devList = null;
-            if (_cubeAddress.Equals(IPAddress.Any))
+            if (_cubeAddress.Equals(IPAddress.Any)) // ip 0.0.0.0 shall be identified as 'simu'
             {
                 devList = CubeSeeker.GetDeviceList("simu://");
             }
-            else if (null != CubeSeeker.TryIP(_cubeAddress))
+            else if (null != CubeSeeker.TryIP(_cubeAddress)) // is cube connected?
             {
                 devList = CubeSeeker.GetDeviceList(_cubeAddress);
             }
@@ -255,6 +284,20 @@ namespace UeiBridge.CubeNet
             }
 
             CubeSignature = BuildCubeSignature(devList);
+
+            _canAddCubeToRepository = true;
+
+            // fill cube list
+            MatchingCubeTypeList = new ObservableCollection<CubeType>( _repositoryProxy.GetCubeTypesBySignature(CubeSignature));
+            if (MatchingCubeTypeList.Count>0)
+            {
+                AddAsNewCubeFlagEnabled = true;
+            }
+            else
+            {
+                AddAsNewCubeFlagValue = true;
+                AddAsNewCubeFlagEnabled = false;
+            }
 
         exit: return;
         }
