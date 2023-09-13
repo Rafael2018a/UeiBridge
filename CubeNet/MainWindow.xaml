@@ -44,18 +44,24 @@
                         <Setter Property="Height" Value="22"/>
                         <Setter Property="HorizontalAlignment" Value="Left"/>
                     </Style>
+                    <Style TargetType="StackPanel">
+                        <Setter Property="Margin" Value="3"/>
+                    </Style>
                 </Grid.Resources>
 
                 <GroupBox Margin="5" Grid.Row="0" BorderBrush="LightBlue" BorderThickness="2" Header="Cube details">
                     <StackPanel x:Name="buttonsPanel" Grid.Row="0" >
-                        <Button Content="Find free address" Width="auto" Command="{Binding GetFreeIpCommand}"/>
-                        <!--<ContentControl Width="10"/>-->
-                        <StackPanel Orientation="Horizontal" Margin="3">
+                        <StackPanel Orientation="Horizontal">
+                            <Button Content="Find free address" Command="{Binding GetFreeIpCommand}"/>
+                            <Button Content="Reset" Command="{Binding ResetPaneCommand}"/>
+                        </StackPanel>
+                        
+                        <StackPanel Orientation="Horizontal">
                             <TextBlock Text="Suggested address "/>
                             <TextBox x:Name="SuggestedIp" Width="100" Text="{Binding Path=CubeAddress, Converter={StaticResource IpAddressToStringConverter}}" IsEnabled="{Binding IsAddressEnabled}" />
-                            <Button  Content="Accept" Width="100" Command="{Binding AcceptAddressCommand}" />
+                            <Button  Content="Accept" Width="auto" Command="{Binding AcceptAddressCommand}" />
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="3">
+                        <StackPanel Orientation="Horizontal" >
                             <Button Content="Get cube signature" Width="auto" Command="{Binding GetCubeSignatureCommand}"/>
                             <TextBlock Text="{Binding Path=CubeSignature}"/>
                         </StackPanel>
@@ -68,12 +74,12 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
-                        <StackPanel Margin="3">
-                            <StackPanel Orientation="Horizontal" Margin="3">
+                        <StackPanel >
+                            <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="Cube nickname "/>
                                 <TextBox Width="100" Text="{Binding CubeNickname}"/>
                             </StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="3">
+                            <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="Cube description "/>
                                 <TextBox Width="200" Height="40" TextWrapping="Wrap" Text="{Binding CubeDesc}"/>
                             </StackPanel>
@@ -82,6 +88,7 @@
                             <!--<Button Width="200" HorizontalAlignment="Left" Margin="3"  Content="Add cube to existing cube-type" Padding="10,0,10,0" Command="{Binding AddCubeToExistingEntryCommand}"/>-->
                         </StackPanel>
                         <StackPanel Grid.Column="1">
+                            <TextBlock Text="Repository matching entries"/>
                             <ListBox Width="200" HorizontalAlignment="Left" Margin="3" ItemsSource="{Binding MatchingCubeTypeList}" SelectedItem="{Binding SelectedCubeType, Mode=TwoWay}">
                                 <ListBox.Resources>
                                     <DataTemplate DataType="{x:Type local:CubeType}">
@@ -92,19 +99,19 @@
                         </StackPanel>
                     </Grid>
                 </GroupBox>
-            
-            <StatusBar Grid.Row="2" Background="LightGray" Height="25">
-                <StatusBarItem Content="{Binding Path=PanelLogMessage}">
-                    <StatusBarItem.ToolTip>
-                        <ToolTip>
-                            <TextBlock Text="{Binding PanelLogToolTip}"/>
-                        </ToolTip>
-                    </StatusBarItem.ToolTip>
-                </StatusBarItem>
-                <Separator/>
-                <StatusBarItem Content="line 2"/>
-            </StatusBar>
-    </Grid>
-    </Border>
+
+                <StatusBar Grid.Row="2" Background="LightGray" Height="25">
+                    <StatusBarItem Content="{Binding Path=PanelLogMessage}">
+                        <StatusBarItem.ToolTip>
+                            <ToolTip>
+                                <TextBlock Text="{Binding PanelLogToolTip}"/>
+                            </ToolTip>
+                        </StatusBarItem.ToolTip>
+                    </StatusBarItem>
+                    <Separator/>
+                    <StatusBarItem Content="line 2"/>
+                </StatusBar>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

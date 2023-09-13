@@ -25,6 +25,7 @@ namespace UeiBridge.CubeNet
         //public RelayCommand AddCubeToExistingEntryCommand { get; set; }
         public RelayCommand SaveRepositoryCommand { get; set; }
         public RelayCommand AcceptAddressCommand { get; set; }
+        public RelayCommand ResetPaneCommand { get; set; }
         #endregion
         #region == privates ==
         string _cubeSignature;
@@ -39,6 +40,7 @@ namespace UeiBridge.CubeNet
         private bool _isAddressEnabled=true;
         bool _canAddCubeToRepository = false;
         bool _canGetCubeSignature = false;
+        bool _canGetFreeIp = true;
         #endregion
         #region == publics ==
         public string CubeSignature
@@ -159,7 +161,21 @@ namespace UeiBridge.CubeNet
             AddCubeToRepositoryCommand = new RelayCommand(AddCubeToRepository, CanAddCubeToRepository);
             //AddCubeToExistingEntryCommand = new RelayCommand(AddCubeToExistingEntry, CanAddCubeToExistingEntry);
             SaveRepositoryCommand = new RelayCommand( SaveRepository, CanSaveRepository);
-            
+            ResetPaneCommand = new RelayCommand(ResetPane, CanResetPane);
+        }
+
+        private void ResetPane(object obj)
+        {
+            _canGetFreeIp = true;
+            IsAddressEnabled = true;
+            _canGetCubeSignature = false;
+            CubeSignature = null;
+            MatchingCubeTypeList?.Clear();
+        }
+
+        private bool CanResetPane(object obj)
+        {
+            return true;
         }
 
         private bool CanAcceptAddress(object obj)
@@ -169,6 +185,11 @@ namespace UeiBridge.CubeNet
 
         private void AcceptAddress(object obj)
         {
+            if (null==CubeAddress)
+            {
+                return;
+            }
+
             List<IPAddress> cubes = _repositoryProxy.GetAllPertainedCubes();
             bool ipExists = cubes.Any( i => i.Equals(CubeAddress));
             if (ipExists)
@@ -178,6 +199,9 @@ namespace UeiBridge.CubeNet
             }
             IsAddressEnabled = false;
             MessageBox.Show("Please use PowerDNA explorer to change the physical cube address\nAfter that, click \"Get cube signature\"", "Cube IP", MessageBoxButton.OK);
+            _canGetCubeSignature = true;
+            CubeSignature = null;
+            _canGetFreeIp = false;
         }
 
         //private bool CanAddCubeToExistingEntry1(object obj)
@@ -316,15 +340,14 @@ namespace UeiBridge.CubeNet
 
         private bool CanGetFreeIp(object obj)
         {
-            return true;
+            return _canGetFreeIp;
         }
 
         private void GetFreeIp(object obj)
         {
-
             if (_repositoryProxy.IsRepositoryExist)
             {
-
+                _canGetCubeSignature = false;
                 List<IPAddress> ipList = _repositoryProxy.GetAllPertainedCubes();
                 List<byte> lsbList = ipList.Select(i => i.GetAddressBytes()[3]).ToList();
                 //lsbList.Sort();
@@ -334,6 +357,11 @@ namespace UeiBridge.CubeNet
                 IPAddress ipa = new IPAddress(new byte[] { 192, 168, 100, (byte)max });
                 IsAddressEnabled = true;
                 CubeAddress = ipa;
+                //CubeSignature = null;
+            }
+            else
+            {
+                MessageBox.Show("No cube repository","", MessageBoxButton.OK);
             }
         }
     }
