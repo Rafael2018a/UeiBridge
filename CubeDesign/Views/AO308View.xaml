@@ -1,0 +1,18 @@
+﻿<UserControl x:Class="CubeDesign.Views.AO308View"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CubeDesign.Views"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <!--<GroupBox>
+        <GroupBox.Header>
+            <TextBlock Grid.Row="0" FontSize="16" FontWeight="Bold"/>
+        </GroupBox.Header>
+        <Image Source="/Images/uei_product_io_dna_ao_308.png" Height="150" />
+    </GroupBox>-->
+    <Grid>
+        <Image Source="/Images/uei_product_io_dna_ao_308-no_bg.png" />
+    </Grid>
+</UserControl>
