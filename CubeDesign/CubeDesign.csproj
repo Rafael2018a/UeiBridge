@@ -54,6 +54,9 @@
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>code2.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -85,6 +88,7 @@
     <Compile Include="Utilities\DelegateCommand.cs" />
     <Compile Include="ViewModels\AI201ViewModel.cs" />
     <Compile Include="ViewModels\AO308ViewModel.cs" />
+    <Compile Include="ViewModels\CAN503ViewModel.cs" />
     <Compile Include="ViewModels\CubeSetupViewModel.cs" />
     <Compile Include="ViewModels\DIO403ViewModel.cs" />
     <Compile Include="ViewModels\DIO470ViewModel.cs" />
@@ -99,6 +103,9 @@
     </Compile>
     <Compile Include="Views\AO308View.xaml.cs">
       <DependentUpon>AO308View.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Views\CAN503View.xaml.cs">
+      <DependentUpon>CAN503View.xaml</DependentUpon>
     </Compile>
     <Compile Include="Views\DIO403View.xaml.cs">
       <DependentUpon>DIO403View.xaml</DependentUpon>
@@ -134,6 +141,10 @@
     <Page Include="Views\AO308View.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Views\CAN503View.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Views\DIO403View.xaml">
       <Generator>MSBuild:Compile</Generator>
@@ -205,6 +216,12 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\icons8-network-interface-card-68.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\uei_product_io_dna_can_503-no_bg.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="code2.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -14,6 +14,7 @@ namespace CubeDesign.ViewModels
         private string _menuItemHeader_Save;
         private string _menuItemHeader_SaveAs;
 
+        public string MainWindowTitle { get; }
         //private string _settingFileName;
 
         public event Action<SystemSetupViewModel> OnNewSystemViewModel;
@@ -43,6 +44,7 @@ namespace CubeDesign.ViewModels
             SaveFileAsCommand = new DelegateCommand(SaveFileAs);
             CloseAppCommand = new DelegateCommand(CloseApp);
 
+            MainWindowTitle = "Cube Design";
         }
 
         public void LoadSetupFile(FileInfo configFile)
@@ -50,7 +52,7 @@ namespace CubeDesign.ViewModels
             try
             {
                 CubeSetup1 = Config2.LoadCubeSetupFromFile( configFile.Name);
-                MidStatusBarMessage = $"Setup file: {Config2.DefaultSettingsFilename}";
+                MidStatusBarMessage = $"Setup file: {configFile.Name}";
             }
             catch (System.IO.FileNotFoundException ex)
             {

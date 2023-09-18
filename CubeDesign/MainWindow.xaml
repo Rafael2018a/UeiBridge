@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:CubeDesign"
         xmlns:views="clr-namespace:CubeDesign.Views"
         mc:Ignorable="d"
-        Title="MainWindow" Height="700" Width="1134" Closing="Window_Closing">
+        Title="{Binding MainWindowTitle}" Height="700" Width="1134" Closing="Window_Closing">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="30"/>
@@ -28,7 +28,7 @@
 
         <Grid Grid.Row="1" Background="#FF6A829A">
             <StackPanel   Orientation="Horizontal" >
-                <TextBlock Text="UeiBridge settings" Margin="15" FontSize="26" VerticalAlignment="Center"/>
+                <TextBlock Text="Cube/Rack setting editor" Margin="15" FontSize="26" VerticalAlignment="Center"/>
                 <Image Source="/Images/commercial-aircrft - Tailored 2.png" />
                 <TextBlock Text="Version 1.0" FontSize="18" VerticalAlignment="Bottom" Margin="10"/>
             </StackPanel>
@@ -44,7 +44,7 @@
         <views:SystemSetupView Grid.Row="3" x:Name="_systemSetupView"/>
 
         <StatusBar Grid.Row="4">
-            <StatusBarItem FontSize="18" Content="(c) IAI Malat. Dept 2288. R.N."/>
+            <StatusBarItem FontSize="18" Content="(c) IAI Malat. Dept 2287. R.N."/>
         </StatusBar>
     </Grid>
 </Window>

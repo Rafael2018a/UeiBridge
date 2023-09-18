@@ -31,7 +31,7 @@ namespace CubeDesign
             this.DataContext = _mainVM;
             _mainVM.OnNewSystemViewModel += SetSystemViewModel;
 
-            _mainVM.LoadSetupFile(new System.IO.FileInfo("cube3.config")); //Config2.DefaultSettingsFilename););
+            _mainVM.LoadSetupFile(new System.IO.FileInfo("cube2.config")); //Config2.DefaultSettingsFilename););
             
         }
         private void SetSystemViewModel(SystemSetupViewModel sysVM)

@@ -31,6 +31,9 @@
         <DataTemplate DataType="{x:Type vm:DIO470ViewModel}">
             <local:DIO470View/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CAN503ViewModel}">
+            <local:CAN503View/>
+        </DataTemplate>
     </UserControl.Resources>
     <Grid Background="Gray">
         <Grid.ColumnDefinitions>
@@ -43,7 +46,7 @@
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
 
-        <StackPanel x:Name="CubeButtons" Grid.Row="0" Margin="5 0 5 0" Orientation="Horizontal">
+        <!--<StackPanel x:Name="CubeButtons" Grid.Row="0" Margin="5 0 5 0" Orientation="Horizontal">
             <Button Command="{Binding AddCubeCommand}">
                 <StackPanel Orientation="Horizontal">
                     <Image Source="/Images/icons8-plus-math-48.png" Height="18"/>
@@ -51,22 +54,23 @@
                 </StackPanel>
             </Button>
             <Button Content="Remove"/>
-        </StackPanel>
-        <ListView x:Name="Cubes" Grid.Row="1" Margin="5 0 5 5" ItemsSource="{Binding CubeSetupVMList}" SelectedItem="{Binding SelectedCube, Mode=TwoWay}">
+        </StackPanel>-->
+        <ListView x:Name="Cubes" Grid.Row="1" Margin="5 0 5 5" ItemsSource="{Binding CubeSetupVMList}" SelectedItem="{Binding SelectedCube, Mode=TwoWay}" MinWidth="100">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <StackPanel>
                         <Border BorderBrush="{Binding IsCubeConnected, Converter={StaticResource cubeStateToColorConv}}" BorderThickness="2" Margin="10 10 10 2">
                             <Image Source="/Images/cube_a.jpg" Height="100" Opacity="{Binding IsCubeConnected, Converter={StaticResource cubeStateToOpecityConv}}"/>
                         </Border>
-                        <TextBlock Text="{Binding CubeAddress}" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding CubeNickname}" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding CubeTypeId}" FontWeight="SemiBold" HorizontalAlignment="Center"/>
                         <TextBlock Text="Not connected" Foreground="Red" HorizontalAlignment="Center" Visibility="{Binding IsCubeNotConnected, Converter={StaticResource VisibleIfTrueConv}}"/>
                     </StackPanel>
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
 
-        <StackPanel x:Name="Buttons2" Grid.Row="0" Grid.Column="1" Margin="5 0 5 0" Orientation="Horizontal">
+        <!--<StackPanel x:Name="Buttons2" Grid.Row="0" Grid.Column="1" Margin="5 0 5 0" Orientation="Horizontal">
             <Button >
                 <StackPanel Orientation="Horizontal">
                     <Image Source="/Images/icons8-plus-math-48.png" Height="18"/>
@@ -74,7 +78,8 @@
                 </StackPanel>
             </Button>
             <Button Content="Remove"/>
-        </StackPanel>
+        </StackPanel>-->
+        <ContentControl Grid.Row="0" Height="10"/>
         <ListView x:Name="Devices" Grid.Row="1" Grid.Column="1" Margin="5 0 5 5" ItemsSource="{Binding DeviceSetupVMList}" SelectedItem="{Binding SelectedDeviceSetupVM, Mode=TwoWay}">
             <ListView.ItemTemplate>
                 <DataTemplate>

@@ -389,6 +389,9 @@ namespace UeiBridge.Library
     public class CubeSetup : IEquatable<CubeSetup>
     {
         public string CubeUrl { get; set; } // must be public for the  serializer
+        public string TypeNickname { get; set; }
+        public string TypeDesc { get; set; }
+        public int TypeId { get; set; }
         public List<DeviceSetup> DeviceSetupList { get; set; } // don't make private set
         public string OriginFileFullName { get; set; }
 
@@ -409,8 +412,10 @@ namespace UeiBridge.Library
         {
             CubeUrl = deviceList[0].CubeUrl;
             int cubeId = deviceList[0].CubeId;
+            TypeNickname = $"Nick{cubeId}";
+            TypeDesc = TypeNickname + " desc";
+            TypeId = cubeId * 10;
             ConfigFactory cf = new ConfigFactory(ConfigFactory.PortNumberStart + cubeId * 100);
-
 
             DeviceSetupList = new List<DeviceSetup>();
             foreach (var dev in deviceList)
@@ -429,7 +434,7 @@ namespace UeiBridge.Library
             BlockSensorSetup bsSetup = BuildBlockSensorSetup(DeviceSetupList);
             if (null != bsSetup)
             {
-                DeviceSetupList.Add(bsSetup);
+                //DeviceSetupList.Add(bsSetup);
             }
         }
 

@@ -78,6 +78,8 @@ namespace CubeDesign.ViewModels
                     return new AI201ViewModel();
                 case DeviceMap2.DIO470Literal:
                     return new DIO470ViewModel();
+                case DeviceMap2.CAN503Literal:
+                    return new CAN503ViewModel();
                 default:
                     return null;
             }
