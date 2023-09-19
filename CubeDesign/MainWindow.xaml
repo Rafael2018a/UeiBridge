@@ -18,11 +18,12 @@
 
         <Menu Grid.Row="0" FontSize="18">
             <MenuItem Header="_File">
-                <MenuItem Header="Load setup file" Command="{Binding OpenFileCommand}"/>
+                <MenuItem Header="Open setup file" Command="{Binding OpenFileCommand}"/>
                 <!--<MenuItem Header="Open default file" Command="{Binding AddCommand}" CommandParameter="param"/>-->
-                <MenuItem Header="{Binding MenuItemHeader_Save}" Command="{Binding SaveFileCommand}" />
-                <MenuItem Header="{Binding MenuItemHeader_SaveAs}"/>
-                <MenuItem Header="Close"/>
+                <MenuItem Header="Generate setup file"/>
+                <MenuItem Header="Save file" Command="{Binding SaveFileCommand}" />
+                <MenuItem Header="Close file" Command="{Binding CloseFileCommand}"/>
+                <MenuItem Header="Exit" Command="{Binding ExitAppCommand}"/>
             </MenuItem>
         </Menu>
 
@@ -34,14 +35,23 @@
             </StackPanel>
         </Grid>
         <StatusBar Grid.Row="2">
+            <!--<StatusBarItem>
+                <Button Content="Load file" Width="80"/>
+            </StatusBarItem>
+            <StatusBarItem>
+                <Button Content="Generate setup file"/>
+            </StatusBarItem>-->
             <StatusBarItem FontSize="18">
                 <StatusBarItem.Content>
                     <TextBlock Text="{Binding MidStatusBarMessage}"/>
                 </StatusBarItem.Content>
             </StatusBarItem>
+            <StatusBarItem>
+                <Button Content="Save" Width="80"  Command="{Binding SaveFileCommand}"/>
+            </StatusBarItem>
         </StatusBar>
 
-        <views:SystemSetupView Grid.Row="3" x:Name="_systemSetupView"/>
+        <views:SystemSetupView Grid.Row="3" x:Name="_systemSetupView" DataContext="{Binding systemSetupVM}"/>
 
         <StatusBar Grid.Row="4">
             <StatusBarItem FontSize="18" Content="(c) IAI Malat. Dept 2287. R.N."/>

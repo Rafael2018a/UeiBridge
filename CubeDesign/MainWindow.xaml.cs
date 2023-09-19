@@ -27,17 +27,17 @@ namespace CubeDesign
         public MainWindow()
         {
             InitializeComponent();
-            _mainVM = new MainViewModel();
+            _mainVM = new MainViewModel( this);
             this.DataContext = _mainVM;
-            _mainVM.OnNewSystemViewModel += SetSystemViewModel;
+            //_mainVM.OnNewSystemViewModel += SetSystemViewModel;
 
-            _mainVM.LoadSetupFile(new System.IO.FileInfo("cube2.config")); //Config2.DefaultSettingsFilename););
+            //_mainVM.LoadSetupFile(new System.IO.FileInfo("cube2.config")); //Config2.DefaultSettingsFilename););
             
         }
-        private void SetSystemViewModel(SystemSetupViewModel sysVM)
-        {
-            _systemSetupView.DataContext = sysVM;
-        }
+        //private void SetSystemViewModel(SystemSetupViewModel sysVM)
+        //{
+        //    _systemSetupView.DataContext = sysVM;
+        //}
 
         //protected override void OnClosing(CancelEventArgs e)
         //{
@@ -45,6 +45,7 @@ namespace CubeDesign
         //}
         private void Window_Closing(object sender, CancelEventArgs e)
         {
+            _mainVM.ExitAppCommand.Execute(e);
             
             //if (_mainVM.IsConfigDirty)
             //{

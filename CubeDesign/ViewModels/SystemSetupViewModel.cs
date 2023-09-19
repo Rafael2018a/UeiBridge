@@ -96,7 +96,7 @@ namespace CubeDesign.ViewModels
         }
         #endregion
         #region === commands ===
-        public DelegateCommand AddCubeCommand { get; }
+        public RelayCommand AddCubeCommand { get; }
         #endregion
 
         public SystemSetupViewModel(List<CubeSetup> cubeSetupList)
@@ -114,7 +114,7 @@ namespace CubeDesign.ViewModels
             //SelectedViewModel = new SL508ViewModel();
 
             // load commands
-            AddCubeCommand = new DelegateCommand(new Action<object>(AddCubeCmd), new Func<object, bool>(CanAddCubeCmd));
+            AddCubeCommand = new RelayCommand(new Action<object>(AddCubeCmd), new Predicate<object>(CanAddCubeCmd));
         }
 
         private bool CanAddCubeCmd(object arg)

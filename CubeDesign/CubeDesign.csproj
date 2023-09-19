@@ -72,9 +72,6 @@
     <Reference Include="UeiDaqDNet">
       <HintPath>..\..\..\..\_gitRepos\UeiBridge.Integ\3rdParty\x64\UeiDaqDNet.dll</HintPath>
     </Reference>
-    <Reference Include="UeiLibrary">
-      <HintPath>..\..\..\..\_gitRepos\UeiBridge.Integ\bin64\Debug\UeiLibrary.dll</HintPath>
-    </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
@@ -85,7 +82,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Utilities\Converters.cs" />
-    <Compile Include="Utilities\DelegateCommand.cs" />
+    <Compile Include="Utilities\RelayCommand.cs" />
     <Compile Include="ViewModels\AI201ViewModel.cs" />
     <Compile Include="ViewModels\AO308ViewModel.cs" />
     <Compile Include="ViewModels\CAN503ViewModel.cs" />
@@ -222,6 +219,12 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="code2.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\UeiLibrary\UeiLibrary.csproj">
+      <Project>{73ac748f-67f0-4adc-a6cb-0e497f51e6ab}</Project>
+      <Name>UeiLibrary</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
