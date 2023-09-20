@@ -75,7 +75,7 @@ namespace UeiBridgeTest
         [Test]
         public void LoadCubeSetupFromFileTest()
         {
-            UeiBridge.Library.CubeSetup cs = UeiBridge.Library.Config2.LoadCubeSetupFromFile("Cube.fortest.config");
+            UeiBridge.Library.CubeSetup cs = CubeSetup.LoadCubeSetupFromFile( new FileInfo( "Cube.fortest.config"));
             Assert.That(cs, Is.Not.Null);
         }
         [Test]
@@ -205,7 +205,7 @@ namespace UeiBridgeTest
             {
                 Assert.That(File.Exists(fn), Is.EqualTo(true));
                 Assert.That(list[0].DeviceSetupList.Count, Is.EqualTo(11));
-                Assert.That(list[0].OriginFileFullName, Is.Null);
+                Assert.That(list[0].AssociatedFileFullname, Is.Not.Null);
             });
         }
         [Test]

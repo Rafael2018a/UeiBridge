@@ -47,7 +47,10 @@
                 </StatusBarItem.Content>
             </StatusBarItem>
             <StatusBarItem>
-                <Button Content="Save" Width="80"  Command="{Binding SaveFileCommand}"/>
+                <Button Content="Save" Width="80" Command="{Binding SaveFileCommand}"/>
+            </StatusBarItem>
+            <StatusBarItem>
+                <Button Content="Apply changes"/>
             </StatusBarItem>
         </StatusBar>
 

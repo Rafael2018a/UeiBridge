@@ -96,9 +96,9 @@
       <Project>{0475416b-5715-4bd8-a379-83bd444a8401}</Project>
       <Name>ByteStreamer3</Name>
     </ProjectReference>
-    <ProjectReference Include="..\UeiBridgeSetup\UeiBridgeSetup.csproj">
-      <Project>{05d73f32-5fb8-49fe-be5b-af065d07c0c1}</Project>
-      <Name>UeiBridgeSetup</Name>
+    <ProjectReference Include="..\CubeDesign\CubeDesign.csproj">
+      <Project>{41445988-e376-4e91-8832-b9862f31025a}</Project>
+      <Name>CubeDesign</Name>
     </ProjectReference>
     <ProjectReference Include="..\UeiBridge\UeiBridge.csproj">
       <Project>{086a67bb-d92f-4fc5-a91e-39913abc6328}</Project>

@@ -129,7 +129,7 @@ namespace CubeDesign.ViewModels
             //Views.AddCubeDialog d1 = new Views.AddCubeDialog();
             //if (true == d1.ShowDialog())
             {
-                CubeSetup cs = Config2.LoadCubeSetupFromFile("Cube3.config");
+                CubeSetup cs = CubeSetup.LoadCubeSetupFromFile( new System.IO.FileInfo( "Cube3.config"));
                 if (null != cs)
                 {
                     _cubeSetupList.Add(cs);

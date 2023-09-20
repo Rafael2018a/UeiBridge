@@ -17,7 +17,7 @@
             </Grid.RowDefinitions>
             <StackPanel Grid.Row="0" Orientation="Horizontal">
                 <TextBlock Text="IPAddress" Margin="7" FontSize="16"/>
-                <TextBox Width="100" Height="20" Margin="7" Text="{Binding IpString, Mode=OneWay}"/>
+                <TextBox Width="100" Height="20" Margin="7" Text="{Binding Address, Mode=TwoWay}"/>
             </StackPanel>
             <StackPanel Grid.Row="1" Orientation="Horizontal">
                 <TextBlock Text="Port" Margin="7" FontSize="16"/>

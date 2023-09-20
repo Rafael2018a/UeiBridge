@@ -14,16 +14,25 @@ namespace CubeDesign.ViewModels
         readonly EndPointLocation _epLocation;
 
         private UeiBridge.Library.EndPoint EndPoint { get; set; }
-        public string IpString
+        //public string IpString
+        //{
+        //    get => this.EndPoint.Address.ToString();// _ipString;
+        //}
+        public string Address
         {
-            get => this.EndPoint.Address.ToString();// _ipString;
+            get => EndPoint.Address;
+            set
+            {
+                this.EndPoint.SetAddress(value);
+                RaisePropertyChanged();
+            }
         }
         public int IpPort 
         {
             get => this.EndPoint.Port;
             set
             {
-                this.EndPoint.Port = value;
+                this.EndPoint.SetPort( value);
                 RaisePropertyChanged();
             }
         }

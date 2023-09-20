@@ -96,10 +96,15 @@ namespace CubeDesign.ViewModels
 
         public void LoadSetupFile(FileInfo configFile)
         {
+            if (!configFile.Exists)
+            {
+                MessageBox.Show($"File {configFile.FullName} not exists", "Error", MessageBoxButton.OK);
+                return;
+            }
             try
             {
-                CubeSetup1 = Config2.LoadCubeSetupFromFile( configFile.Name);
-                CubeSetupClean = Config2.LoadCubeSetupFromFile( configFile.Name);
+                CubeSetup1 = CubeSetup.LoadCubeSetupFromFile( configFile);
+                CubeSetupClean = CubeSetup.LoadCubeSetupFromFile( configFile);
                 MidStatusBarMessage = $"Setup file: {configFile.Name}";
             }
             catch (System.IO.FileNotFoundException ex)
@@ -111,6 +116,7 @@ namespace CubeDesign.ViewModels
             {
                 CubeSetup1 = new CubeSetup();
                 MidStatusBarMessage = $"Setup file ({Config2.DefaultSettingsFilename}) parse error. {ex.Message}";
+                MessageBox.Show(MidStatusBarMessage, "Error", MessageBoxButton.OK);
             }
 
             //_menuItemHeader_Save = $"Save {configFile.Name}";
@@ -155,6 +161,7 @@ namespace CubeDesign.ViewModels
         private void SaveFile(object param) 
         {
             CubeSetup1.Serialize();//  As(new FileInfo(Config2.DefaultSettingsFilename), true);
+            CubeSetupClean = CubeSetup.LoadCubeSetupFromFile( new FileInfo( CubeSetup1.AssociatedFileFullname));
         }
         private void SaveFileAs(object param) { }
         private void ExitApp(object param) 
