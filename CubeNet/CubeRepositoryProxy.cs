@@ -8,18 +8,17 @@ using System.Net;
 namespace UeiBridge.CubeNet
 {
     /// <summary>
-    /// R&R: Manage CubeRepository class
+    /// R&R: Manage CubeRepository object
     /// 1. create new instance of CubeRepository
-    /// 2. load/save from/to backing file
+    /// 2. load/save from/to backing store (json file)
     /// 3. some repository help methods
     /// </summary>
     class CubeRepositoryProxy
     {
-        //CubeRepository _cubeRepositroy;
-        public bool IsRepositoryExist { get; private set; } = false;
+        public bool IsRepositoryExist => (CubeRepositroy1 != null);// //get ; private set; } = false;
         public FileInfo RepositoryBackingFile { get; private set; } = null;
         //internal CubeRepository CubeRepositroy { get => _cubeRepositroy; private set => _cubeRepositroy = value; }
-        internal CubeRepository CubeRepositroy { get; set; }
+        internal CubeRepository CubeRepositroy1 { get; set; }
 
         /// <summary>
         /// Load from backing file.
@@ -34,8 +33,8 @@ namespace UeiBridge.CubeNet
             {
                 using (StreamReader reader = repFile.OpenText())
                 {
-                    CubeRepositroy = JsonConvert.DeserializeObject<CubeRepository>(reader.ReadToEnd());
-                    IsRepositoryExist = true;
+                    CubeRepositroy1 = JsonConvert.DeserializeObject<CubeRepository>(reader.ReadToEnd());
+                    //IsRepositoryExist = true;
                     RepositoryBackingFile = repFile;
                     rv = true;
                 }
@@ -44,12 +43,12 @@ namespace UeiBridge.CubeNet
         }
         internal void CreateEmptyRepository()
         {
-            if (!IsRepositoryExist)
+            if (IsRepositoryExist)
             {
-                CubeRepositroy = new CubeRepository();
-                IsRepositoryExist = true;
-                RepositoryBackingFile = null;
+                throw new ApplicationException("Repository already exists");
             }
+            CubeRepositroy1 = new CubeRepository();
+            RepositoryBackingFile = null;
         }
 
         /// <summary>
@@ -61,7 +60,7 @@ namespace UeiBridge.CubeNet
         internal bool SaveRepository(FileInfo repFile)
         {
             bool rc = false;
-            string s = JsonConvert.SerializeObject(CubeRepositroy, Formatting.Indented);
+            string s = JsonConvert.SerializeObject(CubeRepositroy1, Formatting.Indented);
             using (StreamWriter fs = repFile.CreateText())
             {
                 fs.Write(s);
@@ -70,10 +69,18 @@ namespace UeiBridge.CubeNet
             rc = true;
             return rc;
         }
+        /// <summary>
+        /// get linear list of cubes from CubeRep.json
+        /// </summary>
+        /// <returns></returns>
         internal List<IPAddress> GetAllPertainedCubes()
         {
+            if (null==CubeRepositroy1)
+            {
+                return null;
+            }
             List<IPAddress> linearCubeList = new List<IPAddress>();
-            foreach (CubeType ct in CubeRepositroy.CubeTypeList)
+            foreach (CubeType ct in CubeRepositroy1.CubeTypeList)
             {
                 foreach (string ip in ct.PertainCubeList)
                 {
@@ -92,12 +99,12 @@ namespace UeiBridge.CubeNet
 
         void AddCubeTypeEntry(CubeType ct)
         {
-            CubeRepositroy.CubeTypeList.Add(ct);
+            CubeRepositroy1.CubeTypeList.Add(ct);
         }
 
         internal List<CubeType> GetCubeTypesBySignature(string cubeSignature)
         {
-            var l = CubeRepositroy.CubeTypeList.Where(i => i.CubeSignature == cubeSignature);
+            var l = CubeRepositroy1.CubeTypeList.Where(i => i.CubeSignature == cubeSignature);
             return l.ToList();
         }
 
@@ -106,7 +113,7 @@ namespace UeiBridge.CubeNet
             CubeType ct = new CubeType(nickName, desc);
             ct.SetSignature(cubeSignature);
 
-            CubeRepositroy.CubeTypeList.Add(ct);
+            CubeRepositroy1.CubeTypeList.Add(ct);
             return ct;
         }
     }

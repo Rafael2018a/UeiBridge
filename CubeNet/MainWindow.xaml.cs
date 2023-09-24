@@ -28,6 +28,12 @@ namespace UeiBridge.CubeNet
             DataContext = _vm;
         }
 
+
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            _vm.ExitAppCommand.Execute(e);
+        }
+
         //private void Button_Click(object sender, RoutedEventArgs e)
         //{
         //    MessageBox.Show("Please use PowerDNA explorer to change the physical cube address\nAfter that, click \"Get cube signature\"", "Cube IP", MessageBoxButton.OK);

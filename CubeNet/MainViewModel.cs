@@ -26,6 +26,7 @@ namespace UeiBridge.CubeNet
         public RelayCommand SaveRepositoryCommand { get; set; }
         public RelayCommand AcceptAddressCommand { get; set; }
         public RelayCommand ResetPaneCommand { get; set; }
+        public RelayCommand ExitAppCommand { get; set; }
         #endregion
         #region == privates ==
         string _cubeSignature;
@@ -162,6 +163,19 @@ namespace UeiBridge.CubeNet
             //AddCubeToExistingEntryCommand = new RelayCommand(AddCubeToExistingEntry, CanAddCubeToExistingEntry);
             SaveRepositoryCommand = new RelayCommand( SaveRepository, CanSaveRepository);
             ResetPaneCommand = new RelayCommand(ResetPane, CanResetPane);
+            ExitAppCommand = new RelayCommand(ExitApp);
+        }
+
+        private void ExitApp(object obj)
+        {
+            CubeRepository cr = new CubeRepository();
+            cr.CubeTypeList.Add(new CubeType("hi", "hello"));
+
+            if (_repositoryProxy.CubeRepositroy1.Equals(cr))
+            {
+
+            }
+            //throw new NotImplementedException();
         }
 
         private void ResetPane(object obj)
@@ -267,7 +281,7 @@ namespace UeiBridge.CubeNet
                         MessageBox.Show("Must fill both name and desc");
                         return;
                     }
-                    if (_repositoryProxy.CubeRepositroy.CubeTypeList.Any( i => i.NickName == CubeNickname))
+                    if (_repositoryProxy.CubeRepositroy1.CubeTypeList.Any( i => i.NickName == CubeNickname))
                     {
                         MessageBox.Show("Nickname already exists");
                         return;

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:UeiBridge.CubeNet"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="450" Width="800" Closing="Window_Closing">
     <Window.Resources>
         <local:IpAddressToStringConverter x:Key="IpAddressToStringConverter" />
         <local:FileInfoToStringConverter x:Key="FileInfoToStringConverter"/>
@@ -25,6 +25,7 @@
         <Border Margin="5,30,5,5" BorderBrush="Navy" BorderThickness="1" CornerRadius="1">
             <Grid>
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="auto"/>
                     <RowDefinition Height="auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="auto"/>
@@ -48,14 +49,18 @@
                         <Setter Property="Margin" Value="3"/>
                     </Style>
                 </Grid.Resources>
+                <StackPanel Orientation="Horizontal">
+                    <ContentControl Width="20"/>
+                    <TextBlock Text="Add new cube to repository" FontSize="26"/>
+                </StackPanel>
 
-                <GroupBox Margin="5" Grid.Row="0" BorderBrush="LightBlue" BorderThickness="2" Header="Cube details">
+                <GroupBox Margin="5" Grid.Row="1" BorderBrush="LightBlue" BorderThickness="2" Header="Cube details">
                     <StackPanel x:Name="buttonsPanel" Grid.Row="0" >
                         <StackPanel Orientation="Horizontal">
                             <Button Content="Find free address" Command="{Binding GetFreeIpCommand}"/>
                             <Button Content="Reset" Command="{Binding ResetPaneCommand}"/>
                         </StackPanel>
-                        
+
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="Suggested address "/>
                             <TextBox x:Name="SuggestedIp" Width="100" Text="{Binding Path=CubeAddress, Converter={StaticResource IpAddressToStringConverter}}" IsEnabled="{Binding IsAddressEnabled}" />
@@ -68,7 +73,7 @@
                     </StackPanel>
                 </GroupBox>
 
-                <GroupBox Margin="5" Grid.Row="1" BorderBrush="LightBlue" BorderThickness="2" Header="Repository update">
+                <GroupBox Margin="5" Grid.Row="2" BorderBrush="LightBlue" BorderThickness="2" Header="Repository update">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
@@ -100,7 +105,7 @@
                     </Grid>
                 </GroupBox>
 
-                <StatusBar Grid.Row="2" Background="LightGray" Height="25">
+                <StatusBar Grid.Row="3" Background="LightGray" Height="25">
                     <StatusBarItem Content="{Binding Path=PanelLogMessage}">
                         <StatusBarItem.ToolTip>
                             <ToolTip>
