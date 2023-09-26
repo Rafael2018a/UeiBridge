@@ -24,7 +24,7 @@ namespace UeiBridge.CubeNet
         public MainWindow()
         {
             InitializeComponent();
-            _vm = new MainViewModel();
+            _vm = new MainViewModel( this);
             DataContext = _vm;
         }
 

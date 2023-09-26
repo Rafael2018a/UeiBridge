@@ -34,10 +34,10 @@ namespace UeiBridge.CubeNet
 
         public bool Equals(CubeType other)
         {
-            bool a1 = this.CubeSignature.Equals(other.CubeSignature);
-            bool a2 = this.NickName.Equals(other.NickName);
+            bool a1 = this.CubeSignature == other.CubeSignature;
+            bool a2 = this.NickName == other.NickName;
             bool a3 = this.TypeId == other.TypeId;
-            bool a4 = this.Desc.Equals(other.Desc);
+            bool a4 = this.Desc == other.Desc;
             bool a5 = this.PertainCubeList.SequenceEqual(other.PertainCubeList);
 
             return (a1 && a2 && a3 && a4 && a5);
