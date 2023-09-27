@@ -13,60 +13,97 @@ namespace UeiBridge.CubeNet
     /// 2. load/save from/to backing store (json file)
     /// 3. some repository help methods
     /// </summary>
-    class CubeRepositoryProxy
+    public class CubeRepositoryProxy
     {
-        public bool IsRepositoryExist => (CubeRepositroy1 != null);// //get ; private set; } = false;
-        public FileInfo RepositoryBackingFile { get; private set; } = null;
+        public bool IsRepositoryLoaded => (CubeRepositroyMain != null);// //get ; private set; } = false;
+        public FileInfo RepositoryFile { get; private set; } = null;
         //internal CubeRepository CubeRepositroy { get => _cubeRepositroy; private set => _cubeRepositroy = value; }
-        internal CubeRepository CubeRepositroy1 { get; set; }
+        CubeRepository CubeRepositroyMain { get; set; }
+        CubeRepository CubeRepositroyClean { get; set; }
 
         /// <summary>
-        /// Load from backing file.
-        /// this method might throw
+        /// Load from file.
+        /// this method might throw serialization exception.
+        /// if rep already open, throw exception
         /// </summary>
         /// <param name="repFile"></param>
         /// <returns></returns>
-        internal bool LoadRepository(FileInfo repFile)
+        public bool LoadRepository(FileInfo repFile)
         {
             bool rv = false;
-            if (!IsRepositoryExist)
+            if (!IsRepositoryLoaded)
             {
                 using (StreamReader reader = repFile.OpenText())
                 {
-                    CubeRepositroy1 = JsonConvert.DeserializeObject<CubeRepository>(reader.ReadToEnd());
-                    //IsRepositoryExist = true;
-                    RepositoryBackingFile = repFile;
+                    CubeRepositroyMain = JsonConvert.DeserializeObject<CubeRepository>(reader.ReadToEnd());
+                    RepositoryFile = repFile;
                     rv = true;
                 }
+                using (StreamReader reader = repFile.OpenText())
+                {
+                    CubeRepositroyClean = JsonConvert.DeserializeObject<CubeRepository>(reader.ReadToEnd());
+                }
+            }
+            else
+            {
+                throw new ArgumentException("Repository already loaded");
             }
             return rv;
         }
-        internal void CreateEmptyRepository()
+        
+        public void CloseRepository()
         {
-            if (IsRepositoryExist)
+            CubeRepositroyMain = null;
+            CubeRepositroyClean = null;
+        }
+        public string GetRepoStatString()
+        {
+            if (IsRepositoryLoaded)
             {
-                throw new ApplicationException("Repository already exists");
+                int entries = CubeRepositroyMain.CubeTypeList.Count;
+                int cubes = GetAllPertainedCubes().Count;
+                string result = $"{entries} cube types, {cubes} cubes";
+                return result;
             }
-            CubeRepositroy1 = new CubeRepository();
-            RepositoryBackingFile = null;
+            return null;
+        }
+        /// <summary>
+        /// Create and save new rep
+        /// </summary>
+        /// <param name="repFile"></param>
+        public void CreateEmptyRepository(FileInfo repFile)
+        {
+            if (IsRepositoryLoaded)
+            {
+                throw new ArgumentException("Repository already loaded");
+            }
+            CubeRepositroyMain = new CubeRepository();
+            CubeRepositroyClean = new CubeRepository();
+            RepositoryFile = repFile;
+
+            this.SaveRepository();
         }
 
         /// <summary>
-        /// Save to backing file.
+        /// Save rep to file.
         /// this method might throw
         /// </summary>
         /// <param name="repFile"></param>
         /// <returns></returns>
-        internal bool SaveRepository(FileInfo repFile)
+        public bool SaveRepository()
         {
             bool rc = false;
-            string s = JsonConvert.SerializeObject(CubeRepositroy1, Formatting.Indented);
-            using (StreamWriter fs = repFile.CreateText())
+            string s = JsonConvert.SerializeObject(CubeRepositroyMain, Formatting.Indented);
+            using (StreamWriter fs = RepositoryFile.CreateText())
             {
                 fs.Write(s);
-                RepositoryBackingFile = repFile;
+                rc = true;
             }
-            rc = true;
+
+            using (StreamReader reader = RepositoryFile.OpenText())
+            {
+                CubeRepositroyClean = JsonConvert.DeserializeObject<CubeRepository>(reader.ReadToEnd());
+            }
             return rc;
         }
         /// <summary>
@@ -75,12 +112,12 @@ namespace UeiBridge.CubeNet
         /// <returns></returns>
         internal List<IPAddress> GetAllPertainedCubes()
         {
-            if (null==CubeRepositroy1)
+            if (null==CubeRepositroyMain)
             {
                 return null;
             }
             List<IPAddress> linearCubeList = new List<IPAddress>();
-            foreach (CubeType ct in CubeRepositroy1.CubeTypeList)
+            foreach (CubeType ct in CubeRepositroyMain.CubeTypeList)
             {
                 foreach (string ip in ct.PertainCubeList)
                 {
@@ -90,31 +127,45 @@ namespace UeiBridge.CubeNet
             return linearCubeList;
         }
         
-        void f()
-        {
-            IPAddress ip;
-            //ip.GetAddressBytes();
-            //IPAddress ip1 = new IPAddress()
-        }
-
         void AddCubeTypeEntry(CubeType ct)
         {
-            CubeRepositroy1.CubeTypeList.Add(ct);
+            CubeRepositroyMain.CubeTypeList.Add(ct);
         }
 
         internal List<CubeType> GetCubeTypesBySignature(string cubeSignature)
         {
-            var l = CubeRepositroy1.CubeTypeList.Where(i => i.CubeSignature == cubeSignature);
+            var l = CubeRepositroyMain.CubeTypeList.Where(i => i.CubeSignature == cubeSignature);
+            return l.ToList();
+        }
+        internal List<CubeType> GetCubeTypeByNickName(string nickname)
+        {
+            var l = CubeRepositroyMain.CubeTypeList.Where(i => i.NickName == nickname);
             return l.ToList();
         }
 
         internal CubeType AddCubeType( string nickName, string desc, string cubeSignature)
         {
-            CubeType ct = new CubeType(nickName, desc);
-            ct.SetSignature(cubeSignature);
+            CubeType ct = new CubeType(nickName, desc, cubeSignature);
 
-            CubeRepositroy1.CubeTypeList.Add(ct);
+            CubeRepositroyMain.CubeTypeList.Add(ct);
             return ct;
+        }
+
+        public bool CheckRepositoryChange()
+        {
+            if (null==CubeRepositroyMain)
+            {
+                return false;
+            }
+
+            if (CubeRepositroyMain.Equals(CubeRepositroyClean))
+            {
+                return false;
+            }
+            else
+            {
+                return true;
+            }
         }
     }
 }

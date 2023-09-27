@@ -14,11 +14,10 @@
     <Grid>
         <Menu FontSize="18">
             <MenuItem Header="_File">
-                <MenuItem Header="Load repository file"/>
+                <MenuItem Header="Load repository file" Command="{Binding PickRepoFileCommand}"/>
                 <MenuItem Header="Create empty repository" Command="{Binding CreateEmptyRepositoryCommand}"/>
                 <MenuItem Header="Save repository" Command="{Binding SaveRepositoryCommand}"/>
-                <MenuItem Header="Save repository as"/>
-                <MenuItem Header="Close"/>
+                <MenuItem Header="Close repository" Command="{Binding CloseRepositoryCommand}"/>
             </MenuItem>
         </Menu>
 
@@ -58,6 +57,7 @@
                 <GroupBox Margin="5" Grid.Row="1" BorderBrush="LightBlue" BorderThickness="2" Header="Repository file">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="{Binding Path=RepositoryFileInfo, Converter={StaticResource FileInfoToStringConverter}}"/>
+                        <TextBlock Text="{Binding RepoStat}"/>
                     </StackPanel>
                 </GroupBox>
 
@@ -120,8 +120,8 @@
                             </ToolTip>
                         </StatusBarItem.ToolTip>
                     </StatusBarItem>
-                    <Separator/>
-                    <StatusBarItem Content="line 2"/>
+                    <Separator Width="2"/>
+                    <!--<StatusBarItem Content="line 2"/>-->
                 </StatusBar>
             </Grid>
         </Border>
