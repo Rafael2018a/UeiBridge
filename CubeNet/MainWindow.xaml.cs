@@ -34,10 +34,24 @@ namespace UeiBridge.CubeNet
             _vm.ExitAppCommand.Execute(e);
         }
 
-        //private void Button_Click(object sender, RoutedEventArgs e)
-        //{
-        //    MessageBox.Show("Please use PowerDNA explorer to change the physical cube address\nAfter that, click \"Get cube signature\"", "Cube IP", MessageBoxButton.OK);
-        //    SuggestedIp.IsEnabled = false;
-        //}
+        private void TabControl_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.Source is TabControl)
+            {
+                if (GenerateSetupFile.IsSelected)
+                {
+                    TabControl tc = e.Source as TabControl;
+                    _vm.GetRepositoryEntriesCommand.Execute(e);
+                }
+            }
+        }
+
+        private void GenerateSetup_click(object sender, RoutedEventArgs e)
+        {
+            //var i = CubeTypeList.SelectedIndex;
+            //var z = CubeTypeList.SelectedItem;
+            //CubeType ct = z as CubeType;
+            _vm.GenerateSetupFileCommand.Execute(CubeTypeList.SelectedItem);
+        }
     }
 }

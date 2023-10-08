@@ -12,6 +12,7 @@ using UeiBridge.Library;
 using System.Windows;
 using System.Collections.ObjectModel;
 using Microsoft.WindowsAPICodePack.Dialogs;
+using Microsoft.Win32;
 
 namespace UeiBridge.CubeNet
 {
@@ -30,6 +31,8 @@ namespace UeiBridge.CubeNet
         public RelayCommand ExitAppCommand { get; set; }
         public RelayCommand PickRepoFileCommand { get; set; }
         public RelayCommand CloseRepositoryCommand { get; set; }
+        public RelayCommand GetRepositoryEntriesCommand { get; set; }
+        public RelayCommand GenerateSetupFileCommand { get; set; }
         #endregion
         #region == privates ==
         string _cubeSignature;
@@ -85,6 +88,7 @@ namespace UeiBridge.CubeNet
 
 
         private ObservableCollection<CubeType> _matchingCubeTypeList;
+        private ObservableCollection<CubeType> _cubeTypeList;
         public bool IsAddressEnabled 
         { 
             get => _isAddressEnabled; 
@@ -129,6 +133,16 @@ namespace UeiBridge.CubeNet
             set
             {
                 _repoStat = value;
+                RaisePropertyChanged();
+            }
+        }
+
+        public ObservableCollection<CubeType> CubeTypeList 
+        { 
+            get => _cubeTypeList;
+            set
+            {
+                _cubeTypeList = value;
                 RaisePropertyChanged();
             }
         }
@@ -179,12 +193,72 @@ namespace UeiBridge.CubeNet
             AcceptAddressCommand = new RelayCommand(AcceptAddress, CanAcceptAddress);
             GetCubeSignatureCommand = new RelayCommand(GetCubeSignature, CanGetCubeSignature);
             AddCubeToRepositoryCommand = new RelayCommand(AddCubeToRepository, CanAddCubeToRepository);
-            //AddCubeToExistingEntryCommand = new RelayCommand(AddCubeToExistingEntry, CanAddCubeToExistingEntry);
             SaveRepositoryCommand = new RelayCommand( SaveRepository, CanSaveRepository);
             ResetPaneCommand = new RelayCommand(ResetPane, CanResetPane);
             ExitAppCommand = new RelayCommand(ExitApp);
             PickRepoFileCommand = new RelayCommand(PickRepoFile);
             CloseRepositoryCommand = new RelayCommand(CloseRepository, CanCloseRepository);
+            GetRepositoryEntriesCommand = new RelayCommand(GetRepositoryEntries, CanGetRepositoryEntries);
+            GenerateSetupFileCommand = new RelayCommand(GenerateSetupFile, CanGenerateSetupFile);
+        }
+
+        private bool CanGenerateSetupFile(object obj)
+        {
+            return true;
+        }
+
+        private void GenerateSetupFile(object obj)
+        {
+            CubeType ct = obj as CubeType;
+            if (ct == null)
+            {
+                return;
+            }
+
+            if (null!=ct.CubeSignature)
+            {
+                List<UeiDeviceInfo> devInfoList = new List<UeiDeviceInfo>();
+                // populate list
+                string[] deviceList = ct.CubeSignature.Split('/');
+                int slot = 0;
+                foreach(string dev in deviceList)
+                {
+                    devInfoList.Add(new UeiDeviceInfo("-", slot++, dev));
+                }
+
+                CubeSetup cs = new CubeSetup(devInfoList);
+
+                SaveFileDialog saveFileDialog = new SaveFileDialog();
+                saveFileDialog.FileName = CubeSetup.GetSelfFilename(ct.NickName);
+                if (saveFileDialog.ShowDialog() == true)
+                {
+                    cs.AssociatedFileFullname = saveFileDialog.FileName;
+                    cs.Serialize();
+                    PanelLogMessage = $"File {cs.AssociatedFileFullname} saved";
+                }
+            }
+            else
+            {
+                MessageBox.Show("Empty signature. Can't save file.", "Error", MessageBoxButton.OK);
+            }
+        }
+
+        private bool CanGetRepositoryEntries(object obj)
+        {
+            return true;
+        }
+
+        private void GetRepositoryEntries(object obj)
+        {
+            var l = _repositoryProxy.GetCubeTypes();
+            if (null != l)
+            {
+                CubeTypeList = new ObservableCollection<CubeType>(_repositoryProxy.GetCubeTypes());
+            }
+            else
+            {
+                CubeTypeList = null;
+            }
         }
 
         private bool CanCloseRepository(object obj)
@@ -232,12 +306,6 @@ namespace UeiBridge.CubeNet
                     e.Cancel = true;
                 }
             }
-
-            //if (_repositoryProxy.CubeRepositroy1.Equals(cr))
-            //{
-
-            //}
-            //throw new NotImplementedException();
         }
 
         private void ResetPane(object obj)

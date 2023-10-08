@@ -167,5 +167,10 @@ namespace UeiBridge.CubeNet
                 return true;
             }
         }
+
+        internal List<CubeType> GetCubeTypes()
+        {
+            return CubeRepositroyMain?.CubeTypeList;
+        }
     }
 }

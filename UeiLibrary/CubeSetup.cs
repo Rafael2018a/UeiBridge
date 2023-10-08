@@ -37,6 +37,11 @@ namespace UeiBridge.Library
             string filename = (cube_id == UeiDeviceInfo.SimuCubeId) ? "Cube.simu.config" : $"Cube{cube_id}.config";
             return filename;
         }
+        public static string GetSelfFilename(string nickname)
+        {
+            string filename = $"Cubesetup.{nickname}.xml";
+            return filename;
+        }
         /// <summary>
         /// Build default cube setup
         /// </summary>
