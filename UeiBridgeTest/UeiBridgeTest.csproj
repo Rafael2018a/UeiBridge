@@ -84,7 +84,7 @@
     <Compile Include="ByteStreamerTest.cs" />
     <Compile Include="ConfigTests.cs" />
     <Compile Include="ConvertersTest.cs" />
-    <Compile Include="CubeRepoTests.cs" />
+    <Compile Include="CubeNetTest.cs" />
     <Compile Include="DeviceManagersTests.cs" />
     <Compile Include="NonSpecificTests.cs" />
     <Compile Include="Program.cs" />
