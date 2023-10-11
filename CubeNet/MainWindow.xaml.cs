@@ -53,5 +53,10 @@ namespace UeiBridge.CubeNet
             //CubeType ct = z as CubeType;
             _vm.GenerateSetupFileCommand.Execute(CubeTypeList.SelectedItem);
         }
+
+        private void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            
+        }
     }
 }

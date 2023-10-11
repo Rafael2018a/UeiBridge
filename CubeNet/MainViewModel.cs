@@ -212,6 +212,7 @@ namespace UeiBridge.CubeNet
             CubeType ct = obj as CubeType;
             if (ct == null)
             {
+                MessageBox.Show("No item selected", "Error", MessageBoxButton.OK);
                 return;
             }
 
