@@ -44,6 +44,18 @@ namespace UeiBridge.CubeNet
         const string _repositoryFileName = "CubeRepository.json";
         CubeRepositoryProxy _repositoryProxy = new CubeRepositoryProxy();
         string _panelLogMessage;
+        string _cubeNickname;
+        string _cubeDesc;
+
+        internal void OnMatchingCubeTypeListChange()
+        {
+            if (null != SelectedCubeType)
+            {
+                CubeNickname = SelectedCubeType.NickName;
+                CubeDesc = SelectedCubeType.Desc;
+            }
+        }
+
         private bool _isAddressEnabled=true;
         bool _canAddCubeToRepository = false;
         bool _canGetCubeSignature = false;
@@ -83,8 +95,8 @@ namespace UeiBridge.CubeNet
         //List<string> _cubeTypeList;
         public string PanelLogMessage { get => _panelLogMessage; set { _panelLogMessage = value; RaisePropertyChanged(); } }
         public string PanelLogToolTip { get; set; }
-        public string CubeNickname { get; set; }
-        public string CubeDesc { get; set; }
+        //public string CubeNickname { get; set; }
+        //public string CubeDesc { get; set; }
 
 
         private ObservableCollection<CubeType> _matchingCubeTypeList;
@@ -146,6 +158,9 @@ namespace UeiBridge.CubeNet
                 RaisePropertyChanged();
             }
         }
+
+        public string CubeNickname { get => _cubeNickname; set { _cubeNickname = value; RaisePropertyChanged(); } }
+        public string CubeDesc { get => _cubeDesc; set { _cubeDesc = value; RaisePropertyChanged(); } }
         #endregion publics
 
         //IPAddress _cubeIp;
@@ -224,6 +239,10 @@ namespace UeiBridge.CubeNet
                 int slot = 0;
                 foreach(string dev in deviceList)
                 {
+                    if (string.IsNullOrEmpty(dev))
+                    {
+                        continue;
+                    }
                     devInfoList.Add(new UeiDeviceInfo("-", slot++, dev));
                 }
 

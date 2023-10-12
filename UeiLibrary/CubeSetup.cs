@@ -39,7 +39,7 @@ namespace UeiBridge.Library
         }
         public static string GetSelfFilename(string nickname)
         {
-            string filename = $"Cubesetup.{nickname}.xml";
+            string filename = $"Cubesetup.{nickname}.config";
             return filename;
         }
         /// <summary>

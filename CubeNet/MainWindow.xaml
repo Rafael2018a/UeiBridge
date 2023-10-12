@@ -9,6 +9,7 @@
     <Window.Resources>
         <local:IpAddressToStringConverter x:Key="IpAddressToStringConverter" />
         <local:FileInfoToStringConverter x:Key="FileInfoToStringConverter"/>
+        <local:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
     </Window.Resources>
 
     <Grid>
@@ -86,19 +87,19 @@
                                 <StackPanel >
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="Cube nickname "/>
-                                        <TextBox Width="100" Text="{Binding CubeNickname}"/>
+                                        <TextBox Width="100" Text="{Binding CubeNickname}" IsReadOnly="{Binding ElementName=AddAsNew, Path=IsChecked, Converter={StaticResource InverseBooleanConverter}}"/>
                                     </StackPanel>
                                     <StackPanel Orientation="Horizontal">
                                         <TextBlock Text="Cube description "/>
-                                        <TextBox Width="200" Height="40" TextWrapping="Wrap" Text="{Binding CubeDesc}"/>
+                                        <TextBox Width="200" Height="40" TextWrapping="Wrap" Text="{Binding CubeDesc}" IsReadOnly="{Binding ElementName=AddAsNew, Path=IsChecked, Converter={StaticResource InverseBooleanConverter}}"/>
                                     </StackPanel>
-                                    <CheckBox Content="Add as new cube type" IsChecked="{Binding AddAsNewCubeFlagValue}" IsEnabled="{Binding AddAsNewCubeFlagEnabled}"/>
+                                    <CheckBox x:Name="AddAsNew" Content="Add as new cube type" IsChecked="{Binding AddAsNewCubeFlagValue}" IsEnabled="{Binding AddAsNewCubeFlagEnabled}"/>
                                     <Button Width="auto" Content="Add cube to repository" Command="{Binding AddCubeToRepositoryCommand}"/>
                                     <!--<Button Width="200" HorizontalAlignment="Left" Margin="3"  Content="Add cube to existing cube-type" Padding="10,0,10,0" Command="{Binding AddCubeToExistingEntryCommand}"/>-->
                                 </StackPanel>
                                 <StackPanel Grid.Column="1">
                                     <TextBlock Text="Repository matching entries"/>
-                                    <ListBox Width="200" HorizontalAlignment="Left" Margin="3" ItemsSource="{Binding MatchingCubeTypeList}" SelectedItem="{Binding SelectedCubeType, Mode=TwoWay}" SelectionChanged="ListBox_SelectionChanged">
+                                    <ListBox Width="200" HorizontalAlignment="Left" Margin="3" ItemsSource="{Binding MatchingCubeTypeList}" SelectedItem="{Binding SelectedCubeType, Mode=TwoWay}" SelectionChanged="MatchingCubeTypeList_SelectionChanged">
                                         <ListBox.Resources>
                                             <DataTemplate DataType="{x:Type local:CubeType}">
                                                 <TextBlock Text="{Binding Path=NickName}"/>

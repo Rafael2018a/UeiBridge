@@ -54,9 +54,9 @@ namespace UeiBridge.CubeNet
             _vm.GenerateSetupFileCommand.Execute(CubeTypeList.SelectedItem);
         }
 
-        private void ListBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void MatchingCubeTypeList_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            
+            _vm.OnMatchingCubeTypeListChange();
         }
     }
 }
