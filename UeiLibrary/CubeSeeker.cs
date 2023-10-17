@@ -10,18 +10,18 @@ using UeiDaq;
 
 namespace UeiBridge.Library
 {
-    public class CubeSeeker
+    public static class CubeSeeker
     {
-        IPAddress SearchCube_TM(object state)
-        {
-            IPAddress ip = (IPAddress)state;
-            System.Diagnostics.Debug.Assert(null != ip);
-            var ipref = IPAddress.Parse("192.168.100.44");
-            if (ip.ToString() == ipref.ToString())
-                return ip;
-            else
-                return null;
-        }
+        //IPAddress SearchCube_TM(object state)
+        //{
+        //    IPAddress ip = (IPAddress)state;
+        //    System.Diagnostics.Debug.Assert(null != ip);
+        //    var ipref = IPAddress.Parse("192.168.100.44");
+        //    if (ip.ToString() == ipref.ToString())
+        //        return ip;
+        //    else
+        //        return null;
+        //}
         public static List<IPAddress> FindCubesInRange(IPAddress startAddress, uint range)
         {
             byte[] addressBytes = startAddress.GetAddressBytes().ToArray();
@@ -65,12 +65,6 @@ namespace UeiBridge.Library
             return l;
         }
 
-        void f()
-        {
-            IPAddress ip = new IPAddress(new byte[] { 10, 20, 30, 40 });
-            //ip++;
-
-        }
         public static IPAddress TryIP(object obj)
         {
             IPAddress ipAddress = (IPAddress)obj;

@@ -50,7 +50,7 @@ namespace UeiBridgeTest
             Assert.That(ct2.Equals(ct1), Is.EqualTo(false));
         }
         [Test]
-        public void AddCubeTest()
+        public void AddCubeToRepoTest()
         {
             Assert.Throws<System.ArgumentException>( () => { ct1.AddCube(null); });
 
@@ -59,12 +59,44 @@ namespace UeiBridgeTest
             var p = ct1.PertainCubeList;
             Assert.That(p.Count, Is.EqualTo(3));
         }
+
         [Test]
-        public void StringListCompareTest()
+        public void SaveAndLoadRepositoryTest()
         {
-            List<string> l1 = new List<string>(), l2 = new List<string>();
-            Assert.That(l1.SequenceEqual(l2), Is.EqualTo(true));
+            CubeRepositoryProxy crp = new CubeRepositoryProxy();
+            crp.CubeRepositoryMain.CubeTypeList.Add(new CubeType("nick55", "desc55", "sig55"));
+            crp.CubeRepositoryMain.CubeTypeList.Add(ct1);
+            crp.CubeRepositoryMain.CubeTypeList.Add(ct2);
+
+            FileInfo fi = new FileInfo("repoTest.json");
+            crp.SaveRepository(fi);
+
+            FileStream fs = fi.OpenRead();
+            CubeRepositoryProxy crp1 = new CubeRepositoryProxy(fs);
+            fs.Close();
+            Assert.That(crp1.CubeRepositoryMain.CubeTypeList, Is.EqualTo(crp.CubeRepositoryMain.CubeTypeList));
+            
         }
 
+        [Test]
+        public void ViewModelTest()
+        {
+            MainViewModel mvm = new MainViewModel(null);
+            mvm.CreateEmptyRepository(null);// Command.Execute(null);
+            mvm.CubeNickname = "nicktest";
+            mvm.CubeDesc = "desctest";
+            mvm.CubeSignature = "AO-308/DIO-430/";
+            mvm.CubeAddress = IPAddress.Parse("192.168.100.2");
+            mvm.AddCubeToRepository(null);
+            mvm.CreateEmptyRepository(null); // just make sure the command is ignored
+            mvm.SaveRepository(null);
+            Assert.That(mvm.RepositoryProxy.CubeRepositoryMain.CubeTypeList.Count, Is.EqualTo(1));
+
+            MainViewModel mvm1 = new MainViewModel(null);
+            Assert.That(mvm1.RepositoryProxy.CubeRepositoryMain.CubeTypeList.Count, Is.EqualTo(1));
+            mvm1.GetFreeIp(null);
+            Assert.That(mvm1.CubeAddress, Is.EqualTo(IPAddress.Parse("192.168.100.3")));
+
+        }
     }
 }

@@ -26,8 +26,14 @@ namespace UeiBridge.CubeNet
             InitializeComponent();
             _vm = new MainViewModel( this);
             DataContext = _vm;
+
+            _vm.MessageBoxEvent += _vm_MessageBoxEvent;
         }
 
+        private void _vm_MessageBoxEvent(string message)
+        {
+            MessageBox.Show(message, "CubeNet", MessageBoxButton.OK);
+        }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {

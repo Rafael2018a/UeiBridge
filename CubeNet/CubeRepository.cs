@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Ignore Spelling: Uei
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -7,7 +9,7 @@ using System.Net;
 
 namespace UeiBridge.CubeNet
 {
-    class CubeRepository: IEquatable<CubeRepository>
+    public class CubeRepository: IEquatable<CubeRepository>
     {
         public List<CubeType> CubeTypeList { get; set; }
         public CubeRepository()
