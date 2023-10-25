@@ -1,0 +1,39 @@
+{
+  "CubeTypeList": [
+    {
+      "CubeSignature": null,
+      "NickName": "simuCube",
+      "TypeId": 0,
+      "Desc": "simu desc",
+      "PertainCubeList": []
+    },
+    {
+      "CubeSignature": "AO-308/DIO-430/AI-201-100/SL-508-892/CT-601/DIO-403/AI-254/",
+      "NickName": "nick1",
+      "TypeId": 0,
+      "Desc": "desc",
+      "PertainCubeList": [
+        "192.168.100.12",
+        "192.168.100.22"
+      ]
+    },
+    {
+      "CubeSignature": "DIO-403/SL-508-892/SL-508-892/SL-508-892/SL-508-892/SL-508-892/DIO-452/DIO-452/CAN-503/",
+      "NickName": "nick2",
+      "TypeId": 0,
+      "Desc": "desc",
+      "PertainCubeList": [
+        "192.168.100.16"
+      ]
+    },
+    {
+      "CubeSignature": "Simu-MF16-12/Simu-AO16/Simu-DIO64/Simu-MF16-12/Simu-COM/Simu-429/Simu-CAN/Simu-MIL1553/Simu-IRIG/Simu-MUX/Simu-SSI/",
+      "NickName": "simu-cube",
+      "TypeId": 0,
+      "Desc": "simu-cube desc",
+      "PertainCubeList": [
+        "0.0.0.0"
+      ]
+    }
+  ]
+}

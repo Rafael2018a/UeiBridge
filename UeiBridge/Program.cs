@@ -63,7 +63,7 @@ namespace UeiBridge
                 List<CubeSetup> cubeSetupList = Config2.GetSetupForConnectedCubes(cubeUrlList);
                 foreach (CubeSetup cs in cubeSetupList)
                 {
-                    if (null == cs.OriginFileFullName)
+                    if (null == cs.AssociatedFileFullname)
                     {
                         cs.Serialize();
                     }

@@ -1,0 +1,181 @@
+﻿<Window x:Class="UeiBridge.CubeNet.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:UeiBridge.CubeNet"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="550" Width="810" Closing="Window_Closing">
+    <Window.Resources>
+        <local:IpAddressToStringConverter x:Key="IpAddressToStringConverter" />
+        <local:FileInfoToStringConverter x:Key="FileInfoToStringConverter"/>
+        <local:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+    </Window.Resources>
+
+    <Grid>
+        <Menu FontSize="18">
+            <MenuItem Header="_File">
+                <MenuItem Header="Load repository file" Command="{Binding PickRepoFileCommand}"/>
+                <MenuItem Header="Create empty repository" Command="{Binding CreateEmptyRepositoryCommand}"/>
+                <MenuItem Header="Generate setup file" Command="{Binding GenerateSetupFileCommand}"/>
+                <MenuItem Header="Save repository" Command="{Binding SaveRepositoryCommand}"/>
+                <MenuItem Header="Close repository" Command="{Binding CloseRepositoryCommand}"/>
+            </MenuItem>
+        </Menu>
+
+        <!--<Border Margin="5,30,5,5" BorderBrush="Navy" BorderThickness="1" CornerRadius="1">-->
+        <!--</Border>-->
+        <Grid Margin="5,30,5,5">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <RowDefinition Height="auto"/>
+                <!--<RowDefinition Height="auto"/>-->
+                <!--<RowDefinition Height="auto"/>-->
+            </Grid.RowDefinitions>
+            <Grid.Resources>
+                <Style TargetType="TextBlock">
+                    <Setter Property="Margin" Value="5"/>
+                </Style>
+                <Style TargetType="TextBox">
+                    <Setter Property="Height" Value="22"/>
+                    <Setter Property="Margin" Value="5"/>
+                    <Setter Property="VerticalAlignment" Value="Top"/>
+                </Style>
+                <Style TargetType="Button">
+                    <Setter Property="Margin" Value="5"/>
+                    <Setter Property="Padding" Value="10,0,10,0"/>
+                    <Setter Property="Height" Value="22"/>
+                    <Setter Property="HorizontalAlignment" Value="Left"/>
+                </Style>
+                <Style TargetType="StackPanel">
+                    <Setter Property="Margin" Value="3"/>
+                </Style>
+            </Grid.Resources>
+
+            <TabControl Grid.Row="0" Margin="5" SelectionChanged="TabControl_SelectionChanged">
+                <TabItem Header="Add new cube">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        <GroupBox Margin="5" Grid.Row="0" BorderBrush="LightBlue" BorderThickness="2" Header="Cube details">
+                            <StackPanel x:Name="buttonsPanel" Grid.Row="0" >
+                                <StackPanel Orientation="Horizontal">
+                                    <Button Content="Find free address" Command="{Binding GetFreeIpCommand}"/>
+                                    <Button Content="Reset" Command="{Binding ResetPaneCommand}"/>
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="Suggested address "/>
+                                    <TextBox x:Name="SuggestedIp" Width="100" Text="{Binding Path=CubeAddress, Converter={StaticResource IpAddressToStringConverter}}" IsEnabled="{Binding IsAddressEnabled}" />
+                                    <Button  Content="Accept" Width="auto" Command="{Binding AcceptAddressCommand}" />
+                                </StackPanel>
+                                <StackPanel Orientation="Horizontal" >
+                                    <Button Content="Get cube signature" Width="auto" Command="{Binding GetCubeSignatureCommand}"/>
+                                    <TextBlock Text="{Binding Path=CubeSignature}"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </GroupBox>
+                        <GroupBox Margin="5" Grid.Row="1" BorderBrush="LightBlue" BorderThickness="2" Header="Repository update">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <StackPanel >
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Cube nickname "/>
+                                        <TextBox Width="100" Text="{Binding CubeNickname}" IsReadOnly="{Binding ElementName=AddAsNew, Path=IsChecked, Converter={StaticResource InverseBooleanConverter}}"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Cube description "/>
+                                        <TextBox Width="200" Height="40" TextWrapping="Wrap" Text="{Binding CubeDesc}" IsReadOnly="{Binding ElementName=AddAsNew, Path=IsChecked, Converter={StaticResource InverseBooleanConverter}}"/>
+                                    </StackPanel>
+                                    <CheckBox x:Name="AddAsNew" Content="Add as new cube type" IsChecked="{Binding AddAsNewCubeFlagValue}" IsEnabled="{Binding AddAsNewCubeFlagEnabled}"/>
+                                    <Button Width="auto" Content="Add cube to repository" Command="{Binding AddCubeToRepositoryCommand}"/>
+                                    <!--<Button Width="200" HorizontalAlignment="Left" Margin="3"  Content="Add cube to existing cube-type" Padding="10,0,10,0" Command="{Binding AddCubeToExistingEntryCommand}"/>-->
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="Repository matching entries"/>
+                                    <ListBox Width="200" HorizontalAlignment="Left" Margin="3" ItemsSource="{Binding MatchingCubeTypeList}" SelectedItem="{Binding SelectedCubeType, Mode=TwoWay}" SelectionChanged="MatchingCubeTypeList_SelectionChanged">
+                                        <ListBox.Resources>
+                                            <DataTemplate DataType="{x:Type local:CubeType}">
+                                                <TextBlock Text="{Binding Path=NickName}"/>
+                                            </DataTemplate>
+                                        </ListBox.Resources>
+                                    </ListBox>
+                                </StackPanel>
+                            </Grid>
+                        </GroupBox>
+
+                    </Grid>
+                </TabItem>
+                <TabItem x:Name="GenerateSetupFile" Header="Generate setup file">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition/>
+                            <RowDefinition/>
+                        </Grid.RowDefinitions>
+                        
+                        <ListBox x:Name="CubeTypeList" Grid.Row="0" Width="auto" Height="320" HorizontalAlignment="Left" Margin="5" ItemsSource="{Binding CubeTypeList}" SelectedItem="{Binding SelectedCubeType2, Mode=TwoWay}">
+                            <ListBox.Resources>
+                                <DataTemplate DataType="{x:Type local:CubeType}">
+                                    <StackPanel Orientation="Vertical">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="Name: " FontWeight="Bold"/>
+                                            <TextBlock Text="{Binding Path=NickName}"/>
+                                        </StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="Signature: " FontWeight="Bold"/>
+                                            <TextBlock Text="{Binding Path=CubeSignature}"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListBox.Resources>
+                            <ListBox.ContextMenu>
+                                <ContextMenu>
+                                    <MenuItem Header="Generate setup file" Click="GenerateSetup_click"/>
+                                </ContextMenu>
+                            </ListBox.ContextMenu>                            
+                        </ListBox>
+                        <!--<Button Grid.Row="1" Content="Generate setup file" Command="{Binding GenerateSetupFileCommand}" CommandParameter="{Binding ElementName=CubeTypeList,Path=SelectedItem}"/>-->
+                    </Grid>
+                </TabItem>
+            </TabControl>
+
+            <GroupBox Margin="5" Grid.Row="1" BorderBrush="LightBlue" BorderThickness="2" Header="Repository file">
+                <StackPanel Orientation="Vertical">
+                    <TextBlock Text="{Binding Path=RepositoryFileInfo, Converter={StaticResource FileInfoToStringConverter}}" Margin="2"/>
+                    <TextBlock Text="{Binding Path=RepoStat}" Margin="2"/>
+                    <TextBlock Text="{Binding  Path=PanelLogMessage}" Margin="2" FontStyle="Oblique"/>
+                </StackPanel>
+            </GroupBox>
+
+            <!--<StatusBar Grid.Row="2" Background="LightGray">
+                    <StatusBarItem>
+                        <StatusBarItem.Content>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Path=RepositoryFileInfo, Converter={StaticResource FileInfoToStringConverter}}"/>
+                                <TextBlock Text="{Binding RepoStat}"/>
+                            </StackPanel>
+                        </StatusBarItem.Content>
+                    </StatusBarItem>
+
+                    -->
+            <!--<StatusBarItem Content="{Binding Path=PanelLogMessage}">
+                        <StatusBarItem.ToolTip>
+                            <ToolTip>
+                                <TextBlock Text="{Binding PanelLogToolTip}"/>
+                            </ToolTip>
+                        </StatusBarItem.ToolTip>
+                    </StatusBarItem>
+                    <Separator Width="2"/>-->
+            <!--<StatusBarItem Content="line 2"/>-->
+            <!--
+                </StatusBar>-->
+        </Grid>
+
+    </Grid>
+</Window>

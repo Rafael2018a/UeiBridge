@@ -1,0 +1,58 @@
+mail from Tue, Aug 22 2023
+static void DasReset()
+        {
+            string sDevCollName = "";
+            Device myDevice;
+            //string pdnaIpAddress = "pdna://" + sIPaddress;
+            string pdnaIpAddress = "pdna://192.168.100.66";
+            int nDeviceNumber = 0;
+            string devStatus;
+            const ulong STS_FW_OPER_MODE = (1UL << 31); //if bit 31 is set, then the layer is in ops mode, otherwise it is in configuration mode.
+
+            DeviceCollection devColl = new DeviceCollection(pdnaIpAddress);
+
+            foreach (Device dev in devColl)
+            {
+                if (dev != null)
+                {
+                    sDevCollName = dev.GetDeviceName();
+
+                    devStatus = dev.GetStatus();
+                    string[] devStatusSplit = devStatus.Split(' ');                  
+                    string layerStatus = devStatusSplit[4].Replace("FW:", string.Empty);                 
+                    ulong statusVal = ((STS_FW_OPER_MODE) & Convert.ToUInt64(layerStatus,16));
+                    if (statusVal == 0)
+                    {
+                        System.Console.WriteLine("Device {0} is in Configuration State", dev);
+                    }
+                    else
+                    {
+                        System.Console.WriteLine("Device {0} is in Operation State", dev);
+                    }
+
+                    Console.WriteLine(sDevCollName);
+
+                    string[] sDevCollNameSplit = sDevCollName.Split('-');
+
+                    string sModel = sDevCollNameSplit[1];
+
+                    int nModelNum = Convert.ToInt16(sModel);
+
+                    if (nModelNum > 100 && statusVal > 0)
+                    {
+                        string sName = pdnaIpAddress + "/dev" + nDeviceNumber.ToString().Trim() + "/";
+                        myDevice = DeviceEnumerator.GetDeviceFromResource(sName);
+                        myDevice.SetTimeout(1000);
+                        if (myDevice != null)
+                        {
+                            Console.WriteLine("Reset");
+                            myDevice.Reset();
+                        }
+                    }
+                }
+                nDeviceNumber++;
+            }
+
+        }
+
+ 

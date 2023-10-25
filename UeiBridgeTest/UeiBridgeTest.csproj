@@ -7,7 +7,7 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{8A6BDC8F-8A3A-43F4-B27F-D0E1A86DF3C1}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <OutputType>Library</OutputType>
     <RootNamespace>UeiBridgeTest</RootNamespace>
     <AssemblyName>UeiBridgeTest</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
@@ -56,6 +56,9 @@
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.2\lib\net45\Newtonsoft.Json.dll</HintPath>
@@ -63,6 +66,7 @@
     <Reference Include="nunit.framework, Version=3.13.3.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
       <HintPath>..\packages\NUnit.3.13.3\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -81,6 +85,7 @@
     <Compile Include="ByteStreamerTest.cs" />
     <Compile Include="ConfigTests.cs" />
     <Compile Include="ConvertersTest.cs" />
+    <Compile Include="CubeNetTest.cs" />
     <Compile Include="DeviceManagersTests.cs" />
     <Compile Include="NonSpecificTests.cs" />
     <Compile Include="Program.cs" />
@@ -96,9 +101,13 @@
       <Project>{0475416b-5715-4bd8-a379-83bd444a8401}</Project>
       <Name>ByteStreamer3</Name>
     </ProjectReference>
-    <ProjectReference Include="..\UeiBridgeSetup\UeiBridgeSetup.csproj">
-      <Project>{05d73f32-5fb8-49fe-be5b-af065d07c0c1}</Project>
-      <Name>UeiBridgeSetup</Name>
+    <ProjectReference Include="..\CubeDesign\CubeDesign.csproj">
+      <Project>{41445988-e376-4e91-8832-b9862f31025a}</Project>
+      <Name>CubeDesign</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CubeNet\CubeNet.csproj">
+      <Project>{47b5ff07-4c59-4197-a700-25d7f7c31dbd}</Project>
+      <Name>CubeNet</Name>
     </ProjectReference>
     <ProjectReference Include="..\UeiBridge\UeiBridge.csproj">
       <Project>{086a67bb-d92f-4fc5-a91e-39913abc6328}</Project>

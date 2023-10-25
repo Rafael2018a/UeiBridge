@@ -1,0 +1,123 @@
+﻿<UserControl x:Class="CubeDesign.Views.SystemSetupView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CubeDesign.Views"
+             xmlns:local1="clr-namespace:CubeDesign"
+             xmlns:vm="clr-namespace:CubeDesign.ViewModels"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+    <UserControl.Resources>
+        <local1:CubeStateToColorConverter x:Key="cubeStateToColorConv"/>
+        <local1:CubeStateToOpecityConverter x:Key="cubeStateToOpecityConv"/>
+        <Style TargetType="Button">
+            <Setter Property="Height" Value="23" />
+            <Setter Property="Margin" Value="0 2 2 2"/>
+        </Style>
+        <BooleanToVisibilityConverter x:Key="VisibleIfTrueConv" />
+        <DataTemplate DataType="{x:Type vm:SL508ViewModel}">
+            <local:SL508View/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AO308ViewModel}">
+            <local:AO308View/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DIO403ViewModel}">
+            <local:DIO403View/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:AI201ViewModel}">
+            <local:AI201View/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DIO470ViewModel}">
+            <local:DIO470View/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CAN503ViewModel}">
+            <local:CAN503View/>
+        </DataTemplate>
+    </UserControl.Resources>
+    <Grid Background="Gray">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!--<StackPanel x:Name="CubeButtons" Grid.Row="0" Margin="5 0 5 0" Orientation="Horizontal">
+            <Button Command="{Binding AddCubeCommand}">
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="/Images/icons8-plus-math-48.png" Height="18"/>
+                    <TextBlock Text="Add" VerticalAlignment="Center" Margin="3"/>
+                </StackPanel>
+            </Button>
+            <Button Content="Remove"/>
+        </StackPanel>-->
+        <ListView x:Name="Cubes" Grid.Row="1" Margin="5 0 5 5" ItemsSource="{Binding CubeSetupVMList}" SelectedItem="{Binding SelectedCube, Mode=TwoWay}" MinWidth="100">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel>
+                        <Border BorderBrush="{Binding IsCubeConnected, Converter={StaticResource cubeStateToColorConv}}" BorderThickness="2" Margin="10 10 10 2">
+                            <Image Source="/Images/cube_a.jpg" Height="100" Opacity="{Binding IsCubeConnected, Converter={StaticResource cubeStateToOpecityConv}}"/>
+                        </Border>
+                        <TextBlock Text="{Binding CubeNickname}" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                        <TextBlock Text="{Binding CubeTypeId}" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                        <TextBlock Text="Not connected" Foreground="Red" HorizontalAlignment="Center" Visibility="{Binding IsCubeNotConnected, Converter={StaticResource VisibleIfTrueConv}}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+
+        <!--<StackPanel x:Name="Buttons2" Grid.Row="0" Grid.Column="1" Margin="5 0 5 0" Orientation="Horizontal">
+            <Button >
+                <StackPanel Orientation="Horizontal">
+                    <Image Source="/Images/icons8-plus-math-48.png" Height="18"/>
+                    <TextBlock Text="Add" VerticalAlignment="Center" Margin="3"/>
+                </StackPanel>
+            </Button>
+            <Button Content="Remove"/>
+        </StackPanel>-->
+        <ContentControl Grid.Row="0" Height="10"/>
+        <ListView x:Name="Devices" Grid.Row="1" Grid.Column="1" Margin="5 0 5 5" ItemsSource="{Binding DeviceSetupVMList}" SelectedItem="{Binding SelectedDeviceSetupVM, Mode=TwoWay}">
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding SlotNumber, StringFormat={}Slot {0}}" FontSize="16" FontWeight="Bold" Margin="5"/>
+                        <Image Source="/Images/icons8-network-interface-card-68.png" Height="32"/>
+                        <TextBlock Text="{Binding DeviceName}" FontSize="16" Margin="5"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <Border Grid.Row="1" Grid.Column="2" Margin="5 0 5 5" Background="#FFCFC8C0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition/>
+                    <ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" Margin="10" Grid.ColumnSpan="2">
+                    <TextBlock Text="{Binding SelectedDeviceSetupVM.EnclosingCubeAddress, StringFormat={}Cube {0}}" FontSize="18" FontWeight="DemiBold"/>
+                    <ContentControl Width="30"/>
+                    <TextBlock Text="{Binding SelectedDeviceSetupVM.SlotNumber, StringFormat={}Slot {0} }" FontSize="18" FontWeight="DemiBold"/>
+                    <ContentControl Width="30"/>
+                    <TextBlock Text="{Binding SelectedDeviceSetupVM.DeviceName, StringFormat={}Device {0}}" FontSize="18" FontWeight="DemiBold"/>
+                    <ContentControl Width="30"/>
+                    <TextBlock Text="{Binding SelectedDeviceSetupVM.DeviceDesc}" FontSize="18" FontWeight="DemiBold"/>
+                </StackPanel>
+                <Separator Grid.Row="1" Grid.ColumnSpan="2"/>
+                <local:EndPointView Grid.Row="2" Grid.Column="0" Margin="10" x:Name="localEndPoint" DataContext="{Binding LocalEndPointViewModel}" Visibility="{Binding IsVisible, Converter={StaticResource VisibleIfTrueConv}}"/>
+                <local:EndPointView Grid.Row="2" Grid.Column="1" Margin="10" x:Name="destEndPoint" DataContext="{Binding DestinationEndPointViewModel}" Visibility="{Binding IsVisible, Converter={StaticResource VisibleIfTrueConv}}"/>
+
+                <ContentControl Grid.Row="3" Grid.ColumnSpan="2" Content="{Binding SelectedDeviceViewModel}" Margin="10"/>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>
