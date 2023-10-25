@@ -5,8 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using UeiBridge.Library;
-using UeiBridgeSetup;
-using UeiBridgeSetup.ViewModels;
+//using UeiBridgeSetup;
+//using UeiBridgeSetup.ViewModels;
+using CubeDesign;
+using CubeDesign.ViewModels;
 
 namespace UeiBridgeTest
 {
@@ -20,7 +22,7 @@ namespace UeiBridgeTest
 
             Assert.Multiple(() =>
             {
-                Assert.That(vm.IpString, Is.EqualTo("0.0.0.0"));
+                Assert.That(vm.Address, Is.EqualTo("0.0.0.0"));
                 Assert.That(vm.IpPort, Is.EqualTo(0));
             });
         }
@@ -31,7 +33,7 @@ namespace UeiBridgeTest
             
             Assert.Multiple(() =>
             {
-                Assert.That(vm.IpString, Is.EqualTo("8.8.8.8"));
+                Assert.That(vm.Address, Is.EqualTo("8.8.8.8"));
                 Assert.That(vm.IpPort, Is.EqualTo(5050));
             });
         }

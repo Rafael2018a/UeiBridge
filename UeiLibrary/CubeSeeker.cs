@@ -6,21 +6,22 @@ using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using System.IO;
+using UeiDaq;
 
 namespace UeiBridge.Library
 {
-    public class CubeSeeker
+    public static class CubeSeeker
     {
-        IPAddress SearchCube_TM( object state)
-        {
-            IPAddress ip = (IPAddress)state;
-            System.Diagnostics.Debug.Assert(null != ip);
-            var ipref = IPAddress.Parse("192.168.100.44");
-            if (ip.ToString() == ipref.ToString())
-                return ip;
-            else
-                return null;
-        }
+        //IPAddress SearchCube_TM(object state)
+        //{
+        //    IPAddress ip = (IPAddress)state;
+        //    System.Diagnostics.Debug.Assert(null != ip);
+        //    var ipref = IPAddress.Parse("192.168.100.44");
+        //    if (ip.ToString() == ipref.ToString())
+        //        return ip;
+        //    else
+        //        return null;
+        //}
         public static List<IPAddress> FindCubesInRange(IPAddress startAddress, uint range)
         {
             byte[] addressBytes = startAddress.GetAddressBytes().ToArray();
@@ -32,26 +33,39 @@ namespace UeiBridge.Library
             List<Task<IPAddress>> taskList = new List<Task<IPAddress>>();
 
             //uint b3 = 1;
-            for (uint b3 = b3first; b3<b3last; b3++)
+            for (uint b3 = b3first; b3 < b3last; b3++)
             {
                 byte[] ab = addressBytes;
                 ab[3] = (byte)b3;
 
-                taskList.Add( Task.Factory.StartNew(new Func<object, IPAddress>(TryIP), new IPAddress(ab), TaskCreationOptions.LongRunning));
+                taskList.Add(Task.Factory.StartNew(new Func<object, IPAddress>(TryIP), new IPAddress(ab), TaskCreationOptions.LongRunning));
             }
 
-            var x = taskList.Where(t => t.Result != null).Select( t=> t.Result);
+            var x = taskList.Where(t => t.Result != null).Select(t => t.Result);
 
             return x.ToList<IPAddress>();
 
         }
-        void f()
-        {
-            IPAddress ip = new IPAddress(new byte[] { 10, 20, 30, 40 });
-            //ip++;
 
+        public static List<UeiDeviceInfo> GetDeviceList(IPAddress cubeIp)
+        {
+            string url = StaticMethods.GetCubeUrl(cubeIp);
+            if (null != url)
+            {
+                DeviceCollection devColl = new DeviceCollection(url);
+                List<UeiDeviceInfo> l = StaticMethods.DeviceCollectionToDeviceInfoList(devColl, url);
+                return l;
+            }
+            return null;
         }
-        public static IPAddress TryIP(Object obj)
+        public static List<UeiDeviceInfo> GetDeviceList(string url)
+        {
+            DeviceCollection devColl = new DeviceCollection(url);
+            List<UeiDeviceInfo> l = StaticMethods.DeviceCollectionToDeviceInfoList(devColl, url);
+            return l;
+        }
+
+        public static IPAddress TryIP(object obj)
         {
             IPAddress ipAddress = (IPAddress)obj;
             //Console.WriteLine($"checking {ipAddress}");
@@ -67,8 +81,6 @@ namespace UeiBridge.Library
                 writer.Write((ushort)IPAddress.HostToNetworkOrder(0));
                 writer.Write((uint)IPAddress.HostToNetworkOrder(unchecked((int)0x104)));
                 writer.Write((uint)IPAddress.HostToNetworkOrder(0));
-
-
 
                 IPEndPoint ep = new IPEndPoint(ipAddress, 6334);
                 udpClient.Send(sendBuffer, (int)writer.BaseStream.Length, ep);
@@ -89,7 +101,7 @@ namespace UeiBridge.Library
                 else
                     return null;
             }
-            catch (SocketException )
+            catch (SocketException)
             {
                 //Console.WriteLine(ex.ToString());
                 return null;

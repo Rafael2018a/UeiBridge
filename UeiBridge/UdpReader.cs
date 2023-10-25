@@ -11,16 +11,17 @@ using UeiBridge.Types;
 namespace UeiBridge
 {
     /// <summary>
-    /// Reads datagrams from udp channel and sends them to 'consumer'.
+    /// UdpReader reads datagrams by multi-cast and forward them to 'consumer'.
+    /// This reader 
     /// </summary>
     public class UdpReader: IDisposable
     {
         private IEnqueue<SendObject> _datagramConsumer;
         log4net.ILog _logger = StaticMethods.GetLogger();
         UdpClient _udpclient;
-        string _instanceName;
-        IPEndPoint _msListeningiEp;
-        IPAddress _localNIC;
+        string _instanceName;          // this is 'help field' to assist in debugging.
+        IPEndPoint _msListeningiEp;    // Multi-cast receive address.
+        IPAddress _localNIC;           // Local NIC into which this reader binds.
 
         public UdpReader( IPEndPoint listeningEp, IPAddress localNIC, IEnqueue<SendObject> consumer, string instanceName)
         {
@@ -110,7 +111,7 @@ namespace UeiBridge
 
         public void Dispose()
         {
-            _udpclient.Dispose();
+            //_udpclient.Dispose();
         }
     }
 

@@ -74,6 +74,8 @@
     <Compile Include="Adapters\DeviceAdapter.cs" />
     <Compile Include="Adapters\SerialReaderAdapter.cs" />
     <Compile Include="Config2.cs" />
+    <Compile Include="CubeSeeker.cs" />
+    <Compile Include="CubeSetup.cs" />
     <Compile Include="EthernetMessage.cs" />
     <Compile Include="Interfaces\IChannel.cs" />
     <Compile Include="Interfaces\IDevice.cs" />
