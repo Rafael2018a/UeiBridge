@@ -3,11 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
 using System.IO;
+using UeiBridge.Library;
 
 /// <summary>
 /// All classes in this file MUST NOT depend on any other module in the project
 /// </summary>
-namespace UeiBridge.Library
+namespace UeiBridge.CubeSetupTypes
 {
     [XmlInclude(typeof(AO308Setup))]
     [XmlInclude(typeof(DIO403Setup))]
@@ -34,7 +35,7 @@ namespace UeiBridge.Library
 
         public static string GetSelfFilename(int cube_id)
         {
-            string filename = (cube_id == UeiDeviceInfo.SimuCubeId) ? "Cube.simu.config" : $"Cube{cube_id}.config";
+            string filename = cube_id == UeiDeviceInfo.SimuCubeId ? "Cube.simu.config" : $"Cube{cube_id}.config";
             return filename;
         }
         public static string GetSelfFilename(string nickname)
@@ -81,10 +82,10 @@ namespace UeiBridge.Library
             //bool f1 = this.CubeUrl.Equals(other.CubeUrl);
             try
             {
-                bool f2 = this.DeviceSetupList.SequenceEqual(other.DeviceSetupList);
+                bool f2 = DeviceSetupList.SequenceEqual(other.DeviceSetupList);
                 return f2;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 return false;
             }
@@ -93,7 +94,7 @@ namespace UeiBridge.Library
 
         public int GetCubeId()
         {
-            return StaticMethods.GetCubeId( this.CubeUrl);
+            return StaticMethods.GetCubeId(CubeUrl);
         }
         /// <summary>
         /// Build DeviceSetupList
@@ -135,7 +136,7 @@ namespace UeiBridge.Library
             DeviceSetup dsa = deviceSetupList.Where(t => t.DeviceName == DeviceMap2.AO308Literal).Select(t => t).FirstOrDefault();
             DeviceSetup dsd = deviceSetupList.Where(t => t.DeviceName == DeviceMap2.DIO403Literal).Select(t => t).FirstOrDefault();
 
-            if ((dsa != null) && (dsd != null))
+            if (dsa != null && dsd != null)
             {
                 //cf = new ConfigFactory();
                 UeiDeviceInfo info = new UeiDeviceInfo(dsa.CubeUrl, dsa.SlotNumber, DeviceMap2.BlocksensorLiteral);
@@ -154,7 +155,7 @@ namespace UeiBridge.Library
         public void Serialize()
         {
             //string filename = GetSelfFilename( StaticMethods.GetCubeId(this.CubeUrl));
-            
+
             if (File.Exists(AssociatedFileFullname))
             {
                 File.Delete(AssociatedFileFullname);
@@ -164,16 +165,16 @@ namespace UeiBridge.Library
 
             using (FileStream fs = fi.OpenWrite())
             {
-                var serializer = new XmlSerializer(this.GetType());
+                var serializer = new XmlSerializer(GetType());
                 serializer.Serialize(fs, this);
                 Console.WriteLine($"Config: File {fi.Name} created");
             }
         }
         public T GetDeviceSetupEntry<T>(UeiDeviceInfo devInfo) where T : DeviceSetup
         {
-            return GetDeviceSetupEntry( devInfo.DeviceSlot) as T;
+            return GetDeviceSetupEntry(devInfo.DeviceSlot) as T;
         }
-        public DeviceSetup GetDeviceSetupEntry( int slotNumber)
+        public DeviceSetup GetDeviceSetupEntry(int slotNumber)
         {
             //if (this.CubeSetupList == null)
             //{
@@ -189,7 +190,7 @@ namespace UeiBridge.Library
             DeviceSetup devSetup = theSetups.FirstOrDefault();
             if (null != devSetup)
             {
-                devSetup.CubeUrl = this.CubeUrl;
+                devSetup.CubeUrl = CubeUrl;
             }
             return devSetup;
         }

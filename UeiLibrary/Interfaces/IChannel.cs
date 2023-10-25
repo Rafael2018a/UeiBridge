@@ -1,6 +1,6 @@
 ﻿using UeiDaq;
 
-namespace UeiBridge.Library
+namespace UeiBridge.Interfaces
 {
     public interface IChannel
     {

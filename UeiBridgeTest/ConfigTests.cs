@@ -9,6 +9,7 @@ using System.IO;
 using UeiBridge.Library;
 using UeiDaq;
 using System.Net;
+using UeiBridge.CubeSetupTypes;
 
 namespace UeiBridgeTest
 {
@@ -75,7 +76,7 @@ namespace UeiBridgeTest
         [Test]
         public void LoadCubeSetupFromFileTest()
         {
-            UeiBridge.Library.CubeSetup cs = CubeSetup.LoadCubeSetupFromFile( new FileInfo( "Cube.fortest.config"));
+            CubeSetup cs = CubeSetup.LoadCubeSetupFromFile( new FileInfo( "Cube.fortest.config"));
             Assert.That(cs, Is.Not.Null);
         }
         [Test]

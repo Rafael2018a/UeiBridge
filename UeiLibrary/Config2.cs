@@ -7,6 +7,7 @@ using System.Xml.Serialization;
 using System.IO;
 using System.Net;
 using UeiDaq;
+using UeiBridge.CubeSetupTypes;
 
 /// <summary>
 /// All classes in this file MUST NOT depend on any other module in the project
@@ -124,125 +125,7 @@ namespace UeiBridge.Library
 
 
     }
-    public class DeviceSetup : IEquatable<DeviceSetup>
-    {
-        [XmlElement(ElementName = "DeviceSlot")]
-        public int SlotNumber;
-        public string DeviceName;
-        public EndPoint LocalEndPoint;
-        public EndPoint DestEndPoint;
-        [XmlIgnore]
-        public int SamplingInterval => 100; // ms
-        [XmlIgnore]
-        public string CubeUrl { get; set; }
-        //[XmlIgnore]
-        public int GetCubeId() // lsb of cube address
-        {
-            return StaticMethods.GetCubeId(CubeUrl);
-        }
-        public DeviceSetup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device)
-        {
-            LocalEndPoint = localEndPoint;
-            DestEndPoint = destEndPoint;
-            DeviceName = device.DeviceName;
-            SlotNumber = device.DeviceSlot;
-        }
-        /// <summary>
-        /// This c-tor for block sensor which does not have a 'uei device'
-        /// </summary>
-        public DeviceSetup(EndPoint localEndPoint, EndPoint destEndPoint, string deviceName)
-        {
-            LocalEndPoint = localEndPoint;
-            DestEndPoint = destEndPoint;
-            DeviceName = deviceName;
-        }
-        protected DeviceSetup()
-        {
-        }
 
-        public bool Equals(DeviceSetup other)
-        {
-            //            public int SlotNumber;
-            //public string DeviceName;
-            //public EndPoint LocalEndPoint;
-            //public EndPoint DestEndPoint;
-            bool f1 = this.SlotNumber == other.SlotNumber;
-            bool f2 = this.DeviceName == other.DeviceName;
-            bool f3 = (this.LocalEndPoint == null) ? true : this.LocalEndPoint.Equals(other.LocalEndPoint);
-            bool f4 = (this.DestEndPoint == null) ? true : this.DestEndPoint.Equals(other.DestEndPoint);
-
-            return f1 && f2 && f3 && f4;
-        }
-        public string GetInstanceName()
-        {
-            return $"{this.DeviceName}/Cube{this.GetCubeId()}/Slot{this.SlotNumber}";
-        }
-        public UeiDeviceInfo GetDeviceInfo()
-        {
-            return new UeiDeviceInfo(CubeUrl, SlotNumber, DeviceName);
-        }
-    }
-
-    public class BlockSensorSetup : AO308Setup
-    {
-        //public const int BlockSensorSlotNumber = 32;
-        public bool IsActive { get; set; }
-        //public int AnalogCardSlot { get; set; }
-        public int DigitalCardSlot { get; set; }
-        public BlockSensorSetup(EndPoint localEndPoint, UeiDeviceInfo deviceInfo) : base(localEndPoint, deviceInfo)
-        {
-            //SlotNumber = AnalogCardSlot;
-        }
-
-        protected BlockSensorSetup()
-        {
-        }
-    }
-    public class AO308Setup : DeviceSetup
-    {
-        [XmlIgnore]
-        public static double PeekVoltage_downstream => 10.0;
-
-        public AO308Setup()
-        {
-        }
-        public AO308Setup(EndPoint localEndPoint, UeiDeviceInfo device) : base(localEndPoint, null, device)
-        {
-        }
-    }
-    //public class AO332Setup : DeviceSetup
-    //{
-    //    [XmlIgnore]
-    //    public static double PeekVoltage_downstream => 10.0;
-
-    //    public AO332Setup()
-    //    {
-    //    }
-    //    public AO332Setup(EndPoint localEndPoint, UeiDeviceInfo device) : base(localEndPoint, null, device)
-    //    {
-    //    }
-    //}
-    //public class AO16Setup : AO308Setup { }
-    public class SimuAO16Setup : AO308Setup
-    {
-        public SimuAO16Setup()
-        {
-        }
-        public SimuAO16Setup(EndPoint localEndPoint, UeiDeviceInfo device) : base(localEndPoint, device)
-        {
-        }
-    }
-    public class AI201100Setup : DeviceSetup
-    {
-        [XmlIgnore]
-        public static double PeekVoltage_upstream => 12.0;
-        public AI201100Setup(EndPoint destEndPoint, UeiDeviceInfo device) : base(null, destEndPoint, device)
-        {
-        }
-        protected AI201100Setup()
-        {
-        }
-    }
     public class DIOChannel
     {
         [XmlAttribute()]
@@ -255,87 +138,7 @@ namespace UeiBridge.Library
         }
         public DIOChannel() { }
     }
-    public class DIO403Setup : DeviceSetup
-    {
-        public List<DIOChannel> IOChannelList { get; set; }
-        //public Direction[] BitOctets;
-        public DIO403Setup()
-        {
-        }
 
-        public DIO403Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device, int numberOfChannels) : base(localEndPoint, destEndPoint, device)
-        {
-            IOChannelList = new List<DIOChannel>();
-            for (byte ch = 0; ch < numberOfChannels; ch++)
-            {
-                MessageWay w = (ch % 2 == 0) ? MessageWay.upstream : MessageWay.downstream;
-                IOChannelList.Add(new DIOChannel(ch, w));
-            }
-        }
-    }
-    public class SimuDIO64Setup : DIO403Setup
-    {
-        public SimuDIO64Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base(localEndPoint, destEndPoint, device, 4)
-        {
-            IOChannelList = new List<DIOChannel>();
-            for (byte ch = 0; ch < 4; ch++)
-            {
-                MessageWay w = (ch % 2 == 0) ? MessageWay.upstream : MessageWay.downstream;
-                IOChannelList.Add(new DIOChannel(ch, w));
-            }
-
-        }
-    }
-    public class DIO470Setup : DeviceSetup
-    {
-        public DIO470Setup()
-        {
-        }
-
-        public DIO470Setup(EndPoint localEndPoint, UeiDeviceInfo device) : base(localEndPoint, null, device)
-        {
-        }
-    }
-    public class SL508892Setup : DeviceSetup
-    {
-        public List<SerialChannelSetup> Channels;
-        const int _numberOfSerialChannels = 8;
-        public SL508892Setup()
-        {
-        }
-
-        public SL508892Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base(localEndPoint, destEndPoint, device)
-        {
-            Channels = new List<SerialChannelSetup>();
-
-            for (int chIndex = 0; chIndex < _numberOfSerialChannels; chIndex++)
-            {
-                Channels.Add(new SerialChannelSetup(chIndex, UeiDaq.SerialPortSpeed.BitsPerSecond19200));
-            }
-        }
-    }
-
-    public class CAN503Setup : DeviceSetup
-    {
-        public List<CANChannelSetup> Channels;
-        const int _numberOfChannels = 4;
-
-        public CAN503Setup()
-        {
-        }
-
-        public CAN503Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base(localEndPoint, destEndPoint, device)
-        {
-            Channels = new List<CANChannelSetup>();
-
-            for (int chIndex = 0; chIndex < _numberOfChannels; chIndex++)
-            {
-                Channels.Add(new CANChannelSetup(chIndex));
-            }
-
-        }
-
-    }
 
     public class ConfigFactory
     {

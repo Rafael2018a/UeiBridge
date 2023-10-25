@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using UeiBridge;
+using UeiBridge.CubeSetupTypes;
+using UeiBridge.Interfaces;
 using UeiBridge.Library;
 using UeiBridge.Types;
 using UeiDaq;
@@ -429,6 +431,11 @@ namespace UeiBridgeTest
         }
 
         public bool IsRunning()
+        {
+            throw new NotImplementedException();
+        }
+
+        ICANReaderAdapter ISession.GetCANReader(int ch)
         {
             throw new NotImplementedException();
         }

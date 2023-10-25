@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace UeiBridge.Library
+namespace UeiBridge.Interfaces
 {
     public interface IWriterAdapter<T> : IDisposable
     {

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using UeiBridge.Interfaces;
+using UeiDaq;
 
 namespace UeiBridge.Library
 {
@@ -15,7 +17,7 @@ namespace UeiBridge.Library
         IDevice GetDevice();
         IReaderAdapter<double[]> GetAnalogScaledReader();
         IWriterAdapter<double[]> GetAnalogScaledWriter();
-        CANReaderAdapter GetCANReader(int ch);
+        ICANReaderAdapter GetCANReader(int ch);
         bool IsRunning();
         void Stop();
     }

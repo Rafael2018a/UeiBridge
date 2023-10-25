@@ -12,6 +12,8 @@ using log4net;
 using UeiDaq;
 using UeiBridge.Types;
 using UeiBridge.Library;
+using UeiBridge.CubeSetupTypes;
+using UeiBridge.Interfaces;
 
 namespace UeiBridge
 {

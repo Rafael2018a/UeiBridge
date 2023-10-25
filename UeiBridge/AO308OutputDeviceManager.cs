@@ -6,6 +6,8 @@ using UeiBridge.Library;
 using System.Collections.Generic;
 using System.Linq;
 using UeiDaq;
+using UeiBridge.CubeSetupTypes;
+using UeiBridge.Interfaces;
 
 namespace UeiBridge
 {

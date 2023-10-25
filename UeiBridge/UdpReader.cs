@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using UeiBridge.Types;
+using UeiBridge.Interfaces;
 
 namespace UeiBridge
 {

@@ -3,6 +3,8 @@ using System.Threading;
 using UeiDaq;
 using UeiBridge.Types;
 using UeiBridge.Library;
+using UeiBridge.CubeSetupTypes;
+using UeiBridge.Interfaces;
 
 /// <summary>
 /// All files in project might refer to this file.

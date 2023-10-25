@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using UeiBridge;
+using UeiBridge.CubeSetupTypes;
 using UeiBridge.Library;
 
 namespace UeiBridgeTest

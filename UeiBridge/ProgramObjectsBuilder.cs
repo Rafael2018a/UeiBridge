@@ -10,6 +10,8 @@ using log4net;
 using UeiBridge.Library;
 using UeiBridge.Types;
 using System.Collections.Concurrent;
+using UeiBridge.CubeSetupTypes;
+using UeiBridge.Interfaces;
 
 namespace UeiBridge
 {
