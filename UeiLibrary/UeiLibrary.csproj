@@ -76,8 +76,11 @@
     <Compile Include="Config2.cs" />
     <Compile Include="CubeSeeker.cs" />
     <Compile Include="CubeSetupTypes\CubeSetup.cs" />
+    <Compile Include="CubeSetupTypes\CubeSetupLoader.cs" />
     <Compile Include="CubeSetupTypes\DeviceSetup.cs" />
     <Compile Include="CubeSetupTypes\DeviceSetupChilds.cs" />
+    <Compile Include="CubeSetupTypes\DeviceSetupAccessories.cs" />
+    <Compile Include="EndPoint.cs" />
     <Compile Include="EthernetMessage.cs" />
     <Compile Include="Interfaces\IChannel.cs" />
     <Compile Include="Interfaces\IDevice.cs" />

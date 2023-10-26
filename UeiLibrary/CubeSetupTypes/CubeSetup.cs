@@ -10,6 +10,8 @@ using UeiBridge.Library;
 /// </summary>
 namespace UeiBridge.CubeSetupTypes
 {
+
+
     [XmlInclude(typeof(AO308Setup))]
     [XmlInclude(typeof(DIO403Setup))]
     [XmlInclude(typeof(DIO470Setup))]
@@ -27,10 +29,13 @@ namespace UeiBridge.CubeSetupTypes
         public int TypeId { get; set; }
         public List<DeviceSetup> DeviceSetupList { get; set; } // don't make private set
         //public string OriginFileFullName { get; set; } // file associated with current config
+        //[XmlIgnore]
+        //public string AssociatedFileFullname { get; set; }
         [XmlIgnore]
-        public string AssociatedFileFullname { get; set; }
+        public bool IsLoadedFromFile { get; private set; }
         public CubeSetup()
         {
+            IsLoadedFromFile = true;
         }
 
         public static string GetSelfFilename(int cube_id)
@@ -49,6 +54,8 @@ namespace UeiBridge.CubeSetupTypes
         /// <param name="deviceList"></param>
         public CubeSetup(List<UeiDeviceInfo> deviceList)
         {
+            IsLoadedFromFile = false;
+
             CubeUrl = deviceList[0].CubeUrl;
             int cubeId = deviceList[0].CubeId;
             TypeNickname = $"Nick{cubeId}";
@@ -96,41 +103,6 @@ namespace UeiBridge.CubeSetupTypes
         {
             return StaticMethods.GetCubeId(CubeUrl);
         }
-        /// <summary>
-        /// Build DeviceSetupList
-        /// </summary>
-#if Obsolete
-        public CubeSetup(string cubeUrl)
-        {
-            CubeUrl = cubeUrl;
-            //CubeNumber = cubeNumber;
-            //_ueiDeviceList = StaticMethods.GetDeviceList();
-            UeiDaq.DeviceCollection devColl = new UeiDaq.DeviceCollection(cubeUrl); // cubesetup should not depend on ueidaq.
-            try
-            {
-                //DeviceSetupList = new DeviceSetup[devColl.Count];
-                foreach (UeiDaq.Device dev in devColl)
-                {
-                    if (null == dev)
-                        continue;
-
-                    var dv = ConfigFactory.DeviceSetupFactory(new UeiDeviceAdapter(dev));
-                    if (dv != null)
-                    {
-                        DeviceSetupList.Add(dv);
-                        //int li = DeviceSetupList.Count - 1;
-                        //var last = DeviceSetupList[li];
-                        //System.Diagnostics.Debug.Assert(last != null);
-                        //System.Diagnostics.Debug.Assert(li == dev.GetIndex());
-                    }
-                }
-            }
-            catch(UeiDaq.UeiDaqException ex)
-            {
-                throw;
-            }
-        }
-#endif
         private BlockSensorSetup BuildBlockSensorSetup(List<DeviceSetup> deviceSetupList)
         {
             DeviceSetup dsa = deviceSetupList.Where(t => t.DeviceName == DeviceMap2.AO308Literal).Select(t => t).FirstOrDefault();
@@ -152,7 +124,8 @@ namespace UeiBridge.CubeSetupTypes
             }
         }
 
-        public void Serialize()
+        [Obsolete]
+        public void Serialize1(string AssociatedFileFullname)
         {
             //string filename = GetSelfFilename( StaticMethods.GetCubeId(this.CubeUrl));
 
@@ -176,11 +149,6 @@ namespace UeiBridge.CubeSetupTypes
         }
         public DeviceSetup GetDeviceSetupEntry(int slotNumber)
         {
-            //if (this.CubeSetupList == null)
-            //{
-            //    return null;
-            //}
-            //var cube = this.CubeSetupList.Where(e => e.CubeUrl == cubeUrl);
             var selectedCube = this;
             if (null == selectedCube)
             {
@@ -195,7 +163,8 @@ namespace UeiBridge.CubeSetupTypes
             return devSetup;
         }
 
-        public static CubeSetup LoadCubeSetupFromFile(FileInfo filename)
+        [Obsolete]
+        public static CubeSetup LoadCubeSetupFromFile1(FileInfo filename)
         {
             var serializer = new XmlSerializer(typeof(CubeSetup));
             CubeSetup resultSetup = null;
@@ -206,7 +175,7 @@ namespace UeiBridge.CubeSetupTypes
                 using (StreamReader sr = configFile.OpenText())
                 {
                     resultSetup = serializer.Deserialize(sr) as CubeSetup;
-                    resultSetup.AssociatedFileFullname = configFile.FullName;
+                    ///resultSetup.AssociatedFileFullname = configFile.FullName;
                 }
             }
             return resultSetup;

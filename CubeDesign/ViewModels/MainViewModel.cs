@@ -95,6 +95,7 @@ namespace CubeDesign.ViewModels
             return !CubeSetup1.Equals(CubeSetupClean);
         }
 
+        FileInfo _loadedSetupFile;
         public void LoadSetupFile(FileInfo configFile)
         {
             if (!configFile.Exists)
@@ -104,9 +105,14 @@ namespace CubeDesign.ViewModels
             }
             try
             {
-                CubeSetup1 = CubeSetup.LoadCubeSetupFromFile( configFile);
-                CubeSetupClean = CubeSetup.LoadCubeSetupFromFile( configFile);
+                CubeSetupLoader cslMain = new CubeSetupLoader();
+                CubeSetup1 = cslMain.LoadSetupFile(configFile);
+                CubeSetupLoader cslClean = new CubeSetupLoader();
+                CubeSetupClean = cslClean.LoadSetupFile(configFile);
+                //CubeSetup1 = CubeSetup.LoadCubeSetupFromFile( configFile);
+                //CubeSetupClean = CubeSetup.LoadCubeSetupFromFile( configFile);
                 MidStatusBarMessage = $"Setup file: {configFile.Name}";
+                _loadedSetupFile = configFile;
             }
             catch (System.IO.FileNotFoundException ex)
             {
@@ -161,8 +167,10 @@ namespace CubeDesign.ViewModels
 
         private void SaveFile(object param) 
         {
-            CubeSetup1.Serialize();//  As(new FileInfo(Config2.DefaultSettingsFilename), true);
-            CubeSetupClean = CubeSetup.LoadCubeSetupFromFile( new FileInfo( CubeSetup1.AssociatedFileFullname));
+            CubeSetupLoader.SaveSetupFile( CubeSetup1, new FileInfo( _loadedSetupFile.Name));//  As(new FileInfo(Config2.DefaultSettingsFilename), true);
+            CubeSetupLoader csl = new CubeSetupLoader();
+            CubeSetupClean = csl.LoadSetupFile(_loadedSetupFile);
+                //CubeSetup.LoadCubeSetupFromFile( new FileInfo( CubeSetup1.AssociatedFileFullname));
         }
         private void SaveFileAs(object param) { }
         private void ExitApp(object param) 

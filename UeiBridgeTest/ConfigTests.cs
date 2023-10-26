@@ -52,7 +52,7 @@ namespace UeiBridgeTest
             string existing_cube = "pdna://192.168.100.2";
             string non_existing_cube = "pdna://192.168.100.99";
             string bad_url = "ksjdlkfjlaks";
-            UeiBridge.Library.Config2 c3 = UeiBridge.Library.Config2.LoadConfig(new List<string>() { simu_url, existing_cube, non_existing_cube, bad_url });
+            UeiBridge.Library.Config2 c3 = null;// UeiBridge.Library.Config2.LoadConfig(new List<string>() { simu_url, existing_cube, non_existing_cube, bad_url });
 
             IPAddress ip = UeiBridge.Library.StaticMethods.CubeUrlToIpAddress("pdna://192.168.100.2");
             if (null == CubeSeeker.TryIP(ip))
@@ -76,13 +76,15 @@ namespace UeiBridgeTest
         [Test]
         public void LoadCubeSetupFromFileTest()
         {
-            CubeSetup cs = CubeSetup.LoadCubeSetupFromFile( new FileInfo( "Cube.fortest.config"));
-            Assert.That(cs, Is.Not.Null);
+            CubeSetupLoader csl = new CubeSetupLoader();
+            csl.LoadSetupFile( new FileInfo( "Cube.fortest.config"));
+            //CubeSetup cs = CubeSetup.LoadCubeSetupFromFile( new FileInfo( "Cube.fortest.config"));
+            Assert.That(csl.CubeSetupMain, Is.Not.Null);
         }
         [Test]
         public void ConfigBadUrlTest()
         {
-            UeiBridge.Library.Config2 c2a = UeiBridge.Library.Config2.LoadConfig(new List<string>() { "kkk" });
+            UeiBridge.Library.Config2 c2a = null;// UeiBridge.Library.Config2.LoadConfig(new List<string>() { "kkk" });
             Assert.That(c2a.CubeSetupList.Count, Is.EqualTo(0));
         }
         [Test]
@@ -91,7 +93,7 @@ namespace UeiBridgeTest
             //string cubeurl = "pdna://192.168.100.4";
             //string cubeurl = "simu://";
             List<string> urllist = new List<string>() { "simu://", "pdna://192.168.100.15" };
-            UeiBridge.Library.Config2 c2a = UeiBridge.Library.Config2.LoadConfig(urllist);
+            UeiBridge.Library.Config2 c2a = null;// UeiBridge.Library.Config2.LoadConfig(urllist);
 
             Assert.That(c2a.CubeSetupList.Count, Is.EqualTo(1));
             Assert.That(c2a.CubeSetupList[0].DeviceSetupList.Count, Is.EqualTo(11));
@@ -171,7 +173,7 @@ namespace UeiBridgeTest
         public void BuildDefaultSimuConfigTest()
         {
             Config2 c2 = new Config2();
-            Config2 c3 = Config2.BuildDefaultConfig(new List<string> { "simu://" });
+            Config2 c3 = null;// Config2.BuildDefaultConfig(new List<string> { "simu://" });
             Assert.That(c3.AppSetup.StatusViewerEP, Is.Not.Null);
             Assert.That(c3.CubeSetupList[0].DeviceSetupList.Count, Is.EqualTo(11)); // only one simulation device setup is defined.
         }
@@ -199,14 +201,14 @@ namespace UeiBridgeTest
                 File.Delete(fn);
             }
             List<string> urlList = new List<string>() { "simu://" };
-            List<CubeSetup> list = Config2.GetSetupForConnectedCubes(urlList);
-            list[0].Serialize();
+            List<CubeSetup> list = Config2.GetSetupForCubes(urlList);
+            CubeSetupLoader.SaveSetupFile(list[0], new FileInfo(fn));
 
             Assert.Multiple(() =>
             {
                 Assert.That(File.Exists(fn), Is.EqualTo(true));
                 Assert.That(list[0].DeviceSetupList.Count, Is.EqualTo(11));
-                Assert.That(list[0].AssociatedFileFullname, Is.Not.Null);
+                //Assert.That(list[0].AssociatedFileFullname, Is.Not.Null);
             });
         }
         [Test]
@@ -221,14 +223,14 @@ namespace UeiBridgeTest
 
             Assert.Throws<System.InvalidOperationException>(() =>
             {
-                List<CubeSetup> list = Config2.GetSetupForConnectedCubes(urlList);
+                List<CubeSetup> list = Config2.GetSetupForCubes(urlList);
             });
         }
         [Test]
         public void LoadConnectedCubesSetup_badUrl()
         {
             List<string> urlList = new List<string>() { "aaa" };
-            List<CubeSetup> list = Config2.GetSetupForConnectedCubes(urlList);
+            List<CubeSetup> list = Config2.GetSetupForCubes(urlList);
             Assert.That(list.Count, Is.EqualTo(0));
         }
         private static void CreateBackupFile(FileInfo fi)
