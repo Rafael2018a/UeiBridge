@@ -29,7 +29,7 @@ namespace CubeDesign.ViewModels
         public RelayCommand ExitAppCommand { get; }
         public RelayCommand CloseFileCommand { get; }
 
-        public CubeSetup CubeSetup1 { get; set; }
+        public CubeSetup CubeSetupMain { get; set; }
         public CubeSetup CubeSetupClean { get; set; }
 
         public string MenuItemHeader_Save { get => _menuItemHeader_Save; set => _menuItemHeader_Save = value; }
@@ -66,21 +66,21 @@ namespace CubeDesign.ViewModels
         {
             bool isClean = true;
 
-            if (CubeSetup1!=null)
+            if (CubeSetupMain!=null)
             {
-                isClean = CubeSetup1.Equals(CubeSetupClean);
+                isClean = CubeSetupMain.Equals(CubeSetupClean);
             }
 
             if (isClean)
             {
-                CubeSetup1 = null;
+                CubeSetupMain = null;
                 systemSetupVM = null;
                 return;
             }
             MessageBoxResult mbr = MessageBox.Show("Close without saving changes?", "User", MessageBoxButton.YesNo);
             if (mbr == MessageBoxResult.Yes)
             {
-                CubeSetup1 = null;
+                CubeSetupMain = null;
                 systemSetupVM = null;
                 return;
             }
@@ -88,11 +88,11 @@ namespace CubeDesign.ViewModels
 
         private bool CanSaveFile(object arg)
         {
-            if (null == CubeSetup1)
+            if (null == CubeSetupMain)
             {
                 return false;
             }
-            return !CubeSetup1.Equals(CubeSetupClean);
+            return !CubeSetupMain.Equals(CubeSetupClean);
         }
 
         FileInfo _loadedSetupFile;
@@ -105,10 +105,10 @@ namespace CubeDesign.ViewModels
             }
             try
             {
-                CubeSetupLoader cslMain = new CubeSetupLoader();
-                CubeSetup1 = cslMain.LoadSetupFile(configFile);
-                CubeSetupLoader cslClean = new CubeSetupLoader();
-                CubeSetupClean = cslClean.LoadSetupFile(configFile);
+                CubeSetupLoader cslMain = new CubeSetupLoader(configFile);
+                CubeSetupMain = cslMain.CubeSetupMain;
+                CubeSetupLoader cslClean = new CubeSetupLoader(configFile);
+                CubeSetupClean = cslClean.CubeSetupMain;
                 //CubeSetup1 = CubeSetup.LoadCubeSetupFromFile( configFile);
                 //CubeSetupClean = CubeSetup.LoadCubeSetupFromFile( configFile);
                 MidStatusBarMessage = $"Setup file: {configFile.Name}";
@@ -116,12 +116,12 @@ namespace CubeDesign.ViewModels
             }
             catch (System.IO.FileNotFoundException ex)
             {
-                CubeSetup1 = new CubeSetup();
+                CubeSetupMain = new CubeSetup();
                 MidStatusBarMessage = $"{ex.Message}";
             }
             catch (System.InvalidOperationException ex)
             {
-                CubeSetup1 = new CubeSetup();
+                CubeSetupMain = new CubeSetup();
                 MidStatusBarMessage = $"Setup file ({Config2.DefaultSettingsFilename}) parse error. {ex.Message}";
                 MessageBox.Show(MidStatusBarMessage, "Error", MessageBoxButton.OK);
             }
@@ -129,7 +129,7 @@ namespace CubeDesign.ViewModels
             //_menuItemHeader_Save = $"Save {configFile.Name}";
             //_menuItemHeader_SaveAs = _menuItemHeader_Save + " As";
 
-            var sysVM = new SystemSetupViewModel( new List<CubeSetup>() { CubeSetup1 });
+            var sysVM = new SystemSetupViewModel( new List<CubeSetup>() { CubeSetupMain });
             systemSetupVM = sysVM;
             //OnNewSystemViewModel?.Invoke(sysVM);
         }
@@ -167,9 +167,9 @@ namespace CubeDesign.ViewModels
 
         private void SaveFile(object param) 
         {
-            CubeSetupLoader.SaveSetupFile( CubeSetup1, new FileInfo( _loadedSetupFile.Name));//  As(new FileInfo(Config2.DefaultSettingsFilename), true);
-            CubeSetupLoader csl = new CubeSetupLoader();
-            CubeSetupClean = csl.LoadSetupFile(_loadedSetupFile);
+            CubeSetupLoader.SaveSetupFile( CubeSetupMain, new FileInfo( _loadedSetupFile.Name));//  As(new FileInfo(Config2.DefaultSettingsFilename), true);
+            CubeSetupLoader csl = new CubeSetupLoader(_loadedSetupFile);
+            CubeSetupClean = csl.CubeSetupMain;
                 //CubeSetup.LoadCubeSetupFromFile( new FileInfo( CubeSetup1.AssociatedFileFullname));
         }
         private void SaveFileAs(object param) { }
@@ -182,9 +182,9 @@ namespace CubeDesign.ViewModels
             }
 
             bool isClean = true;
-            if (CubeSetup1 != null)
+            if (CubeSetupMain != null)
             {
-                isClean = CubeSetup1.Equals(CubeSetupClean);
+                isClean = CubeSetupMain.Equals(CubeSetupClean);
             }
 
             if (isClean)

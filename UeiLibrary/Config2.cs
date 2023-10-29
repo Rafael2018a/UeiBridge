@@ -14,6 +14,16 @@ using UeiBridge.CubeSetupTypes;
 /// </summary>
 namespace UeiBridge.Library
 {
+    public class AppSetup // tbd. not belongs here
+    {
+        public string SelectedNicForMulticast { get; private set; } = "221.109.251.103";
+        public EndPoint StatusViewerEP = new EndPoint("239.10.10.17", 5093);
+
+        public AppSetup()
+        {
+            SelectedNicForMulticast = System.Configuration.ConfigurationManager.AppSettings["SelectedNicForMulticast"];
+        }
+    }
 
     public class ConfigFactory
     {
@@ -95,177 +105,12 @@ namespace UeiBridge.Library
             this.CubeSetupList.AddRange(cubeSetups);
         }
 
-        /// <summary>
-        /// Load config from file
-        /// </summary>
-        /// <returns></returns>
-        [Obsolete]
-        public static Config2 LoadConfigFromFile_notInUse(FileInfo configFile)
-        {
-            var serializer = new XmlSerializer(typeof(Config2));
-            Config2 resultConfig = null;
-
-            using (StreamReader sr = configFile.OpenText())
-            {
-                resultConfig = serializer.Deserialize(sr) as Config2;
-                if (null != resultConfig)
-                {
-                    foreach (CubeSetup cSetup in resultConfig.CubeSetupList)
-                    {
-                        foreach (DeviceSetup dSetup in cSetup.DeviceSetupList)
-                        {
-                            dSetup.CubeUrl = cSetup.CubeUrl;
-                        }
-                    }
-                }
-            }
-            return resultConfig;
-        }
-        /// <summary>
-        /// for each cube url, load unique config-file,
-        /// if config-file not exists, use default. 
-        /// save the default config as new config.
-        /// </summary>
-        /// <param name="cubeUrlList"></param>
-        /// <returns></returns>
-        [Obsolete]
-        public static Config2 LoadConfig1(List<string> cubeUrlList)
-        {
-            // load global setting from app-config
-            Config2 resultConfig = new Config2();
-            resultConfig.AppSetup = LoadGeneralSetup();
-
-            // load settings per cube
-            foreach (string cubeurl in cubeUrlList)
-            {
-                UeiDaq.DeviceCollection devColl = new UeiDaq.DeviceCollection(cubeurl);
-                List<UeiDeviceInfo> devInfoList = StaticMethods.DeviceCollectionToDeviceInfoList(devColl, cubeurl);
-
-                // if cube connected, load/create setup
-                if (null != devInfoList && devInfoList.Count > 0)
-                {
-                    int cube_id = devInfoList[0].CubeId;
-                    string filename = (cube_id == UeiDeviceInfo.SimuCubeId) ? "Cube.simu.config" : $"Cube{cube_id}.config";
-                    CubeSetupLoader csl = new CubeSetupLoader();
-                    csl.LoadSetupFile(new FileInfo(filename));  //CubeSetup.LoadCubeSetupFromFile( new FileInfo( filename));
-                    if (null == csl.CubeSetupMain) // if failed to load from file
-                    {
-                        CubeSetup defaultSetup = new CubeSetup(devInfoList); // create default
-                        resultConfig.CubeSetupList.Add(defaultSetup);
-
-                        // save default to file
-                        using (FileStream fs = new FileStream(filename, FileMode.Create, FileAccess.Write))
-                        {
-                            var serializer = new XmlSerializer(typeof(CubeSetup));
-                            serializer.Serialize(fs, defaultSetup);
-                            Console.WriteLine($"Config: File {filename} created");
-                        }
-                    }
-                    else
-                    {
-                        resultConfig.CubeSetupList.Add(csl.CubeSetupMain);
-                    }
-                }
-            }
-
-            return resultConfig;
-        }
-        /// <summary>
-        /// 1. get config from app config
-        /// 2. load config from cubeX.config files
-        /// 3. Build&Save config per missing cubeX.config 
-        /// </summary>
-        //public static CubeSetup GetCubeSetup(List<UeiDeviceInfo> deviceInfoList)
-        //{
-        //    CubeSetup resutlCubeSetup = null;
-        //    //foreach (List<UeiDeviceInfo> cubeDeviceList in cubeListList)
-
-        //    int cubeid = deviceInfoList[0].CubeId;
-        //    string filename = (cubeid == -2) ? "Cube.simu.config" : $"Cube{cubeid}.config";
-        //    CubeSetup cs = LoadCubeSetupFromFile(filename);
-
-        //    if (null == cs) // if can't load from file
-        //    {
-        //        CubeSetup resutlSetup = new CubeSetup(deviceInfoList);
-
-        //        using (FileStream fs = new FileStream(filename, FileMode.Create, FileAccess.Write))
-        //        {
-        //            var serializer = new XmlSerializer(typeof(CubeSetup));
-        //            serializer.Serialize(fs, resutlSetup);
-        //        }
-
-        //    }
-        //    resutlCubeSetup = cs;
-
-        //    return resutlCubeSetup;
-        //}
-
-        //private static CubeSetup BuildDefaultCubeSetup(List<UeiDeviceInfo> deviceList)
-        //{
-        //    CubeSetup resutlSetup = new CubeSetup(deviceList);
-
-        //}
-
-        //public static CubeSetup LoadCubeSetupFromFile_moved(FileInfo filename)
-        //{
-        //    var serializer = new XmlSerializer(typeof(CubeSetup));
-        //    CubeSetup resultSetup = null;
-        //    FileInfo configFile = filename;// = new FileInfo(filename);
-
-        //    if (configFile.Exists)
-        //    {
-        //        using (StreamReader sr = configFile.OpenText())
-        //        {
-        //            resultSetup = serializer.Deserialize(sr) as CubeSetup;
-        //            resultSetup.AssociatedFileFullname = configFile.FullName;
-        //        }
-        //    }
-        //    return resultSetup;
-        //}
-
         private static AppSetup LoadGeneralSetup()
         {
             AppSetup resultSetup = new AppSetup();
             //resultSetup.SelectedNicForMCast = "221.109.251.103";
             resultSetup.StatusViewerEP = new EndPoint("239.10.10.17", 5093);
             return resultSetup;
-        }
-
-        [Obsolete]
-        public void SavePerCube1(string basefilename, bool overwrite)
-        {
-            foreach (CubeSetup cstp in this.CubeSetupList)
-            {
-                int cubeid = StaticMethods.GetCubeId(cstp.CubeUrl);
-                FileInfo newfile = new FileInfo($"{basefilename}.cube{cubeid}.config");
-                var serializer = new XmlSerializer(typeof(CubeSetup));
-                using (var writer = newfile.OpenWrite()) // new StreamWriter(filename))
-                {
-                    serializer.Serialize(writer, cstp);
-                }
-            }
-        }
-
-        [Obsolete]
-        public static Config2 BuildDefaultConfig1(List<string> cubeUrlList)
-        {
-            List<CubeSetup> csetupList = new List<CubeSetup>();
-            foreach (var url in cubeUrlList)
-            {
-                UeiDaq.DeviceCollection devColl = new UeiDaq.DeviceCollection(url);
-                List<UeiDeviceInfo> rl = new List<UeiDeviceInfo>();
-                foreach (UeiDaq.Device dev in devColl)
-                {
-                    if (dev == null)
-                        continue; // this for the last entry, which is null
-                    rl.Add(new UeiDeviceInfo(url, dev.GetIndex(), dev.GetDeviceName()));
-                }
-                csetupList.Add(new CubeSetup(rl));
-            }
-
-            Config2 res = new Config2(csetupList);
-            return res;
-
         }
 
         public T GetDeviceSetupEntry<T>(UeiDeviceInfo devInfo) where T : DeviceSetup
@@ -360,9 +205,9 @@ namespace UeiBridge.Library
                 if (null != devInfoList && devInfoList.Count > 0)
                 {
                     string filename = CubeSetup.GetSelfFilename(devInfoList[0].CubeId); //(cube_id == UeiDeviceInfo.SimuCubeId) ? "Cube.simu.config" : $"Cube{cube_id}.config";
-                    CubeSetupLoader csl = new CubeSetupLoader();
+                    CubeSetupLoader csl = new CubeSetupLoader( new FileInfo(filename));
 
-                    if (null == csl.LoadSetupFile(new FileInfo(filename))) // if failed to load from file
+                    if (null == csl.CubeSetupMain) // if failed to load from file
                     {
                         CubeSetup cs = new CubeSetup(devInfoList); // create default
                         cubeSetupList.Add(cs);

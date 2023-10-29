@@ -52,40 +52,53 @@ namespace UeiBridgeTest
             string existing_cube = "pdna://192.168.100.2";
             string non_existing_cube = "pdna://192.168.100.99";
             string bad_url = "ksjdlkfjlaks";
-            UeiBridge.Library.Config2 c3 = null;// UeiBridge.Library.Config2.LoadConfig(new List<string>() { simu_url, existing_cube, non_existing_cube, bad_url });
+            List<CubeSetup> cubeList = UeiBridge.Library.Config2.GetSetupForCubes(new List<string>() { simu_url, existing_cube, non_existing_cube, bad_url });
 
             IPAddress ip = UeiBridge.Library.StaticMethods.CubeUrlToIpAddress("pdna://192.168.100.2");
             if (null == CubeSeeker.TryIP(ip))
             {
-                Assert.That(c3.CubeSetupList.Count, Is.EqualTo(1));
+                Assert.That(cubeList.Count, Is.EqualTo(1));
             }
             else
             {
-                Assert.That(c3.CubeSetupList.Count, Is.EqualTo(2));
+                Assert.That(cubeList.Count, Is.EqualTo(2));
             }
-
-            //var list1 = new List<UeiDeviceInfo>();
-            //var list2 = new List<UeiDeviceInfo>();
-            //list1.Add(new UeiDeviceInfo(url1, 0, DeviceMap2.SimuAO16Literal));
-            //list2.Add(new UeiDeviceInfo(url2, 0, DeviceMap2.SimuAO16Literal));
-            //UeiBridge.LibraryA.CubeSetup cs1 = new UeiBridge.LibraryA.CubeSetup(list1);
-            //UeiBridge.LibraryA.CubeSetup cs2 = new UeiBridge.LibraryA.CubeSetup(list2);
-            //UeiBridge.LibraryA.Config2 c3 = new UeiBridge.LibraryA.Config2(new List<UeiBridge.LibraryA.CubeSetup> { cs1, cs2 });
-            //c3.SavePerCube("UeiBridge", true);
         }
         [Test]
-        public void LoadCubeSetupFromFileTest()
+        public void CubeSetupLoader_Test()
         {
-            CubeSetupLoader csl = new CubeSetupLoader();
-            csl.LoadSetupFile( new FileInfo( "Cube.fortest.config"));
-            //CubeSetup cs = CubeSetup.LoadCubeSetupFromFile( new FileInfo( "Cube.fortest.config"));
-            Assert.That(csl.CubeSetupMain, Is.Not.Null);
+            // create file
+            string cubeurl = "simu://";
+            string configfile = "setup.fortest.config";
+            string gfile = "gfile.config";
+            UeiDaq.DeviceCollection devCollection = new UeiDaq.DeviceCollection( cubeurl);
+            List<UeiDeviceInfo> devInfoList = UeiBridge.Library.StaticMethods.DeviceCollectionToDeviceInfoList(devCollection, cubeurl);
+            CubeSetup cs = new CubeSetup(devInfoList);
+            bool saveOk = CubeSetupLoader.SaveSetupFile(cs, new FileInfo(configfile));
+            Assert.That(saveOk, Is.EqualTo(true));
+            using (FileStream fs = new FileStream("gfile.config", FileMode.Create, FileAccess.Write))
+            {
+                StreamWriter sw = new StreamWriter(fs);
+                sw.Write("not xml");
+            }
+
+            // load good file
+            CubeSetupLoader cslgood = new CubeSetupLoader( new FileInfo( configfile));
+            Assert.That( cslgood.CubeSetupMain, Is.Not.Null);
+
+            // load non existing file
+            CubeSetupLoader cslnofile = new CubeSetupLoader(new FileInfo("nonono"));
+            Assert.That(cslnofile.CubeSetupMain, Is.Null);
+
+            CubeSetupLoader cslbad = new CubeSetupLoader(new FileInfo(gfile));
+            Assert.That(cslbad.CubeSetupMain, Is.Null);
+
         }
         [Test]
         public void ConfigBadUrlTest()
         {
-            UeiBridge.Library.Config2 c2a = null;// UeiBridge.Library.Config2.LoadConfig(new List<string>() { "kkk" });
-            Assert.That(c2a.CubeSetupList.Count, Is.EqualTo(0));
+            List<CubeSetup> c2a = UeiBridge.Library.Config2.GetSetupForCubes(new List<string>() { "kkk" });
+            Assert.That(c2a.Count, Is.EqualTo(0));
         }
         [Test]
         public void LoadConfig3Test()
@@ -93,10 +106,10 @@ namespace UeiBridgeTest
             //string cubeurl = "pdna://192.168.100.4";
             //string cubeurl = "simu://";
             List<string> urllist = new List<string>() { "simu://", "pdna://192.168.100.15" };
-            UeiBridge.Library.Config2 c2a = null;// UeiBridge.Library.Config2.LoadConfig(urllist);
+            List<CubeSetup> c2a = Config2.GetSetupForCubes(urllist);
 
-            Assert.That(c2a.CubeSetupList.Count, Is.EqualTo(1));
-            Assert.That(c2a.CubeSetupList[0].DeviceSetupList.Count, Is.EqualTo(11));
+            Assert.That(c2a.Count, Is.EqualTo(1));
+            Assert.That(c2a[0].DeviceSetupList.Count, Is.EqualTo(11));
             //UeiDaq.DeviceCollection devColl = new UeiDaq.DeviceCollection(cubeurl);
             //List<UeiDeviceInfo> devList1 = DeviceCollectionToDeviceInfoList(devColl, );
             //List<UeiDeviceInfo> devList2 = DeviceCollectionToDeviceInfoList(devColl, );
@@ -131,19 +144,6 @@ namespace UeiBridgeTest
 
         }
 
-        //private static List<UeiDeviceInfo> DeviceCollectionToDeviceInfoList( DeviceCollection devColl, string cubeurl)
-        //{
-        //    var l1 = devColl.Cast<UeiDaq.Device>().ToList();
-        //    var devList = l1.Select((UeiDaq.Device i) =>
-        //    {
-        //        if (i == null)
-        //            return null;
-        //        //Uri url = new Uri(i.GetResourceName());
-        //        //string curl = url.LocalPath;
-        //        return new UeiDeviceInfo(cubeurl, i.GetIndex(), i.GetDeviceName());
-        //    });
-        //    return devList.ToList();
-        //}
 
         /// <summary>
         /// Verify that CubeSetup does not generate device-setup for an unknown device.
@@ -173,9 +173,9 @@ namespace UeiBridgeTest
         public void BuildDefaultSimuConfigTest()
         {
             Config2 c2 = new Config2();
-            Config2 c3 = null;// Config2.BuildDefaultConfig(new List<string> { "simu://" });
-            Assert.That(c3.AppSetup.StatusViewerEP, Is.Not.Null);
-            Assert.That(c3.CubeSetupList[0].DeviceSetupList.Count, Is.EqualTo(11)); // only one simulation device setup is defined.
+            List<CubeSetup> c3 = Config2.GetSetupForCubes(new List<string> { "simu://" });
+            //Assert.That(c3.AppSetup.StatusViewerEP, Is.Not.Null);
+            Assert.That(c3[0].DeviceSetupList.Count, Is.EqualTo(11)); // only one simulation device setup is defined.
         }
 
         //[Test]

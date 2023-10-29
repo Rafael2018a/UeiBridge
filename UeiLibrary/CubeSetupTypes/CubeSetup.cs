@@ -92,7 +92,7 @@ namespace UeiBridge.CubeSetupTypes
                 bool f2 = DeviceSetupList.SequenceEqual(other.DeviceSetupList);
                 return f2;
             }
-            catch (Exception ex)
+            catch (Exception )
             {
                 return false;
             }
