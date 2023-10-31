@@ -10,6 +10,7 @@ using System.IO;
 using Newtonsoft.Json;
 using ByteStreamer3.Utilities;
 using UeiBridge.Types;
+using UeiBridge.Interfaces;
 
 namespace UeiBridgeTest
 {
@@ -24,7 +25,7 @@ namespace UeiBridgeTest
             //Assert.Pass();
         }
 
-        public class Consumer : UeiBridge.Types.IEnqueue<SendObject>
+        public class Consumer : IEnqueue<SendObject>
         {
             public byte[] receivedMessage { get; set; }
             public void Enqueue(SendObject so)

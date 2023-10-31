@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using UeiBridge;
+using UeiBridge.Interfaces;
 using UeiBridge.Library;
 using UeiBridge.Types;
 

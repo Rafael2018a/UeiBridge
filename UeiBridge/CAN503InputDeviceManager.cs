@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using UeiBridge.CubeSetupTypes;
+using UeiBridge.Interfaces;
 using UeiBridge.Library;
 using UeiBridge.Types;
 using UeiDaq;
@@ -13,7 +15,7 @@ namespace UeiBridge
         //private SessionAdapter _sessionAdapter;
         //private UdpWriter _udpWriter;
         private log4net.ILog _logger = StaticMethods.GetLogger();
-        List<CANReaderAdapter> _canReaderList = new List<CANReaderAdapter>();
+        List<ICANReaderAdapter> _canReaderList = new List<ICANReaderAdapter>();
         private List<IAsyncResult> _readerIAsyncResultList = new List<IAsyncResult>();
         CAN503Setup _thisSetup;
         bool _inDisposeState = false;
@@ -57,7 +59,7 @@ namespace UeiBridge
         {
             for (int ch = 0; ch < _ueiSession.GetNumberOfChannels(); ch++)
             {
-                CANReaderAdapter cr = _ueiSession.GetCANReader(ch);
+                ICANReaderAdapter cr = _ueiSession.GetCANReader(ch);
                 AsyncCallback readCallback = new AsyncCallback(ReaderCallback);
                 _readerIAsyncResultList.Add(cr.BeginRead(1, readCallback, ch));
                 _canReaderList.Add(cr);
@@ -71,7 +73,7 @@ namespace UeiBridge
             int channel = (int)ar.AsyncState;
             try
             {
-                CANReaderAdapter cra = _canReaderList[channel];
+                ICANReaderAdapter cra = _canReaderList[channel];
                 UeiDaq.CANFrame[] framesBuffer = cra.EndRead(ar);
                 System.Diagnostics.Debug.Assert( framesBuffer.Length == 1);
 

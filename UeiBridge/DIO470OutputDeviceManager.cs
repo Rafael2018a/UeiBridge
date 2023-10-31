@@ -5,6 +5,7 @@ using UeiBridge.Types;
 using System.Timers;
 using UeiBridge.Library;
 using UeiDaq;
+using UeiBridge.CubeSetupTypes;
 
 namespace UeiBridge
 {

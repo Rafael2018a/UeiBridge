@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using UeiDaq;
 using UeiBridge.Library;
 using System.Collections.Generic;
+using UeiBridge.CubeSetupTypes;
 
 namespace UeiBridge
 {

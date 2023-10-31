@@ -3,6 +3,8 @@ using UeiBridge.Types;
 using UeiBridge.Library;
 using System.Collections.Generic;
 using System.Linq;
+using UeiBridge.CubeSetupTypes;
+using UeiBridge.Interfaces;
 
 namespace UeiBridge
 {

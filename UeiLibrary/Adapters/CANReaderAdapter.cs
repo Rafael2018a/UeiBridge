@@ -1,9 +1,10 @@
 ﻿using System;
+using UeiBridge.Interfaces;
 using UeiDaq;
 
 namespace UeiBridge.Library
 {
-    public class CANReaderAdapter : IReaderAdapter<CANFrame>
+    public class CANReaderAdapter : ICANReaderAdapter
     {
         private CANReader _canReader;
 

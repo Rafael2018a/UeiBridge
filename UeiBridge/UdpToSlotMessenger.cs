@@ -6,6 +6,7 @@ using log4net;
 using UeiBridge.Library;
 using UeiBridge.Types;
 using System.Collections.Concurrent;
+using UeiBridge.Interfaces;
 
 namespace UeiBridge
 {

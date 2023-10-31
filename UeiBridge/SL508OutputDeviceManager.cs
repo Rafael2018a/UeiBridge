@@ -8,6 +8,8 @@ using UeiBridge.Library;
 
 using bytearray = System.Array;
 using System.Timers;
+using UeiBridge.CubeSetupTypes;
+using UeiBridge.Interfaces;
 
 namespace UeiBridge
 {

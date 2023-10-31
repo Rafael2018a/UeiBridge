@@ -11,6 +11,7 @@ using System.Windows;
 using System.Collections.ObjectModel;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Microsoft.Win32;
+using UeiBridge.CubeSetupTypes;
 
 namespace UeiBridge.CubeNet
 {
@@ -232,9 +233,9 @@ namespace UeiBridge.CubeNet
                 saveFileDialog.FileName = CubeSetup.GetSelfFilename(ct.NickName);
                 if (saveFileDialog.ShowDialog() == true)
                 {
-                    cs.AssociatedFileFullname = saveFileDialog.FileName;
-                    cs.Serialize();
-                    PanelLogMessage = $"File {cs.AssociatedFileFullname} saved";
+                    //cs.AssociatedFileFullname = saveFileDialog.FileName;
+                    CubeSetupLoader.SaveSetupFile( cs, new FileInfo( saveFileDialog.FileName));
+                    PanelLogMessage = $"File {saveFileDialog.FileName} saved";
                 }
             }
             else

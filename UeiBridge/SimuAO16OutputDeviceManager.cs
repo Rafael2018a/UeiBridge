@@ -1,4 +1,5 @@
-﻿using UeiBridge.Library;
+﻿using UeiBridge.CubeSetupTypes;
+using UeiBridge.Library;
 
 namespace UeiBridge
 {

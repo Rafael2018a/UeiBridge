@@ -9,6 +9,7 @@ using UeiBridge.Library;
 //using UeiBridgeSetup.ViewModels;
 using CubeDesign;
 using CubeDesign.ViewModels;
+using UeiBridge.CubeSetupTypes;
 
 namespace UeiBridgeTest
 {

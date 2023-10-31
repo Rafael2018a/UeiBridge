@@ -12,6 +12,8 @@ using log4net;
 using UeiDaq;
 using UeiBridge.Types;
 using UeiBridge.Library;
+using UeiBridge.CubeSetupTypes;
+using UeiBridge.Interfaces;
 
 namespace UeiBridge
 {
@@ -57,18 +59,23 @@ namespace UeiBridge
                 return;
             }
 
-            // new
+            
             try
             {
-                List<CubeSetup> cubeSetupList = Config2.GetSetupForConnectedCubes(cubeUrlList);
+                List<CubeSetup> cubeSetupList = Config2.GetSetupForCubes(cubeUrlList); // tbd: very slow!
+                // if setup file wasn't found, save default.
                 foreach (CubeSetup cs in cubeSetupList)
                 {
-                    if (null == cs.AssociatedFileFullname)
+                    string fn = CubeSetup.GetSelfFilename(cs.GetCubeId());
+                    
+                    if (false == cs.IsLoadedFromFile)
                     {
-                        cs.Serialize();
+                        FileInfo xfile = new FileInfo(fn);
+                        CubeSetupLoader.SaveSetupFile(cs, xfile);
+                        _logger.Info($"File {xfile.FullName } saved");
                     }
                 }
-                _mainConfig = new Config2(cubeUrlList);
+                _mainConfig = new Config2(cubeUrlList); // tbd. very slow
             }
             catch( Exception ex)
             {
@@ -77,7 +84,7 @@ namespace UeiBridge
                 return;
             }
 
-            List<UeiDeviceInfo> deviceList = BuildLinearDeviceList(cubeUrlList);
+            List<UeiDeviceInfo> deviceList = BuildLinearDeviceList(cubeUrlList); // tbd: very slow
 
             _programBuilder = new ProgramObjectsBuilder( _mainConfig);
             _programBuilder.CreateDeviceManagers(deviceList);

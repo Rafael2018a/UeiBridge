@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using UeiBridge.Interfaces;
 using UeiDaq;
 
 namespace UeiBridge.Library
@@ -59,7 +60,7 @@ namespace UeiBridge.Library
             return new CANWriterAdapter(new CANWriter(_ueiSession.GetDataStream(), _ueiSession.GetChannel(ch).GetIndex()));
         }
 
-        public CANReaderAdapter GetCANReader(int ch)
+        public ICANReaderAdapter GetCANReader(int ch)
         {
             return new CANReaderAdapter( new CANReader(_ueiSession.GetDataStream(), _ueiSession.GetChannel(ch).GetIndex()));
         }

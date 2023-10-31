@@ -10,17 +10,6 @@ using UeiDaq;
 /// </summary>
 namespace UeiBridge.Types
 {
-    /// <summary>
-    /// Send items that should be pushed to q (return immediately)
-    /// </summary>
-    public interface IEnqueue<Item>
-    {
-        void Enqueue(Item i);
-    }
-    public interface ISend<Item>: IDisposable
-    {
-        void Send(Item i);
-    }
     //public interface IConvert
     //{
     //    object EthToDevice(byte[] messagePayload);
@@ -88,12 +77,6 @@ namespace UeiBridge.Types
         }
     }
 
-    public interface IDeviceManager
-    {
-        string DeviceName { get; }
-        string InstanceName { get; }
-        string [] GetFormattedStatus( TimeSpan interval);
-    }
 
     //public class TeeObject : ISend<SendObject>
     //{
