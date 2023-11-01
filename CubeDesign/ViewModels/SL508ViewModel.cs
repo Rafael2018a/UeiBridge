@@ -22,7 +22,7 @@ namespace CubeDesign.ViewModels
             set
             {
                 _selectedPortIndex = value;
-                SerialMode = _thisDeviceSetup.Channels[_selectedPortIndex].mode;
+                SerialMode = _thisDeviceSetup.Channels[_selectedPortIndex].Mode;
                 Baudrate = _thisDeviceSetup.Channels[_selectedPortIndex].Baudrate;
             }
         }
@@ -44,7 +44,7 @@ namespace CubeDesign.ViewModels
             set
             {
                 _serialMode = value;
-                _thisDeviceSetup.Channels[_selectedPortIndex].mode = _serialMode;
+                _thisDeviceSetup.Channels[_selectedPortIndex].Mode = _serialMode;
                 RaisePropertyChanged();
             }
         }

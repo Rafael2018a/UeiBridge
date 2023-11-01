@@ -23,8 +23,8 @@ namespace CubeDesign.ViewModels
             this.CubeSetup = cubesetup;
             this.IsCubeConnected = true;// isCubeConnected;
             //this.CubeAddress = StaticMethods.CubeUrlToIpAddress(CubeSetup.CubeUrl);
-            this.CubeNickname = cubesetup.TypeNickname;
-            this.CubeTypeId = $"Id={cubesetup.TypeId}";
+            this.CubeNickname = cubesetup.CubeTypeNickname;
+            this.CubeTypeId = $"Id={cubesetup.CubeTypeId}";
         }
     }
 }

@@ -24,9 +24,9 @@ namespace UeiBridge.CubeSetupTypes
     public class CubeSetup : IEquatable<CubeSetup>
     {
         public string CubeUrl { get; set; } // must be public for the  serializer
-        public string TypeNickname { get; set; }
-        public string TypeDesc { get; set; }
-        public int TypeId { get; set; }
+        public string CubeTypeNickname { get; set; }
+        public string CubeTypeDesc { get; set; }
+        public int CubeTypeId { get; set; }
         public List<DeviceSetup> DeviceSetupList { get; set; } // don't make private set
         //public string OriginFileFullName { get; set; } // file associated with current config
         //[XmlIgnore]
@@ -58,9 +58,9 @@ namespace UeiBridge.CubeSetupTypes
 
             CubeUrl = deviceList[0].CubeUrl;
             int cubeId = deviceList[0].CubeId;
-            TypeNickname = $"Nick{cubeId}";
-            TypeDesc = TypeNickname + " desc";
-            TypeId = cubeId * 10;
+            CubeTypeNickname = $"Nick{cubeId}";
+            CubeTypeDesc = CubeTypeNickname + " desc";
+            CubeTypeId = cubeId * 10;
             ConfigFactory cf = new ConfigFactory(ConfigFactory.PortNumberStart + cubeId * 100);
 
             DeviceSetupList = new List<DeviceSetup>();

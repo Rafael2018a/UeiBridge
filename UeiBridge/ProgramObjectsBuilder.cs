@@ -307,13 +307,14 @@ namespace UeiBridge
                     {
                         string finalUrl = $"{thisSetup.CubeUrl}Dev{thisSetup.SlotNumber}/Com{channel.ChannelIndex}";
                         SerialPort sport = serialSession.CreateSerialPort(finalUrl,
-                                            channel.mode,
+                                            channel.Mode,
                                             channel.Baudrate,
                                             SerialPortDataBits.DataBits8,
-                                            channel.parity,
-                                            channel.stopbits,
+                                            channel.Parity,
+                                            channel.Stopbits,
                                             "");
                         System.Diagnostics.Debug.Assert(null != sport);
+                        sport.EnableErrorReporting(true);
                     }
 
                     System.Diagnostics.Debug.Assert(serialSession.GetNumberOfChannels() == thisSetup.Channels.Count);
@@ -354,7 +355,7 @@ namespace UeiBridge
             SL508OutputDeviceManager od = new SL508OutputDeviceManager(setup, serialSession);
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMulticast);
             UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, od.InstanceName);
-             // each port
+            // each port
             {
                 var add = IPAddress.Parse( setup.LocalEndPoint.Address);
                 foreach( SerialChannelSetup chSetup in thisSetup.Channels)
