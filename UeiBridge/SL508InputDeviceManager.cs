@@ -132,8 +132,9 @@ namespace UeiBridge
         }
         public override bool OpenDevice()
         {
-            _lastScanList = new List<ViewItem<byte[]>>(new ViewItem<byte[]>[_serialSession.GetNumberOfChannels()]);
-            _readerIAsyncResultList = new List<IAsyncResult>(new IAsyncResult[_thisSetup.Channels.Count]);
+            int numberOfChannels = _serialSession.GetNumberOfChannels();
+            _lastScanList = new List<ViewItem<byte[]>>(new ViewItem<byte[]>[numberOfChannels]);
+            _readerIAsyncResultList = new List<IAsyncResult>(new IAsyncResult[numberOfChannels]);
 
             // build reader list 
             for (int ch = 0; ch < _serialSession.GetNumberOfChannels(); ch++)

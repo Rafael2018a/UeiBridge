@@ -220,11 +220,11 @@ namespace UeiBridgeTest
                 {
                     string finalUrl = $"{thisSetup.CubeUrl}Dev{thisSetup.SlotNumber}/Com{channel.ChannelIndex}";
                     var port = serialSession.CreateSerialPort(finalUrl,
-                                        channel.mode,
+                                        channel.Mode,
                                         channel.Baudrate,
                                         SerialPortDataBits.DataBits8,
-                                        channel.parity,
-                                        channel.stopbits,
+                                        channel.Parity,
+                                        channel.Stopbits,
                                         "");
                 }
 

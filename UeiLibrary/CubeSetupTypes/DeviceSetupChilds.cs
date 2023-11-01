@@ -142,11 +142,12 @@ namespace UeiBridge.CubeSetupTypes
     {
         [XmlAttribute("ChannelIndex")]
         public int ChannelIndex = -1;
-        public UeiDaq.SerialPortMode mode = UeiDaq.SerialPortMode.RS232;
-        //[XmlElement("Baud")]
+        //[XmlAttribute("EnableChannel")]
+        //public bool EnableChannel = true;
+        public UeiDaq.SerialPortMode Mode { get; set; }  = UeiDaq.SerialPortMode.RS232;
         public UeiDaq.SerialPortSpeed Baudrate { get; set; }
-        public UeiDaq.SerialPortParity parity = UeiDaq.SerialPortParity.None;
-        public UeiDaq.SerialPortStopBits stopbits = UeiDaq.SerialPortStopBits.StopBits1;
+        public UeiDaq.SerialPortParity Parity { get; set; } = UeiDaq.SerialPortParity.None;
+        public UeiDaq.SerialPortStopBits Stopbits { get; set; } = UeiDaq.SerialPortStopBits.StopBits1;
         public int LocalUdpPort { get; set; }
 
         public SerialChannelSetup(int channelIndex, UeiDaq.SerialPortSpeed speed)
