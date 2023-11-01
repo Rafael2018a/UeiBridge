@@ -127,6 +127,16 @@ namespace UeiBridge.CubeSetupTypes
         {
         }
 
+        public override bool Equals(DeviceSetup other)
+        {
+            SL508892Setup otherSetup = other as SL508892Setup;
+
+            bool f1 = base.Equals(other);
+            bool f2 = this.Channels.SequenceEqual<SerialChannelSetup>(otherSetup.Channels);
+            return f1 && f2; ;
+
+        }
+
         public SL508892Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base(localEndPoint, destEndPoint, device)
         {
             Channels = new List<SerialChannelSetup>();
@@ -136,14 +146,15 @@ namespace UeiBridge.CubeSetupTypes
                 Channels.Add(new SerialChannelSetup(chIndex, UeiDaq.SerialPortSpeed.BitsPerSecond19200));
             }
         }
+
     }
 
     public class SerialChannelSetup
     {
         [XmlAttribute("ChannelIndex")]
         public int ChannelIndex = -1;
-        [XmlAttribute("EnableChannel")]
-        public bool EnableChannel = true;
+        [XmlAttribute("IsEnabled")]
+        public bool IsEnabled = true;
         public UeiDaq.SerialPortMode Mode { get; set; }  = UeiDaq.SerialPortMode.RS232;
         public UeiDaq.SerialPortSpeed Baudrate { get; set; }
         public UeiDaq.SerialPortParity Parity { get; set; } = UeiDaq.SerialPortParity.None;

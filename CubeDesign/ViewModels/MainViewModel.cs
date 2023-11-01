@@ -52,7 +52,10 @@ namespace CubeDesign.ViewModels
             ExitAppCommand = new RelayCommand(ExitApp);
             CloseFileCommand = new RelayCommand(CloseFile, CanCloseFile);
 
-            MainWindowTitle = "Cube Design";
+            var EntAsm = UeiBridge.Library.StaticMethods.GetLibVersion();
+            System.IO.FileInfo fi = new System.IO.FileInfo(EntAsm.Location);
+
+            MainWindowTitle = $"Cube Design. {EntAsm.GetName().Version.ToString(3)}. (Build time: {fi.LastWriteTime.ToString()})";
 
             _parentView = parentView;
         }
@@ -168,6 +171,7 @@ namespace CubeDesign.ViewModels
         private void SaveFile(object param) 
         {
             CubeSetupLoader.SaveSetupFile( CubeSetupMain, new FileInfo( _loadedSetupFile.Name));//  As(new FileInfo(Config2.DefaultSettingsFilename), true);
+            System.Threading.Thread.Sleep(10);
             CubeSetupLoader csl = new CubeSetupLoader(_loadedSetupFile);
             CubeSetupClean = csl.CubeSetupMain;
                 //CubeSetup.LoadCubeSetupFromFile( new FileInfo( CubeSetup1.AssociatedFileFullname));

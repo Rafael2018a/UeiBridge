@@ -24,6 +24,7 @@ namespace CubeDesign.ViewModels
                 _selectedPortIndex = value;
                 SerialMode = _thisDeviceSetup.Channels[_selectedPortIndex].Mode;
                 Baudrate = _thisDeviceSetup.Channels[_selectedPortIndex].Baudrate;
+                EnableChannel = _thisDeviceSetup.Channels[_selectedPortIndex].IsEnabled;
             }
         }
         private SerialPortSpeed _baudrate;
@@ -38,6 +39,7 @@ namespace CubeDesign.ViewModels
             }
         }
         private SerialPortMode _serialMode;
+        private bool _enableChannel;
         public UeiDaq.SerialPortMode SerialMode
         {
             get => _serialMode;
@@ -45,6 +47,16 @@ namespace CubeDesign.ViewModels
             {
                 _serialMode = value;
                 _thisDeviceSetup.Channels[_selectedPortIndex].Mode = _serialMode;
+                RaisePropertyChanged();
+            }
+        }
+        public bool EnableChannel
+        {
+            get => _enableChannel;
+            set
+            {
+                _enableChannel = value;
+                _thisDeviceSetup.Channels[_selectedPortIndex].IsEnabled = _enableChannel;
                 RaisePropertyChanged();
             }
         }

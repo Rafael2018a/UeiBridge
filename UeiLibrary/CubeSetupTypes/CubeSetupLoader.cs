@@ -63,7 +63,9 @@ namespace UeiBridge.CubeSetupTypes
             }
             using( FileStream fs = xmlFile.OpenWrite())
             {
-                return SaveSetupFile(cs, fs);
+                bool rc = SaveSetupFile(cs, fs);
+                fs.Flush();
+                return rc;
             }
         }
         public static bool SaveSetupFile(CubeSetup cs, Stream xmlStream)

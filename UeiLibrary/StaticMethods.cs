@@ -210,6 +210,14 @@ namespace UeiBridge.Library
             return (u == null) ? true : false;
         }
 
+        public static System.Reflection.Assembly GetLibVersion()
+        {
+            //System.Reflection.Assembly EntAsm = System.Reflection.Assembly.GetEntryAssembly();
+            //System.Reflection.Assembly asm1 = System.Reflection.Assembly.GetCallingAssembly();
+            //System.Reflection.Assembly asm2 = System.Reflection.Assembly.GetEntryAssembly();
+            System.Reflection.Assembly asm3 = System.Reflection.Assembly.GetExecutingAssembly();
 
+            return asm3;
+        }
     }
 }

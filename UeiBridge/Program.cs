@@ -46,7 +46,8 @@ namespace UeiBridge
         private void Run()
         {
             // print current version
-            var EntAsm = System.Reflection.Assembly.GetEntryAssembly();//.GetName().Version;
+            //var EntAsm = System.Reflection.Assembly.GetEntryAssembly();//.GetName().Version;
+            var EntAsm = UeiBridge.Library.StaticMethods.GetLibVersion();
             System.IO.FileInfo fi = new System.IO.FileInfo(EntAsm.Location);
             _logger.Info($"UEI Bridge. Version {EntAsm.GetName().Version.ToString(3)}. Build time: {fi.LastWriteTime.ToString()}");
 

@@ -93,6 +93,10 @@ namespace UeiBridge
                     EmitInitMessage(deviceInfo, deviceMessage);
                     continue;
                 }
+                if (false==setup.IsEnabled)
+                {
+                    continue;
+                }
                 // if config entry match
                 if (setup.DeviceName != deviceInfo.DeviceName)
                 {
@@ -305,6 +309,10 @@ namespace UeiBridge
                 {
                     foreach (var channel in thisSetup.Channels)
                     {
+                        if (false == channel.IsEnabled)
+                        {
+                            continue;
+                        }
                         string finalUrl = $"{thisSetup.CubeUrl}Dev{thisSetup.SlotNumber}/Com{channel.ChannelIndex}";
                         SerialPort sport = serialSession.CreateSerialPort(finalUrl,
                                             channel.Mode,
@@ -317,7 +325,10 @@ namespace UeiBridge
                         sport.EnableErrorReporting(true);
                     }
 
-                    System.Diagnostics.Debug.Assert(serialSession.GetNumberOfChannels() == thisSetup.Channels.Count);
+                    {
+                        int chCount = thisSetup.Channels.Where(ch => ch.IsEnabled == true).ToList().Count;
+                        System.Diagnostics.Debug.Assert(serialSession.GetNumberOfChannels() == chCount);
+                    }
 
                     serialSession.ConfigureTimingForMessagingIO(1000, 100.0);
                     serialSession.GetTiming().SetTimeout(5000); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
@@ -339,9 +350,9 @@ namespace UeiBridge
                 SerialPort ueiPort = ueiChannel as SerialPort;
                 string s1 = ueiPort.GetSpeed().ToString();
                 string s2 = s1.Replace("BitsPerSecond", "");
-                SL508892Setup s508 = setup as SL508892Setup;
+                //SL508892Setup s508 = setup as SL508892Setup;
                 int chIndex = ueiPort.GetIndex();
-                int portnum = s508.Channels.Where(i => i.ChannelIndex == chIndex).Select(i => i.LocalUdpPort).FirstOrDefault();
+                int portnum = thisSetup.Channels.Where(i => i.ChannelIndex == chIndex).Select(i => i.LocalUdpPort).FirstOrDefault();
                 _logger.Debug($"CH:{ueiPort.GetIndex()}, Rate {s2} bps, Mode {ueiPort.GetMode()}. Listening port {portnum}");
             }
 
@@ -357,12 +368,15 @@ namespace UeiBridge
             UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, od.InstanceName);
             // each port
             {
-                var add = IPAddress.Parse( setup.LocalEndPoint.Address);
+                var ip = IPAddress.Parse( setup.LocalEndPoint.Address);
                 foreach( SerialChannelSetup chSetup in thisSetup.Channels)
                 {
-                    IPEndPoint ep = new IPEndPoint(add, chSetup.LocalUdpPort);
-                    UdpReader ureader2 = new UdpReader( ep, nic, _udpMessenger, $"{od.InstanceName}/{chSetup.LocalUdpPort}");
-                    _udpReaderList.Add(ureader2);
+                    if (true == chSetup.IsEnabled)
+                    {
+                        IPEndPoint ep = new IPEndPoint(ip, chSetup.LocalUdpPort);
+                        UdpReader ureader2 = new UdpReader(ep, nic, _udpMessenger, $"{od.InstanceName}/{chSetup.LocalUdpPort}");
+                        _udpReaderList.Add(ureader2);
+                    }
                 }
             }
 
