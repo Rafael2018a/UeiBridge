@@ -32,14 +32,14 @@ namespace UeiBridge.CubeSetupTypes
             {
                 return null;
             }
-            using(FileStream fs = xmlFile.OpenRead())
+            using (FileStream fs = xmlFile.OpenRead())
             {
                 return LoadSetupFile(fs);
             }
         }
         CubeSetup LoadSetupFile(Stream xmlStream)
         {
-            if ((null != CubeSetupMain)||(xmlStream==null))
+            if ((null != CubeSetupMain) || (xmlStream == null))
             {
                 throw new ArgumentException("null argument");
             }
@@ -48,7 +48,7 @@ namespace UeiBridge.CubeSetupTypes
             {
                 CubeSetupMain = serializer.Deserialize(xmlStream) as CubeSetup;
             }
-            catch(InvalidOperationException ex) // bad formatted xml
+            catch (InvalidOperationException ex) // bad formatted xml
             {
                 return null;
             }
@@ -57,28 +57,29 @@ namespace UeiBridge.CubeSetupTypes
         }
         public static bool SaveSetupFile(CubeSetup cs, FileInfo xmlFile)
         {
-            if (null==cs)
+            if (null == cs)
             {
                 throw new ArgumentException("null argument");
             }
-            using( FileStream fs = xmlFile.OpenWrite())
+            using (StreamWriter sw = new StreamWriter(xmlFile.Open(FileMode.Create, FileAccess.Write)))
             {
-                bool rc = SaveSetupFile(cs, fs);
-                fs.Flush();
-                return rc;
+                bool rc = SaveSetupFile(cs, sw);
             }
+            return true;
         }
-        public static bool SaveSetupFile(CubeSetup cs, Stream xmlStream)
+
+        public static bool SaveSetupFile(CubeSetup cs, StreamWriter sw) // Stream xmlStream)
         {
-            if ((null == cs) || (null == xmlStream))
+            if ((null == cs) || (null == sw))
             {
                 throw new ArgumentException("null argument");
             }
 
-            var serializer = new XmlSerializer( typeof(CubeSetup));
-            serializer.Serialize(xmlStream, cs);
+            var serializer = new XmlSerializer(typeof(CubeSetup));
+            serializer.Serialize(sw, cs);
 
             return true;
         }
     }
 }
+

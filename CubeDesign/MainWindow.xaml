@@ -20,7 +20,7 @@
             <MenuItem Header="_File">
                 <MenuItem Header="Open setup file" Command="{Binding OpenFileCommand}"/>
                 <!--<MenuItem Header="Open default file" Command="{Binding AddCommand}" CommandParameter="param"/>-->
-                <MenuItem Header="Generate setup file"/>
+                <!--<MenuItem Header="Generate setup file"/>-->
                 <MenuItem Header="Save file" Command="{Binding SaveFileCommand}" />
                 <MenuItem Header="Close file" Command="{Binding CloseFileCommand}"/>
                 <MenuItem Header="Exit" Command="{Binding ExitAppCommand}"/>

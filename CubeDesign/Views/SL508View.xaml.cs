@@ -26,6 +26,9 @@ namespace CubeDesign.Views
 
             ModeCombo.ItemsSource = Enum.GetValues(typeof(UeiDaq.SerialPortMode));//.Cast<UeiDaq.SerialPortMode>();
             BaudCombo.ItemsSource = Enum.GetValues(typeof(UeiDaq.SerialPortSpeed));
+            ParityCombo.ItemsSource = Enum.GetValues(typeof(UeiDaq.SerialPortParity));
+            StopbitsCombo.ItemsSource = Enum.GetValues(typeof(UeiDaq.SerialPortStopBits));
+
         }
-    }
+}
 }

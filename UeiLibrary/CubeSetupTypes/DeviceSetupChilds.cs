@@ -149,12 +149,12 @@ namespace UeiBridge.CubeSetupTypes
 
     }
 
-    public class SerialChannelSetup
+    public class SerialChannelSetup: IEquatable<SerialChannelSetup>
     {
         [XmlAttribute("ChannelIndex")]
-        public int ChannelIndex = -1;
+        public int ChannelIndex { get; set; }  = -1;
         [XmlAttribute("IsEnabled")]
-        public bool IsEnabled = true;
+        public bool IsEnabled { get; set; } = true;
         public UeiDaq.SerialPortMode Mode { get; set; }  = UeiDaq.SerialPortMode.RS232;
         public UeiDaq.SerialPortSpeed Baudrate { get; set; }
         public UeiDaq.SerialPortParity Parity { get; set; } = UeiDaq.SerialPortParity.None;
@@ -168,6 +168,19 @@ namespace UeiBridge.CubeSetupTypes
         }
         public SerialChannelSetup()
         {
+        }
+
+        public bool Equals(SerialChannelSetup other)
+        {
+            bool f1 = this.ChannelIndex == other.ChannelIndex;
+            bool f2 = this.IsEnabled == other.IsEnabled;
+            bool f3 = this.Mode == other.Mode;
+            bool f4 = this.Baudrate == other.Baudrate;
+            bool f5 = this.Parity == other.Parity;
+            bool f6 = this.Stopbits == other.Stopbits;
+            bool f7 = this.LocalUdpPort == other.LocalUdpPort;
+
+            return (f1 && f2 && f3 && f4 && f5 && f6 && f7);
         }
     }
     public class CANChannelSetup

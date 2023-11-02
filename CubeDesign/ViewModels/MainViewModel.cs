@@ -108,10 +108,15 @@ namespace CubeDesign.ViewModels
             }
             try
             {
-                CubeSetupLoader cslMain = new CubeSetupLoader(configFile);
+                // tbd. what if setup failed to load. It is NOT handled properly!!!!!
+                 
+                CubeSetupLoader cslMain = new CubeSetupLoader(configFile); 
                 CubeSetupMain = cslMain.CubeSetupMain;
                 CubeSetupLoader cslClean = new CubeSetupLoader(configFile);
                 CubeSetupClean = cslClean.CubeSetupMain;
+
+                System.Diagnostics.Debug.Assert(null != CubeSetupMain);
+                System.Diagnostics.Debug.Assert(null != CubeSetupClean);
                 //CubeSetup1 = CubeSetup.LoadCubeSetupFromFile( configFile);
                 //CubeSetupClean = CubeSetup.LoadCubeSetupFromFile( configFile);
                 MidStatusBarMessage = $"Setup file: {configFile.Name}";
@@ -173,7 +178,9 @@ namespace CubeDesign.ViewModels
             CubeSetupLoader.SaveSetupFile( CubeSetupMain, new FileInfo( _loadedSetupFile.Name));//  As(new FileInfo(Config2.DefaultSettingsFilename), true);
             System.Threading.Thread.Sleep(10);
             CubeSetupLoader csl = new CubeSetupLoader(_loadedSetupFile);
+            
             CubeSetupClean = csl.CubeSetupMain;
+            System.Diagnostics.Debug.Assert(null != CubeSetupClean);
                 //CubeSetup.LoadCubeSetupFromFile( new FileInfo( CubeSetup1.AssociatedFileFullname));
         }
         private void SaveFileAs(object param) { }
