@@ -9,6 +9,7 @@ namespace UeiBridge.CubeSetupTypes
 {
     public class CubeSetupLoader
     {
+        public CubeSetup CubeSetupMain { get; private set; }
         public CubeSetupLoader(FileInfo xmlFile)
         {
             if (!xmlFile.Exists)
@@ -19,23 +20,10 @@ namespace UeiBridge.CubeSetupTypes
             {
                 LoadSetupFile(fs);
             }
-
         }
         public CubeSetupLoader(Stream xmlStream)
         {
             LoadSetupFile(xmlStream);
-        }
-        public CubeSetup CubeSetupMain { get; private set; }
-        CubeSetup LoadSetupFile(FileInfo xmlFile)
-        {
-            if (!xmlFile.Exists)
-            {
-                return null;
-            }
-            using (FileStream fs = xmlFile.OpenRead())
-            {
-                return LoadSetupFile(fs);
-            }
         }
         CubeSetup LoadSetupFile(Stream xmlStream)
         {
@@ -44,15 +32,7 @@ namespace UeiBridge.CubeSetupTypes
                 throw new ArgumentException("null argument");
             }
             var serializer = new XmlSerializer(typeof(CubeSetup));
-            try
-            {
-                CubeSetupMain = serializer.Deserialize(xmlStream) as CubeSetup;
-            }
-            catch (InvalidOperationException ex) // bad formatted xml
-            {
-                return null;
-            }
-
+            CubeSetupMain = serializer.Deserialize(xmlStream) as CubeSetup;
             return CubeSetupMain;
         }
         public static bool SaveSetupFile(CubeSetup cs, FileInfo xmlFile)
@@ -67,7 +47,6 @@ namespace UeiBridge.CubeSetupTypes
             }
             return true;
         }
-
         public static bool SaveSetupFile(CubeSetup cs, StreamWriter sw) // Stream xmlStream)
         {
             if ((null == cs) || (null == sw))

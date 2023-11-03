@@ -108,38 +108,33 @@ namespace CubeDesign.ViewModels
             }
             try
             {
-                // tbd. what if setup failed to load. It is NOT handled properly!!!!!
-                 
                 CubeSetupLoader cslMain = new CubeSetupLoader(configFile); 
                 CubeSetupMain = cslMain.CubeSetupMain;
                 CubeSetupLoader cslClean = new CubeSetupLoader(configFile);
                 CubeSetupClean = cslClean.CubeSetupMain;
 
-                System.Diagnostics.Debug.Assert(null != CubeSetupMain);
+                System.Diagnostics.Debug.Assert(null != CubeSetupMain); 
                 System.Diagnostics.Debug.Assert(null != CubeSetupClean);
-                //CubeSetup1 = CubeSetup.LoadCubeSetupFromFile( configFile);
-                //CubeSetupClean = CubeSetup.LoadCubeSetupFromFile( configFile);
+
                 MidStatusBarMessage = $"Setup file: {configFile.Name}";
                 _loadedSetupFile = configFile;
+
+                var sysVM = new SystemSetupViewModel(new List<CubeSetup>() { CubeSetupMain });
+                systemSetupVM = sysVM;
+
             }
             catch (System.IO.FileNotFoundException ex)
             {
                 CubeSetupMain = new CubeSetup();
                 MidStatusBarMessage = $"{ex.Message}";
             }
-            catch (System.InvalidOperationException ex)
+            catch (System.InvalidOperationException ex) // bad formatted xml
             {
                 CubeSetupMain = new CubeSetup();
                 MidStatusBarMessage = $"Setup file ({Config2.DefaultSettingsFilename}) parse error. {ex.Message}";
                 MessageBox.Show(MidStatusBarMessage, "Error", MessageBoxButton.OK);
             }
 
-            //_menuItemHeader_Save = $"Save {configFile.Name}";
-            //_menuItemHeader_SaveAs = _menuItemHeader_Save + " As";
-
-            var sysVM = new SystemSetupViewModel( new List<CubeSetup>() { CubeSetupMain });
-            systemSetupVM = sysVM;
-            //OnNewSystemViewModel?.Invoke(sysVM);
         }
         SystemSetupViewModel _systemSetupVM;
         public SystemSetupViewModel systemSetupVM 

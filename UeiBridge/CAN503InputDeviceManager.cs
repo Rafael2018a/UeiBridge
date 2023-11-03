@@ -104,14 +104,11 @@ namespace UeiBridge
                     else
                     {
                         _logger.Debug($"Disposing {InstanceName} ch{channel}");
-                        // tbd. Dispose session here?
                     }
                 }
                 else
                 {
                     _logger.Warn($"ReaderCallback:  {InstanceName}. {ex.Message}.");
-
-                    // tbd. Dispose session here?
                 }
             }
             catch (Exception ex)

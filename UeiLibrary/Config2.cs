@@ -186,13 +186,7 @@ namespace UeiBridge.Library
         }
 
 
-        /// <summary>
-        /// Result list shall contain entries only for connected cubes
-        /// </summary>
-        /// <param name="cubeUrlList"></param>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        public static List<CubeSetup> GetSetupForCubes(List<string> cubeUrlList) // tbd. make two methods
+        public static List<CubeSetup> GetSetupForCubes(List<string> cubeUrlList) 
         {
             List<CubeSetup> cubeSetupList = new List<CubeSetup>();
             // load settings per cube

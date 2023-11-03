@@ -86,6 +86,10 @@ namespace UeiBridge.CubeSetupTypes
 
         public bool Equals(CubeSetup other)
         {
+            if (null==other)
+            {
+                return false;
+            }
             bool f1 = this.CubeUrl.Equals(other.CubeUrl);
             bool f2 = DeviceSetupList.SequenceEqual(other.DeviceSetupList);
             return f1 && f2;

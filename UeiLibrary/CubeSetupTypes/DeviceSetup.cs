@@ -46,10 +46,6 @@ namespace UeiBridge.CubeSetupTypes
         }
         virtual public bool Equals(DeviceSetup other)
         {
-            //            public int SlotNumber;
-            //public string DeviceName;
-            //public EndPoint LocalEndPoint;
-            //public EndPoint DestEndPoint;
             bool f1 = SlotNumber == other.SlotNumber;
             bool f2 = DeviceName == other.DeviceName;
             bool f3 = LocalEndPoint == null ? true : LocalEndPoint.Equals(other.LocalEndPoint);
