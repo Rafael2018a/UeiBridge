@@ -9,6 +9,8 @@ namespace UeiBridge.CubeSetupTypes
 {
     public class DeviceSetup : IEquatable<DeviceSetup>
     {
+        [XmlAttribute("IsEnabled")]
+        public bool IsEnabled = true;
         [XmlElement(ElementName = "DeviceSlot")]
         public int SlotNumber;
         public string DeviceName;
@@ -42,8 +44,7 @@ namespace UeiBridge.CubeSetupTypes
         protected DeviceSetup()
         {
         }
-
-        public bool Equals(DeviceSetup other)
+        virtual public bool Equals(DeviceSetup other)
         {
             //            public int SlotNumber;
             //public string DeviceName;
@@ -53,8 +54,9 @@ namespace UeiBridge.CubeSetupTypes
             bool f2 = DeviceName == other.DeviceName;
             bool f3 = LocalEndPoint == null ? true : LocalEndPoint.Equals(other.LocalEndPoint);
             bool f4 = DestEndPoint == null ? true : DestEndPoint.Equals(other.DestEndPoint);
+            bool f5 = IsEnabled == other.IsEnabled;
 
-            return f1 && f2 && f3 && f4;
+            return f1 && f2 && f3 && f4 && f5;
         }
         public string GetInstanceName()
         {

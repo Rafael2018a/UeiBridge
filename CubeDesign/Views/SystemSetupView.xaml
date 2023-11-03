@@ -104,7 +104,12 @@
                     <ColumnDefinition/>
                 </Grid.ColumnDefinitions>
                 <StackPanel Orientation="Horizontal" Margin="10" Grid.ColumnSpan="2">
-                    <TextBlock Text="{Binding SelectedDeviceSetupVM.EnclosingCubeAddress, StringFormat={}Cube {0}}" FontSize="18" FontWeight="DemiBold"/>
+                    <!--<TextBlock Text="{Binding SelectedDeviceSetupVM.EnclosingCubeAddress, StringFormat={}Cube {0}}" FontSize="18" FontWeight="DemiBold"/>-->
+                    <CheckBox VerticalContentAlignment="Center" IsChecked="{Binding SelectedDeviceSetupVM.IsEnabled}">
+                        <CheckBox.Content>
+                            <TextBlock Text="Enabled" FontSize="18" FontWeight="DemiBold"/>
+                        </CheckBox.Content >
+                    </CheckBox>
                     <ContentControl Width="30"/>
                     <TextBlock Text="{Binding SelectedDeviceSetupVM.SlotNumber, StringFormat={}Slot {0} }" FontSize="18" FontWeight="DemiBold"/>
                     <ContentControl Width="30"/>

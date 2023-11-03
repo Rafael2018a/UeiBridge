@@ -228,8 +228,10 @@ namespace UeiBridgeTest
                                         "");
                 }
 
-                System.Diagnostics.Debug.Assert(serialSession.GetNumberOfChannels() == thisSetup.Channels.Count);
-                //System.Diagnostics.Debug.Assert(numberOfChannels == Config.Instance.SerialChannels.Length);
+                {
+                    int chCount = thisSetup.Channels.Where(ch1 => ch1.IsEnabled == true).ToList().Count;
+                    Assert.That(serialSession.GetNumberOfChannels(), Is.EqualTo(chCount));
+                }
 
                 serialSession.ConfigureTimingForMessagingIO(1000, 100.0);
                 serialSession.GetTiming().SetTimeout(5000); // timeout to throw from _serialReader.EndRead (looks like default is 1000)

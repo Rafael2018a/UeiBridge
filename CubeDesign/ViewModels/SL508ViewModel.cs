@@ -1,4 +1,6 @@
-﻿using System;
+﻿// Ignore Spelling: Baudrate
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,7 +16,11 @@ namespace CubeDesign.ViewModels
         //private CubeSetup _thisCubeSetup;
         private SL508892Setup _thisDeviceSetup;
 
-        public List<string> ChannelList { get; set; } = new List<string>();
+        public List<SerialChannelSetup> ChannelList 
+        { 
+            get => _thisDeviceSetup.Channels;
+        } 
+
         private int _selectedPortIndex = 0;
         public int SelectedPortIndex
         {
@@ -23,21 +29,23 @@ namespace CubeDesign.ViewModels
             {
                 _selectedPortIndex = value;
                 SerialMode = _thisDeviceSetup.Channels[_selectedPortIndex].Mode;
-                Baudrate = _thisDeviceSetup.Channels[_selectedPortIndex].Baudrate;
+                //Baudrate = _thisDeviceSetup.Channels[_selectedPortIndex].Baudrate;
+                EnableChannel = _thisDeviceSetup.Channels[_selectedPortIndex].IsEnabled;
             }
         }
-        private SerialPortSpeed _baudrate;
+        //private SerialPortSpeed _baudrate;
         public UeiDaq.SerialPortSpeed Baudrate
         {
-            get => _baudrate;
+            get => _thisDeviceSetup.Channels[_selectedPortIndex].Baudrate;
             set
             {
-                _baudrate = value;
-                _thisDeviceSetup.Channels[_selectedPortIndex].Baudrate = _baudrate;
+                //_baudrate = value;
+                _thisDeviceSetup.Channels[_selectedPortIndex].Baudrate = value;
                 RaisePropertyChanged();
             }
         }
         private SerialPortMode _serialMode;
+        private bool _enableChannel;
         public UeiDaq.SerialPortMode SerialMode
         {
             get => _serialMode;
@@ -48,7 +56,35 @@ namespace CubeDesign.ViewModels
                 RaisePropertyChanged();
             }
         }
+        public bool EnableChannel
+        {
+            get => _enableChannel;
+            set
+            {
+                _enableChannel = value;
+                _thisDeviceSetup.Channels[_selectedPortIndex].IsEnabled = _enableChannel;
+                RaisePropertyChanged();
+            }
+        }
 
+        public UeiDaq.SerialPortParity Parity
+        {
+            get => _thisDeviceSetup.Channels[_selectedPortIndex].Parity;
+            set
+            {
+                _thisDeviceSetup.Channels[_selectedPortIndex].Parity = value;
+                RaisePropertyChanged();
+            }
+        }
+        public UeiDaq.SerialPortStopBits Stopbits
+        {
+            get => _thisDeviceSetup.Channels[_selectedPortIndex].Stopbits;
+            set
+            {
+                _thisDeviceSetup.Channels[_selectedPortIndex].Stopbits = value;
+                RaisePropertyChanged();
+            }
+        }
         public SL508ViewModel( DeviceSetupViewModel selectedPhDevice)
         {
             // find setup entry for selected device'
@@ -59,10 +95,10 @@ namespace CubeDesign.ViewModels
             _thisDeviceSetup = selectedPhDevice.ThisDeviceSetup as SL508892Setup;
             System.Diagnostics.Debug.Assert(null != _thisDeviceSetup);
 
-            foreach (var channel in _thisDeviceSetup.Channels)
-            {
-                ChannelList.Add($"Com{channel.ChannelIndex}");
-            }
+            //foreach (var channel in _thisDeviceSetup.Channels)
+            //{
+            //    ChannelList.Add($"Com{channel.ChannelIndex}");
+            //}
 
             SelectedPortIndex = 0;
 

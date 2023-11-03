@@ -7,7 +7,7 @@ namespace CubeDesign.ViewModels
     /// <summary>
     /// This model represents a uei-device which is laid in a specific cube-slot.
     /// </summary>
-    public class DeviceSetupViewModel
+    public class DeviceSetupViewModel : ViewModelBase
     {
         public int SlotNumber => ThisDeviceSetup.SlotNumber;
         public IPAddress EnclosingCubeAddress { get; private set; }
@@ -17,7 +17,15 @@ namespace CubeDesign.ViewModels
         }
         public string DeviceName => ThisDeviceSetup.DeviceName;
         public DeviceSetup ThisDeviceSetup { get; private set; }
-
+        public bool IsEnabled
+        {
+            get => ThisDeviceSetup.IsEnabled;
+            set
+            {
+                ThisDeviceSetup.IsEnabled = value;
+                RaisePropertyChanged();
+            }
+        }
         public DeviceSetupViewModel(IPAddress cubeIp, DeviceSetup devSetup)
         {
             this.ThisDeviceSetup = devSetup;
