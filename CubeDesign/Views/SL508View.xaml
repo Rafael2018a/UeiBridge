@@ -11,7 +11,7 @@
             <StackPanel Orientation="Horizontal">
                 <TextBlock Text="Serial port " FontSize="16" FontWeight="Bold"/>
                 <ContentControl Width="10"/>
-                <ComboBox x:Name="ChannelListComboBox" Grid.Row="0" Grid.Column="0" ItemsSource="{Binding ChannelList}" SelectedIndex="{Binding SelectedPortIndex}">
+                <ComboBox x:Name="ChannelListComboBox" Grid.Row="0" Grid.Column="0" ItemsSource="{Binding ChannelList}" SelectedIndex="{Binding SelectedPortIndex}" SelectionChanged="ChannelListComboBox_SelectionChanged">
                     <ComboBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">

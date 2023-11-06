@@ -122,12 +122,14 @@ namespace UeiBridge
                 }
                 else
                 {
-                    _logger.Warn($"ReaderCallback:  {InstanceName}. {ex.Message}.");
+                    _logger.Warn($"{InstanceName} ch{channel}. Serial input error: {ex.Message}.");
+                    Thread.Sleep(500);
+                    _readerIAsyncResultList[channel] = _serialReaderList[channel].BeginRead(minLen, this.ReaderCallback, channel);
                 }
             }
             catch(Exception ex)
             {
-                _logger.Warn($"ReaderCallback: {InstanceName}. {ex.Message}");
+                _logger.Warn($"{InstanceName} ch{channel}. Serial input global error: {ex.Message}.");
             }
         }
         public override bool OpenDevice()

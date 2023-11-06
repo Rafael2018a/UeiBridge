@@ -55,7 +55,7 @@ namespace CubeDesign.ViewModels
             var EntAsm = UeiBridge.Library.StaticMethods.GetLibVersion();
             System.IO.FileInfo fi = new System.IO.FileInfo(EntAsm.Location);
 
-            MainWindowTitle = $"Cube Design. {EntAsm.GetName().Version.ToString(3)}. (Build time: {fi.LastWriteTime.ToString()})";
+            MainWindowTitle = $"Cube Design. {EntAsm.GetName().Version.ToString(4)}. (Build time: {fi.LastWriteTime.ToString()})";
 
             _parentView = parentView;
         }

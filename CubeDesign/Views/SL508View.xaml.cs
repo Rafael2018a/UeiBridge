@@ -30,5 +30,22 @@ namespace CubeDesign.Views
             StopbitsCombo.ItemsSource = Enum.GetValues(typeof(UeiDaq.SerialPortStopBits));
 
         }
-}
+
+        private void ChannelListComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            BindingExpression bex1 = ModeCombo.GetBindingExpression(ComboBox.SelectedItemProperty);
+            bex1.UpdateTarget();
+
+            BindingExpression bex2 = BaudCombo.GetBindingExpression(ComboBox.SelectedItemProperty);
+            bex2.UpdateTarget();
+
+            BindingExpression bex3 = ParityCombo.GetBindingExpression(ComboBox.SelectedItemProperty);
+            bex3.UpdateTarget();
+
+            BindingExpression bex4 = StopbitsCombo.GetBindingExpression(ComboBox.SelectedItemProperty);
+            bex4.UpdateTarget();
+
+
+        }
+    }
 }
