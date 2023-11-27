@@ -70,7 +70,7 @@ namespace UeiBridgeTest
             // create file
             string cubeurl = "simu://";
             string configfile = "setup.fortest.config";
-            string gfile = "gfile.config";
+            
             UeiDaq.DeviceCollection devCollection = new UeiDaq.DeviceCollection( cubeurl);
             List<UeiDeviceInfo> devInfoList = UeiBridge.Library.StaticMethods.DeviceCollectionToDeviceInfoList(devCollection, cubeurl);
             CubeSetup cs = new CubeSetup(devInfoList);
@@ -90,7 +90,7 @@ namespace UeiBridgeTest
             CubeSetupLoader cslnofile = new CubeSetupLoader(new FileInfo("nonono"));
             Assert.That(cslnofile.CubeSetupMain, Is.Null);
 
-            CubeSetupLoader cslbad = new CubeSetupLoader(new FileInfo(gfile));
+            CubeSetupLoader cslbad = new CubeSetupLoader(new FileInfo("kkk.config"));
             Assert.That(cslbad.CubeSetupMain, Is.Null);
 
         }

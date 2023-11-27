@@ -197,11 +197,15 @@ namespace CubeDesign.ViewModels
             {
                 return;
             }
-            MessageBoxResult mbr = MessageBox.Show("Exit without saving changes?", "User", MessageBoxButton.YesNo);
-            if (mbr == MessageBoxResult.No)
+            MessageBoxResult mbr = MessageBox.Show("Save changes?", "User", MessageBoxButton.YesNoCancel);
+            if (mbr == MessageBoxResult.Cancel)
             {
                 CancelEventArgs e = param as CancelEventArgs;
                 e.Cancel = true;
+            }
+            if (mbr == MessageBoxResult.Yes)
+            {
+                SaveFile(null);
             }
         }
     }

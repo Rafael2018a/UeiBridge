@@ -70,7 +70,7 @@
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
     </Reference>
     <Reference Include="UeiDaqDNet">
-      <HintPath>..\..\..\..\_gitRepos\UeiBridge.Integ\3rdParty\x64\UeiDaqDNet.dll</HintPath>
+      <HintPath>..\3rdParty\x64\UeiDaqDNet.dll</HintPath>
     </Reference>
     <Reference Include="WindowsBase" />
     <Reference Include="PresentationCore" />

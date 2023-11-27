@@ -18,6 +18,29 @@ namespace UeiBridgeTest
     class DeviceManagersTests
     {
         [Test]
+        public void SerialDeviceTest()
+        {
+            Session serialSession = null;
+
+            {
+                serialSession = new Session();
+
+                {
+                    string finalUrl = $"simu://Dev4/Com0";
+                    SerialPort sport = serialSession.CreateSerialPort(finalUrl,
+                                        SerialPortMode.RS232,
+                                        SerialPortSpeed.BitsPerSecond14400,
+                                        SerialPortDataBits.DataBits8,
+                                        SerialPortParity.None,
+                                        SerialPortStopBits.StopBits1,
+                                        "");
+                }
+            }
+
+            serialSession.Dispose();
+        }
+
+        [Test]
         public void BlockSensorTest()
         {
             Session sess1 = new Session();
@@ -33,7 +56,7 @@ namespace UeiBridgeTest
             blocksensor.OpenDevice();
             byte[] d403 = UeiBridge.Library.StaticMethods.Make_Dio403_upstream_message(new byte[] { 0x5, 0, 0, 0, 0, 0 });
             blocksensor.Enqueue(d403);
-            
+
             Int16[] payload = new short[14];
             Array.Clear(payload, 0, payload.Length);
             payload[2] = AnalogConverter.PlusMinusVoltageToInt16(10.0, 5.0);
@@ -41,7 +64,7 @@ namespace UeiBridgeTest
             payload[10] = AnalogConverter.PlusMinusVoltageToInt16(10.0, 7.0);
             EthernetMessage em = UeiBridge.Library.StaticMethods.Make_BlockSensor_downstream_message(payload);
             blocksensor.Enqueue(em.GetByteArray(MessageWay.downstream));
-            
+
             System.Threading.Thread.Sleep(500);
             var ls = sa.GetAnalogScaledWriter().LastScan;
             Assert.That(ls[2], Is.EqualTo(5.0));
@@ -108,11 +131,11 @@ namespace UeiBridgeTest
             System.Threading.Thread.Sleep(100);
 
             dio403.Dispose();
-            
+
             Assert.Multiple(() =>
             {
                 var ls = sa.GetDigitalWriter().LastScan;
-                for(int i=0; i< ls.Length; i++)
+                for (int i = 0; i < ls.Length; i++)
                 {
                     Assert.That(ls[i], Is.EqualTo(v[i]));
                 }
@@ -169,7 +192,7 @@ namespace UeiBridgeTest
             string cubeurl = "simu://Dev2/Di0:1";
 
             Session sess1 = new Session();
-            sess1.CreateDIChannel( cubeurl); // 4 channels, no more (empiric).
+            sess1.CreateDIChannel(cubeurl); // 4 channels, no more (empiric).
             sess1.ConfigureTimingForSimpleIO();
             SessionAdapter sa = new SessionAdapter(sess1);
 
@@ -183,7 +206,7 @@ namespace UeiBridgeTest
 
             System.Threading.Thread.Sleep(100);
 
-            //var ls = sa.GetDigitalReader().LastScan;
+            var last = sa.GetDigitalReader().LastScan;
 
             //Assert.That(ls.Length, Is.EqualTo(sa.GetNumberOfChannels()));
 
@@ -251,9 +274,38 @@ namespace UeiBridgeTest
 
             Assert.That(speed0, Is.EqualTo(SerialPortSpeed.BitsPerSecond19200));
             Assert.That(speed1, Is.EqualTo(SerialPortSpeed.BitsPerSecond14400));
+
+            serialSession.Stop();
+            serialSession.Dispose();
         }
 
+        [Test]
+        public void SessionAdapterClassTest()
+        {
+            string cubeurl = "simu://Dev2/Di0:1";
 
+            Session sess1 = new Session();
+            sess1.CreateDIChannel(cubeurl); // 4 channels, no more (empiric).
+            sess1.ConfigureTimingForSimpleIO();
+            SessionAdapter sa = new SessionAdapter(sess1);
+
+            DIO403Setup setup = new DIO403Setup(null, new EndPoint("8.8.8.8", 5000), new UeiDeviceInfo("simu://", 2, DeviceMap2.DIO403Literal), sess1.GetNumberOfChannels());
+            setup.CubeUrl = cubeurl;
+
+            SenderMock sm = new SenderMock();
+
+            DIO403InputDeviceManager dio403 = new DIO403InputDeviceManager(setup, sa, sm);
+            //bool ok = dio403.OpenDevice();
+
+            System.Threading.Thread.Sleep(100);
+
+            var last = sa.GetDigitalReader().LastScan;
+
+            Assert.That(last, Is.Not.Null);
+
+            //dio403.Dispose();
+
+        }
 
     }
     public class analogWriterMock : IWriterAdapter<double[]>
