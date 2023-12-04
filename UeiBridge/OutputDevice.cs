@@ -31,7 +31,7 @@ namespace UeiBridge
         protected bool _inDisposeState = false;
         private BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
         private log4net.ILog _logger = StaticMethods.GetLogger();
-        protected ISession _ueiSession;
+        protected ISession _iSession;
 
         protected OutputDevice() { }
         protected OutputDevice(DeviceSetup deviceSetup)

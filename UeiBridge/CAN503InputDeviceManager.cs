@@ -27,7 +27,7 @@ namespace UeiBridge
         public CAN503InputDeviceManager(CAN503Setup setup, SessionAdapter ssAdapter, UdpWriter uWriter) : base(setup)
         {
             this._thisSetup = setup;
-            this._ueiSession = ssAdapter;
+            this._iSession = ssAdapter;
             //this._udpWriter = uWriter;
             this._targetConsumer = uWriter;
         }
@@ -37,14 +37,14 @@ namespace UeiBridge
         public override void Dispose()
         {
             _inDisposeState = true;
-            _ueiSession.Stop();
+            _iSession.Stop();
             var waitall = _readerIAsyncResultList.Select(i => i.AsyncWaitHandle).ToArray();
             WaitHandle.WaitAll(waitall);
             for (int ch=0; ch<_canReaderList.Count; ch++)
             {
                 _canReaderList[ch].Dispose();
             }
-            _ueiSession.Dispose();
+            _iSession.Dispose();
             _targetConsumer.Dispose();
             
             _logger.Debug($"{this.DeviceName}/Input, slot {_thisSetup.SlotNumber}, Disposed");
@@ -57,9 +57,9 @@ namespace UeiBridge
 
         public override bool OpenDevice()
         {
-            for (int ch = 0; ch < _ueiSession.GetNumberOfChannels(); ch++)
+            for (int ch = 0; ch < _iSession.GetNumberOfChannels(); ch++)
             {
-                ICANReaderAdapter cr = _ueiSession.GetCANReader(ch);
+                ICANReaderAdapter cr = _iSession.GetCANReader(ch);
                 AsyncCallback readCallback = new AsyncCallback(ReaderCallback);
                 _readerIAsyncResultList.Add(cr.BeginRead(1, readCallback, ch));
                 _canReaderList.Add(cr);
@@ -86,7 +86,7 @@ namespace UeiBridge
                 // restart reader
                 if (_inDisposeState == false)
                 {
-                    System.Diagnostics.Debug.Assert(true == _ueiSession.IsRunning());
+                    System.Diagnostics.Debug.Assert(true == _iSession.IsRunning());
                     _readerIAsyncResultList[channel] = _canReaderList[channel].BeginRead( 1, this.ReaderCallback, channel);
                 }
             }
@@ -98,7 +98,7 @@ namespace UeiBridge
                     // clicked on fast enough!
                     if (_inDisposeState == false)
                     {
-                        System.Diagnostics.Debug.Assert(true == _ueiSession.IsRunning());
+                        System.Diagnostics.Debug.Assert(true == _iSession.IsRunning());
                         _readerIAsyncResultList[channel] = _canReaderList[channel].BeginRead( 1, this.ReaderCallback, channel);
                     }
                     else

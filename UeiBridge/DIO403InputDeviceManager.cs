@@ -24,12 +24,12 @@ namespace UeiBridge
         private List<byte> _scanMask = new List<byte>();
         private IReaderAdapter<UInt16[]> _ueiDigitalReader;
 
-        public DIO403InputDeviceManager(DIO403Setup setup, ISession ueiSession, ISend<SendObject> targetConsumer): base (setup)
+        public DIO403InputDeviceManager(DIO403Setup setup, ISession iSession, ISend<SendObject> targetConsumer): base (setup)
         {
             _thisSetup = setup;
-            _ueiSession = ueiSession;
+            _iSession = iSession;
             _targetConsumer = targetConsumer;
-            _ueiDigitalReader = _ueiSession.GetDigitalReader();
+            _ueiDigitalReader = _iSession.GetDigitalReader();
 
             //System.Diagnostics.Debug.Assert(null != setup);
             //System.Diagnostics.Debug.Assert(DeviceName.Equals(setup.DeviceName));
@@ -43,7 +43,7 @@ namespace UeiBridge
             byte[] ba = new byte[numOfCh];
             Array.Clear(ba, 0, ba.Length);
             _scanMask = new List<byte>(ba);
-            foreach (UeiDaq.Channel ch in _ueiSession.GetChannels())
+            foreach (UeiDaq.Channel ch in _iSession.GetChannels())
             {
                 int i = ch.GetIndex();
                 _scanMask[i] = 0xff;
@@ -66,7 +66,7 @@ namespace UeiBridge
             catch (Exception ex)
             {
                 _logger.Error(ex.Message);
-                _ueiSession = null;
+                _iSession = null;
                 return false;
             }
         }
@@ -75,7 +75,7 @@ namespace UeiBridge
             _samplingTimer?.Dispose();
             _ueiDigitalReader?.Dispose();
             System.Threading.Thread.Sleep(200); // wait for callback to finish
-            _ueiSession.Dispose();
+            _iSession.Dispose();
             
             _logger.Debug($"{this.DeviceName}/Input, slot {_thisSetup.SlotNumber}. Disposed.");
         }
@@ -93,7 +93,7 @@ namespace UeiBridge
             
                 // fix to full buffer
                 int i = 0;
-                foreach(UeiDaq.Channel ch in _ueiSession.GetChannels())
+                foreach(UeiDaq.Channel ch in _iSession.GetChannels())
                 {
                     fullBuffer16bit[ch.GetIndex()] = singleScan[i++];
                 }

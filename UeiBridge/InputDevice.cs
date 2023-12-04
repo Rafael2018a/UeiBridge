@@ -22,7 +22,7 @@ namespace UeiBridge
         public string InstanceName { get; private set; }
         //public int SlotNumber { get; private set; }
         private log4net.ILog _logger = StaticMethods.GetLogger();
-        protected ISession _ueiSession;// { get; set; }
+        protected ISession _iSession;// { get; set; }
         protected ISend<SendObject> _targetConsumer;// { get ; set; }
         //protected bool _isDeviceReady = false;
 

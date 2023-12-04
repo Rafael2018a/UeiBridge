@@ -295,7 +295,7 @@ namespace UeiBridgeTest
             SenderMock sm = new SenderMock();
 
             DIO403InputDeviceManager dio403 = new DIO403InputDeviceManager(setup, sa, sm);
-            //bool ok = dio403.OpenDevice();
+            bool ok = dio403.OpenDevice();
 
             System.Threading.Thread.Sleep(100);
 
@@ -460,13 +460,13 @@ namespace UeiBridgeTest
             return _analogWriter;
         }
 
-        IDevice ISession.GetDevice()
+        DeviceAdapter ISession.GetDevice()
         {
             if (null == _deviceMock)
             {
                 _deviceMock = new DeviceMock();
             }
-            return _deviceMock;
+            return null;// _deviceMock;
         }
 
         public IWriterAdapter<double[]> GetAnalogScaledWriter()
@@ -503,8 +503,13 @@ namespace UeiBridgeTest
         {
             throw new NotImplementedException();
         }
+
+        public DeviceAdapter GetDevice()
+        {
+            throw new NotImplementedException();
+        }
     }
-    public class DeviceMock : IDevice
+    public class DeviceMock //: IDevice
     {
         public Range[] GetAIRanges()
         {

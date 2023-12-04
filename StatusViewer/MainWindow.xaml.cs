@@ -15,13 +15,13 @@ using System.Text;
 
 namespace StatusViewer
 {
-    public class Rootobject
-    {
-        public DateTime date { get; set; }
-        public string level { get; set; }
-        public string logger { get; set; }
-        public string message { get; set; }
-    }
+    //public class Rootobject
+    //{
+    //    public DateTime date { get; set; }
+    //    public string level { get; set; }
+    //    public string logger { get; set; }
+    //    public string message { get; set; }
+    //}
 
     public enum MachineStateEnum { Initial, Running, Freeze }
 

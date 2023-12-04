@@ -82,7 +82,7 @@ namespace UeiBridge.Library
             var r = _ueiSession.GetChannels().Cast<UeiDaq.Channel>().ToList();//.Select(i => new ChannelAdapter(i));
             return r;
         }
-        IDevice ISession.GetDevice()
+        DeviceAdapter ISession.GetDevice()
         {
             return new DeviceAdapter( _ueiSession.GetDevice());
         }

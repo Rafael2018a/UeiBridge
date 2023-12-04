@@ -21,7 +21,7 @@ namespace UeiBridge
         #region === publics ====
         public override string DeviceName => DeviceMap2.AO308Literal;
         //public IWriterAdapter<double[]> AnalogWriter => _analogWriter;
-        public ISession UeiSession { get => _ueiSession; }
+        public ISession UeiSession { get => _iSession; }
         public bool IsBlockSensorActive { get; private set; }
         #endregion
 
@@ -39,7 +39,7 @@ namespace UeiBridge
         public AO308OutputDeviceManager(AO308Setup deviceSetup1, ISession session, bool isBlockSensorActive) : base(deviceSetup1)
         {
             //this._analogWriter = analogWriter;
-            this._ueiSession = session;
+            this._iSession = session;
             this.IsBlockSensorActive = isBlockSensorActive;
             this._deviceSetup = deviceSetup1;
         }
@@ -49,15 +49,15 @@ namespace UeiBridge
         {
             try
             {
-                _analogWriter = _ueiSession.GetAnalogScaledWriter();
+                _analogWriter = _iSession.GetAnalogScaledWriter();
                 _attachedConverter = new AnalogConverter(AI201100Setup.PeekVoltage_upstream, AO308Setup.PeekVoltage_downstream);
 
-                int numOfCh = _ueiSession.GetNumberOfChannels();
+                int numOfCh = _iSession.GetNumberOfChannels();
                 System.Diagnostics.Debug.Assert(numOfCh > 0);
 
                 Task.Factory.StartNew(() => OutputDeviceHandler_Task());
 
-                var range = _ueiSession.GetDevice().GetAORanges();
+                var range = _iSession.GetDevice().GetAORanges();
                 AO308Setup ao308 = _deviceSetup as AO308Setup;
                 //System.Diagnostics.Debug.Assert(this.IsBlockSensorActive.HasValue);
                 if (this.IsBlockSensorActive)
@@ -163,7 +163,7 @@ namespace UeiBridge
             _inDisposeState = true;
             //base.HaltMessageLoop();
             _analogWriter.Dispose();
-            _ueiSession.Dispose();
+            _iSession.Dispose();
             base.TerminateMessageLoop();
         }
     }
