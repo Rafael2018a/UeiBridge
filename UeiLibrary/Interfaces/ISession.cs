@@ -7,8 +7,8 @@ namespace UeiBridge.Library
 {
     public interface ISession : IDisposable
     {
-        List<IChannel> GetChannels();
-        IChannel GetChannel(int v);
+        List<UeiDaq.Channel> GetChannels();
+        UeiDaq.Channel GetChannel(int v);
         //DataStream GetDataStream();
         IReaderAdapter<UInt16[]> GetDigitalReader();
         IWriterAdapter<UInt16[]> GetDigitalWriter();

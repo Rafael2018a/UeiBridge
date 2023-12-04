@@ -393,7 +393,7 @@ namespace UeiBridgeTest
     public class SessionMock : ISession
     {
         public int _numberOfChannels;
-        public List<IChannel> _channelList = new List<IChannel>();
+        public List<UeiDaq.Channel> _channelList = new List<UeiDaq.Channel>();
         public DigitalWriterMock _digitalWriterMock;
         public digitalReaderMock _digitalReader;
         public analogWriterMock _analogWriter;
@@ -403,7 +403,7 @@ namespace UeiBridgeTest
         {
             for (int i = 0; i < numberOfChannels; i++)
             {
-                _channelList.Add(new ChannelMock(i));
+                //_channelList.Add(new ChannelMock(i));
             }
             _numberOfChannels = numberOfChannels;
         }
@@ -413,14 +413,14 @@ namespace UeiBridgeTest
 
         }
 
-        public IChannel GetChannel(int v)
+        public UeiDaq.Channel GetChannel(int v)
         {
             return _channelList[v];
         }
 
-        public List<IChannel> GetChannels()
+        public List<UeiDaq.Channel> GetChannels()
         {
-            return _channelList;
+            return null;// _channelList;
         }
 
         public IWriterAdapter<ushort[]> GetDigitalWriter()
@@ -490,6 +490,16 @@ namespace UeiBridgeTest
         }
 
         ICANReaderAdapter ISession.GetCANReader(int ch)
+        {
+            throw new NotImplementedException();
+        }
+
+        List<Channel> ISession.GetChannels()
+        {
+            throw new NotImplementedException();
+        }
+
+        Channel ISession.GetChannel(int v)
         {
             throw new NotImplementedException();
         }
@@ -565,7 +575,7 @@ namespace UeiBridgeTest
             LastScan = scan;
         }
     }
-    public class ChannelMock : IChannel
+    public class ChannelMock //: IChannel
     {
         int _channelIndex;
 

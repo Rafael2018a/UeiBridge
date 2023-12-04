@@ -77,19 +77,19 @@ namespace UeiBridge.Library
         {
             return _ueiSession.GetNumberOfChannels();
         }
-       public List<IChannel> GetChannels() 
+       public List<UeiDaq.Channel> GetChannels() 
         {
-            var r = _ueiSession.GetChannels().Cast<Channel>().ToList().Select(i => new ChannelAdapter(i));
-            return r.ToList<IChannel>();
+            var r = _ueiSession.GetChannels().Cast<UeiDaq.Channel>().ToList();//.Select(i => new ChannelAdapter(i));
+            return r;
         }
         IDevice ISession.GetDevice()
         {
             return new DeviceAdapter( _ueiSession.GetDevice());
         }
 
-        public IChannel GetChannel(int serialChannelNumber)
+        public UeiDaq.Channel GetChannel(int serialChannelNumber)
         {
-            return new ChannelAdapter(_ueiSession.GetChannel( serialChannelNumber));
+            return GetChannels()[serialChannelNumber];
         }
 
         public bool IsRunning()

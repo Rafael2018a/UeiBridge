@@ -66,7 +66,7 @@ namespace UeiBridge
             Task.Factory.StartNew(() => OutputDeviceHandler_Task());
 
             bool firstIteration = true;
-            foreach (IChannel port in _serialSession.GetChannels())
+            foreach (UeiDaq.Channel port in _serialSession.GetChannels())
             {
                 if (firstIteration)
                 {
@@ -172,7 +172,7 @@ namespace UeiBridge
 
                 // wait
                 {
-                    IChannel sPort = _serialSession.GetChannel(request.SerialChannelNumber);
+                    SerialPort sPort = _serialSession.GetChannel(request.SerialChannelNumber) as SerialPort;
                     SerialPortSpeed x = sPort.GetSpeed();
                     int bpsPossibe = (int)(_serialSpeedDic[x] * 0.8);
                     int bpsActual = request.PayloadBytes.Length * 8;

@@ -43,7 +43,7 @@ namespace UeiBridge
             byte[] ba = new byte[numOfCh];
             Array.Clear(ba, 0, ba.Length);
             _scanMask = new List<byte>(ba);
-            foreach (IChannel ch in _ueiSession.GetChannels())
+            foreach (UeiDaq.Channel ch in _ueiSession.GetChannels())
             {
                 int i = ch.GetIndex();
                 _scanMask[i] = 0xff;
@@ -93,7 +93,7 @@ namespace UeiBridge
             
                 // fix to full buffer
                 int i = 0;
-                foreach( IChannel ch in _ueiSession.GetChannels())
+                foreach(UeiDaq.Channel ch in _ueiSession.GetChannels())
                 {
                     fullBuffer16bit[ch.GetIndex()] = singleScan[i++];
                 }

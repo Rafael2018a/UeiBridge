@@ -59,7 +59,7 @@ namespace UeiBridge
             //{
             //    _scanMask.Add(0);
             //}
-            foreach (IChannel ch in _ueiSession.GetChannels())
+            foreach (UeiDaq.Channel ch in _ueiSession.GetChannels())
             {
                 _scanMask[ch.GetIndex()] = 0xff;
             }
