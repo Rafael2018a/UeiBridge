@@ -79,8 +79,10 @@ namespace UeiBridgeTest
             Session session1 = new Session();
             session1.CreateAOChannel("simu://Dev1/AO0:7", -10, +10);
             session1.ConfigureTimingForSimpleIO();
-            AO308Setup setup = new AO308Setup(new EndPoint("8.8.8.8", 5000), new UeiDeviceInfo(simuUrl, 1, DeviceMap2.AO308Literal));
-            setup.CubeUrl = simuUrl;
+            AO308Setup setup = new AO308Setup(new EndPoint("8.8.8.8", 5000), new UeiDeviceInfo(simuUrl, 1, DeviceMap2.AO308Literal))
+            {
+                CubeUrl = simuUrl
+            };
             SessionAdapter sa = new SessionAdapter(session1);
 
             // build device manager
@@ -161,8 +163,10 @@ namespace UeiBridgeTest
                 inSession.ConfigureTimingForSimpleIO();
                 SessionAdapter sa = new SessionAdapter(inSession);
 
-                DIO403Setup setup = new DIO403Setup(null, new EndPoint("8.8.8.8", 5000), info, 6);
-                setup.CubeUrl = cubeurl;
+                DIO403Setup setup = new DIO403Setup(null, new EndPoint("8.8.8.8", 5000), info, 6)
+                {
+                    CubeUrl = cubeurl
+                };
 
                 SenderMock sm = new SenderMock();
 
@@ -196,8 +200,10 @@ namespace UeiBridgeTest
             sess1.ConfigureTimingForSimpleIO();
             SessionAdapter sa = new SessionAdapter(sess1);
 
-            DIO403Setup setup = new DIO403Setup(null, new EndPoint("8.8.8.8", 5000), new UeiDeviceInfo("simu://", 2, DeviceMap2.DIO403Literal), sess1.GetNumberOfChannels());
-            setup.CubeUrl = cubeurl;
+            DIO403Setup setup = new DIO403Setup(null, new EndPoint("8.8.8.8", 5000), new UeiDeviceInfo("simu://", 2, DeviceMap2.DIO403Literal), sess1.GetNumberOfChannels())
+            {
+                CubeUrl = cubeurl
+            };
 
             SenderMock sm = new SenderMock();
 
@@ -289,8 +295,10 @@ namespace UeiBridgeTest
             sess1.ConfigureTimingForSimpleIO();
             SessionAdapter sa = new SessionAdapter(sess1);
 
-            DIO403Setup setup = new DIO403Setup(null, new EndPoint("8.8.8.8", 5000), new UeiDeviceInfo("simu://", 2, DeviceMap2.DIO403Literal), sess1.GetNumberOfChannels());
-            setup.CubeUrl = cubeurl;
+            DIO403Setup setup = new DIO403Setup(null, new EndPoint("8.8.8.8", 5000), new UeiDeviceInfo("simu://", 2, DeviceMap2.DIO403Literal), sess1.GetNumberOfChannels())
+            {
+                CubeUrl = cubeurl
+            };
 
             SenderMock sm = new SenderMock();
 
@@ -308,7 +316,7 @@ namespace UeiBridgeTest
         }
 
     }
-    public class analogWriterMock : IWriterAdapter<double[]>
+    public class AnalogWriterMock : IWriterAdapter<double[]>
     {
         //public int NumberOfChannels => 8;
 
@@ -396,7 +404,7 @@ namespace UeiBridgeTest
         public List<UeiDaq.Channel> _channelList = new List<UeiDaq.Channel>();
         public DigitalWriterMock _digitalWriterMock;
         public digitalReaderMock _digitalReader;
-        public analogWriterMock _analogWriter;
+        public AnalogWriterMock _analogWriter;
         public DeviceMock _deviceMock;
 
         public SessionMock(int numberOfChannels)
@@ -455,7 +463,7 @@ namespace UeiBridgeTest
         {
             if (null == _analogWriter)
             {
-                _analogWriter = new analogWriterMock();
+                _analogWriter = new AnalogWriterMock();
             }
             return _analogWriter;
         }
@@ -473,8 +481,7 @@ namespace UeiBridgeTest
         {
             throw new NotImplementedException();
         }
-
-        IReaderAdapter<double[]> ISession.GetAnalogScaledReader()
+        UeiDaq.AnalogScaledReader ISession.GetAnalogScaledReader()
         {
             throw new NotImplementedException();
         }
@@ -518,9 +525,11 @@ namespace UeiBridgeTest
 
         public Range[] GetAORanges()
         {
-            Range r = new Range();
-            r.maximum = 10.0;
-            r.minimum = 10.0;
+            Range r = new Range
+            {
+                maximum = 10.0,
+                minimum = 10.0
+            };
             return new Range[] { r };
         }
     }
@@ -550,7 +559,7 @@ namespace UeiBridgeTest
             return scan;
         }
     }
-    public class AnalogWriterMock : IWriterAdapter<double[]>
+    public class AnalogWriterMock1 : IWriterAdapter<double[]>
     {
         public double[] Scan { get; private set; }
 

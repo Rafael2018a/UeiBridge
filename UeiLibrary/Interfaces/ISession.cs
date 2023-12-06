@@ -15,7 +15,7 @@ namespace UeiBridge.Library
         //void Stop();
         int GetNumberOfChannels();
         DeviceAdapter GetDevice();
-        IReaderAdapter<double[]> GetAnalogScaledReader();
+        UeiDaq.AnalogScaledReader GetAnalogScaledReader();
         IWriterAdapter<double[]> GetAnalogScaledWriter();
         ICANReaderAdapter GetCANReader(int ch);
         bool IsRunning();

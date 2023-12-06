@@ -12,7 +12,7 @@ namespace UeiBridge.Library
     /// </summary>
     public class SessionAdapter : ISession
     {
-        Session _ueiSession;
+        readonly Session _ueiSession;
         DigitalReaderAdapter _digitalReaderAd;
         DigitalWriterAdapter _digitalWriterAd;
         AnalogScaledWriteAdapter _analogWriterAd;
@@ -30,13 +30,17 @@ namespace UeiBridge.Library
         {
             _ueiSession.Dispose();
         }
-        public IReaderAdapter<double[]> GetAnalogScaledReader()
+        public IReaderAdapter<double[]> GetAnalogScaledReaderOrig()
         {
             if (null == _analogReaderAd)
             {
-                _analogReaderAd = new AnalogScaledReaderAdapter( new AnalogScaledReader( _ueiSession.GetDataStream()));
+                _analogReaderAd = new AnalogScaledReaderAdapter(new AnalogScaledReader(_ueiSession.GetDataStream()));
             }
             return _analogReaderAd;
+        }
+        public UeiDaq.AnalogScaledReader GetAnalogScaledReader()
+        {
+                return new AnalogScaledReader(_ueiSession.GetDataStream());
         }
         public IWriterAdapter<double[]> GetAnalogScaledWriter()
         {

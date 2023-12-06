@@ -151,8 +151,10 @@ namespace UeiBridgeTest
         [Test]
         public void CubeSetupTest1()
         {
-            List<UeiDeviceInfo> devList = new List<UeiDeviceInfo>();
-            devList.Add(new UeiDeviceInfo("cubeurl", 51, "devicename1"));
+            List<UeiDeviceInfo> devList = new List<UeiDeviceInfo>
+            {
+                new UeiDeviceInfo("cubeurl", 51, "devicename1")
+            };
             CubeSetup cs = new CubeSetup(devList);
             Assert.That(cs.DeviceSetupList.Count, Is.EqualTo(1));
         }
@@ -162,8 +164,10 @@ namespace UeiBridgeTest
         [Test]
         public void CubeSetupTest2()
         {
-            List<UeiDeviceInfo> devList = new List<UeiDeviceInfo>();
-            devList.Add(new UeiDeviceInfo("cubeurl", 101, "AO-308"));
+            List<UeiDeviceInfo> devList = new List<UeiDeviceInfo>
+            {
+                new UeiDeviceInfo("cubeurl", 101, "AO-308")
+            };
             CubeSetup cs = new CubeSetup(devList);
             Assert.That(cs.DeviceSetupList.Count, Is.EqualTo(1));
             Assert.That(cs.DeviceSetupList[0], Is.Not.Null);
@@ -172,7 +176,7 @@ namespace UeiBridgeTest
         [Test]
         public void BuildDefaultSimuConfigTest()
         {
-            Config2 c2 = new Config2();
+            //Config2 c2 = new Config2();
             List<CubeSetup> c3 = Config2.GetSetupForCubes(new List<string> { "simu://" });
             //Assert.That(c3.AppSetup.StatusViewerEP, Is.Not.Null);
             Assert.That(c3[0].DeviceSetupList.Count, Is.EqualTo(11)); // only one simulation device setup is defined.

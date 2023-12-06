@@ -45,7 +45,7 @@ namespace StatusViewer
 
         //Process dbgViewProcess;
 
-        List<string> logDic = new List<string>();
+        readonly List<string> logDic = new List<string>();
 
         IPAddress m_multicastIp;
         public IPAddress MulticastIp
@@ -53,8 +53,7 @@ namespace StatusViewer
             get { return m_multicastIp; }
             set
             {
-                if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("MulticastIp"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("MulticastIp"));
 
                 m_multicastIp = value;
             }
@@ -187,7 +186,7 @@ namespace StatusViewer
 
             CommandBinding freezeCommand = new CommandBinding(MediaCommands.Pause);
             this.CommandBindings.Add(freezeCommand);
-            freezeCommand.Executed += new ExecutedRoutedEventHandler(freezeCommandExecuted);
+            freezeCommand.Executed += new ExecutedRoutedEventHandler(FreezeCommandExecuted);
             freezeCommand.CanExecute += FreezeCommand_CanExecute;
 
 
@@ -251,7 +250,7 @@ namespace StatusViewer
 
         private void StopCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = ((MachineState == MachineStateEnum.Running) || (MachineState == MachineStateEnum.Freeze)) ? true : false; // 
+            e.CanExecute = ((MachineState == MachineStateEnum.Running) || (MachineState == MachineStateEnum.Freeze)); // 
         }
 
         private void StopCommand_Executed(object sender, ExecutedRoutedEventArgs e)
@@ -279,7 +278,7 @@ namespace StatusViewer
 
         private void StartCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = (MachineState == MachineStateEnum.Initial) ? true : false;
+            e.CanExecute = (MachineState == MachineStateEnum.Initial);
         }
 
         private void StartCommand_Executed(object sender, ExecutedRoutedEventArgs e)
@@ -322,10 +321,10 @@ namespace StatusViewer
 
         private void FreezeCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = ((MachineState == MachineStateEnum.Running) || (MachineState == MachineStateEnum.Freeze)) ? true : false;
+            e.CanExecute = ((MachineState == MachineStateEnum.Running) || (MachineState == MachineStateEnum.Freeze));
         }
 
-        void freezeCommandExecuted(object sender, ExecutedRoutedEventArgs e)
+        void FreezeCommandExecuted(object sender, ExecutedRoutedEventArgs e)
         {
             System.Windows.Controls.Primitives.ToggleButton tb = e.Source as System.Windows.Controls.Primitives.ToggleButton;
             if (tb.IsChecked.Value)
@@ -369,7 +368,7 @@ namespace StatusViewer
             get 
             {
                 var EntAsm = System.Reflection.Assembly.GetEntryAssembly();//.GetName().Version;
-                System.IO.FileInfo fi = new System.IO.FileInfo(EntAsm.Location);
+                //System.IO.FileInfo fi = new System.IO.FileInfo(EntAsm.Location);
                 //_logger.Info($"UEI Bridge. Version {EntAsm.GetName().Version.ToString(3)}. Build time: {fi.LastWriteTime.ToString()}");
                 string result = $"StatusViewer. Version {EntAsm.GetName().Version.ToString(3)}";
                 return result;
@@ -387,8 +386,7 @@ namespace StatusViewer
             set
             {
                 _receivedBytes = value;
-                if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("ReceivedBytes"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ReceivedBytes"));
             }
         }
 
@@ -403,8 +401,7 @@ namespace StatusViewer
             set
             {
                 _receivedDatagrams = value;
-                if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("ReceivedDatagrams"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ReceivedDatagrams"));
             }
         }
 

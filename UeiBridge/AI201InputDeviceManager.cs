@@ -19,10 +19,10 @@ namespace UeiBridge
     {
         public override string DeviceName => "AI-201-100"; // 
 
-        private IReaderAdapter<double[]> _reader;
-        private log4net.ILog _logger = StaticMethods.GetLogger();
-        private IConvert2<double[]> _attachedConverter;
-        private AI201100Setup _thisSetup;
+        private UeiDaq.AnalogScaledReader _reader;
+        private readonly log4net.ILog _logger = StaticMethods.GetLogger();
+        private readonly IConvert2<double[]> _attachedConverter;
+        private readonly AI201100Setup _thisSetup;
         private double[] _lastScan;
         private System.Threading.Timer _samplingTimer;
 
