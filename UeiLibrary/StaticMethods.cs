@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using UeiDaq;
@@ -218,6 +219,19 @@ namespace UeiBridge.Library
             System.Reflection.Assembly asm3 = System.Reflection.Assembly.GetExecutingAssembly();
 
             return asm3;
+        }
+
+        public static List<IPAddress> GetLocalIpList()
+        {
+            List<IPAddress> result = new List<IPAddress>();
+            foreach (IPAddress ip in Dns.GetHostAddresses(Dns.GetHostName()))
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    result.Add(ip);
+                }
+            }
+            return result;
         }
     }
 }

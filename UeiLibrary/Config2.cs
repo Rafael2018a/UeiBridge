@@ -7,7 +7,8 @@ using System.Xml.Serialization;
 using System.IO;
 using UeiDaq;
 using UeiBridge.CubeSetupTypes;
-
+using System.Net;
+using System.Net.Sockets;
 
 /// <summary>
 /// All classes in this file MUST NOT depend on any other module in the project
@@ -16,12 +17,33 @@ namespace UeiBridge.Library
 {
     public class AppSetup // tbd. not belongs here
     {
-        public string SelectedNicForMulticast { get; private set; } = "221.109.251.103";
+        public string SelectedNicForMulticast { get; private set; } = null;//"221.109.251.103";
         public EndPoint StatusViewerEP = new EndPoint("239.10.10.17", 5093);
 
         public AppSetup()
         {
-            SelectedNicForMulticast = System.Configuration.ConfigurationManager.AppSettings["SelectedNicForMulticast"];
+            string hint = System.Configuration.ConfigurationManager.AppSettings["MulticastNicHint"];
+            IPAddress ipHint;
+
+            // if there is an ip hint, prefare hint
+            if ( (null!=hint) && IPAddress.TryParse(hint, out ipHint))
+            {
+                var ipList = StaticMethods.GetLocalIpList();
+                foreach (IPAddress ip in ipList)
+                {
+                    if (ip.Equals(ipHint))
+                    {
+                        SelectedNicForMulticast = ip.ToString();
+                    }
+                }
+            }
+
+            // if failed to use hint, select the first ip from local host ip list
+            if (null == SelectedNicForMulticast)
+            {
+                var ipList = StaticMethods.GetLocalIpList();
+                SelectedNicForMulticast = ipList[0]?.ToString();
+            }
         }
     }
 
