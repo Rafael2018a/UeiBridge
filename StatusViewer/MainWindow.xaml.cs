@@ -158,9 +158,11 @@ namespace StatusViewer
                 if (ipa.AddressFamily == AddressFamily.InterNetwork)
                 {
                     ipList.Add(ipa);
-                    SelectedLocalIp = ipa;
+                    //SelectedLocalIp = ipa;
                 }
             }
+            ipList.Add(IPAddress.Any);
+            SelectedLocalIp = ipList[ipList.Count - 1];
             return ipList;
         }
         protected override void OnClosed(EventArgs e)
@@ -307,7 +309,7 @@ namespace StatusViewer
                 //IPEndPoint localEp = new IPEndPoint( IPAddress.Any, mcPort); // this is just for the port number
                 m_udpListener.Client.Bind(localEp);
 
-                m_udpListener.JoinMulticastGroup(mcAddress, SelectedLocalIp);//IPAddress.Parse("192.168.1.128")); // ip of UAV-LAN
+                m_udpListener.JoinMulticastGroup(mcAddress);//, SelectedLocalIp);//IPAddress.Parse("192.168.1.128")); // ip of UAV-LAN
                 m_multicastIp = mcAddress;
                 Tuple<UdpClient, IPEndPoint> udpState = new Tuple<UdpClient, IPEndPoint>(m_udpListener, localEp);
                 m_udpListener.BeginReceive(new AsyncCallback(UdpReceiveCallback), udpState);
@@ -367,10 +369,8 @@ namespace StatusViewer
         {
             get 
             {
-                var EntAsm = System.Reflection.Assembly.GetEntryAssembly();//.GetName().Version;
-                //System.IO.FileInfo fi = new System.IO.FileInfo(EntAsm.Location);
-                //_logger.Info($"UEI Bridge. Version {EntAsm.GetName().Version.ToString(3)}. Build time: {fi.LastWriteTime.ToString()}");
-                string result = $"StatusViewer. Version {EntAsm.GetName().Version.ToString(3)}";
+                var asmb = StaticMethods.GetLibVersion();
+                string result = $"StatusViewer. Version {asmb.GetName().Version.ToString(3)}";
                 return result;
 
             }
