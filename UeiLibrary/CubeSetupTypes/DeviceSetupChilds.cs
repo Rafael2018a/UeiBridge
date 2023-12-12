@@ -124,7 +124,12 @@ namespace UeiBridge.CubeSetupTypes
         public UeiDaq.SerialPortParity Parity { get; set; } = UeiDaq.SerialPortParity.None;
         public UeiDaq.SerialPortStopBits Stopbits { get; set; } = UeiDaq.SerialPortStopBits.StopBits1;
         public int LocalUdpPort { get; set; }
-
+        public int ChannelActivityTimeoutUs { get; set; }
+        public bool FilterBySyncBytes { get; set; } // 0 - no filter, 1 - one sync bytes, 2 - two sync bytes
+        public byte SyncByte0 { get; set; }
+        public byte SyncByte1 { get; set; }
+        public bool FilterByLength { get; set; }
+        public int MessageLength { get; set; } // if FilterByLength==true, use this length
         public SerialChannelSetup(int channelIndex, UeiDaq.SerialPortSpeed speed)
         {
             this.ChannelIndex = channelIndex;

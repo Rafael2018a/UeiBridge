@@ -121,10 +121,10 @@ namespace UeiBridge.Library
             }
         }
 
-        public SerialReaderAdapter GetSerialReader(int ch)
+        public SerialReader GetSerialReader(int ch)
         {
            var sr = new SerialReader(_ueiSession.GetDataStream(), _ueiSession.GetChannel(ch).GetIndex());
-           return new SerialReaderAdapter(sr);
+            return sr;
         }
     }
 

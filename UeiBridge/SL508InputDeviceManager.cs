@@ -21,7 +21,7 @@ namespace UeiBridge
         public override string DeviceName => DeviceMap2.SL508Literal; //"SL-508-892";
 
         private log4net.ILog _logger = StaticMethods.GetLogger();
-        private readonly List<SerialReaderAdapter> _serialReaderList = new List<SerialReaderAdapter>();
+        private readonly List<SerialReader> _serialReaderList = new List<SerialReader>();
         private bool _InDisposeState = false;
         private List<ViewItem<byte[]>> _lastScanList = new List<ViewItem<byte[]>>();
         private readonly SL508892Setup _thisSetup;
@@ -89,7 +89,7 @@ namespace UeiBridge
             int channel = (int)ar.AsyncState;
             try
             {
-                SerialReaderAdapter sra = _serialReaderList[channel];
+                SerialReader sra = _serialReaderList[channel];
                 byte[] receiveBuffer = sra.EndRead(ar); 
                 // this api might throw UeiDaqException exception with message "The device is not responding, check the connection and the device's status"
                 // in this case, the session must be closed/disposed and open again.
