@@ -58,7 +58,7 @@ namespace UeiBridge
             return id as DeviceType;
         }
 
-        protected void EmitInitMessage(UeiDeviceInfo deviceInfo,  string deviceMessage)
+        protected void EmitInitMessage(UeiDeviceInfo deviceInfo, string deviceMessage)
         {
             _logger.Info($"Cube{deviceInfo.CubeId}/Slot{deviceInfo.DeviceSlot}: {deviceMessage}");
         }
@@ -74,7 +74,7 @@ namespace UeiBridge
 
             foreach (UeiDeviceInfo deviceInfo in deviceInfoList)
             {
-                string deviceMessage=null;
+                string deviceMessage = null;
                 // prologue
                 // =========
                 // it type exists
@@ -82,7 +82,7 @@ namespace UeiBridge
                 if (null == t)
                 {
                     deviceMessage = $"Device {deviceInfo.DeviceName} not supported";
-                    EmitInitMessage( deviceInfo, deviceMessage);
+                    EmitInitMessage(deviceInfo, deviceMessage);
                     continue;
                 }
                 // if config entry exists
@@ -93,7 +93,7 @@ namespace UeiBridge
                     EmitInitMessage(deviceInfo, deviceMessage);
                     continue;
                 }
-                if (false==setup.IsEnabled)
+                if (false == setup.IsEnabled)
                 {
                     continue;
                 }
@@ -114,7 +114,7 @@ namespace UeiBridge
                     _PerDeviceObjectsList.AddRange(objs);
                 }
 
-                
+
             }
         }
 
@@ -217,7 +217,7 @@ namespace UeiBridge
             //var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()));
             SessionAdapter tsa = new SessionAdapter(theSession);
 
-            OutputDevice analogOut=null;
+            OutputDevice analogOut = null;
             if (realDevice.DeviceName == DeviceMap2.AO308Literal)
             {
                 analogOut = new AO308OutputDeviceManager(setup as AO308Setup, tsa, bsActive);
@@ -306,40 +306,42 @@ namespace UeiBridge
             {
                 serialSession = new Session();
 
+                // create serial port object for each channel
+                foreach (var channel in thisSetup.Channels)
                 {
-                    foreach (var channel in thisSetup.Channels)
+                    if (false == channel.IsEnabled)
                     {
-                        if (false == channel.IsEnabled)
-                        {
-                            continue;
-                        }
-                        string finalUrl = $"{thisSetup.CubeUrl}Dev{thisSetup.SlotNumber}/Com{channel.ChannelIndex}";
-                        SerialPort sport = serialSession.CreateSerialPort(finalUrl,
-                                            channel.Mode,
-                                            channel.Baudrate,
-                                            SerialPortDataBits.DataBits8,
-                                            channel.Parity,
-                                            channel.Stopbits,
-                                            "");
-                        System.Diagnostics.Debug.Assert(null != sport);
-                        sport.EnableErrorReporting(true);
+                        continue;
                     }
-
-                    {
-                        int chCount = thisSetup.Channels.Where(ch => ch.IsEnabled == true).ToList().Count;
-                        System.Diagnostics.Debug.Assert(serialSession.GetNumberOfChannels() == chCount);
-                    }
-
-                    serialSession.ConfigureTimingForMessagingIO(1000, 100.0);
-                    serialSession.GetTiming().SetTimeout(5000); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
-
-                    serialSession.Start();
+                    string finalUrl = $"{thisSetup.CubeUrl}Dev{thisSetup.SlotNumber}/Com{channel.ChannelIndex}";
+                    SerialPort sport = serialSession.CreateSerialPort(finalUrl,
+                                        channel.Mode,
+                                        channel.Baudrate,
+                                        SerialPortDataBits.DataBits8,
+                                        channel.Parity,
+                                        channel.Stopbits,
+                                        "");
+                    System.Diagnostics.Debug.Assert(null != sport);
+                    sport.EnableErrorReporting(true);
                 }
+
+                // just verify that there are N channels (serial  ports)
+                {
+                    int chCount = thisSetup.Channels.Where(ch => ch.IsEnabled == true).ToList().Count;
+                    System.Diagnostics.Debug.Assert(serialSession.GetNumberOfChannels() == chCount);
+                }
+
+                // set timeout for protocol
+                serialSession.ConfigureTimingForMessagingIO(1000, 100.0);
+                // set timeout for callback
+                serialSession.GetTiming().SetTimeout(5000); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
+
+                serialSession.Start();
 
             }
             catch (UeiDaqException ex)
             {
-                _logger.Warn($"Failed to init serial card mananger.Slot {setup.SlotNumber}. {ex.Message}. Might be invalid baud rate");
+                _logger.Warn($"Failed to init serial card mananger. Slot {setup.SlotNumber}. {ex.Message}. Might be invalid baud rate");
                 return null;
             }
 
@@ -360,7 +362,7 @@ namespace UeiBridge
 
             //SessionAdapter serAd = new SessionAdapter(serialSession);
             string instanceName = setup.GetInstanceName();// $"{realDevice.DeviceName}/Slot{realDevice.DeviceSlot}";
-            UdpWriter uWriter = new UdpWriter( setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMulticast);
+            UdpWriter uWriter = new UdpWriter(setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMulticast);
             SL508InputDeviceManager id = new SL508InputDeviceManager(uWriter, setup, ssAdapter);
 
             SL508OutputDeviceManager od = new SL508OutputDeviceManager(setup, serialSession);
@@ -368,8 +370,8 @@ namespace UeiBridge
             UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, od.InstanceName);
             // each port
             {
-                var ip = IPAddress.Parse( setup.LocalEndPoint.Address);
-                foreach( SerialChannelSetup chSetup in thisSetup.Channels)
+                var ip = IPAddress.Parse(setup.LocalEndPoint.Address);
+                foreach (SerialChannelSetup chSetup in thisSetup.Channels)
                 {
                     if (true == chSetup.IsEnabled)
                     {
@@ -418,7 +420,7 @@ namespace UeiBridge
 
                     System.Diagnostics.Debug.Assert(canSession.GetNumberOfChannels() == thisSetup.Channels.Count);
 
-                    canSession.ConfigureTimingForMessagingIO(1,0);
+                    canSession.ConfigureTimingForMessagingIO(1, 0);
                     canSession.GetTiming().SetTimeout(100); // timeout to throw from _serialReader.EndRead (looks like default is 1000)
 
                     canSession.Start();
@@ -442,9 +444,9 @@ namespace UeiBridge
                 //int chIndex = ueiPort.GetIndex();
                 //int portnum = s508.Channels.Where(i => i.ChannelIndex == chIndex).Select(i => i.LocalUdpPort).FirstOrDefault();
                 CANPort cport = ueiChannel as CANPort;
-                
+
                 _logger.Debug($"CAN CH:{cport.GetIndex()} - {cport.GetMode()} - {cport.GetSpeed()} - {cport.GetType()}");
-                
+
             }
 
             SessionAdapter ssAdapter = new SessionAdapter(canSession);
@@ -452,7 +454,7 @@ namespace UeiBridge
             //SessionAdapter serAd = new SessionAdapter(serialSession);
             string instanceName = setup.GetInstanceName();// $"{realDevice.DeviceName}/Slot{realDevice.DeviceSlot}";
             UdpWriter uWriter = new UdpWriter(setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMulticast);
-            CAN503InputDeviceManager id = new CAN503InputDeviceManager( thisSetup, ssAdapter, uWriter);
+            CAN503InputDeviceManager id = new CAN503InputDeviceManager(thisSetup, ssAdapter, uWriter);
 
             CAN503OutputDeviceManager od = new CAN503OutputDeviceManager(setup, ssAdapter);
             var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMulticast);
@@ -481,18 +483,18 @@ namespace UeiBridge
         private List<PerDeviceObjects> Build_AI201(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
             string instanceName = $"{realDevice.DeviceName}/Slot{realDevice.DeviceSlot}";
-            UdpWriter uWriter = new UdpWriter( setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMulticast);
+            UdpWriter uWriter = new UdpWriter(setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMulticast);
 
 
             Session sess1 = new Session();
             string url1 = $"{setup.CubeUrl}Dev{setup.SlotNumber}/Ai0: 23";
             double peek = AI201100Setup.PeekVoltage_upstream;
-            sess1.CreateAIChannel( url1, -peek, peek, AIChannelInputMode.SingleEnded); // -15,15 means 'no gain'
+            sess1.CreateAIChannel(url1, -peek, peek, AIChannelInputMode.SingleEnded); // -15,15 means 'no gain'
             //var numberOfChannels = _ueiSession.GetNumberOfChannels();
             sess1.ConfigureTimingForSimpleIO();
             sess1.Start();
 
-            AI201InputDeviceManager id = new AI201InputDeviceManager(setup as AI201100Setup, new SessionAdapter( sess1), uWriter );
+            AI201InputDeviceManager id = new AI201InputDeviceManager(setup as AI201100Setup, new SessionAdapter(sess1), uWriter);
 
             var pd = new PerDeviceObjects(realDevice);
             //pd.UdpWriter = uWriter;
@@ -524,7 +526,7 @@ namespace UeiBridge
             // =======================
 
             // build session
-            string outDevString = ComposeDio403DeviceString( realDevice, MessageWay.downstream);
+            string outDevString = ComposeDio403DeviceString(realDevice, MessageWay.downstream);
             string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/{outDevString}";
             Session outSession = new Session();
             outSession.CreateDOChannel(cubeUrl);
@@ -542,12 +544,12 @@ namespace UeiBridge
 
             // Subscribe device manager as consumer to incoming messages
             _udpMessenger.SubscribeConsumer(outDev, realDevice.CubeId, realDevice.DeviceSlot);
-            
+
             // prepare input manager
             // =======================
 
             // build udp writer
-            UdpWriter udpWriter = new UdpWriter( setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMulticast);
+            UdpWriter udpWriter = new UdpWriter(setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMulticast);
 
             // build session
             string inDevString = ComposeDio403DeviceString(realDevice, MessageWay.upstream);
@@ -557,7 +559,7 @@ namespace UeiBridge
             inSession.ConfigureTimingForSimpleIO();
             inSession.Start();
             SessionAdapter sa2 = new SessionAdapter(inSession);
-            
+
             // build device manager
             DIO403InputDeviceManager inDev = new DIO403InputDeviceManager(setup, sa2, udpWriter);
 
@@ -569,17 +571,17 @@ namespace UeiBridge
             return new List<PerDeviceObjects>() { pd };
         }
 
-        private string ComposeDio403DeviceString( UeiDeviceInfo devInfo, MessageWay way)
+        private string ComposeDio403DeviceString(UeiDeviceInfo devInfo, MessageWay way)
         {
-            StringBuilder resultString = new StringBuilder( (way == MessageWay.downstream) ? "Do" : "Di");
+            StringBuilder resultString = new StringBuilder((way == MessageWay.downstream) ? "Do" : "Di");
             //Do0,2,4
             DIO403Setup setup = _mainConfig.GetDeviceSetupEntry<DIO403Setup>(devInfo);
             if (null != setup)
             {
                 IEnumerable<DIOChannel> l = setup.IOChannelList.Where(i => i.Way == way);
-                foreach( var c in l)
+                foreach (var c in l)
                 {
-                    resultString.Append( c.OctetIndex);
+                    resultString.Append(c.OctetIndex);
                     resultString.Append(",");
                 }
                 resultString.Remove(resultString.Length - 1, 1);
@@ -629,7 +631,7 @@ namespace UeiBridge
                 PerDeviceObjects pd = new PerDeviceObjects(blockSensor.DeviceName, -1, "no_cube");
                 pd.OutputDeviceManager = blockSensor;
 
-                int cubeid = UeiBridge.Library.StaticMethods.CubeUrlToIpAddress( csetup.CubeUrl).GetAddressBytes()[3]; // tbd. result of CubeUriToIpAddress might be null
+                int cubeid = UeiBridge.Library.StaticMethods.CubeUrlToIpAddress(csetup.CubeUrl).GetAddressBytes()[3]; // tbd. result of CubeUriToIpAddress might be null
                 _udpMessenger.SubscribeConsumer(blockSensor, cubeid, 32);
                 _udpReaderList.Add(ureader);
 

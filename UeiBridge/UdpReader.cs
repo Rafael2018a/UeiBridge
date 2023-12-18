@@ -57,7 +57,7 @@ namespace UeiBridge
                 // Start listening for incoming data
                 _udpclient.BeginReceive(new AsyncCallback(ReceivedCallback), null);
 
-                _logger.Debug($"Udp reader start. {this._instanceName} Listening port: {_msListeningiEp.Port}");
+                //_logger.Debug($"Udp reader start. {this._instanceName} Listening port: {_msListeningiEp.Port}");
             }
             catch (SocketException ex)
             {

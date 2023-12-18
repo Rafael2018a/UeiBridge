@@ -120,7 +120,6 @@ namespace UeiBridge.Library
                 Console.WriteLine($"Session stop() failed. {ex.Message}");
             }
         }
-
         public SerialReader GetSerialReader(int ch)
         {
            var sr = new SerialReader(_ueiSession.GetDataStream(), _ueiSession.GetChannel(ch).GetIndex());

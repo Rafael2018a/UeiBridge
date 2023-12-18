@@ -89,8 +89,8 @@ namespace UeiBridge
             int channel = (int)ar.AsyncState;
             try
             {
-                SerialReader sra = _serialReaderList[channel];
-                byte[] receiveBuffer = sra.EndRead(ar); 
+                SerialReader sr = _serialReaderList[channel];
+                byte[] receiveBuffer = sr.EndRead(ar); 
                 // this api might throw UeiDaqException exception with message "The device is not responding, check the connection and the device's status"
                 // in this case, the session must be closed/disposed and open again.
 
@@ -116,8 +116,7 @@ namespace UeiBridge
                     }
                     else
                     {
-                        _logger.Debug($"Disposing {InstanceName} ch{channel}");
-                        // tbd. Dispose session here?
+                        _logger.Debug($"Teminating {InstanceName} ch{channel}");
                     }
                 }
                 else
@@ -148,10 +147,10 @@ namespace UeiBridge
 
             // activate
             int ch1 = 0;
-            foreach (var sl in _serialReaderList)
+            foreach (SerialReader sReader in _serialReaderList)
             {
                 AsyncCallback readerAsyncCallback = new AsyncCallback(ReaderCallback);
-                _readerIAsyncResultList[ch1] = sl.BeginRead(minLen, readerAsyncCallback, ch1);
+                _readerIAsyncResultList[ch1] = sReader.BeginRead(minLen, readerAsyncCallback, ch1);
                 ch1++;
             }
 
