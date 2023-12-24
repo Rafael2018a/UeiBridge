@@ -87,6 +87,7 @@
     <Compile Include="ConvertersTest.cs" />
     <Compile Include="CubeNetTest.cs" />
     <Compile Include="DeviceManagersTests.cs" />
+    <Compile Include="FromUei.cs" />
     <Compile Include="NonSpecificTests.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

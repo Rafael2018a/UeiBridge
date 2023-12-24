@@ -631,9 +631,9 @@ namespace UeiBridge
                 PerDeviceObjects pd = new PerDeviceObjects(blockSensor.DeviceName, -1, "no_cube");
                 pd.OutputDeviceManager = blockSensor;
 
-                int cubeid = UeiBridge.Library.StaticMethods.CubeUrlToIpAddress(csetup.CubeUrl).GetAddressBytes()[3]; // tbd. result of CubeUriToIpAddress might be null
-                _udpMessenger.SubscribeConsumer(blockSensor, cubeid, 32);
-                _udpReaderList.Add(ureader);
+                //int cubeid = UeiBridge.Library.StaticMethods.CubeUrlToIpAddress(csetup.CubeUrl).GetAddressBytes()[3]; // tbd. result of CubeUriToIpAddress might be null
+                //_udpMessenger.SubscribeConsumer(blockSensor, cubeid, 32);
+                //_udpReaderList.Add(ureader);
 
                 blockSensor.OpenDevice();
                 //ureader.Start();

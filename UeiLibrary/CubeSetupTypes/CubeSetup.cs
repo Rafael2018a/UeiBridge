@@ -97,7 +97,8 @@ namespace UeiBridge.CubeSetupTypes
 
         public int GetCubeId()
         {
-            return StaticMethods.GetCubeId(CubeUrl);
+            return (new UeiCube(CubeUrl)).GetCubeId();
+            //return StaticMethods.GetCubeId(CubeUrl);
         }
         private BlockSensorSetup BuildBlockSensorSetup(List<DeviceSetup> deviceSetupList)
         {

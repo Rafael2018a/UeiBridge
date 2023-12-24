@@ -214,8 +214,9 @@ namespace UeiBridge.Library
             // load settings per cube
             foreach (string cubeurl in cubeUrlList)
             {
-                UeiDaq.DeviceCollection devCollection = new UeiDaq.DeviceCollection(cubeurl);
-                List<UeiDeviceInfo> devInfoList = StaticMethods.DeviceCollectionToDeviceInfoList(devCollection, cubeurl);
+                UeiCube cube = new UeiCube(cubeurl);
+                //UeiDaq.DeviceCollection devCollection = new UeiDaq.DeviceCollection(cubeurl);
+                List<UeiDeviceInfo> devInfoList = cube.GetDeviceInfoList();// StaticMethods.DeviceCollectionToDeviceInfoList(devCollection, cubeurl);
 
                 // if cube connected, load/create setup
                 if (null != devInfoList && devInfoList.Count > 0)

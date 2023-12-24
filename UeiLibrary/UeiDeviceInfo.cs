@@ -28,7 +28,7 @@ namespace UeiBridge.Library
             }
             else
             {
-                IPAddress ipa = StaticMethods.CubeUrlToIpAddress(this.CubeUrl);
+                IPAddress ipa = UeiCube.CubeUriToIpAddress(this.CubeUrl);
                 CubeId = (null != ipa) ? ipa.GetAddressBytes()[3] : -1;
             }
         }

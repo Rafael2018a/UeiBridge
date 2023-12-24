@@ -59,6 +59,11 @@ namespace UeiBridge.Library
             return _digitalReaderAd;
         }
 
+        public Device GetAssociatedDevice()
+        {
+            return _ueiSession.GetDevice();
+        }
+
         public CANWriterAdapter GetCANWriter(int ch)
         {
             return new CANWriterAdapter(new CANWriter(_ueiSession.GetDataStream(), _ueiSession.GetChannel(ch).GetIndex()));

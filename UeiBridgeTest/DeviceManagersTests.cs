@@ -150,8 +150,9 @@ namespace UeiBridgeTest
             //Session s = new Session();
             string cubeurl = "pdna://192.168.100.2";//c";
 
-            UeiDaq.DeviceCollection devColl = new UeiDaq.DeviceCollection(cubeurl);
-            List<UeiDeviceInfo> devList1 = UeiBridge.Library.StaticMethods.DeviceCollectionToDeviceInfoList(devColl, cubeurl);
+            UeiCube cube = new UeiCube(cubeurl);
+            //UeiDaq.DeviceCollection devColl = new UeiDaq.DeviceCollection(cubeurl);
+            List<UeiDeviceInfo> devList1 = cube.GetDeviceInfoList();// UeiBridge.Library.StaticMethods.DeviceCollectionToDeviceInfoList(devColl, cubeurl);
 
             if (devList1.Count > 1) // if connected
             {

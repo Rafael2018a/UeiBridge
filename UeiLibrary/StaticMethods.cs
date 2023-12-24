@@ -15,21 +15,6 @@ namespace UeiBridge.Library
     // Methods in the class SHOULD NOT depend on any other project class
     public class StaticMethods
     {
-        public static System.Net.IPAddress CubeUriToIpAddress_moved(string url)
-        {
-            Uri u1 = new Uri(url);
-            var a1 = u1.Host;
-            System.Net.IPAddress result;
-            try
-            {
-                result = System.Net.IPAddress.Parse(u1.Host);
-            }
-            catch (FormatException)
-            {
-                result = null;// System.Net.IPAddress.None;
-            }
-            return result;
-        }
         public static string GetEnumValues<T>()
         {
             T[] v1 = Enum.GetValues(typeof(T)) as T[];
@@ -120,7 +105,7 @@ namespace UeiBridge.Library
             return msgs;
         }
 
-        public static List<UeiDeviceInfo> DeviceCollectionToDeviceInfoList(DeviceCollection devColl, string cubeurl)
+        public static List<UeiDeviceInfo> DeviceCollectionToDeviceInfoList_old(DeviceCollection devColl, string cubeurl)
         {
             try
             {
@@ -145,8 +130,8 @@ namespace UeiBridge.Library
                 return null;
             }
         }
-
-        public static int GetCubeId(string cubeUrl)
+#if old
+        public static int GetCubeId_old(string cubeUrl)
         {
             int result = -1;
             if (null != cubeUrl)
@@ -166,7 +151,8 @@ namespace UeiBridge.Library
             }
             return result;
         }
-        public static int GetCubeId(IPAddress cubeIp)
+#endif
+        public static int GetCubeId_old(IPAddress cubeIp)
         {
             if (null == cubeIp)
             {
@@ -177,7 +163,7 @@ namespace UeiBridge.Library
                 return cubeIp.GetAddressBytes()[3];
             }    
         }
-        public static string GetCubeUrl(IPAddress ip)
+        public static string GetCubeUrl_old(IPAddress ip)
         {
             if (null==ip)
             {
@@ -189,7 +175,7 @@ namespace UeiBridge.Library
             return sb.ToString();
         }
 
-        public static System.Net.IPAddress CubeUrlToIpAddress(string url)
+        public static System.Net.IPAddress CubeUrlToIpAddress_old(string url)
         {
             //m.Net.IPAddress result = null;
             Uri resutlUri;
@@ -206,7 +192,7 @@ namespace UeiBridge.Library
             return null;
         }
 
-        static bool IsNullPredicate(object u)
+        public static bool IsNullPredicate(object u)
         {
             return (u == null) ? true : false;
         }

@@ -28,10 +28,10 @@ namespace UeiBridgeTest
         [Test]
         public void CubeUriToIpAddressTest()
         {
-            IPAddress ip1 = UeiBridge.Library.StaticMethods.CubeUrlToIpAddress("pdna://192.168.100.2/");
+            IPAddress ip1 = UeiCube.CubeUriToIpAddress("pdna://192.168.100.2/");
             byte[] bytes1 = ip1.GetAddressBytes();
-            IPAddress ip2 = UeiBridge.Library.StaticMethods.CubeUrlToIpAddress("simu://");
-            IPAddress ip3 = UeiBridge.Library.StaticMethods.CubeUrlToIpAddress("ddd");
+            IPAddress ip2 = UeiCube.CubeUriToIpAddress("simu://");
+            IPAddress ip3 = UeiCube.CubeUriToIpAddress("ddd");
 
             Assert.Multiple(() => 
             { 

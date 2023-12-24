@@ -54,7 +54,7 @@ namespace UeiBridgeTest
             string bad_url = "ksjdlkfjlaks";
             List<CubeSetup> cubeList = UeiBridge.Library.Config2.GetSetupForCubes(new List<string>() { simu_url, existing_cube, non_existing_cube, bad_url });
 
-            IPAddress ip = UeiBridge.Library.StaticMethods.CubeUrlToIpAddress("pdna://192.168.100.2");
+            IPAddress ip = UeiCube.CubeUriToIpAddress("pdna://192.168.100.2");
             if (null == CubeSeeker.TryIP(ip))
             {
                 Assert.That(cubeList.Count, Is.EqualTo(1));
@@ -70,9 +70,10 @@ namespace UeiBridgeTest
             // create file
             string cubeurl = "simu://";
             string configfile = "setup.fortest.config";
-            
-            UeiDaq.DeviceCollection devCollection = new UeiDaq.DeviceCollection( cubeurl);
-            List<UeiDeviceInfo> devInfoList = UeiBridge.Library.StaticMethods.DeviceCollectionToDeviceInfoList(devCollection, cubeurl);
+
+            UeiCube cube = new UeiCube(cubeurl);
+            //UeiDaq.DeviceCollection devCollection = new UeiDaq.DeviceCollection( cubeurl);
+            List<UeiDeviceInfo> devInfoList = cube.GetDeviceInfoList(); //UeiBridge.Library.StaticMethods.DeviceCollectionToDeviceInfoList(devCollection, cubeurl);
             CubeSetup cs = new CubeSetup(devInfoList);
             bool saveOk = CubeSetupLoader.SaveSetupFile(cs, new FileInfo(configfile));
             Assert.That(saveOk, Is.EqualTo(true));

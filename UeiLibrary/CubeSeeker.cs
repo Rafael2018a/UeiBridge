@@ -46,7 +46,7 @@ namespace UeiBridge.Library
             return x.ToList<IPAddress>();
 
         }
-
+#if old
         public static List<UeiDeviceInfo> GetDeviceList(IPAddress cubeIp)
         {
             string url = StaticMethods.GetCubeUrl(cubeIp);
@@ -64,7 +64,7 @@ namespace UeiBridge.Library
             List<UeiDeviceInfo> l = StaticMethods.DeviceCollectionToDeviceInfoList(devColl, url);
             return l;
         }
-
+#endif
         public static IPAddress TryIP(object obj)
         {
             IPAddress ipAddress = (IPAddress)obj;

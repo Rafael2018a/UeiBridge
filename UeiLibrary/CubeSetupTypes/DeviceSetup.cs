@@ -23,7 +23,8 @@ namespace UeiBridge.CubeSetupTypes
         //[XmlIgnore]
         public int GetCubeId() // lsb of cube address
         {
-            return StaticMethods.GetCubeId(CubeUrl);
+            return (new UeiCube(CubeUrl)).GetCubeId();
+            //return StaticMethods.GetCubeId(CubeUrl);
         }
         public DeviceSetup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device)
         {
