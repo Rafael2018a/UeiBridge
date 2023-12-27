@@ -25,7 +25,7 @@ namespace UeiBridge.Library
         }
         public UeiCube(IPAddress cubeAddress)
         {
-            if (null == this.CubeAddress)
+            if (null == cubeAddress)
             {
                 throw new ArgumentNullException();
             }
@@ -149,15 +149,15 @@ namespace UeiBridge.Library
             }
         }
 
-        public void DasReset1(string cubeuri)
+        public void DasReset1()
         {
             int deviceNumber;
             int powerDev = 0;
             Device myDevice;
             string devCollName;
+            string cubeUri = this.GetCubeUri();
 
-
-            DeviceCollection devColl = new DeviceCollection("pdna://192.168.100.40");
+            DeviceCollection devColl = new DeviceCollection(cubeUri);
 
             foreach (Device dev in devColl)
             {
@@ -165,7 +165,7 @@ namespace UeiBridge.Library
                 {
                     devCollName = dev.GetDeviceName();
 
-                    if (devCollName == "DNRP-40")
+                    if (devCollName.ToLower().StartsWith("dnrp"))
                     {
                         powerDev = dev.GetIndex();
                     }
@@ -175,8 +175,8 @@ namespace UeiBridge.Library
 
             for (deviceNumber = 0; deviceNumber <= powerDev - 2; deviceNumber++)
             {
-                string rNAME = @"pdna://192.168.100.40/Dev" + deviceNumber.ToString().Trim() + @"/";
-                myDevice = new Device();
+                string rNAME = cubeUri + "Dev" + deviceNumber.ToString().Trim() + @"/";
+                //myDevice = new Device();
                 myDevice = DeviceEnumerator.GetDeviceFromResource(rNAME);
                 string devName = myDevice.GetDeviceName();
                 if (myDevice != null)
@@ -185,7 +185,9 @@ namespace UeiBridge.Library
                 }
             }
 
-
+            //string prNAME = cubeUri + "Dev" + "7" + @"/";
+            //myDevice = DeviceEnumerator.GetDeviceFromResource(prNAME);
+            //myDevice.Reset();
 
         }
         public void DasReset2(string cubeuri)

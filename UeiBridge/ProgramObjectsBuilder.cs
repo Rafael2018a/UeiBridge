@@ -300,11 +300,12 @@ namespace UeiBridge
         {
 
             SL508892Setup thisSetup = setup as SL508892Setup;
-
             Session serialSession = null;
             try
             {
                 serialSession = new Session();
+                UeiCube cube = new UeiCube(thisSetup.CubeUrl);
+                cube.DasReset1();
 
                 // create serial port object for each channel
                 foreach (var channel in thisSetup.Channels)

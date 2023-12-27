@@ -116,7 +116,7 @@ namespace UeiBridge
                     }
                     else
                     {
-                        _logger.Debug($"Teminating {InstanceName} ch{channel}");
+                        _logger.Debug($"Terminating {InstanceName} ch{channel}");
                     }
                 }
                 else
