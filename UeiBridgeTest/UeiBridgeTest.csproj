@@ -110,6 +110,10 @@
       <Project>{47b5ff07-4c59-4197-a700-25d7f7c31dbd}</Project>
       <Name>CubeNet</Name>
     </ProjectReference>
+    <ProjectReference Include="..\CubeOp\CubeOp.csproj">
+      <Project>{fd64c49f-2597-4c88-8687-8a50dc3cf94c}</Project>
+      <Name>CubeOp</Name>
+    </ProjectReference>
     <ProjectReference Include="..\UeiBridge\UeiBridge.csproj">
       <Project>{086a67bb-d92f-4fc5-a91e-39913abc6328}</Project>
       <Name>UeiBridge</Name>

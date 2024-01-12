@@ -1,7 +1,10 @@
 *.suo
 *.user
-
+.vs/
 obj
 
 *.p7s
 /packages/
+*.exe
+*.vsidx
+*.pdb

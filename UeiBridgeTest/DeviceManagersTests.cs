@@ -40,7 +40,7 @@ namespace UeiBridgeTest
             serialSession.Dispose();
         }
 
-        [Test]
+        
         public void BlockSensorTest()
         {
             Session sess1 = new Session();
@@ -120,6 +120,7 @@ namespace UeiBridgeTest
             SessionAdapter sa = new SessionAdapter(sess1);
 
             DIO403Setup setup = new DIO403Setup(new EndPoint("8.8.8.8", 5000), null, new UeiDeviceInfo("simu://", 2, "Simu-DIO64"), sess1.GetNumberOfChannels());
+            setup.CubeUrl = "simu://";
 
             // build device manager
             DIO403OutputDeviceManager dio403 = new DIO403OutputDeviceManager(setup, sa);

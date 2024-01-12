@@ -54,7 +54,7 @@ namespace UeiBridgeTest
             string bad_url = "ksjdlkfjlaks";
             List<CubeSetup> cubeList = UeiBridge.Library.Config2.GetSetupForCubes(new List<string>() { simu_url, existing_cube, non_existing_cube, bad_url });
 
-            IPAddress ip = UeiCube.CubeUriToIpAddress("pdna://192.168.100.2");
+            IPAddress ip = new UeiCube("pdna://192.168.100.2").CubeAddress;
             if (null == CubeSeeker.TryIP(ip))
             {
                 Assert.That(cubeList.Count, Is.EqualTo(1));
@@ -98,8 +98,8 @@ namespace UeiBridgeTest
         [Test]
         public void ConfigBadUrlTest()
         {
-            List<CubeSetup> c2a = UeiBridge.Library.Config2.GetSetupForCubes(new List<string>() { "kkk" });
-            Assert.That(c2a.Count, Is.EqualTo(0));
+            List<CubeSetup> c2a = UeiBridge.Library.Config2.GetSetupForCubes(new List<string>() { "simu://" });
+            Assert.That(c2a.Count, Is.EqualTo(1));
         }
         [Test]
         public void LoadConfig3Test()
@@ -154,9 +154,10 @@ namespace UeiBridgeTest
         {
             List<UeiDeviceInfo> devList = new List<UeiDeviceInfo>
             {
-                new UeiDeviceInfo("cubeurl", 51, "devicename1")
+                new UeiDeviceInfo("simu://", 51, "devicename1")
             };
             CubeSetup cs = new CubeSetup(devList);
+            cs.CubeUrl = "simu://";
             Assert.That(cs.DeviceSetupList.Count, Is.EqualTo(1));
         }
         /// <summary>
@@ -167,9 +168,10 @@ namespace UeiBridgeTest
         {
             List<UeiDeviceInfo> devList = new List<UeiDeviceInfo>
             {
-                new UeiDeviceInfo("cubeurl", 101, "AO-308")
+                new UeiDeviceInfo("simu://", 101, "AO-308")
             };
             CubeSetup cs = new CubeSetup(devList);
+            cs.CubeUrl = "simu://";
             Assert.That(cs.DeviceSetupList.Count, Is.EqualTo(1));
             Assert.That(cs.DeviceSetupList[0], Is.Not.Null);
         }

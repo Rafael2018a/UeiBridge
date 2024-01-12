@@ -10,42 +10,88 @@ using UeiDaq;
 namespace UeiBridge.Library
 {
 
+    /// <summary>
+    /// Cube management class.
+    /// - check cube exist (connected)
+    /// - get list of devices in cube
+    /// - get/convert cube id/ip/url
+    /// - reset specific device, 
+    /// - reset whole cube (Watchdog reset)
+    /// </summary>
     public class UeiCube
     {
-        IPAddress CubeAddress { get; set; }
+        const string _simuUri = "simu://";
+
+        public IPAddress CubeAddress { get; private set; }
+        public bool IsSimuCube { get; private set; } = false;
+        public bool IsValidCube { get; private set; } = false;
         public UeiCube(string cubeUri)
         {
-            CubeAddress = CubeUriToIpAddress(cubeUri);
-
-            if (null == this.CubeAddress)
+            System.Diagnostics.Debug.Assert(cubeUri != null);
+            if (cubeUri.ToLower().StartsWith("simu"))
             {
-                throw new ArgumentNullException();
+                IsSimuCube = true;
+                IsValidCube = true;
             }
-
+            else
+            {
+                CubeAddress = CubeUriToIpAddress(cubeUri);
+                IsValidCube = (null == this.CubeAddress) ? false : true;
+            }
         }
+
         public UeiCube(IPAddress cubeAddress)
         {
-            if (null == cubeAddress)
-            {
-                throw new ArgumentNullException();
-            }
-
+            System.Diagnostics.Debug.Assert(null != cubeAddress);
             this.CubeAddress = cubeAddress;
+            IsSimuCube = false;
+            IsValidCube = true;
+        }
+
+        /// <summary>
+        /// Cube id is the fourth field of the cube ip
+        /// </summary>
+        /// <returns></returns>
+        internal int GetCubeId()
+        {
+            if (null == CubeAddress)
+            {
+                return -1;
+            }
+            else
+            {
+                return CubeAddress.GetAddressBytes()[3];
+            }
         }
 
         public string GetCubeUri()
         {
+            if (this.IsSimuCube)
+            {
+                return _simuUri;
+            }
+            if (null==this.CubeAddress)
+            {
+                return null;
+            }
+
             StringBuilder sb = new StringBuilder("pdna://");
             sb.Append( this.CubeAddress.ToString());
             sb.Append("/");
             return sb.ToString();
         }
+
         /// <summary>
         /// (DNRP device NOT included)
         /// </summary>
         /// <returns></returns>
         public List<UeiDeviceInfo> GetDeviceInfoList()
         {
+            if (false==IsValidCube)
+            {
+                return null;
+            }
+
             DeviceCollection devColl = new DeviceCollection( this.GetCubeUri());
 
             try
@@ -71,35 +117,36 @@ namespace UeiBridge.Library
 
         public Device GetDevice(int slotNumber) 
         {
-            throw new NotImplementedException();
+            string devuri = $"{this.GetCubeUri()}Dev{slotNumber}";
+            return DeviceEnumerator.GetDeviceFromResource(devuri);
         }
 
-        /// <summary>
-        /// Device.Reset() doc: Executes a hardware reset on the device. To reboot a PowerDNA or PowerDNR unit call this method on the CPU device (device 14). 
-        /// </summary>
-        public void CubeReboot()
+        public bool DeviceReset( string deviceUri)
         {
-            //var ip = UeiBridge.Library.StaticMethods.CubeUrlToIpAddress(cubeUri);
-            throw new NotImplementedException();
+            Device dev = DeviceEnumerator.GetDeviceFromResource(deviceUri);
+            try
+            {
+                dev?.Reset();
+                return true;
+            }
+            catch(Exception)
+            {
+                return false;
+            }
         }
-
-        /// <summary>
-        /// Reset dnrp
-        /// </summary>
-        /// <param name="cubeAddress"></param>
-        public void CubeReset()
-        {
-            throw new NotImplementedException();
-        }
-
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="slotNumber">One of the cards, not DNRP and not 'dev14'</param>
-        public void DeviceReset(uint slotNumber)
+        /// <remarks>
+        /// From doc: Device.Reset() Executes a hardware reset on the device. To reboot a PowerDNA or PowerDNR unit call this method on the CPU device (device 14). 
+        /// Rafi: Might as well use "cpu" instead of "Dev14", see Diagnostics project in Uei-Examples
+        /// </remarks>
+        public void CubeReset()
         {
-            throw new NotImplementedException();
+            string cpudev = $"{this.GetCubeUri()}cpu";
+            this.DeviceReset(cpudev);
         }
+
         public void DeviceResetAll()
         {
             throw new NotImplementedException();
@@ -110,7 +157,7 @@ namespace UeiBridge.Library
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public static bool IsCubeConnected(IPAddress ipAddress)
+        public bool IsCubeConnected()//IPAddress ipAddress)
         {
             UdpClient udpClient = new UdpClient();
             try
@@ -124,7 +171,7 @@ namespace UeiBridge.Library
                 writer.Write((uint)IPAddress.HostToNetworkOrder(unchecked((int)0x104)));
                 writer.Write((uint)IPAddress.HostToNetworkOrder(0));
 
-                IPEndPoint ep = new IPEndPoint(ipAddress, 6334);
+                IPEndPoint ep = new IPEndPoint(CubeAddress, 6334);
                 udpClient.Send(sendBuffer, (int)writer.BaseStream.Length, ep);
 
                 udpClient.Client.ReceiveTimeout = 500;
@@ -233,24 +280,8 @@ namespace UeiBridge.Library
 
         }
 
-        internal int GetCubeId()
-        {
-            if (null == CubeAddress)
-            {
-                return -1;
-            }
-            else
-            {
-                return CubeAddress.GetAddressBytes()[3];
-            }
-        }
 
-        internal string GetCubeUri(IPAddress cubeIp)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static System.Net.IPAddress CubeUriToIpAddress(string uri)
+        private System.Net.IPAddress CubeUriToIpAddress(string uri)
         {
             Uri resutlUri;
             bool ok1 = Uri.TryCreate(uri, UriKind.Absolute, out resutlUri);
