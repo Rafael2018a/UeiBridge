@@ -24,20 +24,29 @@ namespace UeiBridge.Library
 
         public IPAddress CubeAddress { get; private set; }
         public bool IsSimuCube { get; private set; } = false;
-        public bool IsValidCube { get; private set; } = false;
+        public bool IsValidAddress { get; private set; } = false;
         public UeiCube(string cubeUri)
         {
             System.Diagnostics.Debug.Assert(cubeUri != null);
             if (cubeUri.ToLower().StartsWith("simu"))
             {
                 IsSimuCube = true;
-                IsValidCube = true;
+                IsValidAddress = true;
+                return;
             }
-            else
+
+            IPAddress ip;
+            if (IPAddress.TryParse(cubeUri, out ip))
             {
-                CubeAddress = CubeUriToIpAddress(cubeUri);
-                IsValidCube = (null == this.CubeAddress) ? false : true;
+                this.CubeAddress = ip;
+                IsSimuCube = false;
+                IsValidAddress = true;
+                return;
             }
+
+            CubeAddress = CubeUriToIpAddress(cubeUri);
+            IsValidAddress = (null == this.CubeAddress) ? false : true;
+            IsSimuCube = false;
         }
 
         public UeiCube(IPAddress cubeAddress)
@@ -45,7 +54,7 @@ namespace UeiBridge.Library
             System.Diagnostics.Debug.Assert(null != cubeAddress);
             this.CubeAddress = cubeAddress;
             IsSimuCube = false;
-            IsValidCube = true;
+            IsValidAddress = true;
         }
 
         /// <summary>
@@ -82,21 +91,22 @@ namespace UeiBridge.Library
         }
 
         /// <summary>
+        /// Get real device info list
         /// (DNRP device NOT included)
         /// </summary>
         /// <returns></returns>
         public List<UeiDeviceInfo> GetDeviceInfoList()
         {
-            if (false==IsValidCube)
+            if (false == IsValidAddress)
             {
                 return null;
             }
 
-            DeviceCollection devColl = new DeviceCollection( this.GetCubeUri());
+            DeviceCollection devColl = new DeviceCollection(this.GetCubeUri());
 
             try
             {
-                List<Device>  l1 = devColl.Cast<UeiDaq.Device>().ToList();
+                List<Device> l1 = devColl.Cast<UeiDaq.Device>().ToList();
                 var devList = l1.Select((UeiDaq.Device i) =>
                 {
                     if (i == null)
@@ -115,6 +125,28 @@ namespace UeiBridge.Library
             }
         }
 
+        public List<Device> GetDeviceList()
+        {
+            if (false == IsValidAddress && IsSimuCube==false)
+            {
+                return null;
+            }
+            
+            try
+            {
+                DeviceCollection devColl = new DeviceCollection(this.GetCubeUri());
+                List<Device> l1 = devColl.Cast<UeiDaq.Device>().ToList();
+                // remove null entries
+                var l2 = l1.Where(i => i != null);
+                var l3 = l2.Cast<UeiDaq.Device>().ToList();
+                return l3;
+            }
+            catch (UeiDaq.UeiDaqException)
+            {
+                return null;
+            }
+        }
+
         public Device GetDevice(int slotNumber) 
         {
             string devuri = $"{this.GetCubeUri()}Dev{slotNumber}";
@@ -123,13 +155,24 @@ namespace UeiBridge.Library
 
         public bool DeviceReset( string deviceUri)
         {
+            if (this.IsSimuCube)
+            {
+                return true;
+            }
             Device dev = DeviceEnumerator.GetDeviceFromResource(deviceUri);
             try
             {
-                dev?.Reset();
-                return true;
+                if (dev != null)
+                {
+                    dev.Reset();
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
-            catch(Exception)
+            catch(Exception ex)
             {
                 return false;
             }
@@ -141,10 +184,10 @@ namespace UeiBridge.Library
         /// From doc: Device.Reset() Executes a hardware reset on the device. To reboot a PowerDNA or PowerDNR unit call this method on the CPU device (device 14). 
         /// Rafi: Might as well use "cpu" instead of "Dev14", see Diagnostics project in Uei-Examples
         /// </remarks>
-        public void CubeReset()
+        public bool CubeReset()
         {
-            string cpudev = $"{this.GetCubeUri()}cpu";
-            this.DeviceReset(cpudev);
+            string cpudev = $"{this.GetCubeUri()}cpu"; 
+            return this.DeviceReset(cpudev);
         }
 
         public void DeviceResetAll()
@@ -159,6 +202,15 @@ namespace UeiBridge.Library
         /// <returns></returns>
         public bool IsCubeConnected()//IPAddress ipAddress)
         {
+            if (false==IsValidAddress)
+            {
+                return false;
+            }
+            if (true==IsSimuCube)
+            {
+                return true;
+            }
+
             UdpClient udpClient = new UdpClient();
             try
             {
@@ -237,7 +289,7 @@ namespace UeiBridge.Library
             //myDevice.Reset();
 
         }
-        public void DasReset2(string cubeuri)
+        void DasReset2(string cubeuri)
         {
 
             string sDevCollName = "";

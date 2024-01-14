@@ -317,6 +317,25 @@ namespace UeiBridgeTest
 
         }
 
+        [Test]
+        public void GetDeviceFromResourceTest()
+        {
+            string deviceUri = "simu://dev0";
+            Device dev = DeviceEnumerator.GetDeviceFromResource(deviceUri);
+            Assert.That(dev, Is.Not.Null);
+            deviceUri = "simu://dev14";
+            dev = DeviceEnumerator.GetDeviceFromResource(deviceUri);
+            Assert.That(dev, Is.Null);
+            deviceUri = "pdna://192.168.100.3/dev0";
+            dev = DeviceEnumerator.GetDeviceFromResource(deviceUri);
+            Assert.That(dev, Is.Not.Null); // this works only if cube is connected
+            deviceUri = "192.168.100.3/dev0";
+            dev = DeviceEnumerator.GetDeviceFromResource(deviceUri);
+            Assert.That(dev, Is.Null);
+            //deviceUri = "simu://dev14";
+            //dev = DeviceEnumerator.GetDeviceFromResource(deviceUri);
+            //Assert.That(dev, Is.Null);
+        }
     }
     public class AnalogWriterMock : IWriterAdapter<double[]>
     {

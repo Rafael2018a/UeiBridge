@@ -35,7 +35,7 @@ namespace UeiBridgeTest
         public void UriClassTest()
         {
             {
-                string uri1 = "pdna://192.168.100.2/Dev14";
+                string uri1 = "pdna://192.168.100.2";
                 Uri resutlUri;
                 bool ok1 = Uri.TryCreate(uri1, UriKind.Absolute, out resutlUri);
             }
@@ -44,6 +44,22 @@ namespace UeiBridgeTest
                 Uri resutlUri;
                 bool ok1 = Uri.TryCreate(uri1, UriKind.RelativeOrAbsolute, out resutlUri);
             }
+            {
+                string uri1 = "pdna://192.168.100.2/Dev0";
+                Uri resutlUri;
+                bool ok1 = Uri.TryCreate(uri1, UriKind.RelativeOrAbsolute, out resutlUri);
+            }
+            {
+                string uri1 = "simu://Dev0";
+                Uri resutlUri;
+                bool ok1 = Uri.TryCreate(uri1, UriKind.RelativeOrAbsolute, out resutlUri);
+            }
+            {
+                string uri1 = "simu://";
+                Uri resutlUri;
+                bool ok1 = Uri.TryCreate(uri1, UriKind.RelativeOrAbsolute, out resutlUri);
+            }
+
         }
         [Test]
         public void CubePingTest()
