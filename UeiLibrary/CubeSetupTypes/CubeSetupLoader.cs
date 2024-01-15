@@ -7,6 +7,11 @@ using System.IO;
 /// </summary>
 namespace UeiBridge.CubeSetupTypes
 {
+    /// <summary>
+    /// Load/Save CubeSetup from/to xml file.
+    /// CubeSetupMain property is the main object, 
+    /// this might be null in case of failure.
+    /// </summary>
     public class CubeSetupLoader
     {
         public CubeSetup CubeSetupMain { get; private set; }

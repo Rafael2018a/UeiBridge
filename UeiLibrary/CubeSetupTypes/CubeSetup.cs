@@ -10,8 +10,10 @@ using UeiBridge.Library;
 /// </summary>
 namespace UeiBridge.CubeSetupTypes
 {
-
-
+    /// <summary>
+    /// This is the main cube-setup object. 
+    /// This class is serialized into xml file like cube2.config for cube 2.
+    /// </summary>
     [XmlInclude(typeof(AO308Setup))]
     [XmlInclude(typeof(DIO403Setup))]
     [XmlInclude(typeof(DIO470Setup))]
@@ -120,7 +122,18 @@ namespace UeiBridge.CubeSetupTypes
                 return null;
             }
         }
+        public DeviceSetup GetDeviceSetupEntry( int slotIndex)
+        {
+            var theSetups = this.DeviceSetupList.Where(d => d.SlotNumber == slotIndex);
+            DeviceSetup result = theSetups.FirstOrDefault();
+            if (null != result)
+            {
+                result.CubeUrl = this.CubeUrl;
+            }
 
+            return result;
+        }
+#if dont
         [Obsolete]
         public void Serialize1(string AssociatedFileFullname)
         {
@@ -177,6 +190,7 @@ namespace UeiBridge.CubeSetupTypes
             }
             return resultSetup;
         }
+#endif
 
     }
 }
