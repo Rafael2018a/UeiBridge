@@ -3,11 +3,11 @@ using UeiDaq;
 
 namespace UeiBridge.Library
 {
-    public class ChannelAdapter : IChannel
+    public class ChannelAdapter__old //: IChannel
     {
         Channel _channel;
 
-        public ChannelAdapter(Channel channel)
+        public ChannelAdapter__old(Channel channel)
         {
             _channel = channel;
         }

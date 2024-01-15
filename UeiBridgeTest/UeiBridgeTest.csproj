@@ -87,6 +87,7 @@
     <Compile Include="ConvertersTest.cs" />
     <Compile Include="CubeNetTest.cs" />
     <Compile Include="DeviceManagersTests.cs" />
+    <Compile Include="FromUei.cs" />
     <Compile Include="NonSpecificTests.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -108,6 +109,10 @@
     <ProjectReference Include="..\CubeNet\CubeNet.csproj">
       <Project>{47b5ff07-4c59-4197-a700-25d7f7c31dbd}</Project>
       <Name>CubeNet</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\CubeOp\CubeOp.csproj">
+      <Project>{fd64c49f-2597-4c88-8687-8a50dc3cf94c}</Project>
+      <Name>CubeOp</Name>
     </ProjectReference>
     <ProjectReference Include="..\UeiBridge\UeiBridge.csproj">
       <Project>{086a67bb-d92f-4fc5-a91e-39913abc6328}</Project>

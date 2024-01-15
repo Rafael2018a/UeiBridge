@@ -74,6 +74,48 @@ namespace CubeDesign.ViewModels
                 RaisePropertyChanged();
             }
         }
+        public int MessageTimeoutUS
+        {
+            get => _thisDeviceSetup.Channels[_selectedPortIndex].ChannelActivityTimeoutUs;
+            set
+            {
+                _thisDeviceSetup.Channels[_selectedPortIndex].ChannelActivityTimeoutUs = value;
+                RaisePropertyChanged();
+            }
+        }
+        public bool FilterBySyncBytes
+        {
+            get => _thisDeviceSetup.Channels[_selectedPortIndex].FilterBySyncBytes;
+            set
+            {
+                _thisDeviceSetup.Channels[_selectedPortIndex].FilterBySyncBytes = value;
+                RaisePropertyChanged();
+            }
+        }
+        public string HexSyncByte0
+        {
+            get { return _thisDeviceSetup.Channels[_selectedPortIndex].SyncByte0.ToString("X2"); }
+            set
+            {
+                Byte result;
+                if (Byte.TryParse(value, System.Globalization.NumberStyles.HexNumber, null, out result))
+                {
+                    _thisDeviceSetup.Channels[_selectedPortIndex].SyncByte0 = result;
+                }
+            }
+        }
+        public string HexSyncByte1
+        {
+            get { return _thisDeviceSetup.Channels[_selectedPortIndex].SyncByte1.ToString("X2"); }
+            set
+            {
+                Byte result;
+                if (Byte.TryParse(value, System.Globalization.NumberStyles.HexNumber, null, out result))
+                {
+                    _thisDeviceSetup.Channels[_selectedPortIndex].SyncByte1 = result;
+                }
+            }
+        }
         public SL508ViewModel( DeviceSetupViewModel selectedPhDevice)
         {
             _thisDeviceSetup = selectedPhDevice.ThisDeviceSetup as SL508892Setup;

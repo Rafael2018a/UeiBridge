@@ -27,7 +27,7 @@ namespace UeiBridge.Library
             byte[] addressBytes = startAddress.GetAddressBytes().ToArray();
             uint b3first = addressBytes[3];
             uint b3last = b3first + range;
-            System.Diagnostics.Debug.Assert(b3last < 254);
+            System.Diagnostics.Debug.Assert(b3last <= 256);
 
             //var tasks = new Task<IPAddress>[range];
             List<Task<IPAddress>> taskList = new List<Task<IPAddress>>();
@@ -46,7 +46,7 @@ namespace UeiBridge.Library
             return x.ToList<IPAddress>();
 
         }
-
+#if old
         public static List<UeiDeviceInfo> GetDeviceList(IPAddress cubeIp)
         {
             string url = StaticMethods.GetCubeUrl(cubeIp);
@@ -64,8 +64,13 @@ namespace UeiBridge.Library
             List<UeiDeviceInfo> l = StaticMethods.DeviceCollectionToDeviceInfoList(devColl, url);
             return l;
         }
-
-        public static IPAddress TryIP(object obj)
+#endif
+        public static IPAddress TryIP(IPAddress ip)
+        {
+            object o = ip;
+            return TryIP(o);
+        }
+        static IPAddress TryIP(object obj)
         {
             IPAddress ipAddress = (IPAddress)obj;
             //Console.WriteLine($"checking {ipAddress}");

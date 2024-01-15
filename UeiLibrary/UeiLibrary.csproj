@@ -72,7 +72,6 @@
     <Compile Include="Adapters\CANReaderAdapter.cs" />
     <Compile Include="Adapters\CANWriterAdapter.cs" />
     <Compile Include="Adapters\DeviceAdapter.cs" />
-    <Compile Include="Adapters\SerialReaderAdapter.cs" />
     <Compile Include="Config2.cs" />
     <Compile Include="CubeSeeker.cs" />
     <Compile Include="CubeSetupTypes\CubeSetup.cs" />
@@ -97,6 +96,7 @@
     <Compile Include="Adapters\DigitalReaderAdapter.cs" />
     <Compile Include="Adapters\DigitalWriterAdapter.cs" />
     <Compile Include="Adapters\SessionAdapter.cs" />
+    <Compile Include="UeiCube.cs" />
     <Compile Include="UeiDeviceInfo.cs" />
   </ItemGroup>
   <ItemGroup>

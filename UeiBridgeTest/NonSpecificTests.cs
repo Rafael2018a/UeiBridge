@@ -1,4 +1,5 @@
 ﻿using NUnit.Framework;
+using System;
 using UeiBridge;
 using UeiBridge.Interfaces;
 using UeiBridge.Library;
@@ -29,6 +30,43 @@ namespace UeiBridgeTest
             EndPoint ep2 = EndPoint.MakeEndPoint("8.8.8.8", 0);
             Assert.That(ep1, Is.Null);
             Assert.That(ep2, Is.Not.Null);
+        }
+        [Test]
+        public void UriClassTest()
+        {
+            {
+                string uri1 = "pdna://192.168.100.2";
+                Uri resutlUri;
+                bool ok1 = Uri.TryCreate(uri1, UriKind.Absolute, out resutlUri);
+            }
+            {
+                string uri1 = "192.168.100.2";
+                Uri resutlUri;
+                bool ok1 = Uri.TryCreate(uri1, UriKind.RelativeOrAbsolute, out resutlUri);
+            }
+            {
+                string uri1 = "pdna://192.168.100.2/Dev0";
+                Uri resutlUri;
+                bool ok1 = Uri.TryCreate(uri1, UriKind.RelativeOrAbsolute, out resutlUri);
+            }
+            {
+                string uri1 = "simu://Dev0";
+                Uri resutlUri;
+                bool ok1 = Uri.TryCreate(uri1, UriKind.RelativeOrAbsolute, out resutlUri);
+            }
+            {
+                string uri1 = "simu://";
+                Uri resutlUri;
+                bool ok1 = Uri.TryCreate(uri1, UriKind.RelativeOrAbsolute, out resutlUri);
+            }
+
+        }
+        [Test]
+        public void CubePingTest()
+        {
+            CubeOp.Program p = new CubeOp.Program();
+            string[] cmdline = { "192.168.100.3", "--cube-ping" };
+            p.Run(cmdline);
         }
     }
     class EnqMock : IEnqueue<byte[]>

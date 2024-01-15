@@ -33,7 +33,7 @@ namespace UeiBridge
         public DIO403OutputDeviceManager(DIO403Setup setup, ISession session) : base(setup)
         {
             this._digitalWriter = session.GetDigitalWriter();
-            this._ueiSession = session;
+            this._iSession = session;
             this._thisSetup = setup;// as DIO403Setup;
         }
         public DIO403OutputDeviceManager() { }// must have default c-tor
@@ -42,7 +42,7 @@ namespace UeiBridge
         {
             _digitalWriter?.Dispose();
 
-            _ueiSession.Dispose();
+            _iSession.Dispose();
 
             base.TerminateMessageLoop();
 
@@ -59,7 +59,7 @@ namespace UeiBridge
             //{
             //    _scanMask.Add(0);
             //}
-            foreach (IChannel ch in _ueiSession.GetChannels())
+            foreach (UeiDaq.Channel ch in _iSession.GetChannels())
             {
                 _scanMask[ch.GetIndex()] = 0xff;
             }
@@ -108,10 +108,10 @@ namespace UeiBridge
             }
             _viewItem = new ViewItem<byte[]>(request.PayloadBytes, TimeSpan.FromSeconds(5));
 
-            byte[] distilledBuffer = new byte[_ueiSession.GetNumberOfChannels()];
-            for (int ch = 0; ch < _ueiSession.GetNumberOfChannels(); ch++)
+            byte[] distilledBuffer = new byte[_iSession.GetNumberOfChannels()];
+            for (int ch = 0; ch < _iSession.GetNumberOfChannels(); ch++)
             {
-                int i = _ueiSession.GetChannel(ch).GetIndex();
+                int i = _iSession.GetChannel(ch).GetIndex();
                 distilledBuffer[ch] = request.PayloadBytes[i];
             }
 

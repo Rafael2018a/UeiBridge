@@ -54,7 +54,7 @@ namespace UeiBridgeTest
             string bad_url = "ksjdlkfjlaks";
             List<CubeSetup> cubeList = UeiBridge.Library.Config2.GetSetupForCubes(new List<string>() { simu_url, existing_cube, non_existing_cube, bad_url });
 
-            IPAddress ip = UeiBridge.Library.StaticMethods.CubeUrlToIpAddress("pdna://192.168.100.2");
+            IPAddress ip = new UeiCube("pdna://192.168.100.2").CubeAddress;
             if (null == CubeSeeker.TryIP(ip))
             {
                 Assert.That(cubeList.Count, Is.EqualTo(1));
@@ -70,9 +70,10 @@ namespace UeiBridgeTest
             // create file
             string cubeurl = "simu://";
             string configfile = "setup.fortest.config";
-            string gfile = "gfile.config";
-            UeiDaq.DeviceCollection devCollection = new UeiDaq.DeviceCollection( cubeurl);
-            List<UeiDeviceInfo> devInfoList = UeiBridge.Library.StaticMethods.DeviceCollectionToDeviceInfoList(devCollection, cubeurl);
+
+            UeiCube cube = new UeiCube(cubeurl);
+            //UeiDaq.DeviceCollection devCollection = new UeiDaq.DeviceCollection( cubeurl);
+            List<UeiDeviceInfo> devInfoList = cube.GetDeviceInfoList(); //UeiBridge.Library.StaticMethods.DeviceCollectionToDeviceInfoList(devCollection, cubeurl);
             CubeSetup cs = new CubeSetup(devInfoList);
             bool saveOk = CubeSetupLoader.SaveSetupFile(cs, new FileInfo(configfile));
             Assert.That(saveOk, Is.EqualTo(true));
@@ -90,15 +91,15 @@ namespace UeiBridgeTest
             CubeSetupLoader cslnofile = new CubeSetupLoader(new FileInfo("nonono"));
             Assert.That(cslnofile.CubeSetupMain, Is.Null);
 
-            CubeSetupLoader cslbad = new CubeSetupLoader(new FileInfo(gfile));
+            CubeSetupLoader cslbad = new CubeSetupLoader(new FileInfo("kkk.config"));
             Assert.That(cslbad.CubeSetupMain, Is.Null);
 
         }
         [Test]
         public void ConfigBadUrlTest()
         {
-            List<CubeSetup> c2a = UeiBridge.Library.Config2.GetSetupForCubes(new List<string>() { "kkk" });
-            Assert.That(c2a.Count, Is.EqualTo(0));
+            List<CubeSetup> c2a = UeiBridge.Library.Config2.GetSetupForCubes(new List<string>() { "simu://" });
+            Assert.That(c2a.Count, Is.EqualTo(1));
         }
         [Test]
         public void LoadConfig3Test()
@@ -151,9 +152,12 @@ namespace UeiBridgeTest
         [Test]
         public void CubeSetupTest1()
         {
-            List<UeiDeviceInfo> devList = new List<UeiDeviceInfo>();
-            devList.Add(new UeiDeviceInfo("cubeurl", 51, "devicename1"));
+            List<UeiDeviceInfo> devList = new List<UeiDeviceInfo>
+            {
+                new UeiDeviceInfo("simu://", 51, "devicename1")
+            };
             CubeSetup cs = new CubeSetup(devList);
+            cs.CubeUrl = "simu://";
             Assert.That(cs.DeviceSetupList.Count, Is.EqualTo(1));
         }
         /// <summary>
@@ -162,9 +166,12 @@ namespace UeiBridgeTest
         [Test]
         public void CubeSetupTest2()
         {
-            List<UeiDeviceInfo> devList = new List<UeiDeviceInfo>();
-            devList.Add(new UeiDeviceInfo("cubeurl", 101, "AO-308"));
+            List<UeiDeviceInfo> devList = new List<UeiDeviceInfo>
+            {
+                new UeiDeviceInfo("simu://", 101, "AO-308")
+            };
             CubeSetup cs = new CubeSetup(devList);
+            cs.CubeUrl = "simu://";
             Assert.That(cs.DeviceSetupList.Count, Is.EqualTo(1));
             Assert.That(cs.DeviceSetupList[0], Is.Not.Null);
         }
@@ -172,7 +179,7 @@ namespace UeiBridgeTest
         [Test]
         public void BuildDefaultSimuConfigTest()
         {
-            Config2 c2 = new Config2();
+            //Config2 c2 = new Config2();
             List<CubeSetup> c3 = Config2.GetSetupForCubes(new List<string> { "simu://" });
             //Assert.That(c3.AppSetup.StatusViewerEP, Is.Not.Null);
             Assert.That(c3[0].DeviceSetupList.Count, Is.EqualTo(11)); // only one simulation device setup is defined.

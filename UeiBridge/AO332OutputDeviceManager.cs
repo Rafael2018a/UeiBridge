@@ -17,7 +17,7 @@ namespace UeiBridge
         public AO332OutputDeviceManager(AO308Setup deviceSetup1, ISession session, bool bsensor) : base(deviceSetup1, session, bsensor)
         {
             _thisSetup = deviceSetup1;// as AO332Setup;
-            _ueiSession = session;
+            _iSession = session;
         }
 
         public AO332OutputDeviceManager() { }

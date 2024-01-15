@@ -2,7 +2,7 @@
 
 namespace UeiBridge.Interfaces
 {
-    public interface IDevice
+    public interface IDevice__
     {
         Range[] GetAORanges();
         Range[] GetAIRanges();

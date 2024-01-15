@@ -3,7 +3,7 @@ using UeiDaq;
 
 namespace UeiBridge.Library
 {
-    public class DeviceAdapter : IDevice
+    public class DeviceAdapter //: IDevice
     {
         private Device _device;
 

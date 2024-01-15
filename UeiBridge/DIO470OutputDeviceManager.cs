@@ -25,7 +25,7 @@ namespace UeiBridge
         //UeiDaq.Session _deviceSession;
         UeiDaq.DigitalWriter _writer;
         UInt16[] _lastScan;
-        private new Session _ueiSession; // tbd. replace with session-adapter
+        private new Session _iSession; // tbd. replace with session-adapter
         private DeviceSetup _deviceSetup;
         public DIO470OutputDeviceManager(DeviceSetup setup) : base(setup)
         {
@@ -38,7 +38,7 @@ namespace UeiBridge
         public override void Dispose()
         {
             _writer.Dispose();
-            CloseSession(_ueiSession);
+            CloseSession(_iSession);
             base.TerminateMessageLoop();
         }
 
@@ -46,11 +46,11 @@ namespace UeiBridge
         {
             //_attachedConverter = StaticMethods.CreateConverterInstance( _deviceSetup);
             string cubeUrl = $"{_deviceSetup.CubeUrl}Dev{_deviceSetup.SlotNumber}/{_channelsString}";
-            _ueiSession = new UeiDaq.Session();
-            _ueiSession.CreateDOChannel(cubeUrl);
+            _iSession = new UeiDaq.Session();
+            _iSession.CreateDOChannel(cubeUrl);
 
-            _ueiSession.ConfigureTimingForSimpleIO();
-            _writer = new UeiDaq.DigitalWriter(_ueiSession.GetDataStream());
+            _iSession.ConfigureTimingForSimpleIO();
+            _writer = new UeiDaq.DigitalWriter(_iSession.GetDataStream());
 
             //UInt16[] u16 = { 0x1 };
             //_writer.WriteSingleScanUInt16(u16);

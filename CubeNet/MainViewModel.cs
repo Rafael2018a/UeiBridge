@@ -469,11 +469,15 @@ namespace UeiBridge.CubeNet
             List<UeiDeviceInfo> devList = null;
             if (_cubeAddress.Equals(IPAddress.Any)) // ip 0.0.0.0 shall be identified as 'simu'
             {
-                devList = CubeSeeker.GetDeviceList("simu://");
+                UeiCube cube = new UeiCube("simu://");
+                //devList = CubeSeeker.GetDeviceList("simu://");
+                devList = cube.GetDeviceInfoList();
             }
             else if (null != CubeSeeker.TryIP(_cubeAddress)) // is cube connected?
             {
-                devList = CubeSeeker.GetDeviceList(_cubeAddress);
+                UeiCube cube = new UeiCube(_cubeAddress);
+                //devList = CubeSeeker.GetDeviceList(_cubeAddress);
+                devList = cube.GetDeviceInfoList();
             }
             else
             {

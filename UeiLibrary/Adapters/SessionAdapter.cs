@@ -12,7 +12,7 @@ namespace UeiBridge.Library
     /// </summary>
     public class SessionAdapter : ISession
     {
-        Session _ueiSession;
+        readonly Session _ueiSession;
         DigitalReaderAdapter _digitalReaderAd;
         DigitalWriterAdapter _digitalWriterAd;
         AnalogScaledWriteAdapter _analogWriterAd;
@@ -30,13 +30,17 @@ namespace UeiBridge.Library
         {
             _ueiSession.Dispose();
         }
-        public IReaderAdapter<double[]> GetAnalogScaledReader()
+        public IReaderAdapter<double[]> GetAnalogScaledReaderOrig()
         {
             if (null == _analogReaderAd)
             {
-                _analogReaderAd = new AnalogScaledReaderAdapter( new AnalogScaledReader( _ueiSession.GetDataStream()));
+                _analogReaderAd = new AnalogScaledReaderAdapter(new AnalogScaledReader(_ueiSession.GetDataStream()));
             }
             return _analogReaderAd;
+        }
+        public UeiDaq.AnalogScaledReader GetAnalogScaledReader()
+        {
+                return new AnalogScaledReader(_ueiSession.GetDataStream());
         }
         public IWriterAdapter<double[]> GetAnalogScaledWriter()
         {
@@ -53,6 +57,11 @@ namespace UeiBridge.Library
                 _digitalReaderAd = new DigitalReaderAdapter( new DigitalReader(_ueiSession.GetDataStream()));
             }
             return _digitalReaderAd;
+        }
+
+        public Device GetAssociatedDevice()
+        {
+            return _ueiSession.GetDevice();
         }
 
         public CANWriterAdapter GetCANWriter(int ch)
@@ -77,19 +86,19 @@ namespace UeiBridge.Library
         {
             return _ueiSession.GetNumberOfChannels();
         }
-       public List<IChannel> GetChannels() 
+       public List<UeiDaq.Channel> GetChannels() 
         {
-            var r = _ueiSession.GetChannels().Cast<Channel>().ToList().Select(i => new ChannelAdapter(i));
-            return r.ToList<IChannel>();
+            var r = _ueiSession.GetChannels().Cast<UeiDaq.Channel>().ToList();//.Select(i => new ChannelAdapter(i));
+            return r;
         }
-        IDevice ISession.GetDevice()
+        DeviceAdapter ISession.GetDevice()
         {
             return new DeviceAdapter( _ueiSession.GetDevice());
         }
 
-        public IChannel GetChannel(int serialChannelNumber)
+        public UeiDaq.Channel GetChannel(int serialChannelNumber)
         {
-            return new ChannelAdapter(_ueiSession.GetChannel( serialChannelNumber));
+            return GetChannels()[serialChannelNumber];
         }
 
         public bool IsRunning()
@@ -116,11 +125,10 @@ namespace UeiBridge.Library
                 Console.WriteLine($"Session stop() failed. {ex.Message}");
             }
         }
-
-        public SerialReaderAdapter GetSerialReader(int ch)
+        public SerialReader GetSerialReader(int ch)
         {
            var sr = new SerialReader(_ueiSession.GetDataStream(), _ueiSession.GetChannel(ch).GetIndex());
-           return new SerialReaderAdapter(sr);
+            return sr;
         }
     }
 

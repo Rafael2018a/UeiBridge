@@ -25,6 +25,18 @@
             </StackPanel>
         </GroupBox.Header>
         <Grid ShowGridLines="False">
+            <Grid.Resources>
+                <Style TargetType="StackPanel">
+                    <!--<Setter Property="Height" Value="25"/>-->
+                </Style>
+                <Style TargetType="TextBlock">
+                    <Setter Property="FontSize" Value="14"/>
+                </Style>
+                <Style TargetType="ComboBox">
+                    <Setter Property="Height" Value="24"/>
+                    <Setter Property="VerticalAlignment" Value="Top"/>
+                </Style>
+            </Grid.Resources>
             <Grid.RowDefinitions>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="*"/>
@@ -36,28 +48,54 @@
                 <ColumnDefinition Width="*"/>
                 <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <StackPanel Orientation="Horizontal" Grid.Row="0" Grid.Column="0" Height="25">
-                <TextBlock Text="Mode" FontSize="14"/>
-                <ContentControl Width="20"/>
-                <ComboBox x:Name="ModeCombo" SelectedItem="{Binding SerialMode}"/>
+
+            <StackPanel Grid.RowSpan="4" Panel.ZIndex="1">
+                <ContentControl Height="20"/>
+                <StackPanel Orientation="Horizontal" >
+                    <TextBlock Text="Mode" />
+                    <ContentControl Width="20"/>
+                    <ComboBox x:Name="ModeCombo" SelectedItem="{Binding SerialMode}" />
+                </StackPanel>
+                <ContentControl Height="20"/>
+                <StackPanel Orientation="Horizontal" >
+                    <TextBlock Text="Baud rate" />
+                    <ContentControl Width="20"/>
+                    <ComboBox x:Name="BaudCombo" SelectedItem="{Binding Baudrate}"/>
+                </StackPanel>
+                <ContentControl Height="20"/>
+                <StackPanel Orientation="Horizontal" >
+                    <TextBlock Text="Parity" />
+                    <ContentControl Width="20"/>
+                    <ComboBox x:Name="ParityCombo" SelectedItem="{Binding Parity}"/>
+                </StackPanel>
+                <ContentControl Height="20"/>
+                <StackPanel Orientation="Horizontal" >
+                    <TextBlock Text="Stop bits" />
+                    <ContentControl Width="20"/>
+                    <ComboBox x:Name="StopbitsCombo" SelectedItem="{Binding Stopbits}"/>
+                </StackPanel>
             </StackPanel>
-            <StackPanel Orientation="Horizontal" Grid.Row="1" Grid.Column="0" Height="25">
-                <TextBlock Text="Baud rate" FontSize="14"/>
-                <ContentControl Width="20"/>
-                <ComboBox x:Name="BaudCombo" SelectedItem="{Binding Baudrate}"/>
+
+            <StackPanel Grid.RowSpan="4" Grid.Column="1" Panel.ZIndex="1" >
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Minimal time between messages (us) "/>
+                    <TextBox Width="60" HorizontalAlignment="Left"/>
+                </StackPanel>
+                <ContentControl Height="20"/>
+                <StackPanel Orientation="Horizontal"  >
+                    <CheckBox Content="Filter by sync bytes (Hex) " FontSize="14" IsChecked="{Binding FilterBySyncBytes}"/>
+                    <TextBox Width="22" HorizontalAlignment="Left" Text="{Binding HexSyncByte0}"/>
+                    <TextBox Width="22" HorizontalAlignment="Left" Text="{Binding HexSyncByte1}"/>
+                </StackPanel>
+                <ContentControl Height="20"/>
+                <StackPanel Orientation="Horizontal">
+                    <CheckBox Content="Filter by message length (bytes)" FontSize="14"/>
+                    <TextBox Width="50" HorizontalAlignment="Left"/>
+                </StackPanel>
             </StackPanel>
-            <StackPanel Orientation="Horizontal" Grid.Row="2" Grid.Column="0" Height="25" >
-                <TextBlock Text="Parity" FontSize="14"/>
-                <ContentControl Width="20"/>
-                <ComboBox x:Name="ParityCombo" SelectedItem="{Binding Parity}"/>
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Grid.Row="3" Grid.Column="0" Height="25">
-                <TextBlock Text="Stop bits" FontSize="14"/>
-                <ContentControl Width="20"/>
-                <ComboBox x:Name="StopbitsCombo" SelectedItem="{Binding Stopbits}"/>
-            </StackPanel>
-            <Image Grid.Row="1" Grid.Column="1" Grid.RowSpan="4" Source="/Images/uei_product_io_dna_sl_508-no_bg.png" />
-            <Image  />
+
+            <Image  Grid.ColumnSpan="2" Grid.RowSpan="5" Source="/Images/uei_product_io_dna_sl_508-no_bg.png" Opacity="0.3"/>
+
         </Grid>
     </GroupBox>
 </UserControl>

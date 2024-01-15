@@ -31,15 +31,16 @@ namespace UeiBridge
         }
         /// <summary>
         /// Build linear device list.
-        /// This method assumes that the indicates cubes exists.
+        /// This method assumes that the indicated cubes exists.
         /// </summary>
         public static List<UeiDeviceInfo> BuildLinearDeviceList(List<string> cubesUrl)
         {
             List<UeiDeviceInfo> resultList = new List<UeiDeviceInfo>();
             foreach (string url in cubesUrl)
             {
-                DeviceCollection devColl = new DeviceCollection(url);
-                resultList.AddRange( UeiBridge.Library.StaticMethods.DeviceCollectionToDeviceInfoList(devColl, url));
+                UeiCube cube = new UeiCube(url);
+                //DeviceCollection devColl = new DeviceCollection(url);
+                resultList.AddRange(cube.GetDeviceInfoList()); //UeiBridge.Library.StaticMethods.DeviceCollectionToDeviceInfoList(devColl, url));
             }
             return resultList;
         }

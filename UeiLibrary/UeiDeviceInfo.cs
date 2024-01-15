@@ -18,7 +18,7 @@ namespace UeiBridge.Library
             DeviceSlot = deviceSlot;
             DeviceName = deviceName;
 
-            if (null==cubeUrl) // block sensor
+            if (null==cubeUrl || cubeUrl.Length==0) // block sensor
             {
                 CubeId = -1;
             }
@@ -28,8 +28,10 @@ namespace UeiBridge.Library
             }
             else
             {
-                IPAddress ipa = StaticMethods.CubeUrlToIpAddress(this.CubeUrl);
-                CubeId = (null != ipa) ? ipa.GetAddressBytes()[3] : -1;
+                UeiCube uc = new UeiCube(this.CubeUrl); // tbd. hmm.. not nice.. UeiCube depend on this class
+                CubeId = uc.GetCubeId();
+                //IPAddress ipa = UeiCube.CubeUriToIpAddress(this.CubeUrl);
+                //CubeId = (null != ipa) ? ipa.GetAddressBytes()[3] : -1;
             }
         }
     }

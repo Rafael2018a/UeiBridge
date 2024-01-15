@@ -15,13 +15,13 @@ using System.Text;
 
 namespace StatusViewer
 {
-    public class Rootobject
-    {
-        public DateTime date { get; set; }
-        public string level { get; set; }
-        public string logger { get; set; }
-        public string message { get; set; }
-    }
+    //public class Rootobject
+    //{
+    //    public DateTime date { get; set; }
+    //    public string level { get; set; }
+    //    public string logger { get; set; }
+    //    public string message { get; set; }
+    //}
 
     public enum MachineStateEnum { Initial, Running, Freeze }
 
@@ -45,7 +45,7 @@ namespace StatusViewer
 
         //Process dbgViewProcess;
 
-        List<string> logDic = new List<string>();
+        readonly List<string> logDic = new List<string>();
 
         IPAddress m_multicastIp;
         public IPAddress MulticastIp
@@ -53,8 +53,7 @@ namespace StatusViewer
             get { return m_multicastIp; }
             set
             {
-                if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("MulticastIp"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("MulticastIp"));
 
                 m_multicastIp = value;
             }
@@ -159,9 +158,11 @@ namespace StatusViewer
                 if (ipa.AddressFamily == AddressFamily.InterNetwork)
                 {
                     ipList.Add(ipa);
-                    SelectedLocalIp = ipa;
+                    //SelectedLocalIp = ipa;
                 }
             }
+            ipList.Add(IPAddress.Any);
+            SelectedLocalIp = ipList[ipList.Count - 1];
             return ipList;
         }
         protected override void OnClosed(EventArgs e)
@@ -187,7 +188,7 @@ namespace StatusViewer
 
             CommandBinding freezeCommand = new CommandBinding(MediaCommands.Pause);
             this.CommandBindings.Add(freezeCommand);
-            freezeCommand.Executed += new ExecutedRoutedEventHandler(freezeCommandExecuted);
+            freezeCommand.Executed += new ExecutedRoutedEventHandler(FreezeCommandExecuted);
             freezeCommand.CanExecute += FreezeCommand_CanExecute;
 
 
@@ -251,7 +252,7 @@ namespace StatusViewer
 
         private void StopCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = ((MachineState == MachineStateEnum.Running) || (MachineState == MachineStateEnum.Freeze)) ? true : false; // 
+            e.CanExecute = ((MachineState == MachineStateEnum.Running) || (MachineState == MachineStateEnum.Freeze)); // 
         }
 
         private void StopCommand_Executed(object sender, ExecutedRoutedEventArgs e)
@@ -279,7 +280,7 @@ namespace StatusViewer
 
         private void StartCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = (MachineState == MachineStateEnum.Initial) ? true : false;
+            e.CanExecute = (MachineState == MachineStateEnum.Initial);
         }
 
         private void StartCommand_Executed(object sender, ExecutedRoutedEventArgs e)
@@ -308,7 +309,7 @@ namespace StatusViewer
                 //IPEndPoint localEp = new IPEndPoint( IPAddress.Any, mcPort); // this is just for the port number
                 m_udpListener.Client.Bind(localEp);
 
-                m_udpListener.JoinMulticastGroup(mcAddress, SelectedLocalIp);//IPAddress.Parse("192.168.1.128")); // ip of UAV-LAN
+                m_udpListener.JoinMulticastGroup(mcAddress);//, SelectedLocalIp);//IPAddress.Parse("192.168.1.128")); // ip of UAV-LAN
                 m_multicastIp = mcAddress;
                 Tuple<UdpClient, IPEndPoint> udpState = new Tuple<UdpClient, IPEndPoint>(m_udpListener, localEp);
                 m_udpListener.BeginReceive(new AsyncCallback(UdpReceiveCallback), udpState);
@@ -322,10 +323,10 @@ namespace StatusViewer
 
         private void FreezeCommand_CanExecute(object sender, CanExecuteRoutedEventArgs e)
         {
-            e.CanExecute = ((MachineState == MachineStateEnum.Running) || (MachineState == MachineStateEnum.Freeze)) ? true : false;
+            e.CanExecute = ((MachineState == MachineStateEnum.Running) || (MachineState == MachineStateEnum.Freeze));
         }
 
-        void freezeCommandExecuted(object sender, ExecutedRoutedEventArgs e)
+        void FreezeCommandExecuted(object sender, ExecutedRoutedEventArgs e)
         {
             System.Windows.Controls.Primitives.ToggleButton tb = e.Source as System.Windows.Controls.Primitives.ToggleButton;
             if (tb.IsChecked.Value)
@@ -368,10 +369,8 @@ namespace StatusViewer
         {
             get 
             {
-                var EntAsm = System.Reflection.Assembly.GetEntryAssembly();//.GetName().Version;
-                System.IO.FileInfo fi = new System.IO.FileInfo(EntAsm.Location);
-                //_logger.Info($"UEI Bridge. Version {EntAsm.GetName().Version.ToString(3)}. Build time: {fi.LastWriteTime.ToString()}");
-                string result = $"StatusViewer. Version {EntAsm.GetName().Version.ToString(3)}";
+                var asmb = StaticMethods.GetLibVersion();
+                string result = $"StatusViewer. Version {asmb.GetName().Version.ToString(3)}";
                 return result;
 
             }
@@ -387,8 +386,7 @@ namespace StatusViewer
             set
             {
                 _receivedBytes = value;
-                if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("ReceivedBytes"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ReceivedBytes"));
             }
         }
 
@@ -403,8 +401,7 @@ namespace StatusViewer
             set
             {
                 _receivedDatagrams = value;
-                if (PropertyChanged != null)
-                    PropertyChanged(this, new PropertyChangedEventArgs("ReceivedDatagrams"));
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("ReceivedDatagrams"));
             }
         }
 
