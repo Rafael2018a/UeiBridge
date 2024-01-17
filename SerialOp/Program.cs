@@ -10,33 +10,6 @@ using UeiDaq;
 
 namespace SerialOp
 {
-    /// <summary>
-    /// Auxiliary class for serial channel
-    /// channel index, channel nickname (tbd)
-    /// the originating session, the associated serial reader
-    /// and more..
-    /// </summary>
-    class ChannelAux
-    {
-        public SerialReader Reader { get; set; }
-        public IAsyncResult AsyncResult { get; set; }
-        public int ChannelIndex { get; private set; } // zero based
-        //public int SelfIndex { get; private set; }
-        public Session OriginatingSession { get; private set; }
-        public ChannelAux(int channelIndex, Session originatingSession)
-        {
-            this.ChannelIndex = channelIndex;
-            this.OriginatingSession = originatingSession;
-        }
-    }
-    public interface IWatchdog
-    {
-        void Register(string v, TimeSpan timeSpan);
-        void ImAlive(string v);
-        void Crash(string v);
-        //void StartWatching();
-        void StopWatching();
-    }
 
     class mysite : ISite
     {
@@ -57,72 +30,6 @@ namespace SerialOp
             throw new NotImplementedException();
         }
     }
-    public class SerialWatchdog : IWatchdog
-    {
-        //Dictionary<string, System.Threading.Timer> _wdDic = new Dictionary<string, Timer>();
-        Dictionary<string, System.Timers.Timer> _wdDic = new Dictionary<string, System.Timers.Timer>();
-        Action<int> _doAction;
-        public void Crash(string v)
-        {
-            Console.WriteLine(" !!  Kaboom  !!");
-        }
-
-        public void ImAlive(string v)
-        {
-            System.Timers.Timer t;
-            if (_wdDic.TryGetValue(v, out t))
-            {
-                t.Stop();
-                t.Start();
-            }
-        }
-
-
-        public void Register(string v, TimeSpan timeSpan)
-        {
-            System.Timers.Timer t = new System.Timers.Timer();
-            t.AutoReset = false;
-            t.Interval = timeSpan.TotalMilliseconds;
-            t.Elapsed += T1_Elapsed;
-            t.Site = new mysite(v);
-
-            t.Start();
-            //            System.Threading.Timer t = new Timer(new TimerCallback(callback), v, timeSpan, TimeSpan.FromMilliseconds(-1));
-            _wdDic.Add(v, t);
-
-        }
-
-
-        void f()
-        {
-
-        }
-
-        private void T1_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
-        {
-            System.Timers.Timer t = sender as System.Timers.Timer;
-            Console.WriteLine($"{t.Site.Name} is not alive");
-            _doAction(10);
-        }
-
-        //public void StartWatching()
-        //{
-        //    foreach( var e in _wdDic)
-        //    {
-        //        e.Value.Start();
-        //    }
-        //}
-
-        public void StopWatching()
-        {
-            throw new NotImplementedException();
-        }
-
-        internal void OnCrash(Action<int> action)
-        {
-            _doAction = action;
-        }
-    }
 
     /// <summary>
     /// serial-agent -r -ch 1
@@ -140,10 +47,6 @@ namespace SerialOp
         }
 
 
-        void doaction(int n)
-        {
-            throw new NotImplementedException();
-        }
         public void MainSerial()
         {
             // register CTRL + c handler
@@ -167,8 +70,7 @@ namespace SerialOp
             SL508892Setup serialDev = _cubeSetup.GetDeviceSetupEntry(3) as SL508892Setup; // slot 3
             SL508InputManager inputManager = new SL508InputManager(null, serialDev, session1);
 
-            SerialWatchdog swd = new SerialWatchdog();
-            swd.OnCrash(new Action<int>((i) => { stop = true;  })); //inputManager.Dispose();
+            SerialWatchdog swd = new SerialWatchdog(new Action<string>((i) => { stop = true; }));
             inputManager.SetWatchdog(swd);
 
             inputManager.OpenDevice();
@@ -295,11 +197,7 @@ namespace SerialOp
 
         private Session BuildSerialSession()
         {
-            string serialResource = "pdna://192.168.100.2/Dev3/com2:3";
-
-            string wduri = "pdna://192.168.100.2/Dev14";
-            //DeviceReset(wduri);
-            //System.Threading.Thread.Sleep(10000);
+            string serialResource = "pdna://192.168.100.2/Dev3/com0:7";
             string deviceuri = "pdna://192.168.100.2/Dev3";
             DeviceReset(deviceuri);
 
