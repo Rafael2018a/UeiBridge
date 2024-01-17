@@ -27,7 +27,7 @@ namespace CubeOp
         public bool pingcube { get; set; }
         [Option("reset-cube", HelpText = "WD reset for specified cube")]
         public bool resetcube { get; set; }
-        [Option("reset-device", HelpText = "WD reset for specified cube")]
+        [Option("reset-device", HelpText = "Reset specified device")]
         public bool resetdevice { get; set; }
         [Option("slot", HelpText = "Slot number (0 based)", Default =-1)]
         public int slotnumber { get; set; }

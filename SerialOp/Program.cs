@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,23 +10,119 @@ using UeiDaq;
 
 namespace SerialOp
 {
-
+    /// <summary>
+    /// Auxiliary class for serial channel
+    /// channel index, channel nickname (tbd)
+    /// the originating session, the associated serial reader
+    /// and more..
+    /// </summary>
     class ChannelAux
     {
+        public SerialReader Reader { get; set; }
+        public IAsyncResult AsyncResult { get; set; }
+        public int ChannelIndex { get; private set; } // zero based
+        //public int SelfIndex { get; private set; }
+        public Session OriginatingSession { get; private set; }
         public ChannelAux(int channelIndex, Session originatingSession)
         {
             this.ChannelIndex = channelIndex;
-            //this.SelfIndex = selfIndex;
             this.OriginatingSession = originatingSession;
         }
-        public SerialReader Reader { get; set; }
-        public IAsyncResult AsyncResult { get; set; }
-        //public AsyncCallback Callback { get; set; }
-        public int ChannelIndex { get; private set; }
-        //public int SelfIndex { get; private set; }
-        public Session OriginatingSession { get; private set; }
+    }
+    public interface IWatchdog
+    {
+        void Register(string v, TimeSpan timeSpan);
+        void ImAlive(string v);
+        void Crash(string v);
+        //void StartWatching();
+        void StopWatching();
     }
 
+    class mysite : ISite
+    {
+        public mysite(string n)
+        {
+            this.Name = n;
+        }
+        public IComponent Component => throw new NotImplementedException();
+
+        public IContainer Container => throw new NotImplementedException();
+
+        public bool DesignMode { get; set; }
+
+        public string Name { get; set; }
+
+        public object GetService(Type serviceType)
+        {
+            throw new NotImplementedException();
+        }
+    }
+    public class SerialWatchdog : IWatchdog
+    {
+        //Dictionary<string, System.Threading.Timer> _wdDic = new Dictionary<string, Timer>();
+        Dictionary<string, System.Timers.Timer> _wdDic = new Dictionary<string, System.Timers.Timer>();
+        Action<int> _doAction;
+        public void Crash(string v)
+        {
+            Console.WriteLine(" !!  Kaboom  !!");
+        }
+
+        public void ImAlive(string v)
+        {
+            System.Timers.Timer t;
+            if (_wdDic.TryGetValue(v, out t))
+            {
+                t.Stop();
+                t.Start();
+            }
+        }
+
+
+        public void Register(string v, TimeSpan timeSpan)
+        {
+            System.Timers.Timer t = new System.Timers.Timer();
+            t.AutoReset = false;
+            t.Interval = timeSpan.TotalMilliseconds;
+            t.Elapsed += T1_Elapsed;
+            t.Site = new mysite(v);
+
+            t.Start();
+            //            System.Threading.Timer t = new Timer(new TimerCallback(callback), v, timeSpan, TimeSpan.FromMilliseconds(-1));
+            _wdDic.Add(v, t);
+
+        }
+
+
+        void f()
+        {
+
+        }
+
+        private void T1_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
+        {
+            System.Timers.Timer t = sender as System.Timers.Timer;
+            Console.WriteLine($"{t.Site.Name} is not alive");
+            _doAction(10);
+        }
+
+        //public void StartWatching()
+        //{
+        //    foreach( var e in _wdDic)
+        //    {
+        //        e.Value.Start();
+        //    }
+        //}
+
+        public void StopWatching()
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void OnCrash(Action<int> action)
+        {
+            _doAction = action;
+        }
+    }
 
     /// <summary>
     /// serial-agent -r -ch 1
@@ -42,41 +139,50 @@ namespace SerialOp
             p.MainSerial();
         }
 
+
+        void doaction(int n)
+        {
+            throw new NotImplementedException();
+        }
         public void MainSerial()
         {
             // register CTRL + c handler
             Console.CancelKeyPress += new ConsoleCancelEventHandler(myHandler);
             FileInfo setupfile = new FileInfo("Cube2.config");
-            var csl = new CubeSetupLoader( setupfile );
-            if (null==csl.CubeSetupMain)
+            var csl = new CubeSetupLoader(setupfile);
+            if (null == csl.CubeSetupMain)
             {
                 Console.WriteLine($"File to load setup file {setupfile.FullName}");
                 return;
             }
             _cubeSetup = csl.CubeSetupMain;
 
-             Session session1 = BuildSerialSession();
+            Session session1 = BuildSerialSession();
 
             //SerialReaderTask reader = new SerialReaderTask(session1);
             //reader.Start();
-            this.StartReader(session1, _cubeSetup);
+
+            //this.StartReader(session1, _cubeSetup);
+
+            SL508892Setup serialDev = _cubeSetup.GetDeviceSetupEntry(3) as SL508892Setup; // slot 3
+            SL508InputManager inputManager = new SL508InputManager(null, serialDev, session1);
+
+            SerialWatchdog swd = new SerialWatchdog();
+            swd.OnCrash(new Action<int>((i) => { stop = true;  })); //inputManager.Dispose();
+            inputManager.SetWatchdog(swd);
+
+            inputManager.OpenDevice();
 
             // sleep
             do { System.Threading.Thread.Sleep(1000); } while (false == stop);
 
             Console.WriteLine("Any key to exit...");
 
+            Thread.Sleep(2000);
+
+            inputManager.Dispose();
             // dispose process
             // ===============
-            Console.WriteLine("Waiting on all readers..");
-            var waitall = _channelAuxList.Select(i => i.AsyncResult.AsyncWaitHandle).ToArray();
-            WaitHandle.WaitAll(waitall);
-
-            Console.WriteLine("disposing readers..");
-            foreach ( var cx in _channelAuxList)
-            {
-                cx.Reader.Dispose();
-            }
 
             _serialSession.Stop();
             System.Diagnostics.Debug.Assert(false == _serialSession.IsRunning());
@@ -87,7 +193,7 @@ namespace SerialOp
             Console.ReadKey();
         }
 
-        void DeviceReset( string deviceUri)
+        void DeviceReset(string deviceUri)
         {
             Device myDevice = DeviceEnumerator.GetDeviceFromResource(deviceUri);
 
@@ -117,21 +223,21 @@ namespace SerialOp
                 SerialPort sPort = session1.GetChannel(chNum) as SerialPort;
                 int chIndex = sPort.GetIndex();
                 SerialChannelSetup serialChannel = serialDev.Channels[chIndex];
-                if (null!=serialChannel)
+                if (null != serialChannel)
                 {
                     sPort.SetMode(serialChannel.Mode);
-                    sPort.SetSpeed( serialChannel.Baudrate);
+                    sPort.SetSpeed(serialChannel.Baudrate);
                     sPort.SetParity(serialChannel.Parity);
                     sPort.SetStopBits(serialChannel.Stopbits);
                 }
 
                 // add channel to channel-list
-                ChannelAux chAux = new ChannelAux( chIndex, session1);
+                ChannelAux chAux = new ChannelAux(chIndex, session1);
                 _channelAuxList.Add(chAux);
                 chAux.Reader = new SerialReader(session1.GetDataStream(), chAux.ChannelIndex);
-                
+
             }
-            foreach(ChannelAux cx in _channelAuxList)
+            foreach (ChannelAux cx in _channelAuxList)
             {
                 cx.AsyncResult = cx.Reader.BeginRead(200, new AsyncCallback(ReaderCallback), cx);
             }
@@ -139,7 +245,7 @@ namespace SerialOp
 
         void ReaderCallback(IAsyncResult ar)
         {
-            if (true==stop)
+            if (true == stop)
             {
                 return;
             }
@@ -152,16 +258,11 @@ namespace SerialOp
                 System.Diagnostics.Debug.Assert(null != recvBytes);
                 System.Diagnostics.Debug.Assert(null != chAux.OriginatingSession);
 
-                if (chAux.OriginatingSession.IsRunning())
-                {
-                    SerialPort sp = chAux.OriginatingSession.GetChannel(chIndex) as SerialPort;
-                    Console.WriteLine($"Message from channel {chIndex}. Length {recvBytes.Length}");
-                    chAux.AsyncResult = chAux.Reader.BeginRead(200, new AsyncCallback(ReaderCallback), chAux);
-                }
-                else
-                {
-                    System.Diagnostics.Debug.Assert(false);
-                }
+                System.Diagnostics.Debug.Assert(true == chAux.OriginatingSession.IsRunning());
+
+                //SerialPort sp = chAux.OriginatingSession.GetChannel(chIndex) as SerialPort;
+                Console.WriteLine($"Message from channel {chIndex}. Length {recvBytes.Length}");
+                chAux.AsyncResult = chAux.Reader.BeginRead(200, new AsyncCallback(ReaderCallback), chAux);
             }
             catch (UeiDaqException ex)
             {
@@ -187,6 +288,8 @@ namespace SerialOp
                         //chAux.OriginatingSession.Dispose();
                     }
                 }
+
+                System.Diagnostics.Debug.Assert(true == chAux.OriginatingSession.IsRunning());
             }
         }
 
