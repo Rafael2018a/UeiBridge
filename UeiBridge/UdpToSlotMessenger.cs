@@ -4,9 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using log4net;
 using UeiBridge.Library;
-using UeiBridge.Types;
+using UeiBridge.Library.Types;
 using System.Collections.Concurrent;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.Interfaces;
 
 namespace UeiBridge
 {
@@ -29,7 +29,7 @@ namespace UeiBridge
     /// </summary>
     public class UdpToSlotMessenger : IEnqueue<SendObject>
     {
-        private ILog _logger = StaticMethods.GetLogger();
+        private ILog _logger = StaticLocalMethods.GetLogger();
         private List<ConsumerEntry> _consumersList = new List<ConsumerEntry>();
         private BlockingCollection<SendObject> _inputQueue = new BlockingCollection<SendObject>(1000); // max 1000 items
 

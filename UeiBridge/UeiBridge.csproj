@@ -104,6 +104,7 @@
     <Compile Include="UdpReader.cs" />
     <Compile Include="UdpToSlotMessenger.cs" />
     <Compile Include="UdpWriter.cs" />
+    <Compile Include="ViewItem.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -114,6 +115,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\SerialOp\SerialOp.csproj">
+      <Project>{e3102b3f-1a90-498c-976a-15db355a669d}</Project>
+      <Name>SerialOp</Name>
+    </ProjectReference>
     <ProjectReference Include="..\UeiLibrary\UeiLibrary.csproj">
       <Project>{73ac748f-67f0-4adc-a6cb-0e497f51e6ab}</Project>
       <Name>UeiLibrary</Name>

@@ -5,7 +5,7 @@ using UeiBridge.Library;
 /// <summary>
 /// All classes in this file MUST NOT depend on any other module in the project
 /// </summary>
-namespace UeiBridge.CubeSetupTypes
+namespace UeiBridge.Library.CubeSetupTypes
 {
     public class DeviceSetup : IEquatable<DeviceSetup>
     {

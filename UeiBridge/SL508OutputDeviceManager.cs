@@ -1,15 +1,10 @@
 ﻿using System;
-using System.Text;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using UeiDaq;
-using UeiBridge.Types;
 using UeiBridge.Library;
-
-using bytearray = System.Array;
-using System.Timers;
-using UeiBridge.CubeSetupTypes;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.CubeSetupTypes;
+using UeiBridge.Library.Types;
+using UeiDaq;
 
 namespace UeiBridge
 {
@@ -19,7 +14,7 @@ namespace UeiBridge
         // publics
         public override string DeviceName => DeviceMap2.SL508Literal;
         // privates
-        log4net.ILog _logger = StaticMethods.GetLogger();
+        log4net.ILog _logger = StaticLocalMethods.GetLogger();
         //IConvert _attachedConverter;
         List<ViewItem<byte[]>> _ViewItemList = new List<ViewItem<byte[]>>(); 
         SessionAdapter _serialSession;

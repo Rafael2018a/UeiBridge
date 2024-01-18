@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Threading.Tasks;
 //using UeiDaq;
-using UeiBridge.Types;
+using UeiBridge.Library.Types;
 using System.Timers;
 using UeiBridge.Library;
 using UeiDaq;
 using System.Collections.Generic;
 using System.Text;
-using UeiBridge.CubeSetupTypes;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.CubeSetupTypes;
+using UeiBridge.Library.Interfaces;
 
 namespace UeiBridge
 {
@@ -20,7 +20,7 @@ namespace UeiBridge
     {
         public override string DeviceName => "DIO-403";
 
-        private log4net.ILog _logger = StaticMethods.GetLogger();
+        private log4net.ILog _logger = StaticLocalMethods.GetLogger();
         private DigitalConverter _digitalConverter = new DigitalConverter();
         private IWriterAdapter<UInt16[]> _digitalWriter;
         private ViewItem<byte[]> _viewItem;

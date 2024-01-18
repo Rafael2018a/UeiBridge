@@ -8,7 +8,7 @@ using UeiBridge.Library;
 /// <summary>
 /// All classes in this file MUST NOT depend on any other module in the project
 /// </summary>
-namespace UeiBridge.CubeSetupTypes
+namespace UeiBridge.Library.CubeSetupTypes
 {
     /// <summary>
     /// This is the main cube-setup object. 
@@ -130,7 +130,6 @@ namespace UeiBridge.CubeSetupTypes
             {
                 result.CubeUrl = this.CubeUrl;
             }
-
             return result;
         }
 #if dont

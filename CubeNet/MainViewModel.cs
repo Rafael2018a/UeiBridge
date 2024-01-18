@@ -11,7 +11,7 @@ using System.Windows;
 using System.Collections.ObjectModel;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using Microsoft.Win32;
-using UeiBridge.CubeSetupTypes;
+using UeiBridge.Library.CubeSetupTypes;
 
 namespace UeiBridge.CubeNet
 {

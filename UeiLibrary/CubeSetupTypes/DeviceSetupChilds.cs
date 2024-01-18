@@ -7,7 +7,7 @@ using System.Xml.Serialization;
 using UeiBridge.Library;
 using UeiDaq;
 
-namespace UeiBridge.CubeSetupTypes
+namespace UeiBridge.Library.CubeSetupTypes
 {
     public class AO308Setup : DeviceSetup
     {
@@ -92,7 +92,7 @@ namespace UeiBridge.CubeSetupTypes
     }
     public class SL508892Setup : DeviceSetup
     {
-        public List<SerialChannelSetup> Channels;
+        public List<SerialChannelSetup> Channels { get; set; }
         const int _numberOfSerialChannels = 8;
         public SL508892Setup() { }
         public override bool Equals(DeviceSetup other)
@@ -103,6 +103,19 @@ namespace UeiBridge.CubeSetupTypes
             bool f2 = this.Channels.SequenceEqual<SerialChannelSetup>(otherSetup.Channels);
             return f1 && f2; ;
         }
+
+        public SerialChannelSetup GetChannelEntry(int chIndex)
+        {
+            if (chIndex<Channels.Count)
+            {
+                return Channels[chIndex];
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         public SL508892Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base(localEndPoint, destEndPoint, device)
         {
             Channels = new List<SerialChannelSetup>();

@@ -8,6 +8,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using UeiBridge.Library.CubeSetupTypes;
 using UeiDaq;
 
 namespace UeiBridge.Library
@@ -219,5 +220,36 @@ namespace UeiBridge.Library
             }
             return result;
         }
+
+        /// <summary>
+        /// Create EthernetMessage from device result.
+        /// Might return null.
+        /// </summary>
+        public static EthernetMessage BuildEthernetMessageFromDevice(byte[] payload, DeviceSetup setup, int serialChannel = 0)
+        {
+            //ILog _logger = log4net.LogManager.GetLogger("Root");
+
+            //int key = //ProjectRegistry.Instance.GetDeviceKeyFromDeviceString(deviceName);
+            int key = DeviceMap2.GetDeviceName(setup.DeviceName);
+
+            System.Diagnostics.Debug.Assert(key >= 0);
+
+            EthernetMessage msg = new EthernetMessage();
+            if (setup.GetType() == typeof(SL508892Setup))
+            {
+                msg.SerialChannelNumber = serialChannel;
+            }
+
+            msg.SlotNumber = setup.SlotNumber;
+            msg.CubeId = 0;
+            msg.CardType = (byte)key;
+            msg.PayloadBytes = payload;
+            //msg.NominalLength = payload.Length + EthernetMessage._payloadOffset;
+
+            System.Diagnostics.Debug.Assert(msg.InternalValidityTest());
+
+            return msg;
+        }
+
     }
 }

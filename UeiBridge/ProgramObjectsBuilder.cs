@@ -8,16 +8,16 @@ using System.Net;
 using UeiDaq;
 using log4net;
 using UeiBridge.Library;
-using UeiBridge.Types;
+using UeiBridge.Library.Types;
 using System.Collections.Concurrent;
-using UeiBridge.CubeSetupTypes;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.CubeSetupTypes;
+using UeiBridge.Library.Interfaces;
 
 namespace UeiBridge
 {
     public class ProgramObjectsBuilder : IDisposable
     {
-        ILog _logger = StaticMethods.GetLogger();
+        ILog _logger = StaticLocalMethods.GetLogger();
         List<PerDeviceObjects> _PerDeviceObjectsList;
         List<UdpReader> _udpReaderList;
         public List<PerDeviceObjects> PerDeviceObjectsList => _PerDeviceObjectsList;
@@ -78,7 +78,7 @@ namespace UeiBridge
                 // prologue
                 // =========
                 // it type exists
-                var t = StaticMethods.GetDeviceManagerType<IDeviceManager>(deviceInfo.DeviceName);
+                var t = StaticLocalMethods.GetDeviceManagerType<IDeviceManager>(deviceInfo.DeviceName);
                 if (null == t)
                 {
                     deviceMessage = $"Device {deviceInfo.DeviceName} not supported";
@@ -178,7 +178,9 @@ namespace UeiBridge
                     }
                 case DeviceMap2.SL508Literal:
                     {
+                        //Build_SL508_Failsafe(realDevice, setup);
                         return Build_SL508(realDevice, setup);
+
                     }
                 case DeviceMap2.CAN503Literal:
                     {
@@ -387,6 +389,63 @@ namespace UeiBridge
             var pd = new PerDeviceObjects(realDevice);
             //pd.SerialSession = serialSession;
             pd.InputDeviceManager = id;
+            pd.OutputDeviceManager = od;
+            //pd.UdpWriter = uWriter;
+
+            _udpMessenger.SubscribeConsumer(od, realDevice.CubeId, realDevice.DeviceSlot);
+            _udpReaderList.Add(ureader);
+
+            return new List<PerDeviceObjects>() { pd };
+        }
+        private List<PerDeviceObjects> Build_SL508_Failsafe(UeiDeviceInfo realDevice, DeviceSetup setup)
+        {
+            SL508892Setup thisSetup = setup as SL508892Setup;
+            SerialOp.Program p = new SerialOp.Program();
+            Session serialSession = p.BuildSerialSession(thisSetup, realDevice.DeviceSlot);
+            serialSession.Start();
+          
+            // emit info log
+            _logger.Debug($" == Serial channels for cube {setup.CubeUrl}, slot {setup.SlotNumber}");
+            foreach (UeiDaq.Channel ueiChannel in serialSession.GetChannels())
+            {
+                SerialPort ueiPort = ueiChannel as SerialPort;
+                string s1 = ueiPort.GetSpeed().ToString();
+                string s2 = s1.Replace("BitsPerSecond", "");
+                //SL508892Setup s508 = setup as SL508892Setup;
+                int chIndex = ueiPort.GetIndex();
+                int portnum = thisSetup.Channels.Where(i => i.ChannelIndex == chIndex).Select(i => i.LocalUdpPort).FirstOrDefault();
+                _logger.Debug($"CH:{ueiPort.GetIndex()}, Rate {s2} bps, Mode {ueiPort.GetMode()}. Listening port {portnum}");
+            }
+
+            SessionAdapter ssAdapter = new SessionAdapter(serialSession);
+
+            //SessionAdapter serAd = new SessionAdapter(serialSession);
+            string instanceName = setup.GetInstanceName();// $"{realDevice.DeviceName}/Slot{realDevice.DeviceSlot}";
+            UdpWriter uWriter = new UdpWriter(setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMulticast);
+            SerialOp.SL508InputManager serialmManager = new SerialOp.SL508InputManager(uWriter, thisSetup, serialSession);
+            //SL508InputDeviceManager id = new SL508InputDeviceManager(uWriter, setup, ssAdapter);
+
+            SL508OutputDeviceManager od = new SL508OutputDeviceManager(setup, serialSession);
+            var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMulticast);
+            UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, od.InstanceName);
+            // each port
+            {
+                var ip = IPAddress.Parse(setup.LocalEndPoint.Address);
+                foreach (SerialChannelSetup chSetup in thisSetup.Channels)
+                {
+                    if (true == chSetup.IsEnabled)
+                    {
+                        IPEndPoint ep = new IPEndPoint(ip, chSetup.LocalUdpPort);
+                        UdpReader ureader2 = new UdpReader(ep, nic, _udpMessenger, $"{od.InstanceName}/{chSetup.LocalUdpPort}");
+                        _udpReaderList.Add(ureader2);
+                    }
+                }
+            }
+
+
+            var pd = new PerDeviceObjects(realDevice);
+            //pd.SerialSession = serialSession;
+            //pd.InputDeviceManager = id;
             pd.OutputDeviceManager = od;
             //pd.UdpWriter = uWriter;
 
@@ -685,7 +744,7 @@ namespace UeiBridge
     /// </summary>
     public class UdpToSlotMessenger : IEnqueue<byte[]>
     {
-        private ILog _logger = StaticMethods.GetLogger();
+        private ILog _logger = StaticLocalMethods.GetLogger();
         private List<OutputDevice> _consumersList = new List<OutputDevice>();
         private BlockingCollection<byte[]> _inputQueue = new BlockingCollection<byte[]>(1000); // max 1000 items
 

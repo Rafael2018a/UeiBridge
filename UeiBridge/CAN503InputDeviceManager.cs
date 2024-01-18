@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using UeiBridge.CubeSetupTypes;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.CubeSetupTypes;
+using UeiBridge.Library.Interfaces;
 using UeiBridge.Library;
-using UeiBridge.Types;
+using UeiBridge.Library.Types;
 using UeiDaq;
 
 namespace UeiBridge
@@ -14,7 +14,7 @@ namespace UeiBridge
     {
         //private SessionAdapter _sessionAdapter;
         //private UdpWriter _udpWriter;
-        private log4net.ILog _logger = StaticMethods.GetLogger();
+        private log4net.ILog _logger = StaticLocalMethods.GetLogger();
         List<ICANReaderAdapter> _canReaderList = new List<ICANReaderAdapter>();
         private List<IAsyncResult> _readerIAsyncResultList = new List<IAsyncResult>();
         CAN503Setup _thisSetup;
@@ -79,7 +79,7 @@ namespace UeiBridge
 
                 //_lastScanList[channel] = new ViewItem<byte[]>(receiveBuffer, TimeSpan.FromSeconds(5));
                 //byte[] payload = receiveBuffer;
-                EthernetMessage em = StaticMethods.BuildEthernetMessageFromDevice( framesBuffer, this._thisSetup, channel);
+                EthernetMessage em = null;// StaticMethods.BuildEthernetMessageFromDevice( framesBuffer, this._thisSetup, channel);
                 // forward to consumer (send by udp)
                 _targetConsumer.Send(new SendObject( _thisSetup.DestEndPoint.ToIpEp(), em.GetByteArray(MessageWay.upstream)));
                 

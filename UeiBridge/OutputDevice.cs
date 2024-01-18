@@ -1,15 +1,11 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
-using System.Threading.Tasks;
+using UeiBridge.Library.CubeSetupTypes;
+using UeiBridge.Library.Interfaces;
 using UeiDaq;
-using UeiBridge.Types;
-using UeiBridge.Library;
-using System.Net;
-using UeiBridge.CubeSetupTypes;
-using UeiBridge.Interfaces;
 
-namespace UeiBridge
+namespace UeiBridge.Library
 {
     /// <summary>
     /// Parent class for all [x]outputDeviceManger classes.
@@ -30,7 +26,7 @@ namespace UeiBridge
         protected bool _isDeviceReady = false;
         protected bool _inDisposeState = false;
         private BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
-        private log4net.ILog _logger = StaticMethods.GetLogger();
+        private log4net.ILog _logger = StaticLocalMethods.GetLogger();
         protected ISession _iSession;
 
         protected OutputDevice() { }

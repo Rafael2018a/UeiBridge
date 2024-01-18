@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using System.IO;
 using UeiDaq;
-using UeiBridge.CubeSetupTypes;
+using UeiBridge.Library.CubeSetupTypes;
 using System.Net;
 using System.Net.Sockets;
 

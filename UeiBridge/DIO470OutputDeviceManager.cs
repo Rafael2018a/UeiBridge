@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
 //using UeiDaq;
-using UeiBridge.Types;
+using UeiBridge.Library.Types;
 using System.Timers;
 using UeiBridge.Library;
 using UeiDaq;
-using UeiBridge.CubeSetupTypes;
+using UeiBridge.Library.CubeSetupTypes;
+using UeiBridge.Library.Interfaces;
 
 namespace UeiBridge
 {
@@ -18,7 +19,7 @@ namespace UeiBridge
         public override string DeviceName => "DIO-470";
 
         //privates
-        log4net.ILog _logger = StaticMethods.GetLogger();
+        log4net.ILog _logger = StaticLocalMethods.GetLogger();
         //IConvert _attachedConverter;
         private IConvert2<UInt16[]> _digitalConverter = new DigitalConverter();
         const string _channelsString = "Do0";

@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using UeiBridge.CubeSetupTypes;
+using UeiBridge.Library.CubeSetupTypes;
 using UeiDaq;
 
 namespace SerialOp
@@ -34,7 +34,7 @@ namespace SerialOp
     /// <summary>
     /// serial-agent -r -ch 1
     /// </summary>
-    class Program
+    public class Program
     {
         private Session _serialSession;
         List<ChannelAux> _channelAuxList;
@@ -51,7 +51,7 @@ namespace SerialOp
         {
             // register CTRL + c handler
             Console.CancelKeyPress += new ConsoleCancelEventHandler(myHandler);
-            FileInfo setupfile = new FileInfo("Cube2.config");
+            FileInfo setupfile = new FileInfo("Cube3.config");
             var csl = new CubeSetupLoader(setupfile);
             if (null == csl.CubeSetupMain)
             {
@@ -60,27 +60,25 @@ namespace SerialOp
             }
             _cubeSetup = csl.CubeSetupMain;
 
-            Session session1 = BuildSerialSession();
-
+            var ds = _cubeSetup.GetDeviceSetupEntry(0) as SL508892Setup;
+            Session session1 = BuildSerialSession( ds, 0);
+            session1.Start();
             //SerialReaderTask reader = new SerialReaderTask(session1);
             //reader.Start();
 
             //this.StartReader(session1, _cubeSetup);
 
-            SL508892Setup serialDev = _cubeSetup.GetDeviceSetupEntry(3) as SL508892Setup; // slot 3
-            SL508InputManager inputManager = new SL508InputManager(null, serialDev, session1);
+            //SL508892Setup serialDev = _cubeSetup.GetDeviceSetupEntry(3) as SL508892Setup; // slot 3
+            SL508InputManager inputManager = new SL508InputManager(null, ds, session1);
 
             SerialWatchdog swd = new SerialWatchdog(new Action<string>((i) => { stop = true; }));
             inputManager.SetWatchdog(swd);
 
             inputManager.OpenDevice();
 
+            Console.WriteLine("^C to stop");
             // sleep
             do { System.Threading.Thread.Sleep(1000); } while (false == stop);
-
-            Console.WriteLine("Any key to exit...");
-
-            Thread.Sleep(2000);
 
             inputManager.Dispose();
             // dispose process
@@ -92,24 +90,25 @@ namespace SerialOp
             _serialSession.Dispose();
 
             Console.WriteLine("All Disposed");
+            Console.WriteLine("Any key to exit...");
             Console.ReadKey();
         }
 
-        void DeviceReset(string deviceUri)
+        bool DeviceReset(string deviceUri)
         {
             Device myDevice = DeviceEnumerator.GetDeviceFromResource(deviceUri);
 
             if (null != myDevice)
             {
                 string devName = myDevice.GetDeviceName();
-                if (myDevice != null)
-                {
-                    myDevice.Reset();
-                }
+                System.Diagnostics.Debug.Assert(myDevice != null);
+                myDevice.Reset();
+                return true;
             }
             else
             {
                 Console.WriteLine("GetDeviceFromResource fail");
+                return false;
             }
         }
 
@@ -195,15 +194,33 @@ namespace SerialOp
             }
         }
 
-        private Session BuildSerialSession()
+        public Session BuildSerialSession(SL508892Setup deviceSetup, int slotIndex)
         {
-            string serialResource = "pdna://192.168.100.2/Dev3/com0:7";
-            string deviceuri = "pdna://192.168.100.2/Dev3";
-            DeviceReset(deviceuri);
+            //SL508892Setup deviceSetup = deviceSetup1 as SL508892Setup;
+                //cubeSetup.GetDeviceSetupEntry(slotIndex) as SL508892Setup;
+            if (null==deviceSetup)
+            {
+                return null;
+            }
+            string deviceuri = $"{deviceSetup.CubeUrl}Dev{slotIndex}/";
+
+            // build serialResource string
+            StringBuilder com = new StringBuilder("com");
+            foreach( SerialChannelSetup ss in deviceSetup.Channels)
+            {
+                if (ss.IsEnabled)
+                {
+                    com.Append($"{ss.ChannelIndex},");
+                }
+            }
+            string serialResource = deviceuri + com.ToString();
+
+            
 
             try
             {
-                // Configure Master session
+                // build serial session
+                DeviceReset(deviceuri);
                 _serialSession = new Session();
                 SerialPort port = _serialSession.CreateSerialPort(serialResource,
                     SerialPortMode.RS485FullDuplex,

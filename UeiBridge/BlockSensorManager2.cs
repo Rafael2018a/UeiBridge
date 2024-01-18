@@ -1,10 +1,10 @@
 ﻿using System;
-using UeiBridge.Types;
+using UeiBridge.Library.Types;
 using UeiBridge.Library;
 using System.Collections.Generic;
 using System.Linq;
-using UeiBridge.CubeSetupTypes;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.CubeSetupTypes;
+using UeiBridge.Library.Interfaces;
 
 namespace UeiBridge
 {
@@ -20,7 +20,7 @@ namespace UeiBridge
         private int _subaddress = -1;
         private double[] _scanToEmit;
         //private BlockSensorSetup _thisDeviceSetup;
-        private log4net.ILog _logger = StaticMethods.GetLogger();
+        private log4net.ILog _logger = StaticLocalMethods.GetLogger();
         //private bool _isInDispose = false;
         BlockSensorSetup _thisDeviceSetup;
         #endregion

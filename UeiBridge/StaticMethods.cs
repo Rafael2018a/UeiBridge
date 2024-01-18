@@ -4,20 +4,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UeiDaq;
-using UeiBridge.Types;
+using UeiBridge.Library.Types;
 using UeiBridge.Library;
-using UeiBridge.CubeSetupTypes;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.CubeSetupTypes;
+using UeiBridge.Library.Interfaces;
 
-namespace UeiBridge
+namespace UeiBridge.Library
 {
-    public static class StaticMethods
+    public static class StaticLocalMethods
     {
         //static string _lastErrorMessage;
         //public static string LastErrorMessage { get => _lastErrorMessage; }
         
 
-        static StaticMethods()
+        static StaticLocalMethods()
         {
         }
 

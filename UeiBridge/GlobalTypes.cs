@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using UeiDaq;
@@ -8,118 +7,8 @@ using UeiDaq;
 /// All files in project might refer to this file.
 /// Types in this file might NOT refer to types in any other file.
 /// </summary>
-namespace UeiBridge.Types
+namespace UeiBridge.Library.Types
 {
-    //public interface IConvert
-    //{
-    //    object EthToDevice(byte[] messagePayload);
-    //    byte[] DeviceToEth(object dt);
-    //    string DeviceName { get; }
-    //    string LastErrorMessage { get; }
-    //}
-    public interface IConvert2<SourceType>
-    {
-        SourceType DownstreamConvert(byte[] messagePayload);
-        byte[] UpstreamConvert(SourceType dt);
-    }
-    /// <summary>
-    /// (Immutable)
-    /// </summary>
-    [Obsolete]
-    public class DeviceRequest
-    {
-        readonly object _requestObject;
-        readonly string _caseUrl;
-        readonly int _serialChannel;
-        //readonly string _deviceName;
-
-        public object RequestObject => _requestObject;
-
-        public string CaseUrl => _caseUrl;
-
-        public int SerialChannel => _serialChannel;
-
-        //public string DeviceName => _deviceName;
-        public DeviceRequest(object requestObject, string caseUrl, int serialChannel = -1)//, string deviceName=null)
-        {
-            _requestObject = requestObject;
-            _caseUrl = caseUrl;
-            _serialChannel = serialChannel;
-        }
-    }
-
-    /// <summary>
-    /// Contains: Object to write to device, serial channel id (in case of serial)
-    /// </summary>
-    //public class ScanResult
-    //{
-    //    object _scan;
-    //    UeiBridge.InputDevice _originDevice; 
-    //    public ScanResult(object scan, UeiBridge.InputDevice originDevice)
-    //    {
-    //        _scan = scan;
-    //        _originDevice = originDevice;
-    //    }
-    //    public object Scan { get => _scan; }
-    //    public UeiBridge.InputDevice OriginDevice { get => _originDevice; }
-    //}
-    /// <summary>
-    /// This class encapsulates payload with dest address
-    /// </summary>
-    public class SendObject
-    {
-        public IPEndPoint TargetEndPoint { get; }
-        public byte[] ByteMessage { get; }
-        public SendObject(IPEndPoint targetEndPoint, byte[] byteMessage)
-        {
-            TargetEndPoint = targetEndPoint;
-            ByteMessage = byteMessage;
-        }
-    }
-
-
-    //public class TeeObject : ISend<SendObject>
-    //{
-    //    IEnqueue<byte[]> send1;
-    //    ISend<SendObject> send2;
-    //    public TeeObject(IEnqueue<byte[]> send1, ISend<SendObject> send2)
-    //    {
-    //        this.send1 = send1;
-    //        this.send2 = send2;
-    //    }
-    //    public void Send(SendObject obj)
-    //    {
-    //        send1.Enqueue(obj.ByteMessage);
-    //        send2.Send(obj);
-    //    }
-    //}
-
-    /// <summary>
-    /// Helper class for GetFormattedStatus() method
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public class ViewItem<T>
-    {
-        public T ReadValue { get; private set; }
-        public TimeSpan TimeToLive { get; private set; }
-        public void DecreaseTimeToLive( TimeSpan interval)
-        {
-            if (TimeToLive > interval)
-            {
-                TimeToLive -= interval;
-            }
-            else
-            {
-                TimeToLive = TimeSpan.Zero;
-            }
-        }
-
-        public ViewItem(T readValue, TimeSpan timeToLive)
-        {
-            this.ReadValue = readValue;
-            this.TimeToLive = timeToLive;
-        }
-    }
 
     class BlockSensorEntry
     {

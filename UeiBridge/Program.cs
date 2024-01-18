@@ -10,16 +10,16 @@ using System.Net.Sockets;
 using System.IO;
 using log4net;
 using UeiDaq;
-using UeiBridge.Types;
+using UeiBridge.Library.Types;
 using UeiBridge.Library;
-using UeiBridge.CubeSetupTypes;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.CubeSetupTypes;
+using UeiBridge.Library.Interfaces;
 
 namespace UeiBridge
 {
     public class Program
     {
-        ILog _logger = StaticMethods.GetLogger();
+        ILog _logger = StaticLocalMethods.GetLogger();
         ProgramObjectsBuilder _programBuilder;
         Config2 _mainConfig;
 

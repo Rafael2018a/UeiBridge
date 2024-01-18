@@ -1,16 +1,13 @@
 ﻿using System;
-using System.Threading;
+using UeiBridge.Library.CubeSetupTypes;
+using UeiBridge.Library.Interfaces;
 using UeiDaq;
-using UeiBridge.Types;
-using UeiBridge.Library;
-using UeiBridge.CubeSetupTypes;
-using UeiBridge.Interfaces;
 
 /// <summary>
 /// All files in project might refer to this file.
 /// Types in this file might NOT refer to types in any other file.
 /// </summary>
-namespace UeiBridge
+namespace UeiBridge.Library
 {
     public abstract class InputDevice : IDeviceManager, IDisposable
     {
@@ -21,7 +18,7 @@ namespace UeiBridge
         public UeiDeviceInfo DeviceInfo { get; private set; }
         public string InstanceName { get; private set; }
         //public int SlotNumber { get; private set; }
-        private log4net.ILog _logger = StaticMethods.GetLogger();
+        private log4net.ILog _logger = StaticLocalMethods.GetLogger();
         protected ISession _iSession;// { get; set; }
         protected ISend<SendObject> _targetConsumer;// { get ; set; }
         //protected bool _isDeviceReady = false;

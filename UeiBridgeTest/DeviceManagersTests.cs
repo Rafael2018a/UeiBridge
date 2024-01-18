@@ -5,10 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using UeiBridge;
-using UeiBridge.CubeSetupTypes;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.CubeSetupTypes;
+using UeiBridge.Library.Interfaces;
 using UeiBridge.Library;
-using UeiBridge.Types;
+using UeiBridge.Library.Types;
 using UeiDaq;
 
 namespace UeiBridgeTest

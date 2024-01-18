@@ -9,7 +9,7 @@ using System.IO;
 using UeiBridge.Library;
 using UeiDaq;
 using System.Net;
-using UeiBridge.CubeSetupTypes;
+using UeiBridge.Library.CubeSetupTypes;
 
 namespace UeiBridgeTest
 {

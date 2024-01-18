@@ -1,13 +1,10 @@
 ﻿#define mcast
 
 using System;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using UeiBridge.Types;
-using UeiBridge.Interfaces;
+using UeiBridge.Library;
+using UeiBridge.Library.Interfaces;
 
 namespace UeiBridge
 {
@@ -18,7 +15,7 @@ namespace UeiBridge
     public class UdpReader: IDisposable
     {
         private IEnqueue<SendObject> _datagramConsumer;
-        log4net.ILog _logger = StaticMethods.GetLogger();
+        log4net.ILog _logger = StaticLocalMethods.GetLogger();
         UdpClient _udpclient;
         string _instanceName;          // this is 'help field' to assist in debugging.
         IPEndPoint _msListeningiEp;    // Multi-cast receive address.

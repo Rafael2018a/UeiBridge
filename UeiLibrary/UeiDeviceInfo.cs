@@ -2,10 +2,13 @@
 
 namespace UeiBridge.Library
 {
+    /// <summary>
+    /// Info about device which resides in given slot index
+    /// </summary>
     public class UeiDeviceInfo
     {
         public string DeviceName { get; private set; }
-        public int DeviceSlot { get; private set; }
+        public int DeviceSlot { get; private set; } // slot index (zero based)
         public string CubeUrl { get; set; }
         public int CubeId { get; private set; }
         public static int SimuCubeId {get; } = 101; // const

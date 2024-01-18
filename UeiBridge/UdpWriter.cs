@@ -5,8 +5,9 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
-using UeiBridge.Types;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.Types;
+using UeiBridge.Library.Interfaces;
+using UeiBridge.Library;
 
 namespace UeiBridge
 {
@@ -44,7 +45,7 @@ namespace UeiBridge
 #endif
     public class UdpWriter : ISend<SendObject>, IDisposable
     {
-        log4net.ILog _logger = StaticMethods.GetLogger();
+        log4net.ILog _logger = StaticLocalMethods.GetLogger();
         Socket _sendSocket;
         //string _instanceName;
         public UdpWriter( IPEndPoint destEp, string localBindAddress)

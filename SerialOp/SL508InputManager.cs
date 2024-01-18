@@ -5,16 +5,17 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using UeiBridge;
-using UeiBridge.CubeSetupTypes;
-using UeiBridge.Interfaces;
-using UeiBridge.Types;
+using UeiBridge.Library.CubeSetupTypes;
+using UeiBridge.Library.Interfaces;
+using UeiBridge.Library;
+//using UeiBridge.Library.Types;
 using UeiDaq;
 
 namespace SerialOp
 {
-    class SL508InputManager : InputDevice
+    public class SL508InputManager// : InputDevice
     {
-        public override string DeviceName => throw new NotImplementedException();
+        //public override string DeviceName => throw new NotImplementedException();
         SL508892Setup serialDev;
         Session _ueiSsession;
         List<ChannelAux> _channelAuxList;
@@ -28,13 +29,13 @@ namespace SerialOp
         {
             _watchdog = wd;
         }
-        public SL508InputManager(ISend<SendObject> targetConsumer, SL508892Setup setup, Session theSession) : base(setup)
+        public SL508InputManager(ISend<SendObject> targetConsumer, SL508892Setup setup, Session theSession)// : base(setup)
         {
-            this._targetConsumer = targetConsumer;
+            //this._targetConsumer = targetConsumer;
             this.serialDev = setup;
             this._ueiSsession = theSession;
         }
-        public override void Dispose()
+        public void Dispose()
         {
             if (true==_inDisposeFlag)
             {
@@ -42,7 +43,7 @@ namespace SerialOp
             }
             _inDisposeFlag = true;
             _watchdog?.StopWatching();
-            Console.WriteLine("Waiting on all readers..");
+            Console.WriteLine("Waiting on channel readers to dispose");
             var waitall = _channelAuxList.Select(i => i.AsyncResult.AsyncWaitHandle).ToArray();
             WaitHandle.WaitAll(waitall);
             foreach (var cx in _channelAuxList)
@@ -51,11 +52,11 @@ namespace SerialOp
             }
             Console.WriteLine("Readers disposed..");
         }
-        public override string[] GetFormattedStatus(TimeSpan interval)
-        {
-            throw new NotImplementedException();
-        }
-        public override bool OpenDevice()
+        //public override string[] GetFormattedStatus(TimeSpan interval)
+        //{
+        //    throw new NotImplementedException();
+        //}
+        public bool OpenDevice()
         {
             if (_inDisposeFlag)
             {
@@ -67,7 +68,7 @@ namespace SerialOp
                 // set channel properties
                 SerialPort sPort = _ueiSsession.GetChannel(chNum) as SerialPort;
                 int chIndex = sPort.GetIndex();
-                SerialChannelSetup serialChannel = serialDev.Channels[chIndex]; // tbd. use GetChannelEntry()
+                SerialChannelSetup serialChannel = serialDev.GetChannelEntry(chIndex);  
                 System.Diagnostics.Debug.Assert(null != serialChannel);
                 sPort.SetMode(serialChannel.Mode);
                 sPort.SetSpeed(serialChannel.Baudrate);

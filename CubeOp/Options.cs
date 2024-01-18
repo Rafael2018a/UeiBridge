@@ -31,16 +31,14 @@ namespace CubeOp
         public bool resetdevice { get; set; }
         [Option("slot", HelpText = "Slot number (0 based)", Default =-1)]
         public int slotnumber { get; set; }
-
         [Option("list-cubes", HelpText = "Get list of connected cubes")]
         public bool listcubes { get; set; }
-
         [Option("list-devices", HelpText = "Get list of devices in specified cube")]
         public bool listdevices { get; set; }
-
+        [Option("open-serial", HelpText = "Try to open serial device (use cube-id as resource-string")]
+        public bool openserial { get; set; }
         [Option('?', HelpText = "Help")]
         public bool dohelp { get; set; }
-
         [Value(0, MetaName = "cube-id", HelpText = "IP or uri of cube; 'simu' for simulation")]
         public string cube_id { get; set; }
 
