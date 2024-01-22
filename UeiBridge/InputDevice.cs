@@ -1,4 +1,5 @@
 ﻿using System;
+using UeiBridge.Library;
 using UeiBridge.Library.CubeSetupTypes;
 using UeiBridge.Library.Interfaces;
 using UeiDaq;
@@ -7,7 +8,7 @@ using UeiDaq;
 /// All files in project might refer to this file.
 /// Types in this file might NOT refer to types in any other file.
 /// </summary>
-namespace UeiBridge.Library
+namespace UeiBridge
 {
     public abstract class InputDevice : IDeviceManager, IDisposable
     {
@@ -30,17 +31,17 @@ namespace UeiBridge.Library
             DeviceInfo = setup.GetDeviceInfo();
             //SlotNumber = setup.SlotNumber;
         }
-        public static void CloseSession(Session theSession)
-        {
-            if (null != theSession)
-            {
-                if (theSession.IsRunning())
-                {
-                    theSession.Stop();
-                }
-                theSession.Dispose();
-            }
-        }
+        //public static void CloseSession(Session theSession)
+        //{
+        //    if (null != theSession)
+        //    {
+        //        if (theSession.IsRunning())
+        //        {
+        //            theSession.Stop();
+        //        }
+        //        theSession.Dispose();
+        //    }
+        //}
 
         public abstract void Dispose();
         //{
@@ -53,6 +54,5 @@ namespace UeiBridge.Library
         {
             _logger.Info($"Cube{DeviceInfo.CubeId}/Slot{DeviceInfo.DeviceSlot}: {deviceMessage}");
         }
-
     }
 }

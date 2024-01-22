@@ -66,7 +66,7 @@ namespace UeiBridge
                 }
                 else
                 {
-                    int deviceId = DeviceMap2.GetDeviceName(DeviceName);
+                    int deviceId = DeviceMap2.GetDeviceIdFromName(DeviceName);
                     EmitInitMessage($"Init success: {DeviceName} (ID={deviceId}). {numOfCh} channels. Range {range[0].minimum},{range[0].maximum}V. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}");
                 }
 
@@ -85,7 +85,7 @@ namespace UeiBridge
         protected override void HandleRequest(EthernetMessage em)
         {
             // init conditions check
-            if (_inDisposeState)
+            if (_inDisposeFlag)
             {
                 return;
             }
@@ -160,7 +160,7 @@ namespace UeiBridge
 
         public override void Dispose()
         {
-            _inDisposeState = true;
+            _inDisposeFlag = true;
             //base.HaltMessageLoop();
             _analogWriter.Dispose();
             _iSession.Dispose();

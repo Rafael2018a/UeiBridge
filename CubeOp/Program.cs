@@ -53,7 +53,7 @@ namespace CubeOp
             if (true == options.listcubes)
             {
                 IPAddress startIp = IPAddress.Parse("192.168.100.0");
-                Console.WriteLine($"Searching for cubes, starting from {startIp}");
+                Console.WriteLine($"Searching for cubes in range 192.168.100.*");
                 List<IPAddress> l = CubeSeeker.FindCubesInRange(startIp, 256);
                 if (0 == l.Count)
                 {

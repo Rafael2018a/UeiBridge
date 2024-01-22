@@ -72,12 +72,16 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SerialReaderTask.cs" />
     <Compile Include="SerialWatchdog.cs" />
-    <Compile Include="SL508InputManager.cs" />
+    <Compile Include="SL508DeviceManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\UeiBridge\UeiBridge.csproj">
+      <Project>{086a67bb-d92f-4fc5-a91e-39913abc6328}</Project>
+      <Name>UeiBridge</Name>
+    </ProjectReference>
     <ProjectReference Include="..\UeiLibrary\UeiLibrary.csproj">
       <Project>{73ac748f-67f0-4adc-a6cb-0e497f51e6ab}</Project>
       <Name>UeiLibrary</Name>

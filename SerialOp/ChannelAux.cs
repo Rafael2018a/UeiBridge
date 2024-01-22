@@ -11,14 +11,17 @@ namespace SerialOp
     /// </summary>
     class ChannelAux
     {
-        public SerialReader Reader { get; set; }
+        public SerialReader Reader { get; private set; }
+        public SerialWriter Writer { get; private set; }
         public IAsyncResult AsyncResult { get; set; }
         public int ChannelIndex { get; private set; } // zero based
         //public int SelfIndex { get; private set; }
         public Session OriginatingSession { get; private set; }
-        public ChannelAux(int channelIndex, Session originatingSession)
+        public ChannelAux(int channelIndex, SerialReader reader, SerialWriter writer,  Session originatingSession)
         {
             this.ChannelIndex = channelIndex;
+            this.Reader = reader;
+            this.Writer = writer;
             this.OriginatingSession = originatingSession;
         }
     }

@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
+using UeiBridge.Library;
 using UeiBridge.Library.CubeSetupTypes;
 using UeiBridge.Library.Interfaces;
 using UeiDaq;
 
-namespace UeiBridge.Library
+namespace UeiBridge
 {
     /// <summary>
     /// Parent class for all [x]outputDeviceManger classes.
@@ -24,7 +25,7 @@ namespace UeiBridge.Library
         public UeiDeviceInfo DeviceInfo { get; private set; }
         
         protected bool _isDeviceReady = false;
-        protected bool _inDisposeState = false;
+        protected bool _inDisposeFlag = false;
         private BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
         private log4net.ILog _logger = StaticLocalMethods.GetLogger();
         protected ISession _iSession;
@@ -78,12 +79,15 @@ namespace UeiBridge.Library
 
         }
         /// <summary>
-        /// Message loop
+        /// Output device message loop
+        /// This method is common for all device types, except
+        /// HandleRequest() method which is unique per device.
         /// </summary>
         protected void OutputDeviceHandler_Task()
         {
             
             // message loop
+            // ============
             while (false == _dataItemsQueue2.IsCompleted)
             {
                 try
@@ -103,7 +107,7 @@ namespace UeiBridge.Library
                         continue;
                     }
                     // verify valid card type
-                    int cardId = DeviceMap2.GetDeviceName(this.DeviceName);
+                    int cardId = DeviceMap2.GetDeviceIdFromName(this.DeviceName);
                     if (cardId != incomingMessage.CardType)
                     {
                         _logger.Warn($"{InstanceName} wrong card id {incomingMessage.CardType} while expecting {cardId}. message dropped.");

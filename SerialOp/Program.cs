@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using UeiBridge.Library;
 using UeiBridge.Library.CubeSetupTypes;
 using UeiDaq;
 
@@ -36,9 +37,12 @@ namespace SerialOp
     /// </summary>
     public class Program
     {
-        private Session _serialSession;
-        List<ChannelAux> _channelAuxList;
+        //private Session _serialSession;
+        //List<ChannelAux> _channelAuxList;
         CubeSetup _cubeSetup;
+        bool stopByUser = false;
+        bool stopByWatchdog = false;
+
 
         static void Main()
         {
@@ -51,6 +55,8 @@ namespace SerialOp
         {
             // register CTRL + c handler
             Console.CancelKeyPress += new ConsoleCancelEventHandler(myHandler);
+
+            // load setting
             FileInfo setupfile = new FileInfo("Cube3.config");
             var csl = new CubeSetupLoader(setupfile);
             if (null == csl.CubeSetupMain)
@@ -60,48 +66,72 @@ namespace SerialOp
             }
             _cubeSetup = csl.CubeSetupMain;
 
-            var ds = _cubeSetup.GetDeviceSetupEntry(0) as SL508892Setup;
-            Session session1 = BuildSerialSession( ds, 0);
-            session1.Start();
-            //SerialReaderTask reader = new SerialReaderTask(session1);
-            //reader.Start();
 
-            //this.StartReader(session1, _cubeSetup);
+            int deviceSlotIndex = 3; // slot index in given cube
+            var deviceSetup = _cubeSetup.GetDeviceSetupEntry( deviceSlotIndex) as SL508892Setup;
 
-            //SL508892Setup serialDev = _cubeSetup.GetDeviceSetupEntry(3) as SL508892Setup; // slot 3
-            SL508InputManager inputManager = new SL508InputManager(null, ds, session1);
+            do
+            {
+                Session serSession = BuildSerialSession(deviceSetup);
+                if (null==serSession)
+                {
+                    goto exit;
+                }
+                serSession.Start();
 
-            SerialWatchdog swd = new SerialWatchdog(new Action<string>((i) => { stop = true; }));
-            inputManager.SetWatchdog(swd);
+                SL508DeviceManager deviceManager = new SL508DeviceManager(null, deviceSetup, serSession);
+                SerialWatchdog swd = new SerialWatchdog(new Action<string>((i) => { stopByWatchdog = true; }));
+                deviceManager.SetWatchdog(swd);
+                deviceManager.OpenDevice();
 
-            inputManager.OpenDevice();
+               
+                // sleep
+                // ======
+                Console.WriteLine("^C to stop");
+                int seed = 10;
+                do { 
+                    System.Threading.Thread.Sleep(1000);
+                    List<byte[]> msgs = StaticMethods.Make_SL508Down_Messages(++seed);
+                    foreach (byte[] m in msgs)
+                    {
+                        deviceManager.Enqueue(m);  //new byte[] { 0, 1, 2 });
+                    }
+                } while (false == stopByUser && false == stopByWatchdog);
 
-            Console.WriteLine("^C to stop");
-            // sleep
-            do { System.Threading.Thread.Sleep(1000); } while (false == stop);
+                deviceManager.Dispose();
+                deviceManager = null;
 
-            inputManager.Dispose();
-            // dispose process
-            // ===============
+                // dispose process
+                // ===============
+                serSession.Stop();
+                System.Diagnostics.Debug.Assert(false == serSession.IsRunning());
 
-            _serialSession.Stop();
-            System.Diagnostics.Debug.Assert(false == _serialSession.IsRunning());
+                serSession.Dispose();
+                serSession = null;
 
-            _serialSession.Dispose();
+                Console.WriteLine("All Disposed");
 
-            Console.WriteLine("All Disposed");
-            Console.WriteLine("Any key to exit...");
+                // wait before restart
+                if (true==stopByWatchdog)
+                {
+                    System.Threading.Thread.Sleep(1000);
+                    stopByWatchdog = false;
+                }
+                swd = null;
+            } while (false == stopByUser);
+
+            exit:  Console.WriteLine("Any key to exit...");
             Console.ReadKey();
         }
 
-        bool DeviceReset(string deviceUri)
+        bool DeviceReset_old(string deviceUri)
         {
             Device myDevice = DeviceEnumerator.GetDeviceFromResource(deviceUri);
 
             if (null != myDevice)
             {
-                string devName = myDevice.GetDeviceName();
-                System.Diagnostics.Debug.Assert(myDevice != null);
+                //string devName = myDevice.GetDeviceName();
+                //System.Diagnostics.Debug.Assert(myDevice != null);
                 myDevice.Reset();
                 return true;
             }
@@ -111,7 +141,7 @@ namespace SerialOp
                 return false;
             }
         }
-
+#if dont
         private void StartReader(Session session1, CubeSetup setup)
         {
             _channelAuxList = new List<ChannelAux>();
@@ -143,10 +173,10 @@ namespace SerialOp
                 cx.AsyncResult = cx.Reader.BeginRead(200, new AsyncCallback(ReaderCallback), cx);
             }
         }
-
+#endif
         void ReaderCallback(IAsyncResult ar)
         {
-            if (true == stop)
+            if ((true == stopByUser)||(true==stopByWatchdog))
             {
                 return;
             }
@@ -176,7 +206,7 @@ namespace SerialOp
                         // clicked on fast enough!
                         // Just re-initiate a new asynchronous read.
                         Console.WriteLine($"Timeout ch {chIndex}");
-                        if (false == stop)
+                        if ((false == stopByUser)&&(false==stopByWatchdog))
                         {
                             chAux.AsyncResult = chAux.Reader.BeginRead(200, new AsyncCallback(ReaderCallback), chAux);
                         }
@@ -194,15 +224,17 @@ namespace SerialOp
             }
         }
 
-        public Session BuildSerialSession(SL508892Setup deviceSetup, int slotIndex)
+        public Session BuildSerialSession(SL508892Setup deviceSetup)
         {
+            Session serSession = null;
             //SL508892Setup deviceSetup = deviceSetup1 as SL508892Setup;
                 //cubeSetup.GetDeviceSetupEntry(slotIndex) as SL508892Setup;
             if (null==deviceSetup)
             {
                 return null;
             }
-            string deviceuri = $"{deviceSetup.CubeUrl}Dev{slotIndex}/";
+            
+            string deviceuri = $"{deviceSetup.CubeUrl}Dev{deviceSetup.SlotNumber}/";
 
             // build serialResource string
             StringBuilder com = new StringBuilder("com");
@@ -215,29 +247,33 @@ namespace SerialOp
             }
             string serialResource = deviceuri + com.ToString();
 
-            
-
             try
             {
+                UeiCube cube = new UeiCube(deviceSetup.CubeUrl);
                 // build serial session
-                DeviceReset(deviceuri);
-                _serialSession = new Session();
-                SerialPort port = _serialSession.CreateSerialPort(serialResource,
-                    SerialPortMode.RS485FullDuplex,
-                    SerialPortSpeed.BitsPerSecond115200,
-                    SerialPortDataBits.DataBits8,
-                    SerialPortParity.None,
-                    SerialPortStopBits.StopBits1,
-                    "");
+                if (cube.DeviceReset(deviceuri))
+                {
+                    serSession = new Session();
+                    SerialPort port = serSession.CreateSerialPort(serialResource,
+                        SerialPortMode.RS485FullDuplex,
+                        SerialPortSpeed.BitsPerSecond115200,
+                        SerialPortDataBits.DataBits8,
+                        SerialPortParity.None,
+                        SerialPortStopBits.StopBits1,
+                        "");
 
-                // Configure timing to return serial message when either of the following conditions occurred
-                // - The termination string was detected
-                // - 100 bytes have been received
-                // - 10ms elapsed (rate set to 100Hz);
-                _serialSession.ConfigureTimingForMessagingIO(1000, 100.0);
-                _serialSession.GetTiming().SetTimeout(500);
-
-                return _serialSession;
+                    // Configure timing to return serial message when either of the following conditions occurred
+                    // - The termination string was detected
+                    // - 100 bytes have been received
+                    // - 10ms elapsed (rate set to 100Hz);
+                    serSession.ConfigureTimingForMessagingIO(1000, 100.0);
+                    serSession.GetTiming().SetTimeout(500);
+                }
+                else
+                {
+                    Console.WriteLine($"Failed to reset device {deviceuri}");
+                }
+                return serSession;
             }
             catch (Exception ex)
             {
@@ -247,16 +283,12 @@ namespace SerialOp
         }
 
 
-        protected static void myHandler(object sender, ConsoleCancelEventArgs args)
+        protected void myHandler(object sender, ConsoleCancelEventArgs args)
         {
             // Set cancel to true to let the Main task clean-up the I/O sessions
             args.Cancel = true;
-            stop = true;
+            stopByUser = true;
 
         }
-
-        static bool stop = false;
-
-
     }
 }

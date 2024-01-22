@@ -78,10 +78,10 @@ namespace UeiBridge
                 // prologue
                 // =========
                 // it type exists
-                var t = StaticLocalMethods.GetDeviceManagerType<IDeviceManager>(deviceInfo.DeviceName);
+                Type t = StaticLocalMethods.GetDeviceManagerType<IDeviceManager>(deviceInfo.DeviceName);
                 if (null == t)
                 {
-                    deviceMessage = $"Device {deviceInfo.DeviceName} not supported";
+                    deviceMessage = $"Device {deviceInfo.DeviceName} not supported by software";
                     EmitInitMessage(deviceInfo, deviceMessage);
                     continue;
                 }
@@ -397,6 +397,7 @@ namespace UeiBridge
 
             return new List<PerDeviceObjects>() { pd };
         }
+#if notyet
         private List<PerDeviceObjects> Build_SL508_Failsafe(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
             SL508892Setup thisSetup = setup as SL508892Setup;
@@ -454,7 +455,7 @@ namespace UeiBridge
 
             return new List<PerDeviceObjects>() { pd };
         }
-
+#endif
         private List<PerDeviceObjects> Build_CAN503(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
 

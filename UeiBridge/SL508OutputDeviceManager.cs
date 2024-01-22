@@ -21,7 +21,7 @@ namespace UeiBridge
         int _sentBytesAcc = 0;
         int _numberOfSentMessages = 0;
         List<SerialWriter> _serialWriterList = new List<SerialWriter>();
-        Dictionary<SerialPortSpeed, int> _serialSpeedDic = new Dictionary<SerialPortSpeed, int>();
+        //Dictionary<SerialPortSpeed, int> _serialSpeedDic = new Dictionary<SerialPortSpeed, int>();
         
         private DeviceSetup _deviceSetup;
         public SL508OutputDeviceManager(DeviceSetup setup, Session serialSession) : base(setup)
@@ -74,23 +74,23 @@ namespace UeiBridge
 
             }
 
-            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond110, 110);
-            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond300, 300);
-            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond600, 600);
-            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond1200, 1200);
-            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond2400, 2400);
-            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond4800, 4800);
-            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond9600, 9600);
-            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond14400, 14400);
-            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond19200, 19200);
-            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond28800, 28800);
-            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond38400, 38400);
-            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond57600, 57600);
-            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond115200, 115200);
-            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond128000, 128000);
-            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond250000, 250000);
-            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond256000, 256000);
-            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond1000000, 1000000);
+            //_serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond110, 110);
+            //_serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond300, 300);
+            //_serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond600, 600);
+            //_serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond1200, 1200);
+            //_serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond2400, 2400);
+            //_serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond4800, 4800);
+            //_serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond9600, 9600);
+            //_serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond14400, 14400);
+            //_serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond19200, 19200);
+            //_serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond28800, 28800);
+            //_serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond38400, 38400);
+            //_serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond57600, 57600);
+            //_serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond115200, 115200);
+            //_serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond128000, 128000);
+            //_serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond250000, 250000);
+            //_serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond256000, 256000);
+            //_serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond1000000, 1000000);
 
             _isDeviceReady = true;
             return true;
@@ -98,7 +98,7 @@ namespace UeiBridge
 
         public override void Dispose()
         {
-            _inDisposeState = true;
+            _inDisposeFlag = true;
             for (int ch = 0; ch < _serialWriterList.Count; ch++)
             {
                 _serialWriterList[ch].Dispose();
@@ -151,7 +151,7 @@ namespace UeiBridge
             {
                 return;
             }
-            if (true == _inDisposeState)
+            if (true == _inDisposeFlag)
             {
                 return;
             }
@@ -168,11 +168,11 @@ namespace UeiBridge
                 // wait
                 {
                     SerialPort sPort = _serialSession.GetChannel(request.SerialChannelNumber) as SerialPort;
-                    SerialPortSpeed x = sPort.GetSpeed();
-                    int bpsPossibe = (int)(_serialSpeedDic[x] * 0.8);
-                    int bpsActual = request.PayloadBytes.Length * 8;
-                    int milisec = bpsActual * 1000 / bpsPossibe;
-                    System.Threading.Thread.Sleep(milisec);
+                    int sp = StaticMethods.GetSerialSpeedAsInt(sPort.GetSpeed());
+                    double bpsPossibe = Convert.ToDouble(sp) * 0.8;
+                    int bitsToSend = request.PayloadBytes.Length * 8;
+                    double waitstateMs = Convert.ToDouble( bitsToSend) /  bpsPossibe * 1000.0; // in milisec
+                    System.Threading.Thread.Sleep(  Convert.ToInt32(waitstateMs));
                 }
                 //_logger.Debug($" *** Write to serial port. ch {request.SerialChannelNumber}");
                 System.Diagnostics.Debug.Assert(sentBytes == request.PayloadBytes.Length);

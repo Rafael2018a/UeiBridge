@@ -12,7 +12,7 @@ namespace UeiBridge.Library.CubeSetupTypes
         [XmlAttribute("IsEnabled")]
         public bool IsEnabled = true;
         [XmlElement(ElementName = "DeviceSlot")]
-        public int SlotNumber;
+        public int SlotNumber; // slot index
         public string DeviceName;
         public EndPoint LocalEndPoint;
         public EndPoint DestEndPoint;

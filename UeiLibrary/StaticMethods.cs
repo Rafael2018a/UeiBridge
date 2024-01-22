@@ -14,8 +14,43 @@ using UeiDaq;
 namespace UeiBridge.Library
 {
     // Methods in the class SHOULD NOT depend on any other project class
-    public class StaticMethods
+    public static class StaticMethods
     {
+        static Dictionary<SerialPortSpeed, int> _serialSpeedDic = new Dictionary<SerialPortSpeed, int>();
+
+        static StaticMethods()
+        {
+            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond110, 110);
+            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond300, 300);
+            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond600, 600);
+            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond1200, 1200);
+            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond2400, 2400);
+            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond4800, 4800);
+            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond9600, 9600);
+            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond14400, 14400);
+            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond19200, 19200);
+            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond28800, 28800);
+            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond38400, 38400);
+            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond57600, 57600);
+            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond115200, 115200);
+            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond128000, 128000);
+            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond250000, 250000);
+            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond256000, 256000);
+            _serialSpeedDic.Add(SerialPortSpeed.BitsPerSecond1000000, 1000000);
+
+        }
+        public static int GetSerialSpeedAsInt( SerialPortSpeed speed)
+        {
+            int result;
+            if (_serialSpeedDic.TryGetValue(speed, out result))
+            {
+                return result;
+            }
+            else
+            {
+                return -1;
+            }
+        }
         public static string GetEnumValues<T>()
         {
             T[] v1 = Enum.GetValues(typeof(T)) as T[];
@@ -49,7 +84,7 @@ namespace UeiBridge.Library
         }
         public static byte[] Make_Dio403_upstream_message(byte[] payload)
         {
-            int id = DeviceMap2.GetDeviceName(DeviceMap2.DIO403Literal);
+            int id = DeviceMap2.GetDeviceIdFromName(DeviceMap2.DIO403Literal);
             var b = EthernetMessage.CreateMessage(id, 0, 0, payload); //new byte[] { 0x5, 0, 0 });
             return b.GetByteArray(MessageWay.upstream);
         }
@@ -230,7 +265,7 @@ namespace UeiBridge.Library
             //ILog _logger = log4net.LogManager.GetLogger("Root");
 
             //int key = //ProjectRegistry.Instance.GetDeviceKeyFromDeviceString(deviceName);
-            int key = DeviceMap2.GetDeviceName(setup.DeviceName);
+            int key = DeviceMap2.GetDeviceIdFromName(setup.DeviceName);
 
             System.Diagnostics.Debug.Assert(key >= 0);
 
