@@ -10,130 +10,26 @@ using UeiBridge.Library.Interfaces;
 using UeiBridge.Library;
 //using UeiBridge.Library.Types;
 using UeiDaq;
-using System.Collections.Concurrent;
 
 namespace SerialOp
 {
     /// <summary>
-    /// This class contains methods and fields which are common to all device managers
+    /// Manage serial device.
+    /// - Handle upstream/downstream messages 
+    /// - update a given watchdog
+    /// - maintain channel statistics
     /// </summary>
-    public abstract class DeviceManagerBase : IDeviceManager
-    {
-        private BlockingCollection<EthernetMessage> _ethToDeviceQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
-        abstract protected void HandleEthToDeviceRequest(EthernetMessage request);
-        public string DeviceName { get; protected set;}
-        public string InstanceName { get; protected set;}
-        protected int _deviceSlotIndex;
-        protected bool _isOutputDeviceReady = true;
-        protected bool stopTask = false;  // tbd. use cancel-token
-        protected bool _inDisposeFlag = false;
-
-        /// <summary>
-        /// Push etherent message to EthToDevice message queue
-        /// </summary>
-        public void Enqueue(byte[] m)
-        {
-            if (_ethToDeviceQueue2.IsCompleted)
-            {
-                return;
-            }
-
-            try
-            {
-                string err = null;
-                EthernetMessage em = EthernetMessage.CreateFromByteArray(m, MessageWay.downstream, ref err);
-                if (null == em)
-                {
-                    Console.WriteLine(err);
-                    return;
-                }
-
-                if (false == _ethToDeviceQueue2.TryAdd(em))
-                {
-                    Console.WriteLine($"Incoming message dropped due to full messae queue");
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Incoming message dropped. {ex.Message}.");
-            }
-
-        }
-
-        protected void EthToDeviceMessageLoop_Task()// Action<EthernetMessage> handleRequsetAction)
-        {
-            // message loop
-            // ============
-            while ((false == _ethToDeviceQueue2.IsCompleted)&&(stopTask==false))
-            {
-                try
-                {
-                    EthernetMessage incomingMessage = _ethToDeviceQueue2.Take(); // get from q
-
-                    if (null == incomingMessage) // end task token
-                    {
-                        _ethToDeviceQueue2.CompleteAdding();
-                        break;
-                    }
-
-                    // verify internal consistency
-                    if (false == incomingMessage.InternalValidityTest())
-                    {
-                        Console.WriteLine("Invalid message. rejected");
-                        continue;
-                    }
-                    // verify valid card type
-                    int cardId = DeviceMap2.GetDeviceIdFromName(this.DeviceName);
-                    if (cardId != incomingMessage.CardType)
-                    {
-                        Console.WriteLine($"{InstanceName} wrong card id {incomingMessage.CardType} while expecting {cardId}. message dropped.");
-                        continue;
-                    }
-                    // verify slot number
-                    if (incomingMessage.SlotNumber != this._deviceSlotIndex)
-                    {
-                        Console.WriteLine($"{InstanceName} wrong slot number ({incomingMessage.SlotNumber}). incoming message dropped.");
-                        continue;
-                    }
-                    // alert if items lost
-                    if (_ethToDeviceQueue2.Count == _ethToDeviceQueue2.BoundedCapacity)
-                    {
-                        Console.WriteLine($"Input queue items = {_ethToDeviceQueue2.Count}");
-                    }
-
-                    // finally, Handle message
-                    if (_isOutputDeviceReady)
-                    {
-                        HandleEthToDeviceRequest(incomingMessage);
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Device {DeviceName} not ready. message rejected.");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine(ex.Message);
-                }
-            }
-        }
-
-        public abstract string[] GetFormattedStatus(TimeSpan interval);
-    }
-
     public class SL508DeviceManager : DeviceManagerBase
     {
-        //public override string DeviceName => throw new NotImplementedException();
-        SL508892Setup thisDeviceSetup;
+        private ISend<SendObject> _targetConsumer;
+        SL508892Setup _thisDeviceSetup;
         Session _serialSsession;
-        List<ChannelAux> _channelAuxList;
+        List<ChannelAux> _channelAuxList; // note that the index of this list is NOT (necessarily) the channel index
+        public List<ChannelStat> ChannelStatList { get; private set; } // note that the index of this list is NOT (necessarily) the channel index
         IWatchdog _watchdog;
-        int _numberOfSentBytes;
-        int _numberOfSentMessages;
-        Task messageLoopTask;
 
         /// <summary>
-        /// SetWatchdog should be called before OpenChannel()
+        /// SetWatchdog should be called (if needed) before OpenChannel()
         /// </summary>
         public void SetWatchdog(IWatchdog wd)
         {
@@ -142,11 +38,10 @@ namespace SerialOp
 
         public SL508DeviceManager(ISend<SendObject> targetConsumer, SL508892Setup setup, Session theSession)// : base(setup)
         {
-            //this._targetConsumer = targetConsumer;
-            this.thisDeviceSetup = setup;
+            this._targetConsumer = targetConsumer;
+            this._thisDeviceSetup = setup;
             this._serialSsession = theSession;
             this._deviceSlotIndex = setup.SlotNumber;
-
             this.DeviceName = DeviceMap2.SL508Literal;
         }
 
@@ -157,12 +52,13 @@ namespace SerialOp
                 return;
             }
             _inDisposeFlag = true;
-            stopTask = true;
-            Console.WriteLine("_inDisposeFlag = true");
-            _watchdog?.StopWatching();
             
-            Console.WriteLine("Waiting on channel readers to dispose");
-            messageLoopTask = null;
+            _watchdog?.StopWatching();
+
+            _cancelTokenSource.Cancel();
+            _downstreamTask.Wait();
+            _downstreamTask = null;
+
             var readersWaitHandle = _channelAuxList.Select(i => i.AsyncResult.AsyncWaitHandle).ToArray();
             WaitHandle.WaitAll(readersWaitHandle);
             foreach (var cx in _channelAuxList)
@@ -170,13 +66,10 @@ namespace SerialOp
                 cx.Reader.Dispose();
                 cx.Writer.Dispose();
             }
+
             Console.WriteLine("Readers/writers disposed..");
         }
         
-        //public override string[] GetFormattedStatus(TimeSpan interval)
-        //{
-        //    throw new NotImplementedException();
-        //}
         public bool OpenDevice()
         {
             if (_inDisposeFlag)
@@ -184,6 +77,7 @@ namespace SerialOp
                 return false;
             }
             _channelAuxList = new List<ChannelAux>();
+            ChannelStatList = new List<ChannelStat>();
 
             // set serial channels and add them to channel list
             // ------------------------------------------------
@@ -192,18 +86,25 @@ namespace SerialOp
                 // set channel properties
                 SerialPort sPort = _serialSsession.GetChannel(chNum) as SerialPort;
                 int chIndex = sPort.GetIndex();
-                SerialChannelSetup serialChannel = thisDeviceSetup.GetChannelEntry(chIndex);  
-                System.Diagnostics.Debug.Assert(null != serialChannel);
-                sPort.SetMode(serialChannel.Mode);
-                sPort.SetSpeed(serialChannel.Baudrate);
-                sPort.SetParity(serialChannel.Parity);
-                sPort.SetStopBits(serialChannel.Stopbits);
+                SerialChannelSetup channelSetup = _thisDeviceSetup.GetChannelEntry(chIndex);
+                if (null != channelSetup)
+                {
+                    sPort.SetMode(channelSetup.Mode);
+                    sPort.SetSpeed(channelSetup.Baudrate);
+                    sPort.SetParity(channelSetup.Parity);
+                    sPort.SetStopBits(channelSetup.Stopbits);
+                }
+                else
+                {
+                    Console.WriteLine($"Could not find setup for channel {chIndex}. Using defaults");
+                }
 
                 // set reader & writer and add channel to channel-list
                 var reader = new SerialReader(_serialSsession.GetDataStream(), chIndex);
                 var writer = new SerialWriter(_serialSsession.GetDataStream(), chIndex);
                 ChannelAux chAux = new ChannelAux(chIndex, reader, writer, _serialSsession);
                 _channelAuxList.Add(chAux);
+                ChannelStatList.Add(new ChannelStat(chIndex));
 
                 // register to WD service
                 _watchdog?.Register($"Com{chIndex}", TimeSpan.FromSeconds(2.0)); // Hmm.. two second ... should use value relative to the value passed to .SetTimeout();
@@ -215,8 +116,8 @@ namespace SerialOp
                 cx.AsyncResult = cx.Reader.BeginRead(200, new AsyncCallback(ReaderCallback), cx); // start reading from device
             }
 
-            stopTask = false;
-            messageLoopTask = Task.Factory.StartNew(EthToDeviceMessageLoop_Task);
+
+            _downstreamTask = Task.Factory.StartNew(DownstreamMessageLoop_Task, _cancelTokenSource.Token);
 
             return false;
         }
@@ -238,8 +139,13 @@ namespace SerialOp
                 System.Diagnostics.Debug.Assert(null != chAux.OriginatingSession);
                 System.Diagnostics.Debug.Assert(true == chAux.OriginatingSession.IsRunning());
 
+                EthernetMessage em = StaticMethods.BuildEthernetMessageFromDevice(recvBytes, this._thisDeviceSetup, chIndex);
+                _targetConsumer?.Send(new SendObject(  _thisDeviceSetup.DestEndPoint.ToIpEp(), em.GetByteArray(MessageWay.upstream)));
                 Console.WriteLine($"Message from channel {chIndex}. Length {recvBytes.Length}");
                 _watchdog?.NotifyAlive( chName);
+                ChannelStat chStat = ChannelStatList.Where(i => i.ChannelIndex == chIndex).FirstOrDefault();
+                chStat.ReadByteCount += recvBytes.Length; 
+                chStat.ReadMessageCount++; 
                 chAux.AsyncResult = chAux.Reader.BeginRead(200, new AsyncCallback(ReaderCallback), chAux);
             }
             catch (UeiDaqException ex)
@@ -266,37 +172,47 @@ namespace SerialOp
             }
         }
 
-        protected override void HandleEthToDeviceRequest(EthernetMessage request)
+        /// <summary>
+        /// Ethernet to device message handler
+        /// </summary>
+        protected override void HandleDownstreamRequest(EthernetMessage request)
         {
             if (true == _inDisposeFlag)
             {
                 return;
             }
 
-            System.Diagnostics.Debug.Assert(request.SerialChannelNumber < _channelAuxList.Count);
-            ChannelAux cx = _channelAuxList[request.SerialChannelNumber];
+            int chIndex = request.SerialChannelNumber;
+            ChannelAux cx = _channelAuxList.Where(i => i.ChannelIndex == chIndex).FirstOrDefault();
+            if (null==cx)
+            {
+                Console.WriteLine("Message from Ethernet with non exists channel index. rejected");
+                return;
+            }
             UeiDaq.SerialWriter sw = cx.Writer;
             System.Diagnostics.Debug.Assert(sw != null);
 
-            int sentBytes = 0;
+            //
             try
             {
+                int writtenBytes = 0;
                 // write to serial port
-                sentBytes = sw.Write(request.PayloadBytes);
-                System.Diagnostics.Debug.Assert(sentBytes == request.PayloadBytes.Length);
+                writtenBytes = sw.Write(request.PayloadBytes);
+                System.Diagnostics.Debug.Assert( writtenBytes == request.PayloadBytes.Length);
 
                 // wait state
-                SerialPort sPort = _serialSsession.GetChannel(request.SerialChannelNumber) as SerialPort;
+                SerialPort sPort = _serialSsession.GetChannel( chIndex) as SerialPort;
                 int sp = StaticMethods.GetSerialSpeedAsInt(sPort.GetSpeed());
                 double bpsPossibe = Convert.ToDouble(sp) * 0.8;
                 int bitsToSend = request.PayloadBytes.Length * 8;
-                double waitstateMs = Convert.ToDouble(bitsToSend) / bpsPossibe * 1000.0; // in milisec
+                double waitstateMs = Convert.ToDouble(bitsToSend) / bpsPossibe * 1000.0; // in mili-sec
                 System.Threading.Thread.Sleep(Convert.ToInt32(waitstateMs));
-                
+
                 // update counters
-                
-                _numberOfSentBytes += sentBytes;
-                _numberOfSentMessages++;
+                ChannelStat chStat = ChannelStatList.Where(i => i.ChannelIndex == chIndex).FirstOrDefault();
+                chStat.WrittenByteCount += writtenBytes; 
+                chStat.WrittenMessageCount++;
+
                 //_ViewItemList[request.SerialChannelNumber] = new ViewItem<byte[]>(request.PayloadBytes, TimeSpan.FromSeconds(5));
             }
             catch (UeiDaqException ex)

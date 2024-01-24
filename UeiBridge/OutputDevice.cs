@@ -62,11 +62,9 @@ namespace UeiBridge
 
             try
             {
-                string err=null;
-                EthernetMessage em = EthernetMessage.CreateFromByteArray(m, MessageWay.downstream, ref err);
+                EthernetMessage em = EthernetMessage.CreateFromByteArray(m, MessageWay.downstream, new Action<string>(s => _logger.Warn(s)));
                 if (null==em)
                 {
-                    _logger.Warn(err);
                     return;
                 }
                 

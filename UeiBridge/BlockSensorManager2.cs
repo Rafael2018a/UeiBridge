@@ -90,11 +90,10 @@ namespace UeiBridge
                 var selectedEntries = _blockSensorTable.Where(ent => ent.Subaddress == this._subaddress);
 
                 // convert incoming message 
-                string err=null;
-                EthernetMessage downstreamEthMessage = EthernetMessage.CreateFromByteArray(byteMessage, MessageWay.downstream, ref err);
+                EthernetMessage downstreamEthMessage = EthernetMessage.CreateFromByteArray(byteMessage, MessageWay.downstream, null);
                 if (null==downstreamEthMessage)
                 {
-                    _logger.Warn(err);
+                    _logger.Warn("error in creating eth message");
                     return;
                 }
                 double[] downstreamPayload = _attachedConverter.DownstreamConvert(downstreamEthMessage.PayloadBytes) as double[];

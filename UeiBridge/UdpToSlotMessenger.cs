@@ -67,12 +67,10 @@ namespace UeiBridge
                     break;
                 }
 
-                string err=null;
-                EthernetMessage ethMag = EthernetMessage.CreateFromByteArray( incomingMessage.ByteMessage, MessageWay.downstream,  ref err);
-
+                EthernetMessage ethMag = EthernetMessage.CreateFromByteArray( incomingMessage.ByteMessage, MessageWay.downstream, new Action<string>(s => _logger.Warn(s)));
                 if (null==ethMag)
                 {
-                    _logger.Warn($"Failed to parse incoming ethernet message (aimed to {incomingMessage.TargetEndPoint}). {err}");
+                    _logger.Warn($"Failed to parse incoming Ethernet message (aimed to {incomingMessage.TargetEndPoint}).");
                     continue;
                 }
 

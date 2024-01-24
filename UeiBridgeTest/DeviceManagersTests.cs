@@ -179,8 +179,7 @@ namespace UeiBridgeTest
 
                 System.Threading.Thread.Sleep(100);
 
-                string errStr = null;
-                EthernetMessage em = EthernetMessage.CreateFromByteArray(sm._sentObject.ByteMessage, MessageWay.upstream, ref errStr);
+                EthernetMessage em = EthernetMessage.CreateFromByteArray(sm._sentObject.ByteMessage, MessageWay.upstream, null);
 
                 Assert.Multiple(() =>
                 {

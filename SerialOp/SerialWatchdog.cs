@@ -58,8 +58,6 @@ namespace SerialOp
         /// <summary>
         /// Register client for watch dog services
         /// </summary>
-        /// <param name="originator"></param>
-        /// <param name="timeSpan"></param>
         public void Register(string originator, TimeSpan timeSpan)
         {
             if (true == _stopWatching)
@@ -70,7 +68,7 @@ namespace SerialOp
             t.AutoReset = false;
             t.Interval = timeSpan.TotalMilliseconds;
             t.Elapsed += Timer_Elapsed;
-            t.Site = new mysite(originator);
+            t.Site = new Site1(originator);
             t.Start();
 
             _wdDic.Add(originator, t);

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,26 +10,6 @@ using UeiDaq;
 
 namespace SerialOp
 {
-
-    class mysite : ISite
-    {
-        public mysite(string n)
-        {
-            this.Name = n;
-        }
-        public IComponent Component => throw new NotImplementedException();
-
-        public IContainer Container => throw new NotImplementedException();
-
-        public bool DesignMode { get; set; }
-
-        public string Name { get; set; }
-
-        public object GetService(Type serviceType)
-        {
-            throw new NotImplementedException();
-        }
-    }
 
     /// <summary>
     /// serial-agent -r -ch 1
@@ -54,10 +33,10 @@ namespace SerialOp
         public void MainSerial()
         {
             // register CTRL + c handler
-            Console.CancelKeyPress += new ConsoleCancelEventHandler(myHandler);
+            Console.CancelKeyPress += new ConsoleCancelEventHandler(CancelEventHandler);
 
             // load setting
-            FileInfo setupfile = new FileInfo("Cube3.config");
+            FileInfo setupfile = new FileInfo("Cube2.config");
             var csl = new CubeSetupLoader(setupfile);
             if (null == csl.CubeSetupMain)
             {
@@ -70,23 +49,26 @@ namespace SerialOp
             int deviceSlotIndex = 3; // slot index in given cube
             var deviceSetup = _cubeSetup.GetDeviceSetupEntry( deviceSlotIndex) as SL508892Setup;
 
-            do
+            do // watchdog loop
             {
-                Session serSession = BuildSerialSession(deviceSetup);
+                // set session
+                // -----------
+                Session serSession = BuildSerialSession( deviceSetup);
                 if (null==serSession)
                 {
-                    goto exit;
+                    break;// loop
                 }
                 serSession.Start();
 
+                // set device manager and watchdog
+                // -------------------------------
                 SL508DeviceManager deviceManager = new SL508DeviceManager(null, deviceSetup, serSession);
                 SerialWatchdog swd = new SerialWatchdog(new Action<string>((i) => { stopByWatchdog = true; }));
                 deviceManager.SetWatchdog(swd);
                 deviceManager.OpenDevice();
 
-               
                 // sleep
-                // ======
+                // -----
                 Console.WriteLine("^C to stop");
                 int seed = 10;
                 do { 
@@ -94,22 +76,26 @@ namespace SerialOp
                     List<byte[]> msgs = StaticMethods.Make_SL508Down_Messages(++seed);
                     foreach (byte[] m in msgs)
                     {
-                        deviceManager.Enqueue(m);  //new byte[] { 0, 1, 2 });
+                        deviceManager.Enqueue(m); //new byte[] { 0, 1, 2 });
                     }
                 } while (false == stopByUser && false == stopByWatchdog);
 
+                Console.WriteLine("Serial stat\n--------");
+                foreach (var ch in deviceManager.ChannelStatList)
+                {
+                    Console.WriteLine($"CH {ch.ChannelIndex}: {ch.ToString()}");
+                }
+                // dispose process
+                // ----------------
                 deviceManager.Dispose();
                 deviceManager = null;
 
-                // dispose process
-                // ===============
                 serSession.Stop();
                 System.Diagnostics.Debug.Assert(false == serSession.IsRunning());
-
                 serSession.Dispose();
                 serSession = null;
 
-                Console.WriteLine("All Disposed");
+                Console.WriteLine(" = Dispose fin =");
 
                 // wait before restart
                 if (true==stopByWatchdog)
@@ -120,7 +106,7 @@ namespace SerialOp
                 swd = null;
             } while (false == stopByUser);
 
-            exit:  Console.WriteLine("Any key to exit...");
+            Console.WriteLine("Any key to exit...");
             Console.ReadKey();
         }
 
@@ -283,7 +269,7 @@ namespace SerialOp
         }
 
 
-        protected void myHandler(object sender, ConsoleCancelEventArgs args)
+        protected void CancelEventHandler(object sender, ConsoleCancelEventArgs args)
         {
             // Set cancel to true to let the Main task clean-up the I/O sessions
             args.Cancel = true;
