@@ -45,7 +45,7 @@ namespace SerialOp
             this.DeviceName = DeviceMap2.SL508Literal;
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             if (true==_inDisposeFlag)
             {
@@ -55,7 +55,9 @@ namespace SerialOp
             
             _watchdog?.StopWatching();
 
-            _cancelTokenSource.Cancel();
+
+            
+            TerminateDownstreamTask();
             _downstreamTask.Wait();
             _downstreamTask = null;
 
@@ -93,12 +95,16 @@ namespace SerialOp
                     sPort.SetSpeed(channelSetup.Baudrate);
                     sPort.SetParity(channelSetup.Parity);
                     sPort.SetStopBits(channelSetup.Stopbits);
+                    sPort.SetDataBits(SerialPortDataBits.DataBits8);
                 }
                 else
                 {
                     Console.WriteLine($"Could not find setup for channel {chIndex}. Using defaults");
                 }
 
+                SerialPort sPort1 = _serialSsession.GetChannel(chNum) as SerialPort;
+                Console.WriteLine($"Com {chIndex}: {sPort1.GetMode()} {sPort1.GetSpeed()}" );
+                
                 // set reader & writer and add channel to channel-list
                 var reader = new SerialReader(_serialSsession.GetDataStream(), chIndex);
                 var writer = new SerialWriter(_serialSsession.GetDataStream(), chIndex);
@@ -139,8 +145,8 @@ namespace SerialOp
                 System.Diagnostics.Debug.Assert(null != chAux.OriginatingSession);
                 System.Diagnostics.Debug.Assert(true == chAux.OriginatingSession.IsRunning());
 
-                EthernetMessage em = StaticMethods.BuildEthernetMessageFromDevice(recvBytes, this._thisDeviceSetup, chIndex);
-                _targetConsumer?.Send(new SendObject(  _thisDeviceSetup.DestEndPoint.ToIpEp(), em.GetByteArray(MessageWay.upstream)));
+                //EthernetMessage em = StaticMethods.BuildEthernetMessageFromDevice(recvBytes, this._thisDeviceSetup, chIndex);
+                //_targetConsumer?.Send(new SendObject(  _thisDeviceSetup.DestEndPoint.ToIpEp(), em.GetByteArray(MessageWay.upstream)));
                 Console.WriteLine($"Message from channel {chIndex}. Length {recvBytes.Length}");
                 _watchdog?.NotifyAlive( chName);
                 ChannelStat chStat = ChannelStatList.Where(i => i.ChannelIndex == chIndex).FirstOrDefault();

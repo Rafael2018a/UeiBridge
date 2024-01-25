@@ -27,6 +27,11 @@ namespace SerialOp
         private BlockingCollection<EthernetMessage> _downstreamQueue = new BlockingCollection<EthernetMessage>(100); // max 100 items
         private Action<string> _act = new Action<string>(s => Console.WriteLine($"Failed to parse downstream message. {s}"));
 
+        public void TerminateDownstreamTask()
+        {
+            _cancelTokenSource.Cancel();
+            _downstreamQueue.CompleteAdding();
+        }
         /// <summary>
         /// Translate and enqueue downstream message
         /// </summary>
@@ -102,6 +107,10 @@ namespace SerialOp
                         Console.WriteLine($"Device {DeviceName} not ready. message rejected.");
                     }
                 }
+                catch(InvalidOperationException ex) // _downstreamQueue marked as complete (for task termination)
+                {
+                    //Console.WriteLine(ex.Message);
+                }
                 catch (Exception ex)
                 {
                     Console.WriteLine(ex.Message);
@@ -111,5 +120,7 @@ namespace SerialOp
         }
 
         public abstract string[] GetFormattedStatus(TimeSpan interval);
+
+        public abstract void Dispose();
     }
 }

@@ -36,7 +36,7 @@ namespace SerialOp
             Console.CancelKeyPress += new ConsoleCancelEventHandler(CancelEventHandler);
 
             // load setting
-            FileInfo setupfile = new FileInfo("Cube2.config");
+            FileInfo setupfile = new FileInfo("Cube3.config");
             var csl = new CubeSetupLoader(setupfile);
             if (null == csl.CubeSetupMain)
             {
@@ -46,7 +46,7 @@ namespace SerialOp
             _cubeSetup = csl.CubeSetupMain;
 
 
-            int deviceSlotIndex = 3; // slot index in given cube
+            int deviceSlotIndex = 0; // slot index in given cube
             var deviceSetup = _cubeSetup.GetDeviceSetupEntry( deviceSlotIndex) as SL508892Setup;
 
             do // watchdog loop
@@ -59,6 +59,8 @@ namespace SerialOp
                     break;// loop
                 }
                 serSession.Start();
+
+                Console.WriteLine($"Listening on {serSession.GetDevice().GetResourceName()}");
 
                 // set device manager and watchdog
                 // -------------------------------
@@ -73,11 +75,11 @@ namespace SerialOp
                 int seed = 10;
                 do { 
                     System.Threading.Thread.Sleep(1000);
-                    List<byte[]> msgs = StaticMethods.Make_SL508Down_Messages(++seed);
-                    foreach (byte[] m in msgs)
-                    {
-                        deviceManager.Enqueue(m); //new byte[] { 0, 1, 2 });
-                    }
+                    //List<byte[]> msgs = StaticMethods.Make_SL508Down_Messages(++seed);
+                    //foreach (byte[] m in msgs)
+                    //{
+                    //    deviceManager.Enqueue(m); //new byte[] { 0, 1, 2 });
+                    //}
                 } while (false == stopByUser && false == stopByWatchdog);
 
                 Console.WriteLine("Serial stat\n--------");
