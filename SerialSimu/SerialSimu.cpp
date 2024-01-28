@@ -13,16 +13,28 @@ using namespace std;
 
 int main()
 {
+	//printf("date: '%s'\n", __DATE__);
+	//printf("time: '%s'\n", __TIME__);
+	//printf("timestamp: '%s'\n", __TIMESTAMP__);
+
+	cout << "Compilation time: " << __TIMESTAMP__ << "\n";
+
 	//std::cout << "Hello World!\n";
 
-	char sendBuffer[] = { 0x41,0x42,0x43,0x44,0x45,0x46,0x47,0x48,0x49,0x50, 0x41,0x42,0x43,0x44,0x45,0x46,0x47,0x48,0x49,0x50 };
-	int sendCount;
-	int i, j;
+	char sendBuffer[100];// = { 0x41,0x42,0x43,0x44,0x45,0x46,0x47,0x48,0x49,0x50, 0x41,0x42,0x43,0x44,0x45,0x46,0x47,0x48,0x49,0x50 };
+	//int sendCount;
+	//int i, j;
 	CUeiSession mySession;
 	//CUeiSerialReader** readers;
-	CUeiSerialWriter* writer;
+	//CUeiSerialWriter* writer;
+	vector<CUeiSerialWriter*> writers;
+
+	
 
 	string resString("pdna://192.168.100.3/Dev3/com0");
+
+	CUeiDevice * device = CUeiDeviceEnumerator::GetDeviceFromResource(resString);
+	device->Reset();
 
 	CUeiSerialPort* port = mySession.CreateSerialPort(resString,
 		UeiSerialModeRS485FullDuplex,
@@ -36,6 +48,7 @@ int main()
 
 	cout << "Writing to " << resString << "at 57600bps, RS485FullDuplex" << "\n";
 
+
 	//// Create an asynchronous listener and a writer for each port configured
 	//// in the resource string
 	//writer = new CUeiSerialWriter [mySession.GetNumberOfChannels()];
@@ -43,28 +56,27 @@ int main()
 	int com1 = 0;
 	Int32 port1 = mySession.GetChannel(com1)->GetIndex();
 
-	writer = new CUeiSerialWriter(mySession.GetDataStream(), port1);
+	writers.push_back( new CUeiSerialWriter(mySession.GetDataStream(), port1));
+	//writer = new CUeiSerialWriter(mySession.GetDataStream(), port1);
 
 	mySession.Start();
 
-	sendCount = 0;
-	for (int m = 0; m < 50000; m++)
+	for (int m = 0; m < 100; m++)
 	{
+		int seed = m + 40;
 		// do write for each channel
-		//for (i = 0; i < mySession.GetNumberOfChannels(); i++)
+		for (int i = 0; i < sizeof(sendBuffer); i++)
 		{
-			//for (j = 0; j < SEND_SIZE; j++) {
-			//    sendBuffer[j] = 'a' + sendCount;
-			//    sendCount = (sendCount + 1) % 26;
-			//}
-			//sendBuffer[SEND_SIZE] = 0;
-			cout << m << "  sending " << sizeof(sendBuffer) << " bytes to " << " ch:" << port1 << "\n";
-				//" % d bytes to  writer[% d]: % s\n", i, sendBuffer);
-			writer->Write(sizeof(sendBuffer), sendBuffer, NULL);
+			sendBuffer[i] = seed + i;
 		}
-		//printf("\n");
-
-		Sleep(1);
+        cout << std::dec << m << "  sending " << sizeof(sendBuffer) << " bytes through " << " ch:" << port1 << " first: 0x" << std::hex << seed << "\n";
+		Int32 numberOfSent = 0;
+		writers[0]->Write(sizeof(sendBuffer), sendBuffer, &numberOfSent);
+		if (numberOfSent != sizeof(sendBuffer))
+		{
+			cout << "wrong length" << "\n";
+		}
+		Sleep(10);
 	}
 
 }

@@ -22,13 +22,11 @@ namespace SerialOp
         bool stopByUser = false;
         bool stopByWatchdog = false;
 
-
         static void Main()
         {
             Program p = new Program();
             p.MainSerial();
         }
-
 
         public void MainSerial()
         {
@@ -53,7 +51,7 @@ namespace SerialOp
             {
                 // set session
                 // -----------
-                Session serSession = BuildSerialSession( deviceSetup);
+                Session serSession = BuildSerialSession2( deviceSetup);
                 if (null==serSession)
                 {
                     break;// loop
@@ -67,7 +65,10 @@ namespace SerialOp
                 SL508DeviceManager deviceManager = new SL508DeviceManager(null, deviceSetup, serSession);
                 SerialWatchdog swd = new SerialWatchdog(new Action<string>((i) => { stopByWatchdog = true; }));
                 deviceManager.SetWatchdog(swd);
-                deviceManager.OpenDevice();
+                if (false ==deviceManager.OpenDevice2())
+                {
+                    break;// loop
+                }
 
                 // sleep
                 // -----
@@ -82,6 +83,7 @@ namespace SerialOp
                     //}
                 } while (false == stopByUser && false == stopByWatchdog);
 
+                // Display statistics 
                 Console.WriteLine("Serial stat\n--------");
                 foreach (var ch in deviceManager.ChannelStatList)
                 {
@@ -161,9 +163,11 @@ namespace SerialOp
                 cx.AsyncResult = cx.Reader.BeginRead(200, new AsyncCallback(ReaderCallback), cx);
             }
         }
-#endif
+
+        int line = 0;
         void ReaderCallback(IAsyncResult ar)
         {
+            
             if ((true == stopByUser)||(true==stopByWatchdog))
             {
                 return;
@@ -180,7 +184,7 @@ namespace SerialOp
                 System.Diagnostics.Debug.Assert(true == chAux.OriginatingSession.IsRunning());
 
                 //SerialPort sp = chAux.OriginatingSession.GetChannel(chIndex) as SerialPort;
-                Console.WriteLine($"Message from channel {chIndex}. Length {recvBytes.Length}");
+                Console.WriteLine($"({++line}) Message from channel {chIndex}. Length {recvBytes.Length}");
                 chAux.AsyncResult = chAux.Reader.BeginRead(200, new AsyncCallback(ReaderCallback), chAux);
             }
             catch (UeiDaqException ex)
@@ -211,22 +215,90 @@ namespace SerialOp
                 System.Diagnostics.Debug.Assert(true == chAux.OriginatingSession.IsRunning());
             }
         }
+#endif
+        public Session BuildSerialSession2(SL508892Setup deviceSetup)
+        {
+            if (null == deviceSetup)
+            {
+                return null;
+            }
+            string deviceuri = $"{deviceSetup.CubeUrl}Dev{deviceSetup.SlotNumber}/";
+            try
+            {
+                Session serialSession = new Session();
+
+                UeiCube cube2 = new UeiCube(deviceSetup.CubeUrl);
+                if (cube2.DeviceReset(deviceuri))
+                {
+                    foreach (var channelSetup in deviceSetup.Channels)
+                    {
+                        if (false == channelSetup.IsEnabled)
+                        {
+                            continue;
+                        }
+                        string finalUri = $"{deviceSetup.CubeUrl}Dev{deviceSetup.SlotNumber}/Com{channelSetup.ChannelIndex}";
+                        SerialPort sport = serialSession.CreateSerialPort(finalUri,
+                                            channelSetup.Mode,
+                                            channelSetup.Baudrate,
+                                            SerialPortDataBits.DataBits8,
+                                            channelSetup.Parity,
+                                            channelSetup.Stopbits,
+                                            "");
+                        System.Diagnostics.Debug.Assert(null != sport);
+                    }
+
+                    // just verify that there are N channels (serial  ports)
+                    int chCount = deviceSetup.Channels.Where(ch => ch.IsEnabled == true).ToList().Count;
+                    System.Diagnostics.Debug.Assert(serialSession.GetNumberOfChannels() == chCount);
+                }
+                else
+                {
+                    Console.WriteLine($"Failed to reset device {deviceuri}");
+                    return null;
+                }
+
+                // Configure timing to return serial message when either of the following conditions occurred
+                // - The termination string was detected
+                // - 100 bytes have been received
+                // - 10ms elapsed (rate set to 100Hz);
+                serialSession.ConfigureTimingForMessagingIO(1000, 100.0);
+                serialSession.GetTiming().SetTimeout(500);
+
+
+                
+
+
+                foreach (SerialPort ch in serialSession.GetChannels())
+                {
+                    Console.WriteLine($"Ch{ch.GetIndex()}   Mode:{ch.GetMode()}   Speed:{StaticMethods.GetSerialSpeedAsInt(ch.GetSpeed())}");
+                }
+                //SerialPort sp = chnls[0] as SerialPort;
+                //Console.WriteLine( $"{ sp.GetIndex()}");
+                
+
+
+                return serialSession;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creating session. {ex.Message}");
+                return null;
+            }
+        }
 
         public Session BuildSerialSession(SL508892Setup deviceSetup)
         {
             Session serSession = null;
-            //SL508892Setup deviceSetup = deviceSetup1 as SL508892Setup;
-                //cubeSetup.GetDeviceSetupEntry(slotIndex) as SL508892Setup;
-            if (null==deviceSetup)
+            if (null == deviceSetup)
             {
                 return null;
             }
-            
+
             string deviceuri = $"{deviceSetup.CubeUrl}Dev{deviceSetup.SlotNumber}/";
 
             // build serialResource string
             StringBuilder com = new StringBuilder("com");
-            foreach( SerialChannelSetup ss in deviceSetup.Channels)
+            foreach (SerialChannelSetup ss in deviceSetup.Channels)
             {
                 if (ss.IsEnabled)
                 {

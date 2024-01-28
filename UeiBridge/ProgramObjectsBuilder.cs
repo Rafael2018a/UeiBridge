@@ -19,8 +19,10 @@ namespace UeiBridge
     {
         ILog _logger = StaticLocalMethods.GetLogger();
         List<PerDeviceObjects> _PerDeviceObjectsList;
+        List<IDeviceManager> _deviceManagerList; // for the time being (jan24) this is just for the new serial device handler
         List<UdpReader> _udpReaderList;
         public List<PerDeviceObjects> PerDeviceObjectsList => _PerDeviceObjectsList;
+        public List<IDeviceManager> DeviceManagerList => _deviceManagerList;
         public List<UdpReader> UdpReadersList => _udpReaderList;
 
 
@@ -63,6 +65,9 @@ namespace UeiBridge
             _logger.Info($"Cube{deviceInfo.CubeId}/Slot{deviceInfo.DeviceSlot}: {deviceMessage}");
         }
 
+        /// <summary>
+        /// For each device in slot, build a device manager and add it to _PerDeviceObjectsList
+        /// </summary>
         public void CreateDeviceManagers(List<UeiDeviceInfo> deviceInfoList)
         {
             if (deviceInfoList == null)
@@ -70,6 +75,8 @@ namespace UeiBridge
                 return;
             }
             _PerDeviceObjectsList = new List<PerDeviceObjects>();
+            _deviceManagerList = new List<IDeviceManager>();
+            
             _udpReaderList = new List<UdpReader>();
 
             foreach (UeiDeviceInfo deviceInfo in deviceInfoList)
@@ -108,10 +115,22 @@ namespace UeiBridge
                 // build manager(s)
                 //setup.CubeUrl = realDevice.CubeUrl;
                 //setup.IsBlockSensorActive = _mainConfig.Blocksensor.IsActive;
-                List<PerDeviceObjects> objs = BuildObjectsForDevice(deviceInfo, setup);
-                if (null != objs)
+
+                if (deviceInfo.DeviceName == DeviceMap2.SL508Literal)
                 {
-                    _PerDeviceObjectsList.AddRange(objs);
+                    var dm = BuildDeviceManager(deviceInfo, setup);
+                    if (null!=dm)
+                    {
+                        _deviceManagerList.Add(dm);
+                    }
+                }
+                else
+                {
+                    List<PerDeviceObjects> objs = BuildObjectsForDevice(deviceInfo, setup);
+                    if (null != objs)
+                    {
+                        _PerDeviceObjectsList.AddRange(objs);
+                    }
                 }
 
 
@@ -150,7 +169,25 @@ namespace UeiBridge
             }
         }
 
-        private List<PerDeviceObjects> BuildObjectsForDevice(UeiDeviceInfo realDevice, DeviceSetup setup)
+        IDeviceManager BuildDeviceManager(UeiDeviceInfo realDevice, DeviceSetup setup)
+        {
+            IDeviceManager result=null;
+
+            //switch (realDevice.DeviceName)
+            //{
+            //    case DeviceMap2.SL508Literal:
+            //        _logger.Info("Building SL508...");
+            //        SerialManagerTaskClass smtc = new SerialManagerTaskClass();
+            //        smtc.MainSerial(realDevice, setup as SL508892Setup);
+            //        result = smtc;
+            //        break;
+            //    default:
+            //        _logger.Warn($"Failed to build {realDevice.DeviceName}");
+            //        break;
+            //}
+            return result;
+        }
+        List<PerDeviceObjects> BuildObjectsForDevice(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
             switch (realDevice.DeviceName)
             {
@@ -736,82 +773,11 @@ namespace UeiBridge
             {
                 entry.Dispose();
             }
+
+            foreach(var entry in _deviceManagerList)
+            {
+                //entry.Dispose();
+            }
         }
     }
-#if moved
-    /// <summary>
-    /// messenger
-    /// 
-    /// </summary>
-    public class UdpToSlotMessenger : IEnqueue<byte[]>
-    {
-        private ILog _logger = StaticLocalMethods.GetLogger();
-        private List<OutputDevice> _consumersList = new List<OutputDevice>();
-        private BlockingCollection<byte[]> _inputQueue = new BlockingCollection<byte[]>(1000); // max 1000 items
-
-        public UdpToSlotMessenger()
-        {
-            Task.Factory.StartNew(() => DispatchToConsumer_Task());
-        }
-        public void Enqueue(byte[] byteMessage)
-        {
-            if (_inputQueue.IsCompleted)
-            {
-                return;
-            }
-
-            try
-            {
-                _inputQueue.Add(byteMessage);
-            }
-            catch (Exception ex)
-            {
-                _logger.Warn($"Incoming byte message error. {ex.Message}. message dropped.");
-            }
-        }
-
-        void DispatchToConsumer_Task()
-        {
-            // message loop
-            while (false == _inputQueue.IsCompleted)
-            {
-                byte[] incomingMessage = _inputQueue.Take(); // get from q
-
-                if (null == incomingMessage) // end task token
-                {
-                    _inputQueue.CompleteAdding();
-                    break;
-                }
-
-                EthernetMessage ethMag = EthernetMessage.CreateFromByteArray( incomingMessage, MessageWay.downstream);
-
-                var clist = _consumersList.Where(consumer => ((consumer.CubeId == ethMag.UnitId) && ( consumer.SlotNumber == ethMag.SlotNumber )));
-                if (clist.Count()==0) // no subs
-                {
-                    _logger.Warn($"No consumer to message aimed to slot {ethMag.SlotNumber} and unit id {ethMag.UnitId}");
-                    continue;
-                }
-                if (clist.Count() > 1) // 2 subs with same parameters
-                {
-                    throw new ArgumentException();
-                }
-
-                OutputDevice outDev = clist.FirstOrDefault();
-
-                outDev.Enqueue(incomingMessage);
-            }
-
-        }
-
-        /// <summary>
-        /// Subscribe
-        /// </summary>
-        public void SubscribeConsumer(OutputDevice outDevice)
-        {
-            int slot = outDevice.SlotNumber;
-            _logger.Info($"Device {outDevice.DeviceName} subscribed");
-            _consumersList.Add(outDevice);
-        }
-    }
-#endif
 }

@@ -27,6 +27,7 @@ namespace SerialOp
         List<ChannelAux> _channelAuxList; // note that the index of this list is NOT (necessarily) the channel index
         public List<ChannelStat> ChannelStatList { get; private set; } // note that the index of this list is NOT (necessarily) the channel index
         IWatchdog _watchdog;
+        uint linenumber = 0;
 
         /// <summary>
         /// SetWatchdog should be called (if needed) before OpenChannel()
@@ -71,7 +72,7 @@ namespace SerialOp
 
             Console.WriteLine("Readers/writers disposed..");
         }
-        
+
         public bool OpenDevice()
         {
             if (_inDisposeFlag)
@@ -103,8 +104,8 @@ namespace SerialOp
                 }
 
                 SerialPort sPort1 = _serialSsession.GetChannel(chNum) as SerialPort;
-                Console.WriteLine($"Com {chIndex}: {sPort1.GetMode()} {sPort1.GetSpeed()}" );
-                
+                Console.WriteLine($"Com {chIndex}: {sPort1.GetMode()} {sPort1.GetSpeed()}");
+
                 // set reader & writer and add channel to channel-list
                 var reader = new SerialReader(_serialSsession.GetDataStream(), chIndex);
                 var writer = new SerialWriter(_serialSsession.GetDataStream(), chIndex);
@@ -127,6 +128,46 @@ namespace SerialOp
 
             return false;
         }
+        public bool OpenDevice2()
+        {
+            if (_inDisposeFlag)
+            {
+                return false;
+            }
+            _channelAuxList = new List<ChannelAux>();
+            ChannelStatList = new List<ChannelStat>();
+
+            // set serial channels and add them to channel list
+            // ------------------------------------------------
+            for (int chNum = 0; chNum < _serialSsession.GetNumberOfChannels(); chNum++)
+            {
+                // get channel index
+                SerialPort sPort = _serialSsession.GetChannel(chNum) as SerialPort;
+                int chIndex = sPort.GetIndex();
+
+                // set reader & writer 
+                var reader = new SerialReader(_serialSsession.GetDataStream(), chIndex);
+                var writer = new SerialWriter(_serialSsession.GetDataStream(), chIndex);
+                // add channel-aux to list
+                ChannelAux chAux = new ChannelAux(chIndex, reader, writer, _serialSsession);
+                _channelAuxList.Add(chAux);
+                ChannelStatList.Add(new ChannelStat(chIndex));
+
+                // register to WD service
+                _watchdog?.Register($"Com{chIndex}", TimeSpan.FromSeconds(2.0)); // Hmm.. two second ... should use value relative to the value passed to .SetTimeout();
+            }
+
+            // start readers
+            foreach (ChannelAux cx in _channelAuxList)
+            {
+                cx.AsyncResult = cx.Reader.BeginRead(200, new AsyncCallback(ReaderCallback), cx); // start reading from device
+            }
+
+            // start downstream message loop
+            _downstreamTask = Task.Factory.StartNew(DownstreamMessageLoop_Task, _cancelTokenSource.Token);
+
+            return true;
+        }
 
         void ReaderCallback(IAsyncResult ar)
         {
@@ -147,7 +188,7 @@ namespace SerialOp
 
                 //EthernetMessage em = StaticMethods.BuildEthernetMessageFromDevice(recvBytes, this._thisDeviceSetup, chIndex);
                 //_targetConsumer?.Send(new SendObject(  _thisDeviceSetup.DestEndPoint.ToIpEp(), em.GetByteArray(MessageWay.upstream)));
-                Console.WriteLine($"Message from channel {chIndex}. Length {recvBytes.Length}");
+                Console.WriteLine($"({++linenumber}) Message from channel {chIndex}. Length {recvBytes.Length}");
                 _watchdog?.NotifyAlive( chName);
                 ChannelStat chStat = ChannelStatList.Where(i => i.ChannelIndex == chIndex).FirstOrDefault();
                 chStat.ReadByteCount += recvBytes.Length; 
