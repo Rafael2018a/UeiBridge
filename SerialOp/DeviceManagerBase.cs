@@ -66,7 +66,7 @@ namespace SerialOp
         {
             // message loop
             // ============
-            while ( _cancelTokenSource.Token.IsCancellationRequested==false)
+            while ( _cancelTokenSource.IsCancellationRequested==false)
             {
                 try
                 {

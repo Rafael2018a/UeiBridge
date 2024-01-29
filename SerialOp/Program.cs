@@ -65,7 +65,7 @@ namespace SerialOp
                 SL508DeviceManager deviceManager = new SL508DeviceManager(null, deviceSetup, serSession);
                 SerialWatchdog swd = new SerialWatchdog(new Action<string>((i) => { stopByWatchdog = true; }));
                 deviceManager.SetWatchdog(swd);
-                if (false ==deviceManager.OpenDevice2())
+                if (false ==deviceManager.OpenDevice())
                 {
                     break;// loop
                 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using UeiDaq;
 
 namespace SerialOp
@@ -9,7 +10,7 @@ namespace SerialOp
     /// the originating session, the associated serial reader
     /// and more..
     /// </summary>
-    class ChannelAux
+    public class ChannelAux
     {
         public SerialReader Reader { get; private set; }
         public SerialWriter Writer { get; private set; }
@@ -24,5 +25,7 @@ namespace SerialOp
             this.Writer = writer;
             this.OriginatingSession = originatingSession;
         }
+        //public Task<ChannelAux> ReadTask { get; private set; }
+        public Task ReadTask { get;  set; }
     }
 }
