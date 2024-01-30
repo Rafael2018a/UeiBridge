@@ -12,6 +12,7 @@ using UeiBridge.Library.Interfaces;
 using UeiBridge.Library;
 //using UeiBridge.Library.Types;
 using UeiDaq;
+using System.Collections.Concurrent;
 
 namespace SerialOp
 {
@@ -21,7 +22,7 @@ namespace SerialOp
     /// - update a given watchdog
     /// - maintain channel statistics
     /// </summary>
-    public class SL508DeviceManager : DeviceManagerBase
+    public class SL508DeviceManager : IDeviceManager
     {
         private ISend<SendObject> _targetConsumer;
         SL508892Setup _thisDeviceSetup;
@@ -30,7 +31,115 @@ namespace SerialOp
         public List<ChannelStat> ChannelStatList { get; private set; } // note that the index of this list is NOT (necessarily) the channel index
         IWatchdog _watchdog;
         uint linenumber = 0;
-        CancellationTokenSource _upstreamTaskCTS = new CancellationTokenSource();
+        //CancellationTokenSource _upstreamTaskCTS = new CancellationTokenSource();
+        // publics
+        public string DeviceName { get; protected set; }
+        public string InstanceName { get; protected set; }
+        // protected
+        protected int _deviceSlotIndex;
+        protected bool _isOutputDeviceReady = true;
+        protected bool _inDisposeFlag = false;
+        protected CancellationTokenSource _cancelTokenSource = new CancellationTokenSource();
+        protected Task _downstreamTask;
+        
+        // privates
+        private BlockingCollection<EthernetMessage> _downstreamQueue = new BlockingCollection<EthernetMessage>(100); // max 100 items
+        private Action<string> _act = new Action<string>(s => Console.WriteLine($"Failed to parse downstream message. {s}"));
+
+        /// <summary>
+        /// Translate and enqueue downstream message
+        /// </summary>
+        public void Enqueue(byte[] message)
+        {
+            if ((_downstreamQueue.IsCompleted) || (_isOutputDeviceReady == false))
+            {
+                return;
+            }
+
+            try
+            {
+                EthernetMessage em = EthernetMessage.CreateFromByteArray(message, MessageWay.downstream, _act);
+                if (null == em)
+                {
+                    return;
+                }
+
+                if (false == _downstreamQueue.TryAdd(em))
+                {
+                    Console.WriteLine($"Incoming message dropped due to full message queue");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Incoming message dropped. {ex.Message}.");
+            }
+
+        }
+
+        protected void DownstreamMessageLoop_Task()
+        {
+            // message loop
+            // ============
+            while (_cancelTokenSource.IsCancellationRequested == false)
+            {
+                try
+                {
+                    EthernetMessage incomingMessage = _downstreamQueue.Take();
+
+                    // verify internal consistency
+                    if (false == incomingMessage.InternalValidityTest())
+                    {
+                        Console.WriteLine("Invalid message. rejected");
+                        continue;
+                    }
+                    // verify valid card type
+                    int cardId = DeviceMap2.GetDeviceIdFromName(this.DeviceName);
+                    if (cardId != incomingMessage.CardType)
+                    {
+                        Console.WriteLine($"{InstanceName} wrong card id {incomingMessage.CardType} while expecting {cardId}. message dropped.");
+                        continue;
+                    }
+                    // verify slot number
+                    if (incomingMessage.SlotNumber != this._deviceSlotIndex)
+                    {
+                        Console.WriteLine($"{InstanceName} wrong slot number ({incomingMessage.SlotNumber}). incoming message dropped.");
+                        continue;
+                    }
+                    // alert if items lost
+                    if (_downstreamQueue.Count == _downstreamQueue.BoundedCapacity)
+                    {
+                        Console.WriteLine($"Input queue items = {_downstreamQueue.Count}");
+                    }
+
+                    // finally, Handle message
+                    if (_isOutputDeviceReady)
+                    {
+                        HandleDownstreamRequest(incomingMessage);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Device {DeviceName} not ready. message rejected.");
+                    }
+                }
+                catch (InvalidOperationException ex) // _downstreamQueue marked as complete (for task termination)
+                {
+                    //Console.WriteLine(ex.Message);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+            _downstreamQueue.CompleteAdding();
+        }
+
+
+
+        public void TerminateDownstreamTask()
+        {
+            _cancelTokenSource.Cancel();
+            _downstreamQueue.CompleteAdding();
+        }
 
         /// <summary>
         /// SetWatchdog should be called (if needed) before OpenChannel()
@@ -49,7 +158,7 @@ namespace SerialOp
             this.DeviceName = DeviceMap2.SL508Literal;
         }
 
-        public override void Dispose()
+        public void Dispose()
         {
             if (true == _inDisposeFlag)
             {
@@ -60,10 +169,10 @@ namespace SerialOp
             _watchdog?.StopWatching();
 
             TerminateDownstreamTask();
-            _downstreamTask.Wait();
+            //_downstreamTask.Wait();
             _downstreamTask = null;
 #if usetasks
-            _upstreamTaskCTS.Cancel();
+            _cancelTokenSource.Cancel();
             var readersWaitHandle = _channelAuxList.Select(i => i.ReadTask);
             Task.WaitAll(readersWaitHandle.ToArray());
 #else
@@ -78,7 +187,7 @@ namespace SerialOp
 
             Console.WriteLine("Readers/writers disposed..");
         }
-        public bool OpenDevice()
+        public bool StartDevice()
         {
             if (_inDisposeFlag)
             {
@@ -87,15 +196,15 @@ namespace SerialOp
             _channelAuxList = new List<ChannelAux>();
             ChannelStatList = new List<ChannelStat>();
 
-            // set serial channels and add them to channel list
-            // ------------------------------------------------
+            // build serial readers and writers
+            // --------------------------------
             for (int chNum = 0; chNum < _serialSsession.GetNumberOfChannels(); chNum++)
             {
                 // get channel index
                 SerialPort sPort = _serialSsession.GetChannel(chNum) as SerialPort;
                 int chIndex = sPort.GetIndex();
 
-                // set reader & writer 
+                // create reader & writer 
                 var reader = new SerialReader(_serialSsession.GetDataStream(), chIndex);
                 var writer = new SerialWriter(_serialSsession.GetDataStream(), chIndex);
 
@@ -111,17 +220,18 @@ namespace SerialOp
             // start readers
             foreach (ChannelAux cx in _channelAuxList)
             {
-
 #if usetasks
-                cx.ReadTask = Task.Factory.StartNew(() => UpstreamMessageLoop_Task(cx), _upstreamTaskCTS.Token);
+                cx.ReadTask = Task.Factory.StartNew(() => UpstreamMessageLoop_Task(cx), _cancelTokenSource.Token);
 #else
                 cx.AsyncResult = cx.Reader.BeginRead(200, new AsyncCallback(ReaderCallback), cx); // start reading from device
 #endif
             }
 
             // start downstream message loop
-            _downstreamTask = Task.Factory.StartNew(DownstreamMessageLoop_Task, _cancelTokenSource.Token);
+            //_downstreamTask = Task.Factory.StartNew(DownstreamMessageLoop_Task, _cancelTokenSource.Token);
 
+            //var allTasks = _channelAuxList.Where(cx => cx.ReadTask != null).Select(cx => cx.ReadTask);
+            //return allTasks.ToArray()
             return true;
         }
 
@@ -175,10 +285,20 @@ namespace SerialOp
             }
         }
 
+        internal void WaitAll()
+        {
+            var allTasks = _channelAuxList.Where(cx => cx.ReadTask != null).Select(cx => cx.ReadTask);
+            Task.WaitAll( allTasks.ToArray());
+        }
+
+        public void Stop()
+        {
+            _cancelTokenSource.Cancel();
+        }
         /// <summary>
         /// Ethernet to device message handler
         /// </summary>
-        protected override void HandleDownstreamRequest(EthernetMessage request)
+        protected void HandleDownstreamRequest(EthernetMessage request)
         {
             if (true == _inDisposeFlag)
             {
@@ -230,15 +350,17 @@ namespace SerialOp
             }
         }
 
-        public override string[] GetFormattedStatus(TimeSpan interval)
+        public string[] GetFormattedStatus(TimeSpan interval)
         {
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// This task is per single channel (uart)
+        /// </summary>
+        /// <param name="cx"></param>
         protected void UpstreamMessageLoop_Task(ChannelAux cx)
         {
-            //int chanNum = _ueiSession.GetChannel(i).GetIndex();
-            //Console.WriteLine("reader{i}: ");
 
             // "available" is the amount of data remaining from a single event
             // more data may be in the queue once "available" bytes have been read
@@ -259,9 +381,9 @@ namespace SerialOp
                         {
                             System.Threading.Thread.Sleep(5);
                         }
-                    } while ((available == 0)&&(false==_upstreamTaskCTS.IsCancellationRequested));
+                    } while ((available == 0)&&(false== _cancelTokenSource.IsCancellationRequested));
 
-                    if (!_upstreamTaskCTS.IsCancellationRequested)
+                    if (!_cancelTokenSource.IsCancellationRequested)
                     {
                         byte[] recvBytes = cx.Reader.Read(100); //ReadTimestamped()
                         Console.WriteLine($"({++linenumber}) Message from channel {cx.ChannelIndex}. Length {recvBytes.Length}");
@@ -270,7 +392,7 @@ namespace SerialOp
                         chStat.ReadMessageCount++;
 
                     }
-                } while (false == _upstreamTaskCTS.IsCancellationRequested);
+                } while (false == _cancelTokenSource.IsCancellationRequested);
             }
             catch (UeiDaqException e)
             {
@@ -278,6 +400,69 @@ namespace SerialOp
             }
             Console.WriteLine($"Stopped listening on {chName}");
         }
+        public static Session BuildSerialSession2(SL508892Setup deviceSetup)
+        {
+            if (null == deviceSetup)
+            {
+                return null;
+            }
+            string deviceuri = $"{deviceSetup.CubeUrl}Dev{deviceSetup.SlotNumber}/";
+            try
+            {
+                Session serialSession = new Session();
+
+                UeiCube cube2 = new UeiCube(deviceSetup.CubeUrl);
+                if (cube2.DeviceReset(deviceuri))
+                {
+                    foreach (var channelSetup in deviceSetup.Channels)
+                    {
+                        if (false == channelSetup.IsEnabled)
+                        {
+                            continue;
+                        }
+                        string finalUri = $"{deviceSetup.CubeUrl}Dev{deviceSetup.SlotNumber}/Com{channelSetup.ChannelIndex}";
+                        SerialPort sport = serialSession.CreateSerialPort(finalUri,
+                                            channelSetup.Mode,
+                                            channelSetup.Baudrate,
+                                            SerialPortDataBits.DataBits8,
+                                            channelSetup.Parity,
+                                            channelSetup.Stopbits,
+                                            "");
+                        System.Diagnostics.Debug.Assert(null != sport);
+                    }
+
+                    // just verify that there are N channels (serial  ports)
+                    int chCount = deviceSetup.Channels.Where(ch => ch.IsEnabled == true).ToList().Count;
+                    System.Diagnostics.Debug.Assert(serialSession.GetNumberOfChannels() == chCount);
+                }
+                else
+                {
+                    Console.WriteLine($"Failed to reset device {deviceuri}");
+                    return null;
+                }
+
+                // Configure timing to return serial message when either of the following conditions occurred
+                // - The termination string was detected
+                // - 100 bytes have been received
+                // - 10ms elapsed (rate set to 100Hz);
+                serialSession.ConfigureTimingForMessagingIO(1000, 100.0);
+                serialSession.GetTiming().SetTimeout(500);
+
+                // display channels info
+                foreach (SerialPort ch in serialSession.GetChannels())
+                {
+                    Console.WriteLine($"Ch{ch.GetIndex()}   Mode:{ch.GetMode()}   Speed:{StaticMethods.GetSerialSpeedAsInt(ch.GetSpeed())}");
+                }
+
+                return serialSession;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creating session. {ex.Message}");
+                return null;
+            }
+        }
+
 #if old
         public bool OpenDevice()
         {

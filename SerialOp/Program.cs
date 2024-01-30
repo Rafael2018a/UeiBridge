@@ -1,58 +1,146 @@
-﻿using System;
+﻿using CommandLine;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading;
 using UeiBridge.Library;
 using UeiBridge.Library.CubeSetupTypes;
 using UeiDaq;
 
+/// <summary>
+/// SerialOp --rx pdna://192.168.100.3/Dev3
+/// SerialOp --tx pdna://192.168.100.3/Dev0  --loop 100 --length 50 --timeout 10
+/// </summary>
+
 namespace SerialOp
 {
-
-    /// <summary>
-    /// serial-agent -r -ch 1
-    /// </summary>
     public class Program
     {
         //private Session _serialSession;
         //List<ChannelAux> _channelAuxList;
-        CubeSetup _cubeSetup;
+
         bool stopByUser = false;
         bool stopByWatchdog = false;
+        ParserResult<Options> _parseResult;
 
-        static void Main()
+        static void Main(string[] args)
         {
             Program p = new Program();
-            p.MainSerial();
+            p.Run(args);
+            Console.WriteLine("Any key to exit...");
+            Console.ReadKey();
         }
 
-        public void MainSerial()
+        void Run(string[] args)
         {
             // register CTRL + c handler
             Console.CancelKeyPress += new ConsoleCancelEventHandler(CancelEventHandler);
+            Console.WriteLine("^C to stop");
 
-            // load setting
-            FileInfo setupfile = new FileInfo("Cube3.config");
-            var csl = new CubeSetupLoader(setupfile);
-            if (null == csl.CubeSetupMain)
+            // parse command line args
+            _parseResult = CommandLine.Parser.Default.ParseArguments<Options>(args);
+
+            var r = _parseResult.WithParsed<Options>(opts =>
             {
-                Console.WriteLine($"File to load setup file {setupfile.FullName}");
+                if (true == opts.rx)
+                {
+                    RunAsReceiver(opts);
+                }
+                if (true == opts.tx)
+                {
+                    //RunAsTransmitter(opts);
+                }
+            }
+            );
+        }
+
+        private void RunAsReceiver(Options opts)
+        {
+
+            string setupFilename;
+            //string localPath;
+            int deviceSlotIndex = 0; // slot index in given cube
+
+
+            // get setup file name and device slot index
+            if (null != opts.DeviceUri)
+            {
+                Uri parsedUri;
+                if (Uri.TryCreate(opts.DeviceUri, UriKind.Absolute, out parsedUri))
+                {
+
+                    IPAddress ip;
+                    if (IPAddress.TryParse(parsedUri.Host, out ip))
+                    {
+                        int last = ip.GetAddressBytes()[3];
+                        setupFilename = $"Cube{last}.config";
+
+                        string localPath = parsedUri.LocalPath;
+                        if (localPath.StartsWith("/Dev"))
+                        {
+                            string s = localPath.Substring(4);
+                            Int32.TryParse(s, out deviceSlotIndex);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("bad ip");
+                        return;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("bad uri");
+                    return;
+                }
+            }
+            else
+            {
+                Console.WriteLine("null uri");
                 return;
             }
-            _cubeSetup = csl.CubeSetupMain;
 
+            // load setup file
+            FileInfo setupfile = new FileInfo(setupFilename);
+            SL508892Setup deviceSetup;
+            if (setupfile.Exists)
+            {
+                CubeSetup _cubeSetup;
+                var csl = new CubeSetupLoader(setupfile);
+                if (null == csl.CubeSetupMain)
+                {
+                    Console.WriteLine($"File to load setup file {setupfile.FullName}");
+                    return;
+                }
+                _cubeSetup = csl.CubeSetupMain;
 
-            int deviceSlotIndex = 0; // slot index in given cube
-            var deviceSetup = _cubeSetup.GetDeviceSetupEntry( deviceSlotIndex) as SL508892Setup;
+                deviceSetup = _cubeSetup.GetDeviceSetupEntry(deviceSlotIndex) as SL508892Setup;
+            }
+            else
+            {
+                Console.WriteLine($"setup file {setupfile.FullName} doesn't exist");
+                return;
+            }
 
+            WatchdogLoop(deviceSetup);
+
+        }
+        SL508DeviceManager deviceManager;
+        void WatchdogLoop(SL508892Setup deviceSetup)
+        {
+            if (null == deviceSetup)
+            {
+                return;
+            }
             do // watchdog loop
             {
                 // set session
                 // -----------
-                Session serSession = BuildSerialSession2( deviceSetup);
-                if (null==serSession)
+                Session serSession = SL508DeviceManager.BuildSerialSession2(deviceSetup);
+                if (null == serSession)
                 {
                     break;// loop
                 }
@@ -62,26 +150,27 @@ namespace SerialOp
 
                 // set device manager and watchdog
                 // -------------------------------
-                SL508DeviceManager deviceManager = new SL508DeviceManager(null, deviceSetup, serSession);
-                SerialWatchdog swd = new SerialWatchdog(new Action<string>((i) => { stopByWatchdog = true; }));
+                deviceManager = new SL508DeviceManager(null, deviceSetup, serSession);
+                SerialWatchdog swd = new SerialWatchdog(new Action<string>((i) => { stopByWatchdog = true; deviceManager.Stop(); }));
                 deviceManager.SetWatchdog(swd);
-                if (false ==deviceManager.OpenDevice())
+                if (false == deviceManager.StartDevice())
                 {
                     break;// loop
                 }
-
+                deviceManager.WaitAll();
                 // sleep
                 // -----
-                Console.WriteLine("^C to stop");
-                int seed = 10;
-                do { 
-                    System.Threading.Thread.Sleep(1000);
-                    //List<byte[]> msgs = StaticMethods.Make_SL508Down_Messages(++seed);
-                    //foreach (byte[] m in msgs)
-                    //{
-                    //    deviceManager.Enqueue(m); //new byte[] { 0, 1, 2 });
-                    //}
-                } while (false == stopByUser && false == stopByWatchdog);
+
+                //int seed = 10;
+                //do
+                //{
+                //    System.Threading.Thread.Sleep(1000);
+                //    List<byte[]> msgs = StaticMethods.Make_SL508Down_Messages(++seed);
+                //    foreach (byte[] m in msgs)
+                //    {
+                //        deviceManager.Enqueue(m); //new byte[] { 0, 1, 2 });
+                //    }
+                //} while (false == stopByUser && false == stopByWatchdog);
 
                 // Display statistics 
                 Console.WriteLine("Serial stat\n--------");
@@ -102,16 +191,13 @@ namespace SerialOp
                 Console.WriteLine(" = Dispose fin =");
 
                 // wait before restart
-                if (true==stopByWatchdog)
+                if (true == stopByWatchdog)
                 {
                     System.Threading.Thread.Sleep(1000);
                     stopByWatchdog = false;
                 }
                 swd = null;
             } while (false == stopByUser);
-
-            Console.WriteLine("Any key to exit...");
-            Console.ReadKey();
         }
 
         bool DeviceReset_old(string deviceUri)
@@ -216,75 +302,6 @@ namespace SerialOp
             }
         }
 #endif
-        public Session BuildSerialSession2(SL508892Setup deviceSetup)
-        {
-            if (null == deviceSetup)
-            {
-                return null;
-            }
-            string deviceuri = $"{deviceSetup.CubeUrl}Dev{deviceSetup.SlotNumber}/";
-            try
-            {
-                Session serialSession = new Session();
-
-                UeiCube cube2 = new UeiCube(deviceSetup.CubeUrl);
-                if (cube2.DeviceReset(deviceuri))
-                {
-                    foreach (var channelSetup in deviceSetup.Channels)
-                    {
-                        if (false == channelSetup.IsEnabled)
-                        {
-                            continue;
-                        }
-                        string finalUri = $"{deviceSetup.CubeUrl}Dev{deviceSetup.SlotNumber}/Com{channelSetup.ChannelIndex}";
-                        SerialPort sport = serialSession.CreateSerialPort(finalUri,
-                                            channelSetup.Mode,
-                                            channelSetup.Baudrate,
-                                            SerialPortDataBits.DataBits8,
-                                            channelSetup.Parity,
-                                            channelSetup.Stopbits,
-                                            "");
-                        System.Diagnostics.Debug.Assert(null != sport);
-                    }
-
-                    // just verify that there are N channels (serial  ports)
-                    int chCount = deviceSetup.Channels.Where(ch => ch.IsEnabled == true).ToList().Count;
-                    System.Diagnostics.Debug.Assert(serialSession.GetNumberOfChannels() == chCount);
-                }
-                else
-                {
-                    Console.WriteLine($"Failed to reset device {deviceuri}");
-                    return null;
-                }
-
-                // Configure timing to return serial message when either of the following conditions occurred
-                // - The termination string was detected
-                // - 100 bytes have been received
-                // - 10ms elapsed (rate set to 100Hz);
-                serialSession.ConfigureTimingForMessagingIO(1000, 100.0);
-                serialSession.GetTiming().SetTimeout(500);
-
-
-                
-
-
-                foreach (SerialPort ch in serialSession.GetChannels())
-                {
-                    Console.WriteLine($"Ch{ch.GetIndex()}   Mode:{ch.GetMode()}   Speed:{StaticMethods.GetSerialSpeedAsInt(ch.GetSpeed())}");
-                }
-                //SerialPort sp = chnls[0] as SerialPort;
-                //Console.WriteLine( $"{ sp.GetIndex()}");
-                
-
-
-                return serialSession;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error creating session. {ex.Message}");
-                return null;
-            }
-        }
 
         public Session BuildSerialSession(SL508892Setup deviceSetup)
         {
@@ -348,6 +365,7 @@ namespace SerialOp
             // Set cancel to true to let the Main task clean-up the I/O sessions
             args.Cancel = true;
             stopByUser = true;
+            deviceManager?.Stop();
 
         }
     }

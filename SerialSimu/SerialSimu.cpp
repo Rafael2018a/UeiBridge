@@ -5,7 +5,6 @@
 #include <sstream>  
 #include <Windows.h>
 #include "ueidaq.h"
-#include "SerialSimu.h"
 using namespace UeiDaq;
 using namespace std;
 #define SEND_SIZE  9         // amount of data to send each iteration
@@ -47,22 +46,30 @@ int main()
 
 		string resString = sstream.str();
 
+		try {
 
-		CUeiDevice* device = CUeiDeviceEnumerator::GetDeviceFromResource(resString);
-		device->Reset();
+			CUeiDevice* device = CUeiDeviceEnumerator::GetDeviceFromResource(resString);
+			device->Reset();
 
-		CUeiSerialPort* port = mySession.CreateSerialPort(resString,
-			UeiSerialModeRS485FullDuplex,
-			UeiSerialBitsPerSecond57600,
-			UeiSerialDataBits8,
-			UeiSerialParityNone,
-			UeiSerialStopBits1,
-			"");
+			CUeiSerialPort* port = mySession.CreateSerialPort(resString,
+				UeiSerialModeRS485FullDuplex,
+				UeiSerialBitsPerSecond57600,
+				UeiSerialDataBits8,
+				UeiSerialParityNone,
+				UeiSerialStopBits1,
+				"");
 
 
-		UeiDaq::CUeiSerialPort* sport = static_cast<UeiDaq::CUeiSerialPort*>(mySession.GetChannel(chIndex));
-		//cout << resString << " speed " << sport->GetSpeed() << " mode " << sport->GetMode() << "\n";
-		 //"at 57600bps, RS485FullDuplex" << "\n";
+			UeiDaq::CUeiSerialPort* sport = static_cast<UeiDaq::CUeiSerialPort*>(mySession.GetChannel(chIndex));
+		}
+		catch (exception &ex)
+		{
+			cout << ex.what() << "\n";
+		}
+		catch (...)
+		{
+			cout << "exception" << "\n";
+		}
 	}
 	cout << "8 serial channels defined. 57600bps, RS485FullDuplex" << "\n";
 	//"at 57600bps, RS485FullDuplex" << "\n";

@@ -92,7 +92,9 @@ namespace UeiBridge
             _programBuilder.CreateDeviceManagers(deviceList);
             _programBuilder.ActivateDownstreamObjects();
             _programBuilder.ActivateUpstreamObjects();
+#if dont
             _programBuilder.Build_BlockSensorManager(deviceList);
+#endif
 
             // publish status to StatusViewer
             Task.Factory.StartNew(() => PublishStatus_Task(_programBuilder.PerDeviceObjectsList));

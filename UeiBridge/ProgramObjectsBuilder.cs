@@ -169,7 +169,7 @@ namespace UeiBridge
             }
         }
 
-        IDeviceManager BuildDeviceManager(UeiDeviceInfo realDevice, DeviceSetup setup)
+        IDeviceManager BuildSerialDeviceManager(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
             IDeviceManager result=null;
 
@@ -689,7 +689,7 @@ namespace UeiBridge
 
             return resultString.ToString();
         }
-
+#if dont
         public void Build_BlockSensorManager(List<UeiDeviceInfo> realDeviceList)
         {
             //DeviceSetup devSetup = null;
@@ -749,7 +749,7 @@ namespace UeiBridge
 
 
         }
-
+#endif
         public void Dispose()
         {
             List<Task> tl = new List<Task>();

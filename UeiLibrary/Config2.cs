@@ -110,9 +110,9 @@ namespace UeiBridge.Library
     {
         [XmlIgnore]
         public AppSetup AppSetup;
-        public List<CubeSetup> CubeSetupList = new List<CubeSetup>();
+        List<CubeSetup> CubeSetupList = new List<CubeSetup>();
 
-        public static string DefaultSettingsFilename => "Cube2.config"; // to be removed
+        public static string DefaultSettingsFilename => "Cube2.config"; // to be removed. tbd.
         public static string SettingsFilename { get; private set; } = DefaultSettingsFilename;
 
         public Config2(List<string> cubeUrlList)
