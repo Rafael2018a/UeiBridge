@@ -1,6 +1,6 @@
 ﻿//using UeiBridge.Library.Types;
 
-namespace SerialOp
+namespace UeiBridge.Library
 {
     /// <summary>
     /// Serial channel statistics

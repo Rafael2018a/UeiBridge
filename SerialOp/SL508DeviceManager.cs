@@ -135,11 +135,11 @@ namespace SerialOp
 
 
 
-        public void TerminateDownstreamTask()
-        {
-            _cancelTokenSource.Cancel();
-            _downstreamQueue.CompleteAdding();
-        }
+        //public void TerminateDownstreamTask()
+        //{
+        //    _cancelTokenSource.Cancel();
+        //    _downstreamQueue.CompleteAdding();
+        //}
 
         /// <summary>
         /// SetWatchdog should be called (if needed) before OpenChannel()
@@ -168,13 +168,17 @@ namespace SerialOp
 
             _watchdog?.StopWatching();
 
-            TerminateDownstreamTask();
-            //_downstreamTask.Wait();
+            //TerminateDownstreamTask();
+
+            _cancelTokenSource.Cancel();
+            _downstreamQueue.CompleteAdding();
+
+            _downstreamTask?.Wait();
             _downstreamTask = null;
 #if usetasks
-            _cancelTokenSource.Cancel();
-            var readersWaitHandle = _channelAuxList.Select(i => i.ReadTask);
-            Task.WaitAll(readersWaitHandle.ToArray());
+            //_cancelTokenSource.Cancel();
+            var allReadTasks = _channelAuxList.Select(i => i.ReadTask);
+            Task.WaitAll(allReadTasks.ToArray());
 #else
             var readersWaitHandle = _channelAuxList.Select(i => i.AsyncResult.AsyncWaitHandle).ToArray();
             WaitHandle.WaitAll(readersWaitHandle);
@@ -288,13 +292,10 @@ namespace SerialOp
         internal void WaitAll()
         {
             var allTasks = _channelAuxList.Where(cx => cx.ReadTask != null).Select(cx => cx.ReadTask);
+            
             Task.WaitAll( allTasks.ToArray());
         }
 
-        public void Stop()
-        {
-            _cancelTokenSource.Cancel();
-        }
         /// <summary>
         /// Ethernet to device message handler
         /// </summary>

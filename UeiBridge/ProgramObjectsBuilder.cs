@@ -118,7 +118,7 @@ namespace UeiBridge
 
                 if (deviceInfo.DeviceName == DeviceMap2.SL508Literal)
                 {
-                    var dm = BuildDeviceManager(deviceInfo, setup);
+                    var dm = BuildSerialDeviceManager(deviceInfo, setup);
                     if (null!=dm)
                     {
                         _deviceManagerList.Add(dm);

@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using UeiDaq;
 
-namespace SerialOp
+namespace UeiBridge.Library
 {
     /// <summary>
     /// Auxiliary class for serial channel

@@ -72,6 +72,8 @@
     <Compile Include="Adapters\CANReaderAdapter.cs" />
     <Compile Include="Adapters\CANWriterAdapter.cs" />
     <Compile Include="Adapters\DeviceAdapter.cs" />
+    <Compile Include="ChannelAux.cs" />
+    <Compile Include="ChannelStat.cs" />
     <Compile Include="Config2.cs" />
     <Compile Include="CubeSeeker.cs" />
     <Compile Include="CubeSetupTypes\CubeSetup.cs" />
@@ -88,10 +90,12 @@
     <Compile Include="Interfaces\IReaderAdapter.cs" />
     <Compile Include="Interfaces\ISend.cs" />
     <Compile Include="Interfaces\ISession.cs" />
+    <Compile Include="Interfaces\IWatchdog.cs" />
     <Compile Include="Interfaces\IWriterAdapter.cs" />
     <Compile Include="JsonStatusClass.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SendObject.cs" />
+    <Compile Include="SerialWatchdog.cs" />
     <Compile Include="StaticMethods.cs" />
     <Compile Include="DeviceMap.cs" />
     <Compile Include="Adapters\ChannelAdapter.cs" />

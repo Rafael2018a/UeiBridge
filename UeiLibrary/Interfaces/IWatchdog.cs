@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SerialOp
+namespace UeiBridge.Library.Interfaces
 {
     public interface IWatchdog
     {

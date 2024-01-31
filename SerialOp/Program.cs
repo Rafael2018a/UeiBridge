@@ -22,8 +22,8 @@ namespace SerialOp
         //private Session _serialSession;
         //List<ChannelAux> _channelAuxList;
 
-        bool stopByUser = false;
-        bool stopByWatchdog = false;
+        bool stopByUser1 = false;
+        //bool stopByWatchdog = false;
         ParserResult<Options> _parseResult;
 
         static void Main(string[] args)
@@ -56,7 +56,7 @@ namespace SerialOp
             }
             );
         }
-
+        SL508SuperManager super;
         private void RunAsReceiver(Options opts)
         {
 
@@ -125,12 +125,28 @@ namespace SerialOp
                 return;
             }
 
-            WatchdogLoop(deviceSetup);
+            super = new SL508SuperManager();
+            super.StartDevice(deviceSetup);
 
+            do            {
+                System.Threading.Thread.Sleep(100);
+            } while (false == stopByUser1);
+            Console.WriteLine("Dispose");
+            super.Dispose();
         }
-        SL508DeviceManager deviceManager;
-        void WatchdogLoop(SL508892Setup deviceSetup)
+        protected void CancelEventHandler(object sender, ConsoleCancelEventArgs args)
         {
+            args.Cancel = true;
+            stopByUser1 = true;
+            Console.WriteLine("stopByUser1 = true");
+        }
+
+#if dont
+        SL508DeviceManager deviceManager; // tbd
+        void WatchdogLoop_moved(SL508892Setup deviceSetup)
+        {
+           
+
             if (null == deviceSetup)
             {
                 return;
@@ -199,7 +215,7 @@ namespace SerialOp
                 swd = null;
             } while (false == stopByUser);
         }
-
+#endif
         bool DeviceReset_old(string deviceUri)
         {
             Device myDevice = DeviceEnumerator.GetDeviceFromResource(deviceUri);
@@ -360,13 +376,5 @@ namespace SerialOp
         }
 
 
-        protected void CancelEventHandler(object sender, ConsoleCancelEventArgs args)
-        {
-            // Set cancel to true to let the Main task clean-up the I/O sessions
-            args.Cancel = true;
-            stopByUser = true;
-            deviceManager?.Stop();
-
-        }
     }
 }
