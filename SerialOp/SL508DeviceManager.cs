@@ -41,7 +41,9 @@ namespace SerialOp
         protected bool _inDisposeFlag = false;
         protected CancellationTokenSource _cancelTokenSource = new CancellationTokenSource();
         protected Task _downstreamTask;
-        
+
+        readonly log4net.ILog _logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         // privates
         private BlockingCollection<EthernetMessage> _downstreamQueue = new BlockingCollection<EthernetMessage>(100); // max 100 items
         private Action<string> _act = new Action<string>(s => Console.WriteLine($"Failed to parse downstream message. {s}"));
@@ -73,14 +75,14 @@ namespace SerialOp
             {
                 Console.WriteLine($"Incoming message dropped. {ex.Message}.");
             }
-
         }
 
-        protected void DownstreamMessageLoop_Task()
+        protected void Task_DownstreamMessageLoop()
         {
+           
             // message loop
             // ============
-            while (_cancelTokenSource.IsCancellationRequested == false)
+            while ((_cancelTokenSource.IsCancellationRequested == false)||(_downstreamQueue.IsCompleted == false))
             {
                 try
                 {
@@ -102,13 +104,13 @@ namespace SerialOp
                     // verify slot number
                     if (incomingMessage.SlotNumber != this._deviceSlotIndex)
                     {
-                        Console.WriteLine($"{InstanceName} wrong slot number ({incomingMessage.SlotNumber}). incoming message dropped.");
+                        _logger.Info($"{InstanceName} wrong slot number ({incomingMessage.SlotNumber}). incoming message dropped.");
                         continue;
                     }
                     // alert if items lost
                     if (_downstreamQueue.Count == _downstreamQueue.BoundedCapacity)
                     {
-                        Console.WriteLine($"Input queue items = {_downstreamQueue.Count}");
+                        _logger.Info($"Input queue items = {_downstreamQueue.Count}");
                     }
 
                     // finally, Handle message
@@ -118,16 +120,16 @@ namespace SerialOp
                     }
                     else
                     {
-                        Console.WriteLine($"Device {DeviceName} not ready. message rejected.");
+                        _logger.Info($"Device {DeviceName} not ready. message rejected.");
                     }
                 }
                 catch (InvalidOperationException ex) // _downstreamQueue marked as complete (for task termination)
                 {
-                    //Console.WriteLine(ex.Message);
+                    //_logger.Info(ex.Message);
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine(ex.Message);
+                    _logger.Warn(ex.Message);
                 }
             }
             _downstreamQueue.CompleteAdding();
@@ -166,15 +168,15 @@ namespace SerialOp
             }
             _inDisposeFlag = true;
 
-            _watchdog?.StopWatching();
+            _watchdog.Dispose();
 
             //TerminateDownstreamTask();
 
             _cancelTokenSource.Cancel();
             _downstreamQueue.CompleteAdding();
 
-            _downstreamTask?.Wait();
-            _downstreamTask = null;
+            _downstreamTask.Wait();
+            //_downstreamTask = null;
 #if usetasks
             //_cancelTokenSource.Cancel();
             var allReadTasks = _channelAuxList.Select(i => i.ReadTask);
@@ -189,7 +191,7 @@ namespace SerialOp
                 cx.Writer.Dispose();
             }
 
-            Console.WriteLine("Readers/writers disposed..");
+            _logger.Info("Readers/writers disposed..");
         }
         public bool StartDevice()
         {
@@ -225,14 +227,14 @@ namespace SerialOp
             foreach (ChannelAux cx in _channelAuxList)
             {
 #if usetasks
-                cx.ReadTask = Task.Factory.StartNew(() => UpstreamMessageLoop_Task(cx), _cancelTokenSource.Token);
+                cx.ReadTask = Task.Factory.StartNew(() => Task_UpstreamMessageLoop(cx), _cancelTokenSource.Token);
 #else
                 cx.AsyncResult = cx.Reader.BeginRead(200, new AsyncCallback(ReaderCallback), cx); // start reading from device
 #endif
             }
 
             // start downstream message loop
-            //_downstreamTask = Task.Factory.StartNew(DownstreamMessageLoop_Task, _cancelTokenSource.Token);
+            _downstreamTask = Task.Factory.StartNew(Task_DownstreamMessageLoop, _cancelTokenSource.Token);
 
             //var allTasks = _channelAuxList.Where(cx => cx.ReadTask != null).Select(cx => cx.ReadTask);
             //return allTasks.ToArray()
@@ -258,7 +260,7 @@ namespace SerialOp
 
                 //EthernetMessage em = StaticMethods.BuildEthernetMessageFromDevice(recvBytes, this._thisDeviceSetup, chIndex);
                 //_targetConsumer?.Send(new SendObject(  _thisDeviceSetup.DestEndPoint.ToIpEp(), em.GetByteArray(MessageWay.upstream)));
-                Console.WriteLine($"({++linenumber}) Message from channel {chIndex}. Length {recvBytes.Length}");
+                _logger.Info($"({++linenumber}) Message from channel {chIndex}. Length {recvBytes.Length}");
                 _watchdog?.NotifyAlive(chName);
                 ChannelStat chStat = ChannelStatList.Where(i => i.ChannelIndex == chIndex).FirstOrDefault();
                 chStat.ReadByteCount += recvBytes.Length;
@@ -272,8 +274,8 @@ namespace SerialOp
                 {
                     if (Error.Timeout == ex.Error)
                     {
-                        //Console.WriteLine($"Timeout ch {chIndex}");
-                        _watchdog?.NotifyAlive(chName);
+                        //_logger.Info($"Timeout ch {chIndex}");
+                        _watchdog.NotifyAlive(chName);
                         if (false == _inDisposeFlag)
                         {
                             chAux.AsyncResult = chAux.Reader.BeginRead(200, new AsyncCallback(ReaderCallback), chAux);
@@ -281,23 +283,24 @@ namespace SerialOp
                     }
                     else
                     {
-                        Console.WriteLine($"{chName} read error: {ex.Message}");
-                        _watchdog?.NotifyCrash(chName);
+                        _logger.Info($"{chName} read error: {ex.Message}");
+                        _watchdog.NotifyCrash(chName, ex.Message);
                     }
                 }
                 System.Diagnostics.Debug.Assert(true == chAux.OriginatingSession.IsRunning());
             }
         }
 
-        internal void WaitAll()
-        {
-            var allTasks = _channelAuxList.Where(cx => cx.ReadTask != null).Select(cx => cx.ReadTask);
+        //internal void WaitAll()
+        //{
+        //    var allTasks = _channelAuxList.Where(cx => cx.ReadTask != null).Select(cx => cx.ReadTask);
             
-            Task.WaitAll( allTasks.ToArray());
-        }
+        //    Task.WaitAll( allTasks.ToArray());
+        //}
 
         /// <summary>
-        /// Ethernet to device message handler
+        /// Write Ethernet message to serial channel.
+        /// and update stat counters
         /// </summary>
         protected void HandleDownstreamRequest(EthernetMessage request)
         {
@@ -310,19 +313,22 @@ namespace SerialOp
             ChannelAux cx = _channelAuxList.Where(i => i.ChannelIndex == chIndex).FirstOrDefault();
             if (null == cx)
             {
-                Console.WriteLine("Message from Ethernet with non exists channel index. rejected");
+                _logger.Info("Message from Ethernet with non exists channel index. rejected");
                 return;
             }
-            UeiDaq.SerialWriter sw = cx.Writer;
-            System.Diagnostics.Debug.Assert(sw != null);
+            //UeiDaq.SerialWriter sw = cx.Writer;
+            System.Diagnostics.Debug.Assert(cx.Writer != null);
 
+            string chName = $"Com{cx.ChannelIndex}";
             //
             try
             {
-                int writtenBytes = 0;
                 // write to serial port
-                writtenBytes = sw.Write(request.PayloadBytes);
-                System.Diagnostics.Debug.Assert(writtenBytes == request.PayloadBytes.Length);
+                int writtenBytes = cx.Writer.Write(request.PayloadBytes);
+                if (writtenBytes != request.PayloadBytes.Length)
+                {
+                    _logger.Warn($"Failed in writing to serial channel {chName} ");
+                }
 
                 // wait state
                 SerialPort sPort = _serialSsession.GetChannel(chIndex) as SerialPort;
@@ -336,18 +342,16 @@ namespace SerialOp
                 ChannelStat chStat = ChannelStatList.Where(i => i.ChannelIndex == chIndex).FirstOrDefault();
                 chStat.WrittenByteCount += writtenBytes;
                 chStat.WrittenMessageCount++;
-
-                //_ViewItemList[request.SerialChannelNumber] = new ViewItem<byte[]>(request.PayloadBytes, TimeSpan.FromSeconds(5));
             }
             catch (UeiDaqException ex)
             {
-                _watchdog.NotifyCrash($"Com{cx.ChannelIndex}");
-                Console.WriteLine($"UeiDaqException: {ex.Message}");
+                _watchdog.NotifyCrash(chName, ex.Message);
+                _logger.Warn($"UeiDaqException: {ex.Message}");
             }
             catch (Exception ex)
             {
-                _watchdog.NotifyCrash($"Com{cx.ChannelIndex}");
-                Console.WriteLine($"General exception: {ex.Message}");
+                _watchdog.NotifyCrash(chName, ex.Message);
+                _logger.Warn($"General exception: {ex.Message}");
             }
         }
 
@@ -360,7 +364,7 @@ namespace SerialOp
         /// This task is per single channel (uart)
         /// </summary>
         /// <param name="cx"></param>
-        protected void UpstreamMessageLoop_Task(ChannelAux cx)
+        protected void Task_UpstreamMessageLoop(ChannelAux cx)
         {
 
             // "available" is the amount of data remaining from a single event
@@ -368,10 +372,9 @@ namespace SerialOp
 
             int available = 0;
             string chName = $"Com{cx.ChannelIndex}";
-            Console.WriteLine($"Started listening on {chName}");
+            _logger.Info($"Started listening on {chName}");
             try
             {
-
                 do //message loop
                 {
                     do // wait for available messages
@@ -387,7 +390,7 @@ namespace SerialOp
                     if (!_cancelTokenSource.IsCancellationRequested)
                     {
                         byte[] recvBytes = cx.Reader.Read(100); //ReadTimestamped()
-                        Console.WriteLine($"({++linenumber}) Message from channel {cx.ChannelIndex}. Length {recvBytes.Length}");
+                        _logger.Info($"({++linenumber}) Message from channel {cx.ChannelIndex}. Length {recvBytes.Length}");
                         ChannelStat chStat = ChannelStatList.Where(i => i.ChannelIndex == cx.ChannelIndex).FirstOrDefault();
                         chStat.ReadByteCount += recvBytes.Length;
                         chStat.ReadMessageCount++;
@@ -397,9 +400,10 @@ namespace SerialOp
             }
             catch (UeiDaqException e)
             {
-                Console.WriteLine($"{chName} read exception. {e.Message}");
+                _logger.Info($"{chName} read exception. {e.Message}");
+                _watchdog.NotifyCrash(chName, e.Message);
             }
-            Console.WriteLine($"Stopped listening on {chName}");
+            _logger.Info($"Stopped listening on {chName}");
         }
         public static Session BuildSerialSession2(SL508892Setup deviceSetup)
         {
@@ -463,6 +467,7 @@ namespace SerialOp
                 return null;
             }
         }
+
 
 #if old
         public bool OpenDevice()

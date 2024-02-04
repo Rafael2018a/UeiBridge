@@ -11,8 +11,8 @@ using UeiBridge.Library.CubeSetupTypes;
 using UeiDaq;
 
 /// <summary>
-/// SerialOp --rx pdna://192.168.100.3/Dev3
-/// SerialOp --tx pdna://192.168.100.3/Dev0  --loop 100 --length 50 --timeout 10
+/// SerialOp  pdna://192.168.100.3/Dev3
+/// SerialOp  pdna://192.168.100.3/Dev0  --loop 100 --length 50 --timeout 10
 /// </summary>
 
 namespace SerialOp
@@ -45,21 +45,13 @@ namespace SerialOp
 
             var r = _parseResult.WithParsed<Options>(opts =>
             {
-                if (true == opts.rx)
-                {
-                    RunAsReceiver(opts);
-                }
-                if (true == opts.tx)
-                {
-                    //RunAsTransmitter(opts);
-                }
+                LoadAndRun(opts);
             }
             );
         }
         SL508SuperManager super;
-        private void RunAsReceiver(Options opts)
+        private void LoadAndRun(Options opts)
         {
-
             string setupFilename;
             //string localPath;
             int deviceSlotIndex = 0; // slot index in given cube
@@ -112,7 +104,7 @@ namespace SerialOp
                 var csl = new CubeSetupLoader(setupfile);
                 if (null == csl.CubeSetupMain)
                 {
-                    Console.WriteLine($"File to load setup file {setupfile.FullName}");
+                    Console.WriteLine($"Failed to load setup file {setupfile.FullName}");
                     return;
                 }
                 _cubeSetup = csl.CubeSetupMain;
@@ -128,7 +120,8 @@ namespace SerialOp
             super = new SL508SuperManager();
             super.StartDevice(deviceSetup);
 
-            do            {
+            do
+            {
                 System.Threading.Thread.Sleep(100);
             } while (false == stopByUser1);
             Console.WriteLine("Dispose");

@@ -95,7 +95,7 @@
     <Compile Include="JsonStatusClass.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SendObject.cs" />
-    <Compile Include="SerialWatchdog.cs" />
+    <Compile Include="DeviceWatchdog.cs" />
     <Compile Include="StaticMethods.cs" />
     <Compile Include="DeviceMap.cs" />
     <Compile Include="Adapters\ChannelAdapter.cs" />
