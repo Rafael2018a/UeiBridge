@@ -20,6 +20,7 @@ namespace UeiBridge.Library
         bool _disposeRequested = false;
         bool _singleTimerElapsed = false;
         bool _crashNotified = false;
+        object _lockObject = new object();
 
         bool IsWatchingStopped() { return (_disposeRequested==true || _singleTimerElapsed==true || _crashNotified==true); }
         public DeviceWatchdog(Action<string, string> action)
@@ -37,8 +38,11 @@ namespace UeiBridge.Library
             {
                 return;
             }
-            _crashNotified = true;
-            _wdAction(originator, reason);
+            lock (_lockObject)
+            {
+                _crashNotified = true;
+                _wdAction(originator, reason);
+            }
         }
         /// <summary>
         /// Restart client timer.
@@ -47,17 +51,20 @@ namespace UeiBridge.Library
         public void NotifyAlive(string originator)
         {
             System.Timers.Timer t;
-            if (_wdDic.TryGetValue(originator, out t))
+            lock (_lockObject)
             {
-                // restart
-                t.Stop();
-                t.Start();
-            }
-            else
-            {
-                if (false == IsWatchingStopped())
+                if (_wdDic.TryGetValue(originator, out t))
                 {
-                    Console.WriteLine($"{originator} is not registered");
+                    // restart
+                    t.Stop();
+                    t.Start();
+                }
+                else
+                {
+                    if (false == IsWatchingStopped())
+                    {
+                        Console.WriteLine($"{originator} is not registered");
+                    }
                 }
             }
         }
@@ -71,14 +78,17 @@ namespace UeiBridge.Library
                 Console.WriteLine("Can't register watching stopped");
                 return;
             }
-            System.Timers.Timer t = new System.Timers.Timer();
-            t.AutoReset = false;
-            t.Interval = timeSpan.TotalMilliseconds;
-            t.Elapsed += Timer_Elapsed;
-            t.Site = new Site1(originator);
-            t.Start();
+            lock (_lockObject)
+            {
+                System.Timers.Timer t = new System.Timers.Timer();
+                t.AutoReset = false;
+                t.Interval = timeSpan.TotalMilliseconds;
+                t.Elapsed += Timer_Elapsed;
+                t.Site = new Site1(originator);
+                t.Start();
 
-            _wdDic.Add(originator, t);
+                _wdDic.Add(originator, t);
+            }
         }
 
         
@@ -87,14 +97,17 @@ namespace UeiBridge.Library
         /// </summary>
         private void Timer_Elapsed(object sender, System.Timers.ElapsedEventArgs e)
         {
-            if (true == IsWatchingStopped())
+            lock (_lockObject)
             {
-                return;
+                if (true == IsWatchingStopped())
+                {
+                    return;
+                }
+                _singleTimerElapsed = true;
+                System.Timers.Timer t = sender as System.Timers.Timer;
+                //Console.WriteLine($"{t.Site.Name} is not alive..");
+                _wdAction(t.Site.Name, "Not alive");
             }
-            _singleTimerElapsed = true;
-            System.Timers.Timer t = sender as System.Timers.Timer;
-            //Console.WriteLine($"{t.Site.Name} is not alive..");
-            _wdAction(t.Site.Name, "Not alive");
         }
 
         public void Dispose()

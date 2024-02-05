@@ -72,7 +72,7 @@
     <Compile Include="Adapters\CANReaderAdapter.cs" />
     <Compile Include="Adapters\CANWriterAdapter.cs" />
     <Compile Include="Adapters\DeviceAdapter.cs" />
-    <Compile Include="ChannelAux.cs" />
+    <Compile Include="ChannelAux2.cs" />
     <Compile Include="ChannelStat.cs" />
     <Compile Include="Config2.cs" />
     <Compile Include="CubeSeeker.cs" />

@@ -12,6 +12,7 @@ using UeiBridge.Library.Types;
 using System.Collections.Concurrent;
 using UeiBridge.Library.CubeSetupTypes;
 using UeiBridge.Library.Interfaces;
+using SerialOp;
 
 namespace UeiBridge
 {
@@ -176,7 +177,9 @@ namespace UeiBridge
             //switch (realDevice.DeviceName)
             //{
             //    case DeviceMap2.SL508Literal:
-            //        _logger.Info("Building SL508...");
+            _logger.Info("Building SL508...");
+            SL508SuperManager super = new SL508SuperManager();
+            super.StartDevice(setup as SL508892Setup);
             //        SerialManagerTaskClass smtc = new SerialManagerTaskClass();
             //        smtc.MainSerial(realDevice, setup as SL508892Setup);
             //        result = smtc;
@@ -185,7 +188,7 @@ namespace UeiBridge
             //        _logger.Warn($"Failed to build {realDevice.DeviceName}");
             //        break;
             //}
-            return result;
+            return super;
         }
         List<PerDeviceObjects> BuildObjectsForDevice(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
@@ -776,7 +779,7 @@ namespace UeiBridge
 
             foreach(var entry in _deviceManagerList)
             {
-                //entry.Dispose();
+                entry.Dispose();
             }
         }
     }

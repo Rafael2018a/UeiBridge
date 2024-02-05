@@ -78,8 +78,6 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Site1.cs" />
-    <Compile Include="SL508DeviceManager.cs" />
-    <Compile Include="SL508SuperManager.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
