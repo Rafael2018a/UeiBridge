@@ -14,7 +14,7 @@ using UeiBridge.Library;
 using UeiDaq;
 using System.Collections.Concurrent;
 
-namespace SerialOp
+namespace UeiBridge
 {
     /// <summary>
     /// Manage serial device.
@@ -24,7 +24,7 @@ namespace SerialOp
     /// </summary>
     public class SL508DeviceManager : IDeviceManager
     {
-        private ISend<SendObject> _targetConsumer;
+        private IEnqueue<SendObject2> _readMessageConsumer;
         SL508892Setup _thisDeviceSetup;
         Session _serialSsession;
         List<ChannelAux2> _channelAuxList; // note that the index of this list is NOT (necessarily) the channel index
@@ -79,10 +79,10 @@ namespace SerialOp
 
         protected void Task_DownstreamMessageLoop()
         {
-           
+
             // message loop
             // ============
-            while ((_cancelTokenSource.IsCancellationRequested == false)||(_downstreamQueue.IsCompleted == false))
+            while ((_cancelTokenSource.IsCancellationRequested == false) || (_downstreamQueue.IsCompleted == false))
             {
                 try
                 {
@@ -151,9 +151,9 @@ namespace SerialOp
             _watchdog = wd;
         }
         public SL508DeviceManager() { }
-        public SL508DeviceManager(ISend<SendObject> targetConsumer, SL508892Setup setup, Session theSession)// : base(setup)
+        public SL508DeviceManager(IEnqueue<SendObject2> readrMessageConsumer, SL508892Setup setup, Session theSession)// : base(setup)
         {
-            this._targetConsumer = targetConsumer;
+            this._readMessageConsumer = readrMessageConsumer;
             this._thisDeviceSetup = setup;
             this._serialSsession = theSession;
             this._deviceSlotIndex = setup.SlotNumber;
@@ -218,9 +218,6 @@ namespace SerialOp
                 ChannelAux2 chAux = new ChannelAux2(chIndex, reader, writer, _serialSsession);
                 _channelAuxList.Add(chAux);
                 ChannelStatList.Add(new ChannelStat(chIndex));
-
-                // register to WD service
-                //_watchdog?.Register($"Com{chIndex}", TimeSpan.FromSeconds(2.0)); // Hmm.. two second ... should use value relative to the value passed to .SetTimeout();
             }
 
             // start readers
@@ -294,7 +291,7 @@ namespace SerialOp
         //internal void WaitAll()
         //{
         //    var allTasks = _channelAuxList.Where(cx => cx.ReadTask != null).Select(cx => cx.ReadTask);
-            
+
         //    Task.WaitAll( allTasks.ToArray());
         //}
 
@@ -367,18 +364,29 @@ namespace SerialOp
         protected void Task_UpstreamMessageLoop(ChannelAux2 cx)
         {
 
+            SerialPort serialCh = cx.OriginatingSession.GetChannel(cx.ChannelIndex) as SerialPort;
+            //sp = ch as SerialPort;
             // "available" is the amount of data remaining from a single event
             // more data may be in the queue once "available" bytes have been read
 
             int available = 0;
             string chName = $"Com{cx.ChannelIndex}";
-            _watchdog.Register( chName, TimeSpan.FromSeconds(2.0)); // Hmm.. two second ... should use value relative to the value passed to .SetTimeout();
-            _logger.Info($"Started listening on {chName}");
+            _watchdog.Register(chName, TimeSpan.FromSeconds(2.0)); // Hmm.. two second ... should use value relative to the value passed to .SetTimeout();
+            _logger.Info($"Listening on {chName}, Mode:{serialCh.GetMode()} Speed:{serialCh.GetSpeed()}");
+            var destEp = _thisDeviceSetup.DestEndPoint.ToIpEp();
+
+            Func<byte[], byte[]> calcbuffer = new Func<byte[], byte[]>((buf) =>
+            {
+                EthernetMessage em1 = StaticMethods.BuildEthernetMessageFromDevice(buf, this._thisDeviceSetup, cx.ChannelIndex);
+                return em1.GetByteArray(MessageWay.upstream);
+            }
+                );
             try
             {
                 do //message loop
                 {
-                    do // wait for available messages
+                    // wait for available messages
+                    do
                     {
                         available = cx.OriginatingSession.GetDataStream().GetAvailableInputMessages(cx.ChannelIndex);
                         _watchdog?.NotifyAlive(chName);
@@ -386,17 +394,23 @@ namespace SerialOp
                         {
                             System.Threading.Thread.Sleep(5);
                         }
-                    } while ((available == 0)&&(false== _cancelTokenSource.IsCancellationRequested));
+                    } while ((available == 0) && (false == _cancelTokenSource.IsCancellationRequested));
 
-                    if (!_cancelTokenSource.IsCancellationRequested)
+                    if (_cancelTokenSource.IsCancellationRequested)
                     {
-                        byte[] recvBytes = cx.Reader.Read(100); //ReadTimestamped()
-                        _logger.Debug($"({++linenumber}) Message from channel {cx.ChannelIndex}. Length {recvBytes.Length}");
-                        ChannelStat chStat = ChannelStatList.Where(i => i.ChannelIndex == cx.ChannelIndex).FirstOrDefault();
-                        chStat.ReadByteCount += recvBytes.Length;
-                        chStat.ReadMessageCount++;
-
+                        continue; // this will bread message loop
                     }
+
+                    // get message from device and send to consumer
+                    byte[] recvBytes = cx.Reader.Read(100); // Alex: what this 100 mean?
+                    _logger.Debug($"({++linenumber}) Message from channel {cx.ChannelIndex}. Length {recvBytes.Length}");
+                    _readMessageConsumer.Enqueue(new SendObject2(destEp, calcbuffer, recvBytes));
+
+                    // update stat
+                    ChannelStat chStat = ChannelStatList.Where(i => i.ChannelIndex == cx.ChannelIndex).FirstOrDefault();
+                    chStat.ReadByteCount += recvBytes.Length;
+                    chStat.ReadMessageCount++;
+
                 } while (false == _cancelTokenSource.IsCancellationRequested);
             }
             catch (UeiDaqException e)
@@ -455,10 +469,10 @@ namespace SerialOp
                 serialSession.GetTiming().SetTimeout(500);
 
                 // display channels info
-                foreach (SerialPort ch in serialSession.GetChannels())
-                {
-                    Console.WriteLine($"Ch{ch.GetIndex()}   Mode:{ch.GetMode()}   Speed:{StaticMethods.GetSerialSpeedAsInt(ch.GetSpeed())}");
-                }
+                //foreach (SerialPort ch in serialSession.GetChannels())
+                //{
+                //    Console.WriteLine($"Ch{ch.GetIndex()}   Mode:{ch.GetMode()}   Speed:{StaticMethods.GetSerialSpeedAsInt(ch.GetSpeed())}");
+                //}
 
                 return serialSession;
             }

@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 
 namespace UeiBridge.Library
 {
@@ -13,6 +14,18 @@ namespace UeiBridge.Library
         {
             TargetEndPoint = targetEndPoint;
             ByteMessage = byteMessage;
+        }
+    }
+    public class SendObject2
+    {
+        public IPEndPoint TargetEndPoint { get; }
+        public byte[] RawByteMessage { get; }
+        public Func<byte[], byte[]> MessageBuild { get; }
+        public SendObject2(IPEndPoint targetEndPoint, Func<byte[], byte[]> builder, byte[] rawByteMessage)
+        {
+            this.TargetEndPoint = targetEndPoint;
+            this.RawByteMessage = rawByteMessage;
+            this.MessageBuild = builder;
         }
     }
 }

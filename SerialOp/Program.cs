@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Text;
 using System.Threading;
+using UeiBridge;
 using UeiBridge.Library;
 using UeiBridge.Library.CubeSetupTypes;
 using UeiDaq;

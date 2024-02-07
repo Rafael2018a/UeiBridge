@@ -12,7 +12,6 @@ using UeiBridge.Library.Types;
 using System.Collections.Concurrent;
 using UeiBridge.Library.CubeSetupTypes;
 using UeiBridge.Library.Interfaces;
-using SerialOp;
 
 namespace UeiBridge
 {

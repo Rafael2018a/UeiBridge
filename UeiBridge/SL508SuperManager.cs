@@ -7,7 +7,7 @@ using UeiBridge.Library;
 using UeiBridge.Library.CubeSetupTypes;
 using UeiDaq;
 
-namespace SerialOp
+namespace UeiBridge
 {
     /// <summary>
     /// This class is kind or Decorator to SL508DeviceManger,
@@ -59,9 +59,10 @@ namespace SerialOp
 
                 _logger.Info($"Listening on {serSession.GetDevice().GetResourceName()}");
 
+                UdpWriterAsync uWriter = new UdpWriterAsync(deviceSetup.DestEndPoint.ToIpEp());//, _mainConfig.AppSetup.SelectedNicForMulticast);
                 // set device manager and watchdog
                 // -------------------------------
-                _deviceManager = new SL508DeviceManager(null, deviceSetup, serSession);
+                _deviceManager = new SL508DeviceManager(uWriter, deviceSetup, serSession);
                 DeviceWatchdog wd = new DeviceWatchdog(new Action<string, string>((source, reason) => 
                 { 
                     _stopByWatchdog = true;

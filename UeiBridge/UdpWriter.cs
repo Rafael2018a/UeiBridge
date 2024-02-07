@@ -43,6 +43,31 @@ namespace UeiBridge
         }
     }
 #endif
+    public class UdpWriterAsync : IEnqueue<SendObject2>, IDisposable
+    {
+        log4net.ILog _logger = StaticLocalMethods.GetLogger();
+        Socket _sendSocket;
+        UdpClient _udpClient = new UdpClient();
+        bool _inDispose = false;
+
+        public UdpWriterAsync(IPEndPoint destEp)
+        {
+            _udpClient.Connect(destEp);
+        }
+        public void Dispose()
+        {
+            _udpClient.Dispose();
+        }
+
+        public void Enqueue(SendObject2 sendObj)
+        {
+            if (_inDispose==false)
+            {
+                byte[] buf = sendObj.MessageBuild(sendObj.RawByteMessage);
+                _udpClient.Send(buf, buf.Length);
+            }
+        }
+    }
     public class UdpWriter : ISend<SendObject>, IDisposable
     {
         log4net.ILog _logger = StaticLocalMethods.GetLogger();

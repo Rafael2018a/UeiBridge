@@ -79,15 +79,7 @@ namespace UeiBridge
                     {
                         item = null;
                     }
-                    //else
-                    //{
-                    //    resultList.Add( $"Ch{ch}: <empty>");
-                    //}
                 }
-                //else
-                //{
-                //    resultList.Add($"Ch{ch}: <empty>");
-                //}
             }
             if (resultList.Count > 0)
             {
