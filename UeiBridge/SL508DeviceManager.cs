@@ -19,22 +19,27 @@ namespace UeiBridge
     /// <summary>
     /// Manage serial device.
     /// - Handle upstream/downstream messages 
-    /// - update a given watchdog
+    /// - sends updates to given watchdog
     /// - maintain channel statistics
     /// </summary>
     public class SL508DeviceManager : IDeviceManager
     {
-        private IEnqueue<SendObject2> _readMessageConsumer;
-        SL508892Setup _thisDeviceSetup;
+        // publics
+        public List<ChannelStat> ChannelStatList { get; private set; } // note that the index of this list is NOT (necessarily) the channel index
+        public string DeviceName { get; } = DeviceMap2.SL508Literal;
+        public string InstanceName { get; protected set; } = "tbd";
+
+        // privates
+        const int _maxReadMesageLength = 400;
+        IEnqueue<SendObject2> _readMessageConsumer;
+        SL508892Setup _deviceSetup;
         Session _serialSsession;
         List<ChannelAux2> _channelAuxList; // note that the index of this list is NOT (necessarily) the channel index
-        public List<ChannelStat> ChannelStatList { get; private set; } // note that the index of this list is NOT (necessarily) the channel index
         IWatchdog _watchdog;
-        uint linenumber = 0;
-        //CancellationTokenSource _upstreamTaskCTS = new CancellationTokenSource();
-        // publics
-        public string DeviceName { get; protected set; }
-        public string InstanceName { get; protected set; }
+        readonly log4net.ILog _logger = StaticLocalMethods.GetLogger();
+        private BlockingCollection<EthernetMessage> _downstreamQueue = new BlockingCollection<EthernetMessage>(100); // max 100 items
+        private Action<string> _onErrorCallback = new Action<string>(s => Console.WriteLine($"Failed to parse downstream message. {s}"));
+
         // protected
         protected int _deviceSlotIndex;
         protected bool _isOutputDeviceReady = true;
@@ -42,14 +47,26 @@ namespace UeiBridge
         protected CancellationTokenSource _cancelTokenSource = new CancellationTokenSource();
         protected Task _downstreamTask;
 
-        readonly log4net.ILog _logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        // privates
-        private BlockingCollection<EthernetMessage> _downstreamQueue = new BlockingCollection<EthernetMessage>(100); // max 100 items
-        private Action<string> _act = new Action<string>(s => Console.WriteLine($"Failed to parse downstream message. {s}"));
-
+        public SL508DeviceManager() { } // default c-tor must exists
+        public SL508DeviceManager(IEnqueue<SendObject2> readMessageConsumer, SL508892Setup setup, Session serialSession)
+        {
+            this._readMessageConsumer = readMessageConsumer;
+            this._deviceSetup = setup;
+            this._serialSsession = serialSession;
+            this._deviceSlotIndex = setup.SlotNumber;
+        }
         /// <summary>
-        /// Translate and enqueue downstream message
+        /// Set a watchdog for this class.
+        /// Note that this method should be called (if needed) before StartDevice
+        /// </summary>
+        public void SetWatchdog(IWatchdog wd)
+        {
+            _watchdog = wd;
+        }
+        /// <summary>
+        /// Push message to downstream task. (single task for all downstream channels)
+        /// Before pushing , the message is translated.
         /// </summary>
         public void Enqueue(byte[] message)
         {
@@ -60,7 +77,7 @@ namespace UeiBridge
 
             try
             {
-                EthernetMessage em = EthernetMessage.CreateFromByteArray(message, MessageWay.downstream, _act);
+                EthernetMessage em = EthernetMessage.CreateFromByteArray(message, MessageWay.downstream, _onErrorCallback); // hmm.. not sure that this is the right place to translate
                 if (null == em)
                 {
                     return;
@@ -73,13 +90,12 @@ namespace UeiBridge
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Incoming message dropped. {ex.Message}.");
+                Console.WriteLine($"Downstream message dropped. {ex.Message}.");
             }
         }
-
-        protected void Task_DownstreamMessageLoop()
+        void Task_DownstreamMessageLoop()
         {
-
+            _logger.Info("Task_DownstreamMessageLoop started ");
             // message loop
             // ============
             while ((_cancelTokenSource.IsCancellationRequested == false) || (_downstreamQueue.IsCompleted == false))
@@ -123,41 +139,17 @@ namespace UeiBridge
                         _logger.Info($"Device {DeviceName} not ready. message rejected.");
                     }
                 }
-                catch (InvalidOperationException ex) // _downstreamQueue marked as complete (for task termination)
+                catch (InvalidOperationException ex) // thrown if _downstreamQueue marked as complete
                 {
-                    //_logger.Info(ex.Message);
+                    // nothing to do here
                 }
                 catch (Exception ex)
                 {
                     _logger.Warn(ex.Message);
                 }
             }
-            _downstreamQueue.CompleteAdding();
-        }
-
-
-
-        //public void TerminateDownstreamTask()
-        //{
-        //    _cancelTokenSource.Cancel();
-        //    _downstreamQueue.CompleteAdding();
-        //}
-
-        /// <summary>
-        /// SetWatchdog should be called (if needed) before OpenChannel()
-        /// </summary>
-        public void SetWatchdog(IWatchdog wd)
-        {
-            _watchdog = wd;
-        }
-        public SL508DeviceManager() { }
-        public SL508DeviceManager(IEnqueue<SendObject2> readrMessageConsumer, SL508892Setup setup, Session theSession)// : base(setup)
-        {
-            this._readMessageConsumer = readrMessageConsumer;
-            this._thisDeviceSetup = setup;
-            this._serialSsession = theSession;
-            this._deviceSlotIndex = setup.SlotNumber;
-            this.DeviceName = DeviceMap2.SL508Literal;
+            _downstreamQueue.CompleteAdding(); // just mark queue as complete if task terminated from other reason
+            _logger.Info("Task_DownstreamMessageLoop ended");
         }
 
         public void Dispose()
@@ -170,17 +162,16 @@ namespace UeiBridge
 
             _watchdog.Dispose();
 
-            //TerminateDownstreamTask();
-
             _cancelTokenSource.Cancel();
             _downstreamQueue.CompleteAdding();
 
-            _downstreamTask.Wait();
-            //_downstreamTask = null;
+            if (_downstreamTask.Status == TaskStatus.Running)
+            {
+                _downstreamTask.Wait();
+            }
 #if usetasks
-            //_cancelTokenSource.Cancel();
-            var allReadTasks = _channelAuxList.Select(i => i.ReadTask);
-            Task.WaitAll(allReadTasks.ToArray());
+            var runningTasks = _channelAuxList.Where(entry => entry.ReadTask.Status == TaskStatus.Running).Select(entry => entry.ReadTask);
+            Task.WaitAll(runningTasks.ToArray());
 #else
             var readersWaitHandle = _channelAuxList.Select(i => i.AsyncResult.AsyncWaitHandle).ToArray();
             WaitHandle.WaitAll(readersWaitHandle);
@@ -237,7 +228,6 @@ namespace UeiBridge
             //return allTasks.ToArray()
             return true;
         }
-
         void ReaderCallback(IAsyncResult ar)
         {
             if (true == _inDisposeFlag)
@@ -257,7 +247,7 @@ namespace UeiBridge
 
                 //EthernetMessage em = StaticMethods.BuildEthernetMessageFromDevice(recvBytes, this._thisDeviceSetup, chIndex);
                 //_targetConsumer?.Send(new SendObject(  _thisDeviceSetup.DestEndPoint.ToIpEp(), em.GetByteArray(MessageWay.upstream)));
-                _logger.Info($"({++linenumber}) Message from channel {chIndex}. Length {recvBytes.Length}");
+                _logger.Info($"Message from channel {chIndex}. Length {recvBytes.Length}");
                 _watchdog?.NotifyAlive(chName);
                 ChannelStat chStat = ChannelStatList.Where(i => i.ChannelIndex == chIndex).FirstOrDefault();
                 chStat.ReadByteCount += recvBytes.Length;
@@ -287,13 +277,6 @@ namespace UeiBridge
                 System.Diagnostics.Debug.Assert(true == chAux.OriginatingSession.IsRunning());
             }
         }
-
-        //internal void WaitAll()
-        //{
-        //    var allTasks = _channelAuxList.Where(cx => cx.ReadTask != null).Select(cx => cx.ReadTask);
-
-        //    Task.WaitAll( allTasks.ToArray());
-        //}
 
         /// <summary>
         /// Write Ethernet message to serial channel.
@@ -363,31 +346,33 @@ namespace UeiBridge
         /// <param name="cx"></param>
         protected void Task_UpstreamMessageLoop(ChannelAux2 cx)
         {
-
             SerialPort serialCh = cx.OriginatingSession.GetChannel(cx.ChannelIndex) as SerialPort;
             //sp = ch as SerialPort;
-            // "available" is the amount of data remaining from a single event
-            // more data may be in the queue once "available" bytes have been read
 
             int available = 0;
             string chName = $"Com{cx.ChannelIndex}";
             _watchdog.Register(chName, TimeSpan.FromSeconds(2.0)); // Hmm.. two second ... should use value relative to the value passed to .SetTimeout();
-            _logger.Info($"Listening on {chName}, Mode:{serialCh.GetMode()} Speed:{serialCh.GetSpeed()}");
-            var destEp = _thisDeviceSetup.DestEndPoint.ToIpEp();
+            int speed = StaticMethods.GetSerialSpeedAsInt(serialCh.GetSpeed());
+            _logger.Info($"Listening on {chName}, Mode:{serialCh.GetMode()} Speed:{speed}");
+            var destEp = _deviceSetup.DestEndPoint.ToIpEp();
 
-            Func<byte[], byte[]> calcbuffer = new Func<byte[], byte[]>((buf) =>
+            Func<byte[], byte[]> ethMsgBuilder = new Func<byte[], byte[]>( (buf) =>
             {
-                EthernetMessage em1 = StaticMethods.BuildEthernetMessageFromDevice(buf, this._thisDeviceSetup, cx.ChannelIndex);
+                EthernetMessage em1 = StaticMethods.BuildEthernetMessageFromDevice(buf, this._deviceSetup, cx.ChannelIndex);
                 return em1.GetByteArray(MessageWay.upstream);
             }
-                );
+            );
+            
             try
             {
                 do //message loop
                 {
                     // wait for available messages
+                    //-----------------------------
                     do
                     {
+                        // "available" is the amount of data remaining from a single event
+                        // more data may be in the queue once "available" bytes have been read
                         available = cx.OriginatingSession.GetDataStream().GetAvailableInputMessages(cx.ChannelIndex);
                         _watchdog?.NotifyAlive(chName);
                         if (available == 0)
@@ -398,13 +383,21 @@ namespace UeiBridge
 
                     if (_cancelTokenSource.IsCancellationRequested)
                     {
-                        continue; // this will bread message loop
+                        continue; // this will break message loop
                     }
 
                     // get message from device and send to consumer
-                    byte[] recvBytes = cx.Reader.Read(100); // Alex: what this 100 mean?
-                    _logger.Debug($"({++linenumber}) Message from channel {cx.ChannelIndex}. Length {recvBytes.Length}");
-                    _readMessageConsumer.Enqueue(new SendObject2(destEp, calcbuffer, recvBytes));
+                    // --------------------------------------------
+                    byte[] recvBytes = cx.Reader.Read(_maxReadMesageLength);
+                    if (recvBytes.Length < _maxReadMesageLength)
+                    {
+                        _logger.Debug($"Message from channel {cx.ChannelIndex}. Length {recvBytes.Length}");
+                    }
+                    else
+                    {
+                        _logger.Warn($"Suspicious Message from channel {cx.ChannelIndex}. Length {recvBytes.Length}");
+                    }
+                    _readMessageConsumer.Enqueue(new SendObject2(destEp, ethMsgBuilder, recvBytes));
 
                     // update stat
                     ChannelStat chStat = ChannelStatList.Where(i => i.ChannelIndex == cx.ChannelIndex).FirstOrDefault();
@@ -468,12 +461,6 @@ namespace UeiBridge
                 serialSession.ConfigureTimingForMessagingIO(1000, 100.0);
                 serialSession.GetTiming().SetTimeout(500);
 
-                // display channels info
-                //foreach (SerialPort ch in serialSession.GetChannels())
-                //{
-                //    Console.WriteLine($"Ch{ch.GetIndex()}   Mode:{ch.GetMode()}   Speed:{StaticMethods.GetSerialSpeedAsInt(ch.GetSpeed())}");
-                //}
-
                 return serialSession;
             }
             catch (Exception ex)
@@ -482,7 +469,6 @@ namespace UeiBridge
                 return null;
             }
         }
-
 
 #if old
         public bool OpenDevice()

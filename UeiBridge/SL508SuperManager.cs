@@ -10,7 +10,7 @@ using UeiDaq;
 namespace UeiBridge
 {
     /// <summary>
-    /// This class is kind or Decorator to SL508DeviceManger,
+    /// This class is kind of Decorator to SL508DeviceManger,
     /// it adds a watchdog ability. Meaning, that if SL508DeviceManger crashes or 
     /// stop functioning from any reason, this class shall restart the SL508DeviceManger
     /// </summary>
@@ -22,7 +22,7 @@ namespace UeiBridge
         public string DeviceName => _deviceManager?.DeviceName;
         public string InstanceName => _deviceManager?.InstanceName;
         readonly log4net.ILog _logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-
+        string _selectedNIC;
         public void Dispose()
         {
             _stopByDispose = true;
@@ -32,16 +32,16 @@ namespace UeiBridge
         {
             return _deviceManager?.GetFormattedStatus(interval);
         }
-        public SL508SuperManager()
+		public SL508SuperManager(){}// must have empty c-tor
+        public SL508SuperManager( string selectedNIC)
         {
-
+            _selectedNIC = selectedNIC;
         }
         public void StartDevice(SL508892Setup deviceSetup)
         {
             if (null != deviceSetup)
             {
                 Task.Run(() => WatchdogLoop(deviceSetup));
-                //Task.Factory.StartNew(() => WatchdogLoop(deviceSetup));
             }
         }
         void WatchdogLoop(SL508892Setup deviceSetup)
@@ -53,13 +53,14 @@ namespace UeiBridge
                 Session serSession = SL508DeviceManager.BuildSerialSession2(deviceSetup);
                 if (null == serSession)
                 {
-                    break;// loop
+                    break; // WD loop
                 }
                 serSession.Start();
 
                 _logger.Info($"Listening on {serSession.GetDevice().GetResourceName()}");
 
-                UdpWriterAsync uWriter = new UdpWriterAsync(deviceSetup.DestEndPoint.ToIpEp());//, _mainConfig.AppSetup.SelectedNicForMulticast);
+                UdpWriterAsync uWriter = new UdpWriterAsync(deviceSetup.DestEndPoint.ToIpEp(), _selectedNIC);//, _mainConfig.AppSetup.SelectedNicForMulticast);
+
                 // set device manager and watchdog
                 // -------------------------------
                 _deviceManager = new SL508DeviceManager(uWriter, deviceSetup, serSession);
@@ -73,23 +74,25 @@ namespace UeiBridge
                 if (false == _deviceManager.StartDevice())
                 {
                     _logger.Info("Failed to start device");
-                    break;// loop
+                    break;// WD loop
                 }
                 
-                // 
+                // wait, as long as device-manager runs
                 do
                 {
                     Task.Delay(100).Wait();
                 } while (_stopByWatchdog == false && _stopByDispose == false);
 
-                // Display statistics 
+                // Display statistics b4 termination
                 _logger.Info("Serial statistics\n--------");
                 foreach (var ch in _deviceManager.ChannelStatList)
                 {
                     //_logger.Info($"CH {ch.ChannelIndex}: {ch.ToString()}");
                 }
+
                 // dispose process
                 // ----------------
+                uWriter.Dispose();
                 _deviceManager.Dispose();
 
                 serSession.Stop();
@@ -99,7 +102,7 @@ namespace UeiBridge
 
                 _logger.Info(" = Dispose fin =");
 
-                // wait before restart after WD reset
+                // in case of WD reset, wait before restart.
                 if (true == _stopByWatchdog)
                 {
                     System.Threading.Thread.Sleep(1000);

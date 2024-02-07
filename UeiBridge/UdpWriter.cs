@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Net;
 using System.Net.Sockets;
 using UeiBridge.Library.Types;
@@ -11,46 +10,14 @@ using UeiBridge.Library;
 
 namespace UeiBridge
 {
-#if old
-    class UdpWriter_old : ISend<byte[]>
-    {
-        log4net.ILog _logger = log4net.LogManager.GetLogger("Root");
-        UdpClient _udpClient;
-        public UdpWriter_old()
-        {
-            IPAddress local = IPAddress.Parse("221.109.251.103");
-            IPEndPoint localep = new IPEndPoint(local, 5050);
-            _udpClient = new UdpClient();
-            IPAddress ip;
-            if (IPAddress.TryParse( Config.Instance.SenderMulticastAddress, out ip))
-            {
-                int p = Config.Instance.SenderMulticastPort;
-                _udpClient.Connect( ip, p);
-                _logger.Info($"Multicast sender esablished. Target end point {ip}:{p}");
-            }
-        }
-        public void Send(byte[] message)
-        {
-            if (null == message)
-            {
-                _logger.Warn("Can't send null message");
-                return;
-            }
-            _udpClient.Send(message, message.Length);
-
-            //_logger.Debug($"Message Sent through udp....len={message.Length}");
-            
-        }
-    }
-#endif
-    public class UdpWriterAsync : IEnqueue<SendObject2>, IDisposable
+    public class UdpWriter2 : IEnqueue<SendObject2>, IDisposable
     {
         log4net.ILog _logger = StaticLocalMethods.GetLogger();
         Socket _sendSocket;
         UdpClient _udpClient = new UdpClient();
         bool _inDispose = false;
 
-        public UdpWriterAsync(IPEndPoint destEp)
+        public UdpWriter2(IPEndPoint destEp)
         {
             _udpClient.Connect(destEp);
         }
@@ -61,19 +28,20 @@ namespace UeiBridge
 
         public void Enqueue(SendObject2 sendObj)
         {
-            if (_inDispose==false)
+            if (_inDispose == false)
             {
                 byte[] buf = sendObj.MessageBuild(sendObj.RawByteMessage);
                 _udpClient.Send(buf, buf.Length);
             }
         }
     }
+
     public class UdpWriter : ISend<SendObject>, IDisposable
     {
         log4net.ILog _logger = StaticLocalMethods.GetLogger();
         Socket _sendSocket;
         //string _instanceName;
-        public UdpWriter( IPEndPoint destEp, string localBindAddress)
+        public UdpWriter(IPEndPoint destEp, string localBindAddress)
         {
 
             //this._instanceName = instnceName;
@@ -95,7 +63,7 @@ namespace UeiBridge
                 // Create an endpoint
                 //IPEndPoint _mcastDestEP = new IPEndPoint(_mcastDestAddress, destPort);// Config.Instance.DestMulticastPort);
 
-                string usingNic=null;
+                string usingNic = null;
                 if (null != localBindAddress)
                 {
                     IPEndPoint localEP = new IPEndPoint(IPAddress.Parse(localBindAddress), 0);
@@ -104,7 +72,7 @@ namespace UeiBridge
                         _sendSocket.Bind(localEP);
                         usingNic = $"Using NIC: {localBindAddress}";
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         _logger.Warn($" Failed to bind to local NIC {localBindAddress}. {ex.Message}");
                     }
@@ -115,9 +83,9 @@ namespace UeiBridge
                 }
                 // Connect to the endpoint
                 //_sendSocket.Connect(_mcastDestEP);
-                
 
-                //_logger.Info($"Multicast sender - {this._instanceName} - esablished. Dest:{destEp.ToString()}. {usingNic}");
+
+                //_logger.Info($"Multicast sender - {this._instanceName} - established. Dest:{destEp.ToString()}. {usingNic}");
             }
             catch (SocketException ex)
             {
@@ -154,4 +122,5 @@ namespace UeiBridge
             _sendSocket.SendTo(sendObj.ByteMessage, SocketFlags.None, sendObj.TargetEndPoint);
         }
     }
+
 }

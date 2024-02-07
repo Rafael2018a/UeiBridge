@@ -106,6 +106,7 @@
     <Compile Include="UdpReader.cs" />
     <Compile Include="UdpToSlotMessenger.cs" />
     <Compile Include="UdpWriter.cs" />
+    <Compile Include="UdpWriterAsync.cs" />
     <Compile Include="ViewItem.cs" />
   </ItemGroup>
   <ItemGroup>

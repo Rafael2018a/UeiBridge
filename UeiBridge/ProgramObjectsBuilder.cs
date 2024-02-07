@@ -177,7 +177,7 @@ namespace UeiBridge
             //{
             //    case DeviceMap2.SL508Literal:
             _logger.Info("Building SL508...");
-            SL508SuperManager super = new SL508SuperManager();
+            SL508SuperManager super = new SL508SuperManager(_mainConfig.AppSetup.SelectedNicForMulticast);
             super.StartDevice(setup as SL508892Setup);
             //        SerialManagerTaskClass smtc = new SerialManagerTaskClass();
             //        smtc.MainSerial(realDevice, setup as SL508892Setup);
