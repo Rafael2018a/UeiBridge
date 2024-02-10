@@ -57,7 +57,7 @@ namespace UeiBridge
                 }
                 serSession.Start();
 
-                _logger.Info($"Listening on {serSession.GetDevice().GetResourceName()}");
+                
 
                 UdpWriterAsync uWriter = new UdpWriterAsync(deviceSetup.DestEndPoint.ToIpEp(), _selectedNIC);//, _mainConfig.AppSetup.SelectedNicForMulticast);
 

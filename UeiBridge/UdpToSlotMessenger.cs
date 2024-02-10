@@ -24,8 +24,8 @@ namespace UeiBridge
         }
     }
     /// <summary>
-    /// messenger
-    /// 
+    /// Incoming ethernet message router.
+    /// The routing is based on cube-id/slot-index
     /// </summary>
     public class UdpToSlotMessenger : IEnqueue<SendObject>
     {

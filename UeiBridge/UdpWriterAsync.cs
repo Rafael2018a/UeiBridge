@@ -9,7 +9,7 @@ namespace UeiBridge
 {
     /// <summary>
     /// Decorator of UdpWriter
-    /// Add async capability
+    /// Add async capability. For serial card (SL508) only
     /// </summary>
     public class UdpWriterAsync : IEnqueue<SendObject2>, IDisposable
     {

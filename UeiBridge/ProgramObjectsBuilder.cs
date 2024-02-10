@@ -171,22 +171,8 @@ namespace UeiBridge
 
         IDeviceManager BuildSerialDeviceManager(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
-            IDeviceManager result=null;
-
-            //switch (realDevice.DeviceName)
-            //{
-            //    case DeviceMap2.SL508Literal:
-            _logger.Info("Building SL508...");
             SL508SuperManager super = new SL508SuperManager(_mainConfig.AppSetup.SelectedNicForMulticast);
             super.StartDevice(setup as SL508892Setup);
-            //        SerialManagerTaskClass smtc = new SerialManagerTaskClass();
-            //        smtc.MainSerial(realDevice, setup as SL508892Setup);
-            //        result = smtc;
-            //        break;
-            //    default:
-            //        _logger.Warn($"Failed to build {realDevice.DeviceName}");
-            //        break;
-            //}
             return super;
         }
         List<PerDeviceObjects> BuildObjectsForDevice(UeiDeviceInfo realDevice, DeviceSetup setup)

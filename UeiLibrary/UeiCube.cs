@@ -10,6 +10,14 @@ using UeiDaq;
 namespace UeiBridge.Library
 {
 
+    public class UeiDevice : UeiCube
+    {
+        public string LocalPath { get { return _cubeUri?.LocalPath; } }
+        public UeiDevice(string deviceUriString) : base( deviceUriString)
+        {
+        }
+    }
+
     /// <summary>
     /// Cube management class.
     /// - check cube exist (connected)
@@ -25,18 +33,32 @@ namespace UeiBridge.Library
         public IPAddress CubeAddress { get; private set; }
         public bool IsSimuCube { get; private set; } = false;
         public bool IsValidAddress { get; private set; } = false;
-        public UeiCube(string cubeUri)
+        protected Uri _cubeUri;
+
+        /// <summary>
+        /// cubeUri might be pdna://192.168.10.9, 
+        /// or only ip 192.168.10.9
+        /// or simu://
+        /// </summary>
+        /// <param name="cubeUriString"></param>
+        public UeiCube(string cubeUriString)
         {
-            System.Diagnostics.Debug.Assert(cubeUri != null);
-            if (cubeUri.ToLower().StartsWith("simu"))
+            if ((cubeUriString == null)||(cubeUriString.Length<4))
+            {
+                throw new ArgumentException("CubeUri parse error");
+            }
+
+            // handle simu://
+            if (cubeUriString.ToLower().StartsWith("simu"))
             {
                 IsSimuCube = true;
                 IsValidAddress = true;
                 return;
             }
 
+            // handle ip only
             IPAddress ip;
-            if (IPAddress.TryParse(cubeUri, out ip))
+            if (IPAddress.TryParse(cubeUriString, out ip))
             {
                 this.CubeAddress = ip;
                 IsSimuCube = false;
@@ -44,9 +66,21 @@ namespace UeiBridge.Library
                 return;
             }
 
-            CubeAddress = CubeUriToIpAddress(cubeUri);
-            IsValidAddress = (null == this.CubeAddress) ? false : true;
-            IsSimuCube = false;
+            // handle pdna://192.168.10.9
+            Uri resutlUri;
+            bool ok1 = Uri.TryCreate(cubeUriString, UriKind.Absolute, out resutlUri);
+            if (ok1)
+            {
+                _cubeUri = resutlUri;
+                IPAddress resutlIp;
+                bool ok2 = System.Net.IPAddress.TryParse(resutlUri.Host, out resutlIp);
+                if (ok2)
+                {
+                    CubeAddress = resutlIp;
+                    IsValidAddress = true;
+                    IsSimuCube = false;
+                }
+            }
         }
 
         public UeiCube(IPAddress cubeAddress)
@@ -61,7 +95,7 @@ namespace UeiBridge.Library
         /// Cube id is the fourth field of the cube ip
         /// </summary>
         /// <returns></returns>
-        internal int GetCubeId()
+        public int GetCubeId()
         {
             if (null == CubeAddress)
             {

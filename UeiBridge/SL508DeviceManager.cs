@@ -33,12 +33,13 @@ namespace UeiBridge
         const int _maxReadMesageLength = 400;
         IEnqueue<SendObject2> _readMessageConsumer;
         SL508892Setup _deviceSetup;
-        Session _serialSsession;
+        Session _serialSession;
         List<ChannelAux2> _channelAuxList; // note that the index of this list is NOT (necessarily) the channel index
         IWatchdog _watchdog;
         readonly log4net.ILog _logger = StaticLocalMethods.GetLogger();
-        private BlockingCollection<EthernetMessage> _downstreamQueue = new BlockingCollection<EthernetMessage>(100); // max 100 items
-        private Action<string> _onErrorCallback = new Action<string>(s => Console.WriteLine($"Failed to parse downstream message. {s}"));
+        BlockingCollection<EthernetMessage> _downstreamQueue = new BlockingCollection<EthernetMessage>(100); // max 100 items
+        Action<string> _onErrorCallback = new Action<string>(s => Console.WriteLine($"Failed to parse downstream message. {s}"));
+        List<ViewItem<byte[]>> _lastScanList = new List<ViewItem<byte[]>>();
 
         // protected
         protected int _deviceSlotIndex;
@@ -53,7 +54,7 @@ namespace UeiBridge
         {
             this._readMessageConsumer = readMessageConsumer;
             this._deviceSetup = setup;
-            this._serialSsession = serialSession;
+            this._serialSession = serialSession;
             this._deviceSlotIndex = setup.SlotNumber;
         }
         /// <summary>
@@ -93,9 +94,10 @@ namespace UeiBridge
                 Console.WriteLine($"Downstream message dropped. {ex.Message}.");
             }
         }
-        void Task_DownstreamMessageLoop()
+        void Task_DownstreamMessageLoop( SL508892Setup setup)
         {
-            _logger.Info("Task_DownstreamMessageLoop started ");
+
+            _logger.Info($"{setup.DeviceName} Writer started");
             // message loop
             // ============
             while ((_cancelTokenSource.IsCancellationRequested == false) || (_downstreamQueue.IsCompleted == false))
@@ -160,7 +162,7 @@ namespace UeiBridge
             }
             _inDisposeFlag = true;
 
-            _watchdog.Dispose();
+            _watchdog?.Dispose();
 
             _cancelTokenSource.Cancel();
             _downstreamQueue.CompleteAdding();
@@ -193,24 +195,29 @@ namespace UeiBridge
             _channelAuxList = new List<ChannelAux2>();
             ChannelStatList = new List<ChannelStat>();
 
+            int numberOfChannels = _serialSession.GetNumberOfChannels();
+            _lastScanList = new List<ViewItem<byte[]>>(new ViewItem<byte[]>[numberOfChannels]);
+
             // build serial readers and writers
             // --------------------------------
-            for (int chNum = 0; chNum < _serialSsession.GetNumberOfChannels(); chNum++)
+            for (int chNum = 0; chNum < _serialSession.GetNumberOfChannels(); chNum++)
             {
                 // get channel index
-                SerialPort sPort = _serialSsession.GetChannel(chNum) as SerialPort;
+                SerialPort sPort = _serialSession.GetChannel(chNum) as SerialPort;
                 int chIndex = sPort.GetIndex();
 
                 // create reader & writer 
-                var reader = new SerialReader(_serialSsession.GetDataStream(), chIndex);
-                var writer = new SerialWriter(_serialSsession.GetDataStream(), chIndex);
+                var reader = new SerialReader(_serialSession.GetDataStream(), chIndex);
+                var writer = new SerialWriter(_serialSession.GetDataStream(), chIndex);
 
                 // add channel-aux to list
-                ChannelAux2 chAux = new ChannelAux2(chIndex, reader, writer, _serialSsession);
+                ChannelAux2 chAux = new ChannelAux2(chIndex, reader, writer, _serialSession);
                 _channelAuxList.Add(chAux);
                 ChannelStatList.Add(new ChannelStat(chIndex));
             }
 
+            
+            _logger.Info($"Reading {_serialSession.GetDevice().GetResourceName()}");
             // start readers
             foreach (ChannelAux2 cx in _channelAuxList)
             {
@@ -222,7 +229,8 @@ namespace UeiBridge
             }
 
             // start downstream message loop
-            _downstreamTask = Task.Factory.StartNew(Task_DownstreamMessageLoop, _cancelTokenSource.Token);
+            //_downstreamTask = Task.Factory.StartNew(Task_DownstreamMessageLoop, _cancelTokenSource.Token);
+            _downstreamTask = Task.Run(() => Task_DownstreamMessageLoop( _deviceSetup ), _cancelTokenSource.Token);
 
             //var allTasks = _channelAuxList.Where(cx => cx.ReadTask != null).Select(cx => cx.ReadTask);
             //return allTasks.ToArray()
@@ -311,7 +319,7 @@ namespace UeiBridge
                 }
 
                 // wait state
-                SerialPort sPort = _serialSsession.GetChannel(chIndex) as SerialPort;
+                SerialPort sPort = _serialSession.GetChannel(chIndex) as SerialPort;
                 int sp = StaticMethods.GetSerialSpeedAsInt(sPort.GetSpeed());
                 double bpsPossibe = Convert.ToDouble(sp) * 0.8;
                 int bitsToSend = request.PayloadBytes.Length * 8;
@@ -337,7 +345,33 @@ namespace UeiBridge
 
         public string[] GetFormattedStatus(TimeSpan interval)
         {
-            throw new NotImplementedException();
+            List<string> resultList = new List<string>();
+            for (int ch = 0; ch < _lastScanList.Count; ch++)
+            {
+                var item = _lastScanList[ch];
+                if (null != item)
+                {
+                    if (item.TimeToLive > TimeSpan.Zero)
+                    {
+                        item.DecreaseTimeToLive(interval);
+                        int len = (item.ReadValue.Length > 20) ? 20 : item.ReadValue.Length;
+                        string s = $"Ch{ch}: Payload=({item.ReadValue.Length}): {BitConverter.ToString(item.ReadValue).Substring(0, len * 3 - 1)}";
+                        resultList.Add(s);
+                    }
+                    else
+                    {
+                        item = null;
+                    }
+                }
+            }
+            if (resultList.Count > 0)
+            {
+                return resultList.ToArray();
+            }
+            else
+            {
+                return null;
+            }
         }
 
         /// <summary>
@@ -348,17 +382,33 @@ namespace UeiBridge
         {
             SerialPort serialCh = cx.OriginatingSession.GetChannel(cx.ChannelIndex) as SerialPort;
             //sp = ch as SerialPort;
-
+            UeiDevice d = new UeiDevice(cx.OriginatingSession.GetDevice().GetResourceName());
+            //int c = d.GetCubeId();
             int available = 0;
             string chName = $"Com{cx.ChannelIndex}";
-            _watchdog.Register(chName, TimeSpan.FromSeconds(2.0)); // Hmm.. two second ... should use value relative to the value passed to .SetTimeout();
+            _watchdog?.Register(chName, TimeSpan.FromSeconds(2.0)); // Hmm.. two second ... should use value relative to the value passed to .SetTimeout();
             int speed = StaticMethods.GetSerialSpeedAsInt(serialCh.GetSpeed());
-            _logger.Info($"Listening on {chName}, Mode:{serialCh.GetMode()} Speed:{speed}");
+            _logger.Info($"Reading Cube{d.GetCubeId()}/{d.LocalPath}/{chName}, Mode:{serialCh.GetMode()} Speed:{speed}");
             var destEp = _deviceSetup.DestEndPoint.ToIpEp();
 
             Func<byte[], byte[]> ethMsgBuilder = new Func<byte[], byte[]>( (buf) =>
             {
                 EthernetMessage em1 = StaticMethods.BuildEthernetMessageFromDevice(buf, this._deviceSetup, cx.ChannelIndex);
+                SerialChannelSetup chSetup = _deviceSetup.Channels[cx.ChannelIndex];
+                if (true == chSetup.FilterByLength)
+                {
+                    if (buf.Length!=chSetup.MessageLength)
+                    {
+                        return null;
+                    }
+                }
+                if (true == _deviceSetup.Channels[cx.ChannelIndex].FilterBySyncBytes)
+                {
+                    if ((buf[0]!=chSetup.SyncByte0)||(buf[1]!=chSetup.SyncByte1))
+                    {
+                        return null;
+                    }
+                }
                 return em1.GetByteArray(MessageWay.upstream);
             }
             );
