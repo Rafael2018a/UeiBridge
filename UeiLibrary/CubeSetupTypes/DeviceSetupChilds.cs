@@ -128,8 +128,8 @@ namespace UeiBridge.Library.CubeSetupTypes
     }
     public class SerialChannelSetup: IEquatable<SerialChannelSetup>
     {
-        [XmlAttribute("ChannelIndex")]
-        public int ChannelIndex { get; set; }  = -1;
+        [XmlAttribute("ComIndex")]
+        public int ComIndex { get; set; }  = -1;
         [XmlAttribute("IsEnabled")]
         public bool IsEnabled { get; set; } = true;
         public UeiDaq.SerialPortMode Mode { get; set; }  = UeiDaq.SerialPortMode.RS232;
@@ -143,15 +143,16 @@ namespace UeiBridge.Library.CubeSetupTypes
         public byte SyncByte1 { get; set; }
         public bool FilterByLength { get; set; }
         public int MessageLength { get; set; } // if FilterByLength==true, use this length
+        
         public SerialChannelSetup(int channelIndex, UeiDaq.SerialPortSpeed speed)
         {
-            this.ChannelIndex = channelIndex;
+            this.ComIndex = channelIndex;
             this.Baudrate = speed;
         }
         public SerialChannelSetup() {  }
         public bool Equals(SerialChannelSetup other)
         {
-            bool f1 = this.ChannelIndex == other.ChannelIndex;
+            bool f1 = this.ComIndex == other.ComIndex;
             bool f2 = this.IsEnabled == other.IsEnabled;
             bool f3 = this.Mode == other.Mode;
             bool f4 = this.Baudrate == other.Baudrate;

@@ -29,7 +29,7 @@ int main()
 	//printf("time: '%s'\n", __TIME__);
 	//printf("timestamp: '%s'\n", __TIMESTAMP__);
 
-	cout << "Compilation time: " << __TIMESTAMP__ << "\n";
+	cout << "SerialSimu. " << __TIMESTAMP__ << "\n";
 
 	//std::cout << "Hello World!\n";
 
@@ -37,30 +37,38 @@ int main()
 	CUeiSession mySession;
 	//CUeiSerialReader** readers;
 	vector<CUeiSerialWriter*> writers;
+	string deviceUri = "pdna://192.168.100.3/Dev3/";
 
 	for (int chIndex = 0; chIndex < 8; chIndex++)
 	{
 		stringstream sstream;
 
-		sstream << "pdna://192.168.100.3/Dev3/com" << chIndex;
-
-		string resString = sstream.str();
+		sstream << deviceUri << "com" << chIndex;
 
 		try {
 
-			CUeiDevice* device = CUeiDeviceEnumerator::GetDeviceFromResource(resString);
-			device->Reset();
+			CUeiDevice* device = CUeiDeviceEnumerator::GetDeviceFromResource(deviceUri);
+			if (nullptr != device)
+			{
+				device->Reset();
 
-			CUeiSerialPort* port = mySession.CreateSerialPort(resString,
-				UeiSerialModeRS485FullDuplex,
-				UeiSerialBitsPerSecond57600,
-				UeiSerialDataBits8,
-				UeiSerialParityNone,
-				UeiSerialStopBits1,
-				"");
+				CUeiSerialPort* port = mySession.CreateSerialPort(sstream.str(),
+					UeiSerialModeRS485FullDuplex,
+					UeiSerialBitsPerSecond57600,
+					UeiSerialDataBits8,
+					UeiSerialParityNone,
+					UeiSerialStopBits1,
+					"");
 
 
-			UeiDaq::CUeiSerialPort* sport = static_cast<UeiDaq::CUeiSerialPort*>(mySession.GetChannel(chIndex));
+				UeiDaq::CUeiSerialPort* sport = static_cast<UeiDaq::CUeiSerialPort*>(mySession.GetChannel(chIndex));
+			}
+			else
+			{
+				cout << "Can't reach " << sstream.str() << ". Program aborted \n";
+				return 0;
+			}
+
 		}
 		catch (exception &ex)
 		{
@@ -71,7 +79,7 @@ int main()
 			cout << "exception" << "\n";
 		}
 	}
-	cout << "8 serial channels defined. 57600bps, RS485FullDuplex" << "\n";
+	cout << deviceUri  << ". 8 serial channels defined. 57600bps, RS485FullDuplex" << "\n";
 	//"at 57600bps, RS485FullDuplex" << "\n";
 	mySession.ConfigureTimingForAsynchronousIO(WATERMARK, 0, TIMEOUT_uS, 0);
 	mySession.GetTiming()->SetTimeout(10);
@@ -90,19 +98,22 @@ int main()
 		writers.push_back(new CUeiSerialWriter(mySession.GetDataStream(), chIndex));
 	}
 	
-	int32_t  bufferLength = 10;
-	for (int i = 0; i < 100; i++)
+	int32_t  bufferLength = 16;
+	for (int i = 0; i < 64; i++)
 	{
-		char * buffer = BuildBuffer(bufferLength, i + 40);
+		char * buffer = BuildBuffer(bufferLength, i + 32);
 		cout << "Writing " << std::dec << bufferLength << " bytes on all channels. first byte:" << std::hex << static_cast<int32_t>(buffer[0]) << "\n";
 		for (CUeiSerialWriter* writer : writers)
-		//auto writer = writers[0];
 		{
 			Int32 numberOfSent = 0;
 			writer->Write(bufferLength, buffer, &numberOfSent);
+			if (bufferLength != numberOfSent)
+			{
+				cout << "Write fail\n";
+			}
 		}
 		delete buffer;
-		Sleep(100);
+		Sleep(500);
 	}
 
 	//for (int m = 0; m < 100; m++)

@@ -329,7 +329,7 @@ namespace SerialOp
             {
                 if (ss.IsEnabled)
                 {
-                    com.Append($"{ss.ChannelIndex},");
+                    com.Append($"{ss.ComIndex},");
                 }
             }
             string serialResource = deviceuri + com.ToString();

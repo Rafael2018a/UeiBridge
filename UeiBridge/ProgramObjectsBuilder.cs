@@ -341,7 +341,7 @@ namespace UeiBridge
                     {
                         continue;
                     }
-                    string finalUrl = $"{thisSetup.CubeUrl}Dev{thisSetup.SlotNumber}/Com{channel.ChannelIndex}";
+                    string finalUrl = $"{thisSetup.CubeUrl}Dev{thisSetup.SlotNumber}/Com{channel.ComIndex}";
                     SerialPort sport = serialSession.CreateSerialPort(finalUrl,
                                         channel.Mode,
                                         channel.Baudrate,
@@ -382,7 +382,7 @@ namespace UeiBridge
                 string s2 = s1.Replace("BitsPerSecond", "");
                 //SL508892Setup s508 = setup as SL508892Setup;
                 int chIndex = ueiPort.GetIndex();
-                int portnum = thisSetup.Channels.Where(i => i.ChannelIndex == chIndex).Select(i => i.LocalUdpPort).FirstOrDefault();
+                int portnum = thisSetup.Channels.Where(i => i.ComIndex == chIndex).Select(i => i.LocalUdpPort).FirstOrDefault();
                 _logger.Debug($"CH:{ueiPort.GetIndex()}, Rate {s2} bps, Mode {ueiPort.GetMode()}. Listening port {portnum}");
             }
 

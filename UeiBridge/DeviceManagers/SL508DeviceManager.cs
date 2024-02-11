@@ -381,16 +381,14 @@ namespace UeiBridge
         protected void Task_UpstreamMessageLoop(ChannelAux2 cx)
         {
             SerialPort serialCh = cx.OriginatingSession.GetChannel(cx.ChannelIndex) as SerialPort;
-            //sp = ch as SerialPort;
-            UeiDevice d = new UeiDevice(cx.OriginatingSession.GetDevice().GetResourceName());
-            //int c = d.GetCubeId();
+            UeiDevice ud = new UeiDevice(cx.OriginatingSession.GetDevice().GetResourceName());
             int available = 0;
             string chName = $"Com{cx.ChannelIndex}";
             _watchdog?.Register(chName, TimeSpan.FromSeconds(2.0)); // Hmm.. two second ... should use value relative to the value passed to .SetTimeout();
             int speed = StaticMethods.GetSerialSpeedAsInt(serialCh.GetSpeed());
-            _logger.Info($"Reading Cube{d.GetCubeId()}/{d.LocalPath}/{chName}, Mode:{serialCh.GetMode()} Speed:{speed}");
             var destEp = _deviceSetup.DestEndPoint.ToIpEp();
-
+            _logger.Info($"{ud.GetCubeId()}/{ud.LocalPath}/{chName} Reader ready. {serialCh.GetMode()} at {speed}bps. Dest {destEp.ToString()}");
+            
             Func<byte[], byte[]> ethMsgBuilder = new Func<byte[], byte[]>( (buf) =>
             {
                 EthernetMessage em1 = StaticMethods.BuildEthernetMessageFromDevice(buf, this._deviceSetup, cx.ChannelIndex);
@@ -447,12 +445,15 @@ namespace UeiBridge
                     {
                         _logger.Warn($"Suspicious Message from channel {cx.ChannelIndex}. Length {recvBytes.Length}");
                     }
+                    // send to consumer
                     _readMessageConsumer.Enqueue(new SendObject2(destEp, ethMsgBuilder, recvBytes));
+                    // update status viewer
+                    _lastScanList[cx.ChannelIndex] = new ViewItem<byte[]>(recvBytes, TimeSpan.FromSeconds(5));
 
                     // update stat
-                    ChannelStat chStat = ChannelStatList.Where(i => i.ChannelIndex == cx.ChannelIndex).FirstOrDefault();
-                    chStat.ReadByteCount += recvBytes.Length;
-                    chStat.ReadMessageCount++;
+                    //ChannelStat chStat = ChannelStatList.Where(i => i.ChannelIndex == cx.ChannelIndex).FirstOrDefault();
+                    //chStat.ReadByteCount += recvBytes.Length;
+                    //chStat.ReadMessageCount++;
 
                 } while (false == _cancelTokenSource.IsCancellationRequested);
             }
@@ -483,7 +484,7 @@ namespace UeiBridge
                         {
                             continue;
                         }
-                        string finalUri = $"{deviceSetup.CubeUrl}Dev{deviceSetup.SlotNumber}/Com{channelSetup.ChannelIndex}";
+                        string finalUri = $"{deviceSetup.CubeUrl}Dev{deviceSetup.SlotNumber}/Com{channelSetup.ComIndex}";
                         SerialPort sport = serialSession.CreateSerialPort(finalUri,
                                             channelSetup.Mode,
                                             channelSetup.Baudrate,

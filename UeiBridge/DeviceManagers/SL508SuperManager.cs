@@ -70,7 +70,11 @@ namespace UeiBridge
                     _logger.Warn($"WD reset by {source}. Reason: {reason}");
                 }));
 
-                _deviceManager.SetWatchdog(wd);
+                if (deviceSetup.EnableWatchdog)
+                {
+                    _deviceManager.SetWatchdog(wd);
+                }
+
                 if (false == _deviceManager.StartDevice())
                 {
                     _logger.Info("Failed to start device");

@@ -13,6 +13,7 @@ namespace UeiBridge.Library.CubeSetupTypes
         public bool IsEnabled = true;
         [XmlElement(ElementName = "DeviceSlot")]
         public int SlotNumber; // slot index
+        public bool EnableWatchdog;
         public string DeviceName;
         public EndPoint LocalEndPoint;
         public EndPoint DestEndPoint;

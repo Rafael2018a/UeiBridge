@@ -98,10 +98,10 @@
     <Compile Include="ProgramObjectsBuilder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SimuAO16OutputDeviceManager.cs" />
-    <Compile Include="SL508DeviceManager.cs" />
+    <Compile Include="DeviceManagers\SL508DeviceManager.cs" />
     <Compile Include="SL508InputDeviceManager.cs" />
     <Compile Include="SL508OutputDeviceManager.cs" />
-    <Compile Include="SL508SuperManager.cs" />
+    <Compile Include="DeviceManagers\SL508SuperManager.cs" />
     <Compile Include="StaticMethods.cs" />
     <Compile Include="UdpReader.cs" />
     <Compile Include="UdpToSlotMessenger.cs" />

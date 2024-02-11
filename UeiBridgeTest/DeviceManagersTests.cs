@@ -248,7 +248,7 @@ namespace UeiBridgeTest
             {
                 foreach (var channel in thisSetup.Channels)
                 {
-                    string finalUrl = $"{thisSetup.CubeUrl}Dev{thisSetup.SlotNumber}/Com{channel.ChannelIndex}";
+                    string finalUrl = $"{thisSetup.CubeUrl}Dev{thisSetup.SlotNumber}/Com{channel.ComIndex}";
                     var port = serialSession.CreateSerialPort(finalUrl,
                                         channel.Mode,
                                         channel.Baudrate,
