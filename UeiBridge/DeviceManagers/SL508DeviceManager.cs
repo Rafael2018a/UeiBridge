@@ -22,12 +22,12 @@ namespace UeiBridge
     /// - sends updates to given watchdog
     /// - maintain channel statistics
     /// </summary>
-    public class SL508DeviceManager : IDeviceManager
+    public class SL508DeviceManager : IDeviceManager, Library.Interfaces.IEnqueue<byte[]>
     {
         // publics
         public List<ChannelStat> ChannelStatList { get; private set; } // note that the index of this list is NOT (necessarily) the channel index
         public string DeviceName { get; } = DeviceMap2.SL508Literal;
-        public string InstanceName { get; protected set; } = "tbd";
+        public string InstanceName { get; protected set; } = "SL508DeviceManager/{instanceName}";
 
         // privates
         const int _maxReadMesageLength = 400;
@@ -36,18 +36,17 @@ namespace UeiBridge
         Session _serialSession;
         List<ChannelAux2> _channelAuxList; // note that the index of this list is NOT (necessarily) the channel index
         IWatchdog _watchdog;
-        readonly log4net.ILog _logger = StaticLocalMethods.GetLogger();
+        //readonly log4net.ILog _logger = StaticLocalMethods.GetLogger();
+        readonly log4net.ILog _logger = log4net.LogManager.GetLogger("SL508Manager");
         BlockingCollection<EthernetMessage> _downstreamQueue = new BlockingCollection<EthernetMessage>(100); // max 100 items
         Action<string> _onErrorCallback = new Action<string>(s => Console.WriteLine($"Failed to parse downstream message. {s}"));
-        List<ViewItem<byte[]>> _lastScanList = new List<ViewItem<byte[]>>();
-
-        // protected
-        protected int _deviceSlotIndex;
-        protected bool _isOutputDeviceReady = true;
-        protected bool _inDisposeFlag = false;
-        protected CancellationTokenSource _cancelTokenSource = new CancellationTokenSource();
-        protected Task _downstreamTask;
-
+        List<ViewItem<byte[]>> _lastScanList;// = new List<ViewItem<byte[]>>();
+        List<ViewItem<byte[]>> _ViewItemList;// = new List<ViewItem<byte[]>>();
+        int _deviceSlotIndex;
+        bool _isOutputDeviceReady = true;
+        bool _inDisposeFlag = false;
+        CancellationTokenSource _cancelTokenSource = new CancellationTokenSource(); // cancel downstream and upstream tasks
+        Task _downstreamTask;
 
         public SL508DeviceManager() { } // default c-tor must exists
         public SL508DeviceManager(IEnqueue<SendObject2> readMessageConsumer, SL508892Setup setup, Session serialSession)
@@ -56,6 +55,8 @@ namespace UeiBridge
             this._deviceSetup = setup;
             this._serialSession = serialSession;
             this._deviceSlotIndex = setup.SlotNumber;
+
+            this.InstanceName = $"{setup.GetInstanceName()}";
         }
         /// <summary>
         /// Set a watchdog for this class.
@@ -97,7 +98,7 @@ namespace UeiBridge
         void Task_DownstreamMessageLoop( SL508892Setup setup)
         {
 
-            _logger.Info($"{setup.DeviceName} Writer started");
+            //_logger.Info($"{setup.DeviceName} Writer started");
             // message loop
             // ============
             while ((_cancelTokenSource.IsCancellationRequested == false) || (_downstreamQueue.IsCompleted == false))
@@ -197,6 +198,7 @@ namespace UeiBridge
 
             int numberOfChannels = _serialSession.GetNumberOfChannels();
             _lastScanList = new List<ViewItem<byte[]>>(new ViewItem<byte[]>[numberOfChannels]);
+            _ViewItemList = new List<ViewItem<byte[]>>(new ViewItem<byte[]>[numberOfChannels]);
 
             // build serial readers and writers
             // --------------------------------
@@ -216,9 +218,9 @@ namespace UeiBridge
                 ChannelStatList.Add(new ChannelStat(chIndex));
             }
 
+            // Create reader tasks
+            // --------------------
             
-            _logger.Info($"Opening {_serialSession.GetDevice().GetResourceName()} ... ");
-            // start readers
             foreach (ChannelAux2 cx in _channelAuxList)
             {
 #if usetasks
@@ -227,13 +229,10 @@ namespace UeiBridge
                 cx.AsyncResult = cx.Reader.BeginRead(200, new AsyncCallback(ReaderCallback), cx); // start reading from device
 #endif
             }
-            //_channelAuxList.All(entry => entry.ReadTask.Status == TaskStatus.Running);
+            
             // start downstream message loop
-            //_downstreamTask = Task.Factory.StartNew(Task_DownstreamMessageLoop, _cancelTokenSource.Token);
-            _downstreamTask = Task.Run(() => Task_DownstreamMessageLoop( _deviceSetup ), _cancelTokenSource.Token);
+            _downstreamTask = Task.Run(() => Task_DownstreamMessageLoop(_deviceSetup), _cancelTokenSource.Token);
 
-            //var allTasks = _channelAuxList.Where(cx => cx.ReadTask != null).Select(cx => cx.ReadTask);
-            //return allTasks.ToArray()
             return true;
         }
         void ReaderCallback(IAsyncResult ar)
@@ -308,7 +307,7 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert(cx.Writer != null);
 
             string chName = $"Com{cx.ChannelIndex}";
-            //
+            
             try
             {
                 // write to serial port
@@ -317,6 +316,8 @@ namespace UeiBridge
                 {
                     _logger.Warn($"Failed in writing to serial channel {chName} ");
                 }
+
+                _ViewItemList[request.SerialChannelNumber] = new ViewItem<byte[]>(request.PayloadBytes, TimeSpan.FromSeconds(5));
 
                 // wait state
                 SerialPort sPort = _serialSession.GetChannel(chIndex) as SerialPort;
@@ -346,6 +347,8 @@ namespace UeiBridge
         public string[] GetFormattedStatus(TimeSpan interval)
         {
             List<string> resultList = new List<string>();
+
+            // upstream
             for (int ch = 0; ch < _lastScanList.Count; ch++)
             {
                 var item = _lastScanList[ch];
@@ -355,7 +358,7 @@ namespace UeiBridge
                     {
                         item.DecreaseTimeToLive(interval);
                         int len = (item.ReadValue.Length > 20) ? 20 : item.ReadValue.Length;
-                        string s = $"Ch{ch}: Payload=({item.ReadValue.Length}): {BitConverter.ToString(item.ReadValue).Substring(0, len * 3 - 1)}";
+                        string s = $"Ch{ch}: Upstream ({item.ReadValue.Length}): {BitConverter.ToString(item.ReadValue).Substring(0, len * 3 - 1)}";
                         resultList.Add(s);
                     }
                     else
@@ -364,6 +367,27 @@ namespace UeiBridge
                     }
                 }
             }
+
+            // downstream
+            for (int ch = 0; ch < _ViewItemList.Count; ch++)
+            {
+                var item = _ViewItemList[ch];
+                if (null != item)
+                {
+                    if (item.TimeToLive > TimeSpan.Zero)
+                    {
+                        item.DecreaseTimeToLive(interval);
+                        int len = (item.ReadValue.Length > 20) ? 20 : item.ReadValue.Length;
+                        string s = $"Ch{ch}: Downstream ({item.ReadValue.Length}): {BitConverter.ToString(item.ReadValue).Substring(0, len * 3 - 1)}";
+                        resultList.Add(s);
+                    }
+                    else
+                    {
+                        item = null;
+                    }
+                }
+            }
+
             if (resultList.Count > 0)
             {
                 return resultList.ToArray();
@@ -389,7 +413,7 @@ namespace UeiBridge
                 SerialPort serialCh = cx.OriginatingSession.GetChannel(cx.ChannelIndex) as SerialPort;
                 UeiDevice ud = new UeiDevice(cx.OriginatingSession.GetDevice().GetResourceName());
                 int speed = StaticMethods.GetSerialSpeedAsInt(serialCh.GetSpeed());
-                _logger.Info($"Reading: Cube{ud.GetCubeId()}/{ud.LocalPath}/{chName}. {serialCh.GetMode()} at {speed}bps. Dest {destEp.ToString()}");
+                _logger.Info($"Cube{ud.GetCubeId()}/{ud.LocalPath}/{chName} Reader ready. ({serialCh.GetMode()}/{speed}bps). Dest {destEp.ToString()}");
             }
 
             // register to watch dot

@@ -54,7 +54,7 @@ int main()
 
 				CUeiSerialPort* port = mySession.CreateSerialPort(sstream.str(),
 					UeiSerialModeRS485FullDuplex,
-					UeiSerialBitsPerSecond57600,
+					UeiSerialBitsPerSecond19200,
 					UeiSerialDataBits8,
 					UeiSerialParityNone,
 					UeiSerialStopBits1,

@@ -132,7 +132,7 @@ namespace UeiBridge.Library.CubeSetupTypes
         public int ComIndex { get; set; }  = -1;
         [XmlAttribute("IsEnabled")]
         public bool IsEnabled { get; set; } = true;
-        public UeiDaq.SerialPortMode Mode { get; set; }  = UeiDaq.SerialPortMode.RS232;
+        public UeiDaq.SerialPortMode Mode { get; set; }  = UeiDaq.SerialPortMode.RS485FullDuplex;
         public UeiDaq.SerialPortSpeed Baudrate { get; set; }
         public UeiDaq.SerialPortParity Parity { get; set; } = UeiDaq.SerialPortParity.None;
         public UeiDaq.SerialPortStopBits Stopbits { get; set; } = UeiDaq.SerialPortStopBits.StopBits1;

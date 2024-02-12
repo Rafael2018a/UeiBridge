@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using UeiBridge.Library;
@@ -21,7 +22,7 @@ namespace UeiBridge
         bool _stopByDispose = false;
         public string DeviceName => _deviceManager?.DeviceName;
         public string InstanceName => _deviceManager?.InstanceName;
-        readonly log4net.ILog _logger = log4net.LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        readonly log4net.ILog _logger = log4net.LogManager.GetLogger("SL508Super");
         string _selectedNIC;
         public void Dispose()
         {
@@ -32,8 +33,8 @@ namespace UeiBridge
         {
             return _deviceManager?.GetFormattedStatus(interval);
         }
-		public SL508SuperManager(){}// must have empty c-tor
-        public SL508SuperManager( string selectedNIC)
+        public SL508SuperManager() { }// must have empty c-tor
+        public SL508SuperManager(string selectedNIC)
         {
             _selectedNIC = selectedNIC;
         }
@@ -53,6 +54,8 @@ namespace UeiBridge
         {
             do // watchdog loop
             {
+                List<UdpReader> udpReaderList = new List<UdpReader>();
+
                 // set session
                 // -----------
                 Session serSession = SL508DeviceManager.BuildSerialSession2(deviceSetup);
@@ -61,21 +64,45 @@ namespace UeiBridge
                     break; // WD loop
                 }
                 serSession.Start();
+                UeiDevice udevice = new UeiDevice(serSession.GetDevice().GetResourceName());
+                _logger.Info($" == Opening Cube{udevice.GetCubeId()}{udevice.LocalPath} SL508 (Serial) == ");
 
-                UdpWriterAsync uWriter = new UdpWriterAsync(deviceSetup.DestEndPoint.ToIpEp(), _selectedNIC);//, _mainConfig.AppSetup.SelectedNicForMulticast);
+                // defince writer for upstream process
+                UdpWriterAsync uWriter = new UdpWriterAsync(deviceSetup.DestEndPoint.ToIpEp(), _selectedNIC);
 
-                // set device manager and watchdog
+                // create SL device manager 
                 // -------------------------------
                 _deviceManager = new SL508DeviceManager(uWriter, deviceSetup, serSession);
-                DeviceWatchdog wd = new DeviceWatchdog(new Action<string, string>((source, reason) => 
-                { 
+
+                // define watchdog handler
+                DeviceWatchdog wd = new DeviceWatchdog(new Action<string, string>((source, reason) =>
+                {
                     _stopByWatchdog = true;
                     _logger.Warn($"WD reset by {source}. Reason: {reason}");
                 }));
-
                 if (deviceSetup.EnableWatchdog)
                 {
                     _deviceManager.SetWatchdog(wd);
+                }
+
+                // Create udp readers for downstream processing
+                // ----------------------------------------------
+                {
+                    UdpToSlotMessenger u2s = new UdpToSlotMessenger();
+                    u2s.SubscribeConsumer(_deviceManager, deviceSetup.GetCubeId(), deviceSetup.SlotNumber);
+
+                    var ip4all = IPAddress.Parse(deviceSetup.LocalEndPoint.Address);
+                    foreach (SerialChannelSetup channelSetup in deviceSetup.Channels)
+                    {
+                        if (true == channelSetup.IsEnabled) // if com enabled
+                        {
+                            IPEndPoint ep = new IPEndPoint(ip4all, channelSetup.LocalUdpPort);
+                            UdpReader ureader2 = new UdpReader(ep, null, u2s, $"InstanceName");
+                            ureader2.Start();
+                            _logger.Info($"Cube{deviceSetup.GetCubeId()}/Dev{deviceSetup.SlotNumber}/Com{channelSetup.ComIndex} Writer ready. Listening on {ep.ToString()}");
+                            udpReaderList.Add(ureader2);
+                        }
+                    }
                 }
 
                 if (false == _deviceManager.StartDevice())
@@ -83,24 +110,21 @@ namespace UeiBridge
                     _logger.Info("Failed to start device");
                     break;// WD loop
                 }
-                
+
                 // wait, as long as device-manager runs
                 do
                 {
                     System.Threading.Thread.Sleep(100);
                 } while (_stopByWatchdog == false && _stopByDispose == false);
 
-                // Display statistics b4 termination
-                //_logger.Info("Serial statistics\n--------");
-                foreach (var ch in _deviceManager.ChannelStatList)
-                {
-                    //_logger.Info($"CH {ch.ChannelIndex}: {ch.ToString()}");
-                }
-
                 // dispose process
                 // ----------------
                 uWriter.Dispose();
                 _deviceManager.Dispose();
+                foreach(var ent in udpReaderList)
+                {
+                    ent.Dispose();
+                }
 
                 serSession.Stop();
                 System.Diagnostics.Debug.Assert(false == serSession.IsRunning());
@@ -115,9 +139,10 @@ namespace UeiBridge
                     System.Threading.Thread.Sleep(1000);
                     _stopByWatchdog = false;
                 }
-                
+
             } while (false == _stopByDispose);
 
         }
+
     }
 }

@@ -77,7 +77,7 @@ namespace UeiBridge
                 var consumerList = _consumersList.Where(consumer1 => ((consumer1.CubeId == ethMag.CubeId) && ( consumer1.SlotNumber == ethMag.SlotNumber )));
                 if (consumerList.Count()==0) // no subs
                 {
-                    _logger.Warn($"No consumer to message aimed to slot{ethMag.SlotNumber} /cube{ethMag.CubeId} ({incomingMessage.TargetEndPoint})");
+                    _logger.Warn($"No consumer to message aimed to Cube{ethMag.CubeId}/Slot{ethMag.SlotNumber}");
                     continue;
                 }
 
