@@ -17,7 +17,7 @@
                             <StackPanel Orientation="Horizontal">
                                 <CheckBox IsChecked="{Binding IsEnabled}"/>
                                 <ContentControl Width="5"/>
-                                <TextBlock Text="{Binding ChannelIndex, StringFormat={}  COM {0}}"/>
+                                <TextBlock Text="{Binding ComIndex, StringFormat={}  COM {0}}"/>
                             </StackPanel>
                         </DataTemplate>
                     </ComboBox.ItemTemplate>

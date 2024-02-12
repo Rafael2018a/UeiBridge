@@ -217,7 +217,7 @@ namespace UeiBridge
             }
 
             
-            _logger.Info($"Reading {_serialSession.GetDevice().GetResourceName()}");
+            _logger.Info($"Opening {_serialSession.GetDevice().GetResourceName()} ... ");
             // start readers
             foreach (ChannelAux2 cx in _channelAuxList)
             {
@@ -227,7 +227,7 @@ namespace UeiBridge
                 cx.AsyncResult = cx.Reader.BeginRead(200, new AsyncCallback(ReaderCallback), cx); // start reading from device
 #endif
             }
-
+            //_channelAuxList.All(entry => entry.ReadTask.Status == TaskStatus.Running);
             // start downstream message loop
             //_downstreamTask = Task.Factory.StartNew(Task_DownstreamMessageLoop, _cancelTokenSource.Token);
             _downstreamTask = Task.Run(() => Task_DownstreamMessageLoop( _deviceSetup ), _cancelTokenSource.Token);
@@ -375,20 +375,27 @@ namespace UeiBridge
         }
 
         /// <summary>
+        /// Read message from serial device and send to target consumer, in a loop.
         /// This task is per single channel (uart)
         /// </summary>
         /// <param name="cx"></param>
         protected void Task_UpstreamMessageLoop(ChannelAux2 cx)
         {
-            SerialPort serialCh = cx.OriginatingSession.GetChannel(cx.ChannelIndex) as SerialPort;
-            UeiDevice ud = new UeiDevice(cx.OriginatingSession.GetDevice().GetResourceName());
-            int available = 0;
             string chName = $"Com{cx.ChannelIndex}";
-            _watchdog?.Register(chName, TimeSpan.FromSeconds(2.0)); // Hmm.. two second ... should use value relative to the value passed to .SetTimeout();
-            int speed = StaticMethods.GetSerialSpeedAsInt(serialCh.GetSpeed());
             var destEp = _deviceSetup.DestEndPoint.ToIpEp();
-            _logger.Info($"{ud.GetCubeId()}/{ud.LocalPath}/{chName} Reader ready. {serialCh.GetMode()} at {speed}bps. Dest {destEp.ToString()}");
-            
+
+            // show establishment log messae
+            {
+                SerialPort serialCh = cx.OriginatingSession.GetChannel(cx.ChannelIndex) as SerialPort;
+                UeiDevice ud = new UeiDevice(cx.OriginatingSession.GetDevice().GetResourceName());
+                int speed = StaticMethods.GetSerialSpeedAsInt(serialCh.GetSpeed());
+                _logger.Info($"Reading: Cube{ud.GetCubeId()}/{ud.LocalPath}/{chName}. {serialCh.GetMode()} at {speed}bps. Dest {destEp.ToString()}");
+            }
+
+            // register to watch dot
+            _watchdog?.Register(chName, TimeSpan.FromSeconds(2.0)); // Hmm.. two second ... should use value relative to the value passed to .SetTimeout();
+
+            // define message-builder delegate
             Func<byte[], byte[]> ethMsgBuilder = new Func<byte[], byte[]>( (buf) =>
             {
                 EthernetMessage em1 = StaticMethods.BuildEthernetMessageFromDevice(buf, this._deviceSetup, cx.ChannelIndex);
@@ -413,10 +420,12 @@ namespace UeiBridge
             
             try
             {
-                do //message loop
+                //message loop
+                do
                 {
                     // wait for available messages
                     //-----------------------------
+                    int available = 0;
                     do
                     {
                         // "available" is the amount of data remaining from a single event
@@ -460,9 +469,9 @@ namespace UeiBridge
             catch (UeiDaqException e)
             {
                 _logger.Info($"{chName} read exception. {e.Message}");
-                _watchdog.NotifyCrash(chName, e.Message);
+                _watchdog?.NotifyCrash(chName, e.Message);
             }
-            _logger.Info($"Stopped listening on {chName}");
+            _logger.Info($"Stopped reading {chName}");
         }
         public static Session BuildSerialSession2(SL508892Setup deviceSetup)
         {

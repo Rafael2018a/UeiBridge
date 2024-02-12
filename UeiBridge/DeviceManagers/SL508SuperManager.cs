@@ -41,7 +41,12 @@ namespace UeiBridge
         {
             if (null != deviceSetup)
             {
-                Task.Run(() => WatchdogLoop(deviceSetup));
+                Task t = Task.Run(() => WatchdogLoop(deviceSetup));
+                do
+                {
+                    System.Threading.Thread.Sleep(50);
+                } while (t.Status != TaskStatus.Running);
+                System.Threading.Thread.Sleep(5000);
             }
         }
         void WatchdogLoop(SL508892Setup deviceSetup)
@@ -56,8 +61,6 @@ namespace UeiBridge
                     break; // WD loop
                 }
                 serSession.Start();
-
-                
 
                 UdpWriterAsync uWriter = new UdpWriterAsync(deviceSetup.DestEndPoint.ToIpEp(), _selectedNIC);//, _mainConfig.AppSetup.SelectedNicForMulticast);
 
@@ -84,11 +87,11 @@ namespace UeiBridge
                 // wait, as long as device-manager runs
                 do
                 {
-                    Task.Delay(100).Wait();
+                    System.Threading.Thread.Sleep(100);
                 } while (_stopByWatchdog == false && _stopByDispose == false);
 
                 // Display statistics b4 termination
-                _logger.Info("Serial statistics\n--------");
+                //_logger.Info("Serial statistics\n--------");
                 foreach (var ch in _deviceManager.ChannelStatList)
                 {
                     //_logger.Info($"CH {ch.ChannelIndex}: {ch.ToString()}");
