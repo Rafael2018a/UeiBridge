@@ -10,7 +10,7 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <local1:CubeStateToColorConverter x:Key="cubeStateToColorConv"/>
-        <local1:CubeStateToOpecityConverter x:Key="cubeStateToOpecityConv"/>
+        <local1:CubeStateToOpacityConverter x:Key="cubeStateToOpacityConv"/>
         <Style TargetType="Button">
             <Setter Property="Height" Value="23" />
             <Setter Property="Margin" Value="0 2 2 2"/>

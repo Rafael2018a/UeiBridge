@@ -37,7 +37,7 @@ namespace UeiBridge
         List<ChannelAux2> _channelAuxList; // note that the index of this list is NOT (necessarily) the channel index
         IWatchdog _watchdog;
         //readonly log4net.ILog _logger = StaticLocalMethods.GetLogger();
-        readonly log4net.ILog _logger = log4net.LogManager.GetLogger("SL508Manager");
+        readonly log4net.ILog _logger = log4net.LogManager.GetLogger("SL508Manag");
         BlockingCollection<EthernetMessage> _downstreamQueue = new BlockingCollection<EthernetMessage>(100); // max 100 items
         Action<string> _onErrorCallback = new Action<string>(s => Console.WriteLine($"Failed to parse downstream message. {s}"));
         List<ViewItem<byte[]>> _lastScanList;// = new List<ViewItem<byte[]>>();
@@ -95,7 +95,7 @@ namespace UeiBridge
                 Console.WriteLine($"Downstream message dropped. {ex.Message}.");
             }
         }
-        void Task_DownstreamMessageLoop( SL508892Setup setup)
+        void Task_DownstreamMessageLoop(SL508892Setup setup)
         {
 
             //_logger.Info($"{setup.DeviceName} Writer started");
@@ -220,7 +220,7 @@ namespace UeiBridge
 
             // Create reader tasks
             // --------------------
-            
+
             foreach (ChannelAux2 cx in _channelAuxList)
             {
 #if usetasks
@@ -229,7 +229,7 @@ namespace UeiBridge
                 cx.AsyncResult = cx.Reader.BeginRead(200, new AsyncCallback(ReaderCallback), cx); // start reading from device
 #endif
             }
-            
+
             // start downstream message loop
             _downstreamTask = Task.Run(() => Task_DownstreamMessageLoop(_deviceSetup), _cancelTokenSource.Token);
 
@@ -307,7 +307,7 @@ namespace UeiBridge
             System.Diagnostics.Debug.Assert(cx.Writer != null);
 
             string chName = $"Com{cx.ChannelIndex}";
-            
+
             try
             {
                 // write to serial port
@@ -406,44 +406,51 @@ namespace UeiBridge
         protected void Task_UpstreamMessageLoop(ChannelAux2 cx)
         {
             string chName = $"Com{cx.ChannelIndex}";
-            var destEp = _deviceSetup.DestEndPoint.ToIpEp();
 
-            // show establishment log messae
+            //var destEp = _deviceSetup.DestEndPoint.ToIpEp();
+            EndPoint ep = new EndPoint(_deviceSetup.DestEndPoint.Address, _deviceSetup.Channels[cx.ChannelIndex].LocalUdpPort);
+            System.Net.IPEndPoint destEp = ep.ToIpEp();
+
+
+            // show establishment log message
             {
                 SerialPort serialCh = cx.OriginatingSession.GetChannel(cx.ChannelIndex) as SerialPort;
                 UeiDevice ud = new UeiDevice(cx.OriginatingSession.GetDevice().GetResourceName());
                 int speed = StaticMethods.GetSerialSpeedAsInt(serialCh.GetSpeed());
-                _logger.Info($"Cube{ud.GetCubeId()}/{ud.LocalPath}/{chName} Reader ready. ({serialCh.GetMode()}/{speed}bps). Dest {destEp.ToString()}");
+                _logger.Info($"Cube{ud.GetCubeId()}/{ud.LocalPath}/{chName} Reader ready.({serialCh.GetMode()}/{speed}bps),Dest:{destEp.ToString()}");
             }
 
             // register to watch dot
             _watchdog?.Register(chName, TimeSpan.FromSeconds(2.0)); // Hmm.. two second ... should use value relative to the value passed to .SetTimeout();
 
             // define message-builder delegate
-            Func<byte[], byte[]> ethMsgBuilder = new Func<byte[], byte[]>( (buf) =>
-            {
-                EthernetMessage em1 = StaticMethods.BuildEthernetMessageFromDevice(buf, this._deviceSetup, cx.ChannelIndex);
-                SerialChannelSetup chSetup = _deviceSetup.Channels[cx.ChannelIndex];
-                if (true == chSetup.FilterByLength)
-                {
-                    if (buf.Length!=chSetup.MessageLength)
-                    {
-                        return null;
-                    }
-                }
-                if (true == _deviceSetup.Channels[cx.ChannelIndex].FilterBySyncBytes)
-                {
-                    if ((buf[0]!=chSetup.SyncByte0)||(buf[1]!=chSetup.SyncByte1))
-                    {
-                        return null;
-                    }
-                }
-                return em1.GetByteArray(MessageWay.upstream);
-            }
+            Func<byte[], byte[]> ethMsgBuilder = new Func<byte[], byte[]>((buf) =>
+           {
+               EthernetMessage em1 = StaticMethods.BuildEthernetMessageFromDevice(buf, this._deviceSetup, cx.ChannelIndex);
+               SerialChannelSetup chSetup = _deviceSetup.Channels[cx.ChannelIndex];
+               if (true == chSetup.FilterByLength)
+               {
+                   if (buf.Length != chSetup.MessageLength)
+                   {
+                       return null;
+                   }
+               }
+               if (true == _deviceSetup.Channels[cx.ChannelIndex].FilterBySyncBytes)
+               {
+                   if ((buf[0] != chSetup.SyncByte0) || (buf[1] != chSetup.SyncByte1))
+                   {
+                       return null;
+                   }
+               }
+               return em1.GetByteArray(MessageWay.upstream);
+           }
             );
-            
+
             try
             {
+                int p60 = 0;
+                int p132 = 0;
+
                 //message loop
                 do
                 {
@@ -458,7 +465,7 @@ namespace UeiBridge
                         _watchdog?.NotifyAlive(chName);
                         if (available == 0)
                         {
-                            System.Threading.Thread.Sleep(5);
+                            System.Threading.Thread.Sleep(1);
                         }
                     } while ((available == 0) && (false == _cancelTokenSource.IsCancellationRequested));
 
@@ -472,7 +479,33 @@ namespace UeiBridge
                     byte[] recvBytes = cx.Reader.Read(_maxReadMesageLength);
                     if (recvBytes.Length < _maxReadMesageLength)
                     {
-                        _logger.Debug($"Message from channel {cx.ChannelIndex}. Length {recvBytes.Length}");
+                        int internalCounter = 0;
+
+                        if (60 == recvBytes.Length)
+                        {
+                            internalCounter = recvBytes[8];
+                            if (p60+1 != internalCounter)
+                            {
+                                _logger.Warn("miss 60");
+                            }
+                            p60 = internalCounter;
+                        }
+                        if (132==recvBytes.Length)
+                        {
+                            internalCounter = (int) BitConverter.ToUInt16(recvBytes, 38);
+                            if (p132 + 1 != internalCounter)
+                            {
+                                _logger.Warn("miss 132.");
+                            }
+                            p132 = internalCounter;
+
+                        }
+                        _logger.Info($"Message from channel {cx.ChannelIndex}. Length {recvBytes.Length} internalCounter {internalCounter}");
+                        //if (recvBytes[0]!=0x81)
+                        //{
+                        //    _logger.Warn("Bad buffer");
+                        //}
+
                     }
                     else
                     {
@@ -542,7 +575,7 @@ namespace UeiBridge
                 // - The termination string was detected
                 // - 100 bytes have been received
                 // - 10ms elapsed (rate set to 100Hz);
-                serialSession.ConfigureTimingForMessagingIO(1000, 100.0);
+                serialSession.ConfigureTimingForMessagingIO(1000, 50.0);
                 serialSession.GetTiming().SetTimeout(500);
 
                 return serialSession;

@@ -75,6 +75,7 @@
     <Compile Include="ChannelAux2.cs" />
     <Compile Include="ChannelStat.cs" />
     <Compile Include="Config2.cs" />
+    <Compile Include="Converters.cs" />
     <Compile Include="CubeSeeker.cs" />
     <Compile Include="CubeSetupTypes\CubeSetup.cs" />
     <Compile Include="CubeSetupTypes\CubeSetupLoader.cs" />

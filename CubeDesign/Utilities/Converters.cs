@@ -25,7 +25,7 @@ namespace CubeDesign
             throw new NotImplementedException();
         }
     }
-    public class CubeStateToOpecityConverter : IValueConverter
+    public class CubeStateToOpacityConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
@@ -38,4 +38,5 @@ namespace CubeDesign
             throw new NotImplementedException();
         }
     }
+
 }

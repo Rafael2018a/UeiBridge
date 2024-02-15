@@ -84,6 +84,10 @@ namespace UeiBridge.Library
                     break;
                 case DeviceMap2.SL508Literal:
                     var sl508 = new SL508892Setup(new EndPoint(LocalIP, _portNumber++), new EndPoint(RemoteIp, _portNumber++), ueiDevice);
+                    do
+                    {
+                        ++_portNumber;
+                    } while (_portNumber % 10 != 0);
                     foreach (var ch in sl508.Channels)
                     {
                         ch.LocalUdpPort = _portNumber++;
