@@ -8,9 +8,9 @@
 using namespace UeiDaq;
 using namespace std;
 #define SEND_SIZE  9         // amount of data to send each iteration
-#define RECV_SIZE  4         // max amount of data to receive on each read
+//#define RECV_SIZE  4         // max amount of data to receive on each read
 #define WATERMARK  5         // amount of data to trigger event
-#define TIMEOUT_uS 1000000   // time without data to trigger event
+#define TIMEOUT_uS 1000000  // time without data to trigger event
 
 char * BuildBuffer(int32_t bufferLength, int seed)
 {
@@ -23,23 +23,19 @@ char * BuildBuffer(int32_t bufferLength, int seed)
 	return buffer;
 }
 
-int main()
+int main(int argc, char * argv[])
 {
-	//printf("date: '%s'\n", __DATE__);
-	//printf("time: '%s'\n", __TIME__);
-	//printf("timestamp: '%s'\n", __TIMESTAMP__);
 
 	cout << "SerialSimu. " << __TIMESTAMP__ << "\n";
 
-	//std::cout << "Hello World!\n";
-
-	char sendBuffer[100];// = { 0x41,0x42,0x43,0x44,0x45,0x46,0x47,0x48,0x49,0x50, 0x41,0x42,0x43,0x44,0x45,0x46,0x47,0x48,0x49,0x50 };
+	//char sendBuffer[100];// = { 0x41,0x42,0x43,0x44,0x45,0x46,0x47,0x48,0x49,0x50, 0x41,0x42,0x43,0x44,0x45,0x46,0x47,0x48,0x49,0x50 };
 	CUeiSession mySession;
-	//CUeiSerialReader** readers;
 	vector<CUeiSerialWriter*> writers;
-	string deviceUri = "pdna://192.168.100.3/Dev3/";
+	vector<CUeiSerialReader*> readers;
+	string deviceUri = "pdna://192.168.100.2/Dev3/";
 
-	for (int chIndex = 0; chIndex < 8; chIndex++)
+	//for (int chIndex = 0; chIndex < 8; chIndex++)
+	int chIndex = 2;
 	{
 		stringstream sstream;
 
@@ -54,7 +50,7 @@ int main()
 
 				CUeiSerialPort* port = mySession.CreateSerialPort(sstream.str(),
 					UeiSerialModeRS485FullDuplex,
-					UeiSerialBitsPerSecond19200,
+					UeiSerialBitsPerSecond115200,
 					UeiSerialDataBits8,
 					UeiSerialParityNone,
 					UeiSerialStopBits1,
@@ -79,7 +75,7 @@ int main()
 			cout << "exception" << "\n";
 		}
 	}
-	cout << deviceUri  << ". 8 serial channels defined. 57600bps, RS485FullDuplex" << "\n";
+	cout << deviceUri  << ". 8 serial channels defined. 115200, RS485FullDuplex" << "\n";
 	//"at 57600bps, RS485FullDuplex" << "\n";
 	mySession.ConfigureTimingForAsynchronousIO(WATERMARK, 0, TIMEOUT_uS, 0);
 	mySession.GetTiming()->SetTimeout(10);
@@ -96,8 +92,57 @@ int main()
 	{
 		int32_t chIndex = mySession.GetChannel(com)->GetIndex();
 		writers.push_back(new CUeiSerialWriter(mySession.GetDataStream(), chIndex));
+		readers.push_back(new CUeiSerialReader(mySession.GetDataStream(), chIndex));
 	}
 	
+	if (argc > 1)
+	{
+		string argv1(argv[1]);
+		if (argv1 == "-rx")
+		{
+			Int32 numBytesRead;
+			char recvBuffer[300];
+
+			//readers[0]->ReadTimestamped(200, recvBuffer, &numBytesRead);
+
+			int portIndex = 2;
+			//for (auto& reader : readers)
+			auto& reader = readers[0];
+
+			while (true)
+			{
+				{
+
+					try 
+					{
+						int a = mySession.GetDataStream()->GetAvailableInputMessages(portIndex);
+						if (a > 0)
+						{
+							reader->ReadTimestamped(300, recvBuffer, &numBytesRead);
+							cout << numBytesRead << " bytes read." << "Ch " << portIndex << "\n";
+						}
+						//Sleep(1);
+					}
+					catch (CUeiException& e)
+					{
+						if (e.GetError() == UEIDAQ_TIMEOUT_ERROR)
+						{
+							printf("  read timeout\n");
+							//break;
+						}
+						else
+						{
+							cout << e.GetErrorMessage() << "\n";
+						}
+					}
+				}
+		}
+		}
+	}
+
+
+	// write loop
+	// ==========
 	int32_t  bufferLength = 16;
 	for (int i = 0; i < 64; i++)
 	{
@@ -116,27 +161,14 @@ int main()
 		Sleep(500);
 	}
 
-	//for (int m = 0; m < 100; m++)
-	//{
-	//	int seed = m + 40;
-	//	// do write for each channel
-	//	for (int i = 0; i < sizeof(sendBuffer); i++)
-	//	{
-	//		sendBuffer[i] = seed + i;
-	//	}
-	//	cout << std::dec << m << "  sending " << sizeof(sendBuffer) << " bytes through " << " ch:" << port1 << " first: 0x" << std::hex << seed << "\n";
-	//	Int32 numberOfSent = 0;
-	//	writers[0]->Write(sizeof(sendBuffer), sendBuffer, &numberOfSent);
-	//	if (numberOfSent != sizeof(sendBuffer))
-	//	{
-	//		cout << "wrong length" << "\n";
-	//	}
-	//	Sleep(10);
-	//}
 
 	for (auto& w : writers)
 	{
 		delete w;
+	}
+	for (auto& r : readers)
+	{
+		delete r;
 	}
 
 	//for (int w=0; w<writers.size(); w++)

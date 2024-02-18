@@ -269,7 +269,7 @@ namespace UeiBridge
                     if (Error.Timeout == ex.Error)
                     {
                         //_logger.Info($"Timeout ch {chIndex}");
-                        _watchdog.NotifyAlive(chName);
+                        _watchdog?.NotifyAlive(chName);
                         if (false == _inDisposeFlag)
                         {
                             chAux.AsyncResult = chAux.Reader.BeginRead(200, new AsyncCallback(ReaderCallback), chAux);
@@ -278,7 +278,7 @@ namespace UeiBridge
                     else
                     {
                         _logger.Info($"{chName} read error: {ex.Message}");
-                        _watchdog.NotifyCrash(chName, ex.Message);
+                        _watchdog?.NotifyCrash(chName, ex.Message);
                     }
                 }
                 System.Diagnostics.Debug.Assert(true == chAux.OriginatingSession.IsRunning());
@@ -450,7 +450,9 @@ namespace UeiBridge
             {
                 int p60 = 0;
                 int p132 = 0;
-
+                var declay = TimeSpan.FromTicks(100);
+                System.Diagnostics.Stopwatch swatch = new System.Diagnostics.Stopwatch();
+                swatch.Start();
                 //message loop
                 do
                 {
@@ -465,7 +467,7 @@ namespace UeiBridge
                         _watchdog?.NotifyAlive(chName);
                         if (available == 0)
                         {
-                            System.Threading.Thread.Sleep(1);
+                            System.Threading.Thread.Sleep(declay);
                         }
                     } while ((available == 0) && (false == _cancelTokenSource.IsCancellationRequested));
 
@@ -477,30 +479,33 @@ namespace UeiBridge
                     // get message from device and send to consumer
                     // --------------------------------------------
                     byte[] recvBytes = cx.Reader.Read(_maxReadMesageLength);
+
+                    //;/ System.Diagnostics.Stopwatch.Frequency
+
                     if (recvBytes.Length < _maxReadMesageLength)
                     {
-                        int internalCounter = 0;
+                        //int internalCounter = 0;
 
-                        if (60 == recvBytes.Length)
-                        {
-                            internalCounter = recvBytes[8];
-                            if (p60+1 != internalCounter)
-                            {
-                                _logger.Warn("miss 60");
-                            }
-                            p60 = internalCounter;
-                        }
-                        if (132==recvBytes.Length)
-                        {
-                            internalCounter = (int) BitConverter.ToUInt16(recvBytes, 38);
-                            if (p132 + 1 != internalCounter)
-                            {
-                                _logger.Warn("miss 132.");
-                            }
-                            p132 = internalCounter;
+                        //if (60 == recvBytes.Length)
+                        //{
+                        //    internalCounter = recvBytes[8];
+                        //    if (p60+1 != internalCounter)
+                        //    {
+                        //        _logger.Warn("miss 60");
+                        //    }
+                        //    p60 = internalCounter;
+                        //}
+                        //if (132 == recvBytes.Length)
+                        //{
+                        //    internalCounter = (int)BitConverter.ToUInt16(recvBytes, 38);
+                        //    if (p132 + 1 != internalCounter)
+                        //    {
+                        //        _logger.Warn("miss 132.");
+                        //    }
+                        //    p132 = internalCounter;
+                        //}
 
-                        }
-                        _logger.Info($"Message from channel {cx.ChannelIndex}. Length {recvBytes.Length} internalCounter {internalCounter}");
+                        //_logger.Info($"{swatch.Elapsed.TotalMilliseconds} Message from channel {cx.ChannelIndex}. Length {recvBytes.Length} internalCounter {internalCounter}");
                         //if (recvBytes[0]!=0x81)
                         //{
                         //    _logger.Warn("Bad buffer");
@@ -525,7 +530,7 @@ namespace UeiBridge
             }
             catch (UeiDaqException e)
             {
-                _logger.Info($"{chName} read exception. {e.Message}");
+                _logger.Warn($"{chName} read exception. {e.Message}");
                 _watchdog?.NotifyCrash(chName, e.Message);
             }
             _logger.Info($"Stopped reading {chName}");
@@ -571,11 +576,15 @@ namespace UeiBridge
                     return null;
                 }
 
+                SessionType st = serialSession.GetType();
+                System.Diagnostics.Debug.Assert(st == SessionType.Serial);
+
                 // Configure timing to return serial message when either of the following conditions occurred
                 // - The termination string was detected
                 // - 100 bytes have been received
                 // - 10ms elapsed (rate set to 100Hz);
-                serialSession.ConfigureTimingForMessagingIO(1000, 50.0);
+                //serialSession.ConfigureTimingForMessagingIO(100, 100.0);
+                serialSession.ConfigureTimingForAsynchronousIO(200, -1, 10000, -1);
                 serialSession.GetTiming().SetTimeout(500);
 
                 return serialSession;
