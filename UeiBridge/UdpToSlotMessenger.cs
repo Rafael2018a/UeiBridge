@@ -35,7 +35,7 @@ namespace UeiBridge
 
         public UdpToSlotMessenger()
         {
-            Task.Factory.StartNew(() => DispatchToConsumer_Task());
+            Task.Factory.StartNew(() => Task_DispatchToConsumer());
         }
         public void Enqueue(SendObject sendObject1)
         {
@@ -54,8 +54,12 @@ namespace UeiBridge
             }
         }
 
-        void DispatchToConsumer_Task()
+        void Task_DispatchToConsumer()
         {
+            var st = new System.Diagnostics.StackTrace();
+            System.Threading.Thread.CurrentThread.Name = "Task#"+ st.GetFrame(1).GetMethod().DeclaringType.Name;
+            _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} start");
+
             // message loop
             while (false == _inputQueue.IsCompleted)
             {
@@ -86,6 +90,7 @@ namespace UeiBridge
                     ce.Consumer.Enqueue(incomingMessage.ByteMessage);
                 }
             }
+            _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} end");
         }
 
         public void SubscribeConsumer( IEnqueue<byte[]> consumer, int cubeId, int slotNumber)

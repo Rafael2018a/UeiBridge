@@ -46,7 +46,7 @@ namespace UeiBridge
         public override bool OpenDevice()
         {
             EmitInitMessage($"Init success {DeviceName}. Listening on {_thisSetup.LocalEndPoint.ToIpEp()}");
-            Task.Factory.StartNew(() => OutputDeviceHandler_Task());
+            Task.Factory.StartNew(() => Task_OutputDeviceHandler());
             _isDeviceReady = true;
 
             // verify init conditions

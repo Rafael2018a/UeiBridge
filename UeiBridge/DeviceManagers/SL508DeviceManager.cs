@@ -97,7 +97,8 @@ namespace UeiBridge
         }
         void Task_DownstreamMessageLoop(SL508892Setup setup)
         {
-
+            System.Threading.Thread.CurrentThread.Name = "Task#DownstreamMessageLoop";
+            _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} start");
             //_logger.Info($"{setup.DeviceName} Writer started");
             // message loop
             // ============
@@ -152,7 +153,7 @@ namespace UeiBridge
                 }
             }
             _downstreamQueue.CompleteAdding(); // just mark queue as complete if task terminated from other reason
-            _logger.Info("Task_DownstreamMessageLoop ended");
+            _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} end");
         }
 
         public void Dispose()
@@ -406,7 +407,8 @@ namespace UeiBridge
         protected void Task_UpstreamMessageLoop(ChannelAux2 cx)
         {
             string chName = $"Com{cx.ChannelIndex}";
-
+            System.Threading.Thread.CurrentThread.Name = "Task#UpstreamMessageLoop#" + chName;
+            _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} start");
             //var destEp = _deviceSetup.DestEndPoint.ToIpEp();
             EndPoint ep = new EndPoint(_deviceSetup.DestEndPoint.Address, _deviceSetup.Channels[cx.ChannelIndex].LocalUdpPort);
             System.Net.IPEndPoint destEp = ep.ToIpEp();
@@ -450,7 +452,7 @@ namespace UeiBridge
             {
                 int p60 = 0;
                 int p132 = 0;
-                var declay = TimeSpan.FromTicks(100);
+                var delay = TimeSpan.FromTicks(100);
                 System.Diagnostics.Stopwatch swatch = new System.Diagnostics.Stopwatch();
                 swatch.Start();
                 //message loop
@@ -467,7 +469,7 @@ namespace UeiBridge
                         _watchdog?.NotifyAlive(chName);
                         if (available == 0)
                         {
-                            System.Threading.Thread.Sleep(declay);
+                            System.Threading.Thread.Sleep(delay);
                         }
                     } while ((available == 0) && (false == _cancelTokenSource.IsCancellationRequested));
 
@@ -533,7 +535,8 @@ namespace UeiBridge
                 _logger.Warn($"{chName} read exception. {e.Message}");
                 _watchdog?.NotifyCrash(chName, e.Message);
             }
-            _logger.Info($"Stopped reading {chName}");
+            //_logger.Info($"Stopped reading {chName}");
+            _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} start");
         }
         public static Session BuildSerialSession2(SL508892Setup deviceSetup)
         {

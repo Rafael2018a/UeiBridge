@@ -81,9 +81,11 @@ namespace UeiBridge
         /// This method is common for all device types, except
         /// HandleRequest() method which is unique per device.
         /// </summary>
-        protected void OutputDeviceHandler_Task()
+        protected void Task_OutputDeviceHandler()
         {
-            
+            //var st = new System.Diagnostics.StackTrace();
+            System.Threading.Thread.CurrentThread.Name = "Task#" + InstanceName; //st.GetFrame(1).GetMethod().DeclaringType.Name;
+            _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} start");
             // message loop
             // ============
             while (false == _dataItemsQueue2.IsCompleted)
@@ -138,6 +140,7 @@ namespace UeiBridge
                     _logger.Warn(ex.Message);
                 }
             }
+            _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} end");
         }
 
         public static void CloseSession(Session theSession)

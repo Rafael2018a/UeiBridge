@@ -55,7 +55,7 @@ namespace UeiBridge
                 int numOfCh = _iSession.GetNumberOfChannels();
                 System.Diagnostics.Debug.Assert(numOfCh > 0);
 
-                Task.Factory.StartNew(() => OutputDeviceHandler_Task());
+                Task.Factory.StartNew(() => Task_OutputDeviceHandler());
 
                 var range = _iSession.GetDevice().GetAORanges();
                 AO308Setup ao308 = _deviceSetup as AO308Setup;

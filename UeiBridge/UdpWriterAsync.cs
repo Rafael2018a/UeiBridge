@@ -15,10 +15,11 @@ namespace UeiBridge
     {
         UdpWriter _uWriter; // tbd. use UdpWriter2
         private BlockingCollection<SendObject2> _dataItemsQueue2 = new BlockingCollection<SendObject2>(100); // max 100 items
-        public UdpWriterAsync(IPEndPoint destEp, string localBindAddress)
+        private log4net.ILog _logger = StaticLocalMethods.GetLogger();
+        public UdpWriterAsync(IPEndPoint destEp, string localBindAddress, string callerInstanceName)
         {
             _uWriter = new UdpWriter(destEp, localBindAddress);
-            Task.Run(() => Task_SendMessageLoop());
+            Task.Run(() => Task_SendMessageLoop(callerInstanceName));
         }
         public void Dispose()
         {
@@ -33,9 +34,12 @@ namespace UeiBridge
             }
             _dataItemsQueue2.Add(so2);
         }
-        protected void Task_SendMessageLoop()
+        protected void Task_SendMessageLoop(string callerInstanceName)
         {
 
+            System.Threading.Thread.CurrentThread.Name = "Task#UdpWriterAsync#" + callerInstanceName;
+           
+            _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} start");
             // message loop
             // ============
             while (false == _dataItemsQueue2.IsCompleted)
@@ -63,6 +67,7 @@ namespace UeiBridge
                     Console.WriteLine(ex);
                 }
             }
+            _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} end");
         }
     }
 

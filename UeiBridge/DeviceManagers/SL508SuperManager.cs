@@ -42,7 +42,7 @@ namespace UeiBridge
         {
             if (null != deviceSetup)
             {
-                Task t = Task.Run(() => WatchdogLoop(deviceSetup));
+                Task t = Task.Run(() => Task_WatchdogLoop(deviceSetup));
                 do
                 {
                     System.Threading.Thread.Sleep(50);
@@ -50,8 +50,10 @@ namespace UeiBridge
                 System.Threading.Thread.Sleep(5000);
             }
         }
-        void WatchdogLoop(SL508892Setup deviceSetup)
+        void Task_WatchdogLoop(SL508892Setup deviceSetup)
         {
+            System.Threading.Thread.CurrentThread.Name = "Task# Serial WatchdogLoop";
+            _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} start");
             do // watchdog loop
             {
                 List<UdpReader> udpReaderList = new List<UdpReader>();
@@ -67,8 +69,9 @@ namespace UeiBridge
                 UeiDevice udevice = new UeiDevice(serSession.GetDevice().GetResourceName());
                 _logger.Info($" == Opening Cube{udevice.GetCubeId()}{udevice.LocalPath} SL508 (Serial) == ");
 
+                string writerName = $"SL508/Cube{udevice.GetCubeId()}/{udevice.LocalPath}";
                 // defince writer for upstream process
-                UdpWriterAsync uWriter = new UdpWriterAsync(deviceSetup.DestEndPoint.ToIpEp(), _selectedNIC);
+                UdpWriterAsync uWriter = new UdpWriterAsync(deviceSetup.DestEndPoint.ToIpEp(), _selectedNIC, writerName);
 
                 // create SL device manager 
                 // -------------------------------
@@ -131,7 +134,7 @@ namespace UeiBridge
                 serSession.Dispose();
                 serSession = null;
 
-                _logger.Info(" = Dispose fin =");
+                _logger.Info("SL508Super disposed");
 
                 // in case of WD reset, wait before restart.
                 if (true == _stopByWatchdog)
@@ -142,6 +145,7 @@ namespace UeiBridge
 
             } while (false == _stopByDispose);
 
+            _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} end");
         }
 
     }

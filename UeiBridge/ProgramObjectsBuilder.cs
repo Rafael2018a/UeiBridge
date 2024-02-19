@@ -756,7 +756,12 @@ namespace UeiBridge
                 System.Threading.Thread.Sleep(10);
 
             }
-            Task.WaitAll(tl.ToArray());
+
+            if (true!=Task.WaitAll(tl.ToArray(), 5000))
+            {
+                Console.WriteLine("Not all tasks completed nice");
+            }
+
             foreach (var entry in _udpReaderList)
             {
                 entry.Dispose();

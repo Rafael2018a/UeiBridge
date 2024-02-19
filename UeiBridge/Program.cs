@@ -100,7 +100,7 @@ namespace UeiBridge
 #endif
 
             // publish status to StatusViewer
-            Task.Factory.StartNew(() => PublishStatus_Task(_programBuilder.PerDeviceObjectsList, _programBuilder.DeviceManagerList));
+            Task.Factory.StartNew(() => Task_PublishStatus(_programBuilder.PerDeviceObjectsList, _programBuilder.DeviceManagerList));
 
             // self tests
             //StartDownwardsTest();
@@ -181,8 +181,11 @@ namespace UeiBridge
             }
 
         }
-        void PublishStatus_Task(List<PerDeviceObjects> deviceList, List<IDeviceManager> deviceList2)
+        void Task_PublishStatus(List<PerDeviceObjects> deviceList, List<IDeviceManager> deviceList2)
         {
+            System.Threading.Thread.CurrentThread.Name = "Task#PublishStatus";
+
+
             //const int intervalMs = 100;
             IPEndPoint destEP = _mainConfig.AppSetup.StatusViewerEP.ToIpEp();
             UdpWriter uw = new UdpWriter( destEP, _mainConfig.AppSetup.SelectedNicForMulticast);
