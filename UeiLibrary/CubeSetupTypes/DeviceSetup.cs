@@ -5,14 +5,15 @@ using UeiBridge.Library;
 /// <summary>
 /// All classes in this file MUST NOT depend on any other module in the project
 /// </summary>
-namespace UeiBridge.CubeSetupTypes
+namespace UeiBridge.Library.CubeSetupTypes
 {
     public class DeviceSetup : IEquatable<DeviceSetup>
     {
         [XmlAttribute("IsEnabled")]
         public bool IsEnabled = true;
         [XmlElement(ElementName = "DeviceSlot")]
-        public int SlotNumber;
+        public int SlotNumber; // slot index
+        public bool EnableWatchdog;
         public string DeviceName;
         public EndPoint LocalEndPoint;
         public EndPoint DestEndPoint;

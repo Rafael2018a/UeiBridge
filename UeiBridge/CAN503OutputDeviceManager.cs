@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using UeiDaq;
 using UeiBridge.Library;
 using System.Collections.Generic;
-using UeiBridge.CubeSetupTypes;
+using UeiBridge.Library.CubeSetupTypes;
 
 namespace UeiBridge
 {
@@ -12,7 +12,7 @@ namespace UeiBridge
         public override string DeviceName => DeviceMap2.CAN503Literal;
 
         private SessionAdapter _canSession;
-        log4net.ILog _logger = StaticMethods.GetLogger();
+        log4net.ILog _logger = StaticLocalMethods.GetLogger();
         private CAN503Setup _thisSetup;
         List<CANWriterAdapter> _canWriterList = new List<CANWriterAdapter>();
         
@@ -28,7 +28,7 @@ namespace UeiBridge
 
         public override void Dispose()
         {
-            _inDisposeState = true;
+            _inDisposeFlag = true;
             base.TerminateMessageLoop();
             for (int ch = 0; ch < _canWriterList.Count; ch++)
             {
@@ -73,7 +73,7 @@ namespace UeiBridge
 
         protected override void HandleRequest(EthernetMessage request)
         {
-            if (true == _inDisposeState)
+            if (true == _inDisposeFlag)
             {
                 return;
             }

@@ -4,10 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UeiDaq;
-using UeiBridge.Types;
+using UeiBridge.Library.Types;
 using UeiBridge.Library;
-using UeiBridge.CubeSetupTypes;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.CubeSetupTypes;
+using UeiBridge.Library.Interfaces;
 
 namespace UeiBridge
 {
@@ -20,7 +20,7 @@ namespace UeiBridge
         public override string DeviceName => "AI-201-100"; // 
 
         private UeiDaq.AnalogScaledReader _reader;
-        private readonly log4net.ILog _logger = StaticMethods.GetLogger();
+        private readonly log4net.ILog _logger = StaticLocalMethods.GetLogger();
         private readonly IConvert2<double[]> _attachedConverter;
         private readonly AI201100Setup _thisSetup;
         private double[] _lastScan;
@@ -55,7 +55,7 @@ namespace UeiBridge
 
                 //ScanResult dr = new ScanResult(_lastScan, this);
                 byte[] payload = _attachedConverter.UpstreamConvert(_lastScan);
-                EthernetMessage em = StaticMethods.BuildEthernetMessageFromDevice(payload, this._thisSetup);
+                EthernetMessage em = StaticLocalMethods.BuildEthernetMessageFromDevice(payload, this._thisSetup);
                 SendObject so = new SendObject(_thisSetup.DestEndPoint.ToIpEp(), em.GetByteArray( MessageWay.upstream));
                 _targetConsumer.Send(so);
             }

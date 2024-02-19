@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.Interfaces;
 using UeiDaq;
 
 namespace UeiBridge.Library

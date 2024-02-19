@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Text;
 using UeiDaq;
-using UeiBridge.Types;
+using UeiBridge.Library.Types;
 using UeiBridge.Library;
 using System.Threading;
 using System.Linq;
-using UeiBridge.CubeSetupTypes;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.CubeSetupTypes;
+using UeiBridge.Library.Interfaces;
 
 namespace UeiBridge
 {
@@ -33,7 +33,7 @@ namespace UeiBridge
     {
         public override string DeviceName => DeviceMap2.SL508Literal; //"SL-508-892";
 
-        private log4net.ILog _logger = StaticMethods.GetLogger();
+        private log4net.ILog _logger = StaticLocalMethods.GetLogger();
         //private readonly List<SerialReader> _serialReaderList = new List<SerialReader>();
         private bool _InDisposeState = false;
         private List<ViewItem<byte[]>> _lastScanList = new List<ViewItem<byte[]>>();
@@ -79,15 +79,7 @@ namespace UeiBridge
                     {
                         item = null;
                     }
-                    //else
-                    //{
-                    //    resultList.Add( $"Ch{ch}: <empty>");
-                    //}
                 }
-                //else
-                //{
-                //    resultList.Add($"Ch{ch}: <empty>");
-                //}
             }
             if (resultList.Count > 0)
             {

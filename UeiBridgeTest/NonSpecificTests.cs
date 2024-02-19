@@ -1,9 +1,9 @@
 ﻿using NUnit.Framework;
 using System;
 using UeiBridge;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.Interfaces;
 using UeiBridge.Library;
-using UeiBridge.Types;
+using UeiBridge.Library.Types;
 
 namespace UeiBridgeTest
 {

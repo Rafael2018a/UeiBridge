@@ -5,8 +5,13 @@ using System.IO;
 /// <summary>
 /// All classes in this file MUST NOT depend on any other module in the project
 /// </summary>
-namespace UeiBridge.CubeSetupTypes
+namespace UeiBridge.Library.CubeSetupTypes
 {
+    /// <summary>
+    /// Load/Save CubeSetup from/to xml file.
+    /// CubeSetupMain property is the main object, 
+    /// this might be null in case of failure.
+    /// </summary>
     public class CubeSetupLoader
     {
         public CubeSetup CubeSetupMain { get; private set; }

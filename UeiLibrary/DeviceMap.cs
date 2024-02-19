@@ -105,7 +105,7 @@ namespace UeiBridge.Library
             return s;
         }
 
-        public static int GetDeviceName(string deviceName)
+        public static int GetDeviceIdFromName(string deviceName)
         {
             try
             {

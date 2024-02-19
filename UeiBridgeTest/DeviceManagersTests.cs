@@ -5,10 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using NUnit.Framework;
 using UeiBridge;
-using UeiBridge.CubeSetupTypes;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.CubeSetupTypes;
+using UeiBridge.Library.Interfaces;
 using UeiBridge.Library;
-using UeiBridge.Types;
+using UeiBridge.Library.Types;
 using UeiDaq;
 
 namespace UeiBridgeTest
@@ -179,8 +179,7 @@ namespace UeiBridgeTest
 
                 System.Threading.Thread.Sleep(100);
 
-                string errStr = null;
-                EthernetMessage em = EthernetMessage.CreateFromByteArray(sm._sentObject.ByteMessage, MessageWay.upstream, ref errStr);
+                EthernetMessage em = EthernetMessage.CreateFromByteArray(sm._sentObject.ByteMessage, MessageWay.upstream, null);
 
                 Assert.Multiple(() =>
                 {
@@ -249,7 +248,7 @@ namespace UeiBridgeTest
             {
                 foreach (var channel in thisSetup.Channels)
                 {
-                    string finalUrl = $"{thisSetup.CubeUrl}Dev{thisSetup.SlotNumber}/Com{channel.ChannelIndex}";
+                    string finalUrl = $"{thisSetup.CubeUrl}Dev{thisSetup.SlotNumber}/Com{channel.ComIndex}";
                     var port = serialSession.CreateSerialPort(finalUrl,
                                         channel.Mode,
                                         channel.Baudrate,

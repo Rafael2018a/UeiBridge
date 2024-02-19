@@ -4,8 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics;
-using UeiBridge.Types;
+using UeiBridge.Library.Types;
 using UeiBridge.Library;
+using UeiBridge.Library.Interfaces;
 
 namespace UeiBridge
 {

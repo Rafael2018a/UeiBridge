@@ -106,14 +106,20 @@ namespace UeiBridge.Library
         /// <summary>
         /// Create EthernetMessage from byte array
         /// </summary>
-        public static EthernetMessage CreateFromByteArray(byte[] byteMessage, MessageWay way, ref string errorString)
+        //public static EthernetMessage CreateFromByteArray(byte[] byteMessage, MessageWay way, ref string errorString)
+        public static EthernetMessage CreateFromByteArray(byte[] byteMessage, MessageWay way, Action<string> onError)
         {
+            if (null==byteMessage)
+            {
+                return null;
+            }
+
             EthernetMessage resutlMessage = null;
-            errorString = null;
+            //errorString = null;
             string errMsg;
             if (false == CheckByteArrayValidity(byteMessage, way, out errMsg))
             {
-                errorString = errMsg;
+                onError?.Invoke(errMsg);
                 return null;
             }
 

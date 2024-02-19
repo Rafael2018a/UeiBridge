@@ -4,20 +4,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UeiDaq;
-using UeiBridge.Types;
+using UeiBridge.Library.Types;
 using UeiBridge.Library;
-using UeiBridge.CubeSetupTypes;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.CubeSetupTypes;
+using UeiBridge.Library.Interfaces;
 
-namespace UeiBridge
+namespace UeiBridge.Library
 {
-    public static class StaticMethods
+    public static class StaticLocalMethods
     {
         //static string _lastErrorMessage;
         //public static string LastErrorMessage { get => _lastErrorMessage; }
         
 
-        static StaticMethods()
+        static StaticLocalMethods()
         {
         }
 
@@ -92,7 +92,7 @@ namespace UeiBridge
             //ILog _logger = log4net.LogManager.GetLogger("Root");
 
             //int key = //ProjectRegistry.Instance.GetDeviceKeyFromDeviceString(deviceName);
-            int key = DeviceMap2.GetDeviceName(setup.DeviceName);
+            int key = DeviceMap2.GetDeviceIdFromName(setup.DeviceName);
 
             System.Diagnostics.Debug.Assert(key >= 0);
 

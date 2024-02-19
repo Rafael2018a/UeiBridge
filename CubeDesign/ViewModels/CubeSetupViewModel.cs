@@ -1,5 +1,5 @@
 ﻿using System.Net;
-using UeiBridge.CubeSetupTypes;
+using UeiBridge.Library.CubeSetupTypes;
 
 namespace CubeDesign.ViewModels
 {

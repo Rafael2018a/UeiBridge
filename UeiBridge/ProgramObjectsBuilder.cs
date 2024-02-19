@@ -8,19 +8,21 @@ using System.Net;
 using UeiDaq;
 using log4net;
 using UeiBridge.Library;
-using UeiBridge.Types;
+using UeiBridge.Library.Types;
 using System.Collections.Concurrent;
-using UeiBridge.CubeSetupTypes;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.CubeSetupTypes;
+using UeiBridge.Library.Interfaces;
 
 namespace UeiBridge
 {
     public class ProgramObjectsBuilder : IDisposable
     {
-        ILog _logger = StaticMethods.GetLogger();
+        ILog _logger = StaticLocalMethods.GetLogger();
         List<PerDeviceObjects> _PerDeviceObjectsList;
+        List<IDeviceManager> _deviceManagerList; // for the time being (jan24) this is just for the new serial device handler
         List<UdpReader> _udpReaderList;
         public List<PerDeviceObjects> PerDeviceObjectsList => _PerDeviceObjectsList;
+        public List<IDeviceManager> DeviceManagerList => _deviceManagerList;
         public List<UdpReader> UdpReadersList => _udpReaderList;
 
 
@@ -63,6 +65,9 @@ namespace UeiBridge
             _logger.Info($"Cube{deviceInfo.CubeId}/Slot{deviceInfo.DeviceSlot}: {deviceMessage}");
         }
 
+        /// <summary>
+        /// For each device in slot, build a device manager and add it to _PerDeviceObjectsList
+        /// </summary>
         public void CreateDeviceManagers(List<UeiDeviceInfo> deviceInfoList)
         {
             if (deviceInfoList == null)
@@ -70,6 +75,8 @@ namespace UeiBridge
                 return;
             }
             _PerDeviceObjectsList = new List<PerDeviceObjects>();
+            _deviceManagerList = new List<IDeviceManager>();
+            
             _udpReaderList = new List<UdpReader>();
 
             foreach (UeiDeviceInfo deviceInfo in deviceInfoList)
@@ -78,10 +85,10 @@ namespace UeiBridge
                 // prologue
                 // =========
                 // it type exists
-                var t = StaticMethods.GetDeviceManagerType<IDeviceManager>(deviceInfo.DeviceName);
+                Type t = StaticLocalMethods.GetDeviceManagerType<IDeviceManager>(deviceInfo.DeviceName);
                 if (null == t)
                 {
-                    deviceMessage = $"Device {deviceInfo.DeviceName} not supported";
+                    deviceMessage = $"Device {deviceInfo.DeviceName} not supported by software";
                     EmitInitMessage(deviceInfo, deviceMessage);
                     continue;
                 }
@@ -108,10 +115,22 @@ namespace UeiBridge
                 // build manager(s)
                 //setup.CubeUrl = realDevice.CubeUrl;
                 //setup.IsBlockSensorActive = _mainConfig.Blocksensor.IsActive;
-                List<PerDeviceObjects> objs = BuildObjectsForDevice(deviceInfo, setup);
-                if (null != objs)
+
+                if (deviceInfo.DeviceName == DeviceMap2.SL508Literal)
                 {
-                    _PerDeviceObjectsList.AddRange(objs);
+                    var dm = BuildSerialDeviceManager(deviceInfo, setup);
+                    if (null!=dm)
+                    {
+                        _deviceManagerList.Add(dm);
+                    }
+                }
+                else
+                {
+                    List<PerDeviceObjects> objs = BuildObjectsForDevice(deviceInfo, setup);
+                    if (null != objs)
+                    {
+                        _PerDeviceObjectsList.AddRange(objs);
+                    }
                 }
 
 
@@ -150,7 +169,13 @@ namespace UeiBridge
             }
         }
 
-        private List<PerDeviceObjects> BuildObjectsForDevice(UeiDeviceInfo realDevice, DeviceSetup setup)
+        IDeviceManager BuildSerialDeviceManager(UeiDeviceInfo realDevice, DeviceSetup setup)
+        {
+            SL508SuperManager super = new SL508SuperManager(_mainConfig.AppSetup.SelectedNicForMulticast);
+            super.StartDevice(setup as SL508892Setup);
+            return super;
+        }
+        List<PerDeviceObjects> BuildObjectsForDevice(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
             switch (realDevice.DeviceName)
             {
@@ -178,7 +203,9 @@ namespace UeiBridge
                     }
                 case DeviceMap2.SL508Literal:
                     {
+                        //Build_SL508_Failsafe(realDevice, setup);
                         return Build_SL508(realDevice, setup);
+
                     }
                 case DeviceMap2.CAN503Literal:
                     {
@@ -314,7 +341,7 @@ namespace UeiBridge
                     {
                         continue;
                     }
-                    string finalUrl = $"{thisSetup.CubeUrl}Dev{thisSetup.SlotNumber}/Com{channel.ChannelIndex}";
+                    string finalUrl = $"{thisSetup.CubeUrl}Dev{thisSetup.SlotNumber}/Com{channel.ComIndex}";
                     SerialPort sport = serialSession.CreateSerialPort(finalUrl,
                                         channel.Mode,
                                         channel.Baudrate,
@@ -355,7 +382,7 @@ namespace UeiBridge
                 string s2 = s1.Replace("BitsPerSecond", "");
                 //SL508892Setup s508 = setup as SL508892Setup;
                 int chIndex = ueiPort.GetIndex();
-                int portnum = thisSetup.Channels.Where(i => i.ChannelIndex == chIndex).Select(i => i.LocalUdpPort).FirstOrDefault();
+                int portnum = thisSetup.Channels.Where(i => i.ComIndex == chIndex).Select(i => i.LocalUdpPort).FirstOrDefault();
                 _logger.Debug($"CH:{ueiPort.GetIndex()}, Rate {s2} bps, Mode {ueiPort.GetMode()}. Listening port {portnum}");
             }
 
@@ -395,7 +422,65 @@ namespace UeiBridge
 
             return new List<PerDeviceObjects>() { pd };
         }
+#if notyet
+        private List<PerDeviceObjects> Build_SL508_Failsafe(UeiDeviceInfo realDevice, DeviceSetup setup)
+        {
+            SL508892Setup thisSetup = setup as SL508892Setup;
+            SerialOp.Program p = new SerialOp.Program();
+            Session serialSession = p.BuildSerialSession(thisSetup, realDevice.DeviceSlot);
+            serialSession.Start();
+          
+            // emit info log
+            _logger.Debug($" == Serial channels for cube {setup.CubeUrl}, slot {setup.SlotNumber}");
+            foreach (UeiDaq.Channel ueiChannel in serialSession.GetChannels())
+            {
+                SerialPort ueiPort = ueiChannel as SerialPort;
+                string s1 = ueiPort.GetSpeed().ToString();
+                string s2 = s1.Replace("BitsPerSecond", "");
+                //SL508892Setup s508 = setup as SL508892Setup;
+                int chIndex = ueiPort.GetIndex();
+                int portnum = thisSetup.Channels.Where(i => i.ChannelIndex == chIndex).Select(i => i.LocalUdpPort).FirstOrDefault();
+                _logger.Debug($"CH:{ueiPort.GetIndex()}, Rate {s2} bps, Mode {ueiPort.GetMode()}. Listening port {portnum}");
+            }
 
+            SessionAdapter ssAdapter = new SessionAdapter(serialSession);
+
+            //SessionAdapter serAd = new SessionAdapter(serialSession);
+            string instanceName = setup.GetInstanceName();// $"{realDevice.DeviceName}/Slot{realDevice.DeviceSlot}";
+            UdpWriter uWriter = new UdpWriter(setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMulticast);
+            SerialOp.SL508InputManager serialmManager = new SerialOp.SL508InputManager(uWriter, thisSetup, serialSession);
+            //SL508InputDeviceManager id = new SL508InputDeviceManager(uWriter, setup, ssAdapter);
+
+            SL508OutputDeviceManager od = new SL508OutputDeviceManager(setup, serialSession);
+            var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMulticast);
+            UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, od.InstanceName);
+            // each port
+            {
+                var ip = IPAddress.Parse(setup.LocalEndPoint.Address);
+                foreach (SerialChannelSetup chSetup in thisSetup.Channels)
+                {
+                    if (true == chSetup.IsEnabled)
+                    {
+                        IPEndPoint ep = new IPEndPoint(ip, chSetup.LocalUdpPort);
+                        UdpReader ureader2 = new UdpReader(ep, nic, _udpMessenger, $"{od.InstanceName}/{chSetup.LocalUdpPort}");
+                        _udpReaderList.Add(ureader2);
+                    }
+                }
+            }
+
+
+            var pd = new PerDeviceObjects(realDevice);
+            //pd.SerialSession = serialSession;
+            //pd.InputDeviceManager = id;
+            pd.OutputDeviceManager = od;
+            //pd.UdpWriter = uWriter;
+
+            _udpMessenger.SubscribeConsumer(od, realDevice.CubeId, realDevice.DeviceSlot);
+            _udpReaderList.Add(ureader);
+
+            return new List<PerDeviceObjects>() { pd };
+        }
+#endif
         private List<PerDeviceObjects> Build_CAN503(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
 
@@ -592,7 +677,7 @@ namespace UeiBridge
 
             return resultString.ToString();
         }
-
+#if dont
         public void Build_BlockSensorManager(List<UeiDeviceInfo> realDeviceList)
         {
             //DeviceSetup devSetup = null;
@@ -652,7 +737,7 @@ namespace UeiBridge
 
 
         }
-
+#endif
         public void Dispose()
         {
             List<Task> tl = new List<Task>();
@@ -676,82 +761,11 @@ namespace UeiBridge
             {
                 entry.Dispose();
             }
+
+            foreach(var entry in _deviceManagerList)
+            {
+                entry.Dispose();
+            }
         }
     }
-#if moved
-    /// <summary>
-    /// messenger
-    /// 
-    /// </summary>
-    public class UdpToSlotMessenger : IEnqueue<byte[]>
-    {
-        private ILog _logger = StaticMethods.GetLogger();
-        private List<OutputDevice> _consumersList = new List<OutputDevice>();
-        private BlockingCollection<byte[]> _inputQueue = new BlockingCollection<byte[]>(1000); // max 1000 items
-
-        public UdpToSlotMessenger()
-        {
-            Task.Factory.StartNew(() => DispatchToConsumer_Task());
-        }
-        public void Enqueue(byte[] byteMessage)
-        {
-            if (_inputQueue.IsCompleted)
-            {
-                return;
-            }
-
-            try
-            {
-                _inputQueue.Add(byteMessage);
-            }
-            catch (Exception ex)
-            {
-                _logger.Warn($"Incoming byte message error. {ex.Message}. message dropped.");
-            }
-        }
-
-        void DispatchToConsumer_Task()
-        {
-            // message loop
-            while (false == _inputQueue.IsCompleted)
-            {
-                byte[] incomingMessage = _inputQueue.Take(); // get from q
-
-                if (null == incomingMessage) // end task token
-                {
-                    _inputQueue.CompleteAdding();
-                    break;
-                }
-
-                EthernetMessage ethMag = EthernetMessage.CreateFromByteArray( incomingMessage, MessageWay.downstream);
-
-                var clist = _consumersList.Where(consumer => ((consumer.CubeId == ethMag.UnitId) && ( consumer.SlotNumber == ethMag.SlotNumber )));
-                if (clist.Count()==0) // no subs
-                {
-                    _logger.Warn($"No consumer to message aimed to slot {ethMag.SlotNumber} and unit id {ethMag.UnitId}");
-                    continue;
-                }
-                if (clist.Count() > 1) // 2 subs with same parameters
-                {
-                    throw new ArgumentException();
-                }
-
-                OutputDevice outDev = clist.FirstOrDefault();
-
-                outDev.Enqueue(incomingMessage);
-            }
-
-        }
-
-        /// <summary>
-        /// Subscribe
-        /// </summary>
-        public void SubscribeConsumer(OutputDevice outDevice)
-        {
-            int slot = outDevice.SlotNumber;
-            _logger.Info($"Device {outDevice.DeviceName} subscribed");
-            _consumersList.Add(outDevice);
-        }
-    }
-#endif
 }

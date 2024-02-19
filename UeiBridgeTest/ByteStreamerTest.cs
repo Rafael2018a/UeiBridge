@@ -9,8 +9,9 @@ using ByteStreamer3;
 using System.IO;
 using Newtonsoft.Json;
 using ByteStreamer3.Utilities;
-using UeiBridge.Types;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.Types;
+using UeiBridge.Library.Interfaces;
+using UeiBridge.Library;
 
 namespace UeiBridgeTest
 {

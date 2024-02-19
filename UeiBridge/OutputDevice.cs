@@ -1,13 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Threading;
-using System.Threading.Tasks;
-using UeiDaq;
-using UeiBridge.Types;
 using UeiBridge.Library;
-using System.Net;
-using UeiBridge.CubeSetupTypes;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.CubeSetupTypes;
+using UeiBridge.Library.Interfaces;
+using UeiDaq;
 
 namespace UeiBridge
 {
@@ -28,9 +25,9 @@ namespace UeiBridge
         public UeiDeviceInfo DeviceInfo { get; private set; }
         
         protected bool _isDeviceReady = false;
-        protected bool _inDisposeState = false;
+        protected bool _inDisposeFlag = false;
         private BlockingCollection<EthernetMessage> _dataItemsQueue2 = new BlockingCollection<EthernetMessage>(100); // max 100 items
-        private log4net.ILog _logger = StaticMethods.GetLogger();
+        private log4net.ILog _logger = StaticLocalMethods.GetLogger();
         protected ISession _iSession;
 
         protected OutputDevice() { }
@@ -65,11 +62,9 @@ namespace UeiBridge
 
             try
             {
-                string err=null;
-                EthernetMessage em = EthernetMessage.CreateFromByteArray(m, MessageWay.downstream, ref err);
+                EthernetMessage em = EthernetMessage.CreateFromByteArray(m, MessageWay.downstream, new Action<string>(s => _logger.Warn(s)));
                 if (null==em)
                 {
-                    _logger.Warn(err);
                     return;
                 }
                 
@@ -82,12 +77,15 @@ namespace UeiBridge
 
         }
         /// <summary>
-        /// Message loop
+        /// Output device message loop
+        /// This method is common for all device types, except
+        /// HandleRequest() method which is unique per device.
         /// </summary>
         protected void OutputDeviceHandler_Task()
         {
             
             // message loop
+            // ============
             while (false == _dataItemsQueue2.IsCompleted)
             {
                 try
@@ -107,7 +105,7 @@ namespace UeiBridge
                         continue;
                     }
                     // verify valid card type
-                    int cardId = DeviceMap2.GetDeviceName(this.DeviceName);
+                    int cardId = DeviceMap2.GetDeviceIdFromName(this.DeviceName);
                     if (cardId != incomingMessage.CardType)
                     {
                         _logger.Warn($"{InstanceName} wrong card id {incomingMessage.CardType} while expecting {cardId}. message dropped.");

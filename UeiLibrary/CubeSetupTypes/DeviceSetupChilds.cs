@@ -7,7 +7,7 @@ using System.Xml.Serialization;
 using UeiBridge.Library;
 using UeiDaq;
 
-namespace UeiBridge.CubeSetupTypes
+namespace UeiBridge.Library.CubeSetupTypes
 {
     public class AO308Setup : DeviceSetup
     {
@@ -92,7 +92,7 @@ namespace UeiBridge.CubeSetupTypes
     }
     public class SL508892Setup : DeviceSetup
     {
-        public List<SerialChannelSetup> Channels;
+        public List<SerialChannelSetup> Channels { get; set; }
         const int _numberOfSerialChannels = 8;
         public SL508892Setup() { }
         public override bool Equals(DeviceSetup other)
@@ -103,6 +103,19 @@ namespace UeiBridge.CubeSetupTypes
             bool f2 = this.Channels.SequenceEqual<SerialChannelSetup>(otherSetup.Channels);
             return f1 && f2; ;
         }
+
+        public SerialChannelSetup GetChannelEntry(int chIndex)
+        {
+            if (chIndex<Channels.Count)
+            {
+                return Channels[chIndex];
+            }
+            else
+            {
+                return null;
+            }
+        }
+
         public SL508892Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base(localEndPoint, destEndPoint, device)
         {
             Channels = new List<SerialChannelSetup>();
@@ -115,11 +128,11 @@ namespace UeiBridge.CubeSetupTypes
     }
     public class SerialChannelSetup: IEquatable<SerialChannelSetup>
     {
-        [XmlAttribute("ChannelIndex")]
-        public int ChannelIndex { get; set; }  = -1;
+        [XmlAttribute("ComIndex")]
+        public int ComIndex { get; set; }  = -1;
         [XmlAttribute("IsEnabled")]
         public bool IsEnabled { get; set; } = true;
-        public UeiDaq.SerialPortMode Mode { get; set; }  = UeiDaq.SerialPortMode.RS232;
+        public UeiDaq.SerialPortMode Mode { get; set; }  = UeiDaq.SerialPortMode.RS485FullDuplex;
         public UeiDaq.SerialPortSpeed Baudrate { get; set; }
         public UeiDaq.SerialPortParity Parity { get; set; } = UeiDaq.SerialPortParity.None;
         public UeiDaq.SerialPortStopBits Stopbits { get; set; } = UeiDaq.SerialPortStopBits.StopBits1;
@@ -130,15 +143,16 @@ namespace UeiBridge.CubeSetupTypes
         public byte SyncByte1 { get; set; }
         public bool FilterByLength { get; set; }
         public int MessageLength { get; set; } // if FilterByLength==true, use this length
+        
         public SerialChannelSetup(int channelIndex, UeiDaq.SerialPortSpeed speed)
         {
-            this.ChannelIndex = channelIndex;
+            this.ComIndex = channelIndex;
             this.Baudrate = speed;
         }
         public SerialChannelSetup() {  }
         public bool Equals(SerialChannelSetup other)
         {
-            bool f1 = this.ChannelIndex == other.ChannelIndex;
+            bool f1 = this.ComIndex == other.ComIndex;
             bool f2 = this.IsEnabled == other.IsEnabled;
             bool f3 = this.Mode == other.Mode;
             bool f4 = this.Baudrate == other.Baudrate;

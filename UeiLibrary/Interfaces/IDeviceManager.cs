@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace UeiBridge.Interfaces
+namespace UeiBridge.Library.Interfaces
 {
-    public interface IDeviceManager
+    public interface IDeviceManager: IDisposable
     {
         string DeviceName { get; }
         string InstanceName { get; }

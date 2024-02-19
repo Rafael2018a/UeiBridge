@@ -1,10 +1,10 @@
 ﻿using System;
-using UeiBridge.Types;
+using UeiBridge.Library.Types;
 using UeiBridge.Library;
 using System.Collections.Generic;
 using System.Linq;
-using UeiBridge.CubeSetupTypes;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.CubeSetupTypes;
+using UeiBridge.Library.Interfaces;
 
 namespace UeiBridge
 {
@@ -20,7 +20,7 @@ namespace UeiBridge
         private int _subaddress = -1;
         private double[] _scanToEmit;
         //private BlockSensorSetup _thisDeviceSetup;
-        private log4net.ILog _logger = StaticMethods.GetLogger();
+        private log4net.ILog _logger = StaticLocalMethods.GetLogger();
         //private bool _isInDispose = false;
         BlockSensorSetup _thisDeviceSetup;
         #endregion
@@ -60,13 +60,13 @@ namespace UeiBridge
         {
             byte[] byteMessage = request.GetByteArray(MessageWay.downstream);
 
-            if (_inDisposeState)
+            if (_inDisposeFlag)
             {
                 return;
             }
 
             // downstream message aimed to block sensor
-            if (byteMessage[EthernetMessage._cardTypeOffset] == DeviceMap2.GetDeviceName(DeviceMap2.BlocksensorLiteral))
+            if (byteMessage[EthernetMessage._cardTypeOffset] == DeviceMap2.GetDeviceIdFromName(DeviceMap2.BlocksensorLiteral))
             {
                 if (byteMessage.Length == 22) // is from digital card
                 {
@@ -90,11 +90,10 @@ namespace UeiBridge
                 var selectedEntries = _blockSensorTable.Where(ent => ent.Subaddress == this._subaddress);
 
                 // convert incoming message 
-                string err=null;
-                EthernetMessage downstreamEthMessage = EthernetMessage.CreateFromByteArray(byteMessage, MessageWay.downstream, ref err);
+                EthernetMessage downstreamEthMessage = EthernetMessage.CreateFromByteArray(byteMessage, MessageWay.downstream, null);
                 if (null==downstreamEthMessage)
                 {
-                    _logger.Warn(err);
+                    _logger.Warn("error in creating eth message");
                     return;
                 }
                 double[] downstreamPayload = _attachedConverter.DownstreamConvert(downstreamEthMessage.PayloadBytes) as double[];
@@ -121,12 +120,12 @@ namespace UeiBridge
         public override void Enqueue(byte[] byteMessage)
         {
             // upstream message from digital/input card
-            if (byteMessage[EthernetMessage._cardTypeOffset] == DeviceMap2.GetDeviceName(DeviceMap2.DIO403Literal)) //"DIO-403"))
+            if (byteMessage[EthernetMessage._cardTypeOffset] == DeviceMap2.GetDeviceIdFromName(DeviceMap2.DIO403Literal)) //"DIO-403"))
             {
                 // just fix message. to make it looks like downward message;
                 byteMessage[0] = 0xaa;
                 byteMessage[1] = 0x55;
-                byteMessage[EthernetMessage._cardTypeOffset] = Convert.ToByte(DeviceMap2.GetDeviceName(DeviceMap2.BlocksensorLiteral));
+                byteMessage[EthernetMessage._cardTypeOffset] = Convert.ToByte(DeviceMap2.GetDeviceIdFromName(DeviceMap2.BlocksensorLiteral));
                 byteMessage[EthernetMessage._slotNumberOffset] = Convert.ToByte( _thisDeviceSetup.SlotNumber);
             }
             base.Enqueue(byteMessage);

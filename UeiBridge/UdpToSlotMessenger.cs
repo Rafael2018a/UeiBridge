@@ -4,9 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using log4net;
 using UeiBridge.Library;
-using UeiBridge.Types;
+using UeiBridge.Library.Types;
 using System.Collections.Concurrent;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.Interfaces;
 
 namespace UeiBridge
 {
@@ -24,12 +24,12 @@ namespace UeiBridge
         }
     }
     /// <summary>
-    /// messenger
-    /// 
+    /// Incoming ethernet message router.
+    /// The routing is based on cube-id/slot-index
     /// </summary>
     public class UdpToSlotMessenger : IEnqueue<SendObject>
     {
-        private ILog _logger = StaticMethods.GetLogger();
+        private ILog _logger = StaticLocalMethods.GetLogger();
         private List<ConsumerEntry> _consumersList = new List<ConsumerEntry>();
         private BlockingCollection<SendObject> _inputQueue = new BlockingCollection<SendObject>(1000); // max 1000 items
 
@@ -67,19 +67,17 @@ namespace UeiBridge
                     break;
                 }
 
-                string err=null;
-                EthernetMessage ethMag = EthernetMessage.CreateFromByteArray( incomingMessage.ByteMessage, MessageWay.downstream,  ref err);
-
+                EthernetMessage ethMag = EthernetMessage.CreateFromByteArray( incomingMessage.ByteMessage, MessageWay.downstream, new Action<string>(s => _logger.Warn(s)));
                 if (null==ethMag)
                 {
-                    _logger.Warn($"Failed to parse incoming ethernet message (aimed to {incomingMessage.TargetEndPoint}). {err}");
+                    _logger.Warn($"Failed to parse incoming Ethernet message (aimed to {incomingMessage.TargetEndPoint}).");
                     continue;
                 }
 
                 var consumerList = _consumersList.Where(consumer1 => ((consumer1.CubeId == ethMag.CubeId) && ( consumer1.SlotNumber == ethMag.SlotNumber )));
                 if (consumerList.Count()==0) // no subs
                 {
-                    _logger.Warn($"No consumer to message aimed to slot{ethMag.SlotNumber} /cube{ethMag.CubeId} ({incomingMessage.TargetEndPoint})");
+                    _logger.Warn($"No consumer to message aimed to Cube{ethMag.CubeId}/Slot{ethMag.SlotNumber}");
                     continue;
                 }
 

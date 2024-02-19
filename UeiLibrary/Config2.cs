@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using System.IO;
 using UeiDaq;
-using UeiBridge.CubeSetupTypes;
+using UeiBridge.Library.CubeSetupTypes;
 using System.Net;
 using System.Net.Sockets;
 
@@ -84,6 +84,10 @@ namespace UeiBridge.Library
                     break;
                 case DeviceMap2.SL508Literal:
                     var sl508 = new SL508892Setup(new EndPoint(LocalIP, _portNumber++), new EndPoint(RemoteIp, _portNumber++), ueiDevice);
+                    do
+                    {
+                        ++_portNumber;
+                    } while (_portNumber % 10 != 0);
                     foreach (var ch in sl508.Channels)
                     {
                         ch.LocalUdpPort = _portNumber++;
@@ -110,9 +114,9 @@ namespace UeiBridge.Library
     {
         [XmlIgnore]
         public AppSetup AppSetup;
-        public List<CubeSetup> CubeSetupList = new List<CubeSetup>();
+        List<CubeSetup> CubeSetupList = new List<CubeSetup>();
 
-        public static string DefaultSettingsFilename => "Cube2.config"; // to be removed
+        public static string DefaultSettingsFilename => "Cube2.config"; // to be removed. tbd.
         public static string SettingsFilename { get; private set; } = DefaultSettingsFilename;
 
         public Config2(List<string> cubeUrlList)

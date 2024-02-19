@@ -161,7 +161,7 @@ namespace StatusViewer
                     //SelectedLocalIp = ipa;
                 }
             }
-            ipList.Add(IPAddress.Any);
+            //ipList.Add(IPAddress.Any);
             SelectedLocalIp = ipList[ipList.Count - 1];
             return ipList;
         }

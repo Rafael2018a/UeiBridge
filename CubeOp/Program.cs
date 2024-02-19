@@ -9,6 +9,7 @@ using CommandLine;
 using CommandLine.Text;
 using Microsoft.Extensions.Configuration;
 using UeiBridge.Library;
+using UeiDaq;
 
 namespace CubeOp
 {
@@ -27,7 +28,7 @@ namespace CubeOp
             }
         }
 
-        ParserResult<Options> pa;
+        ParserResult<Options> _parseResult;
         /// <summary>
         /// --ip only: check if cube connected and list the devices (including dnrp)
         /// --reset-cube
@@ -39,11 +40,11 @@ namespace CubeOp
         /// <param name="args"></param>
         public void Run(string[] args)
         {
-            pa = CommandLine.Parser.Default.ParseArguments<Options>(args);
+            _parseResult = CommandLine.Parser.Default.ParseArguments<Options>(args);
 
-            var r = pa.WithParsed<Options>(opts => RunOptionsAndReturnExitCode(opts));
+            var r = _parseResult.WithParsed<Options>(opts => RunOptionsAndReturnExitCode(opts));
 
-            pa.WithNotParsed<Options>((errs) => HandleParseError(errs));
+            _parseResult.WithNotParsed<Options>((errs) => HandleParseError(errs));
         }
 
         bool IsCubeConnected { get; set; }
@@ -52,7 +53,7 @@ namespace CubeOp
             if (true == options.listcubes)
             {
                 IPAddress startIp = IPAddress.Parse("192.168.100.0");
-                Console.WriteLine($"Searching for cubes, starting from {startIp}");
+                Console.WriteLine($"Searching for cubes in range 192.168.100.*");
                 List<IPAddress> l = CubeSeeker.FindCubesInRange(startIp, 256);
                 if (0 == l.Count)
                 {
@@ -201,9 +202,49 @@ namespace CubeOp
                 goto exit;
             }
 
+            if (true==options.openserial)
+            {
+                if (null!=options.cube_id)
+                {
+                    try
+                    {
+                        // Configure Master session
+                        Session serialSession = new Session();
+                        SerialPort port = serialSession.CreateSerialPort(options.cube_id,
+                            SerialPortMode.RS485FullDuplex,
+                            SerialPortSpeed.BitsPerSecond115200,
+                            SerialPortDataBits.DataBits8,
+                            SerialPortParity.None,
+                            SerialPortStopBits.StopBits1,
+                            "");
+
+                        // Configure timing to return serial message when either of the following conditions occurred
+                        // - The termination string was detected
+                        // - 100 bytes have been received
+                        // - 10ms elapsed (rate set to 100Hz);
+                        serialSession.ConfigureTimingForMessagingIO(1000, 100.0);
+                        serialSession.GetTiming().SetTimeout(500);
+                        serialSession.Start();
+                        System.Threading.Thread.Sleep(1000);
+                        serialSession.Stop();
+                        serialSession.Dispose();
+                        Console.WriteLine($"Resouce string {options.cube_id} ok");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Error creating session. {ex.Message}");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"Error: Device uri not specified.");
+                }
+
+                goto exit;
+            }
             if (true == options.dohelp)
             {
-                HelpText htext = HelpText.AutoBuild(pa, x => x, x => x);
+                HelpText htext = HelpText.AutoBuild(_parseResult, x => x, x => x);
                 Console.WriteLine(htext);
             }
 
@@ -218,7 +259,7 @@ namespace CubeOp
         exit: return 0;
         }
 
-        void HandleParseError(IEnumerable<Error> errs)
+        void HandleParseError(IEnumerable<CommandLine.Error> errs)
         {
             foreach (var e in errs)
             {
@@ -226,7 +267,7 @@ namespace CubeOp
 
                 Console.WriteLine(e);
             }
-            HelpText htext = HelpText.AutoBuild(pa, x => x, x => x);
+            HelpText htext = HelpText.AutoBuild(_parseResult, x => x, x => x);
             //Console.WriteLine(htext);
         }
 

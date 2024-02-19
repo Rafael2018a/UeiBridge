@@ -1,4 +1,4 @@
-﻿namespace UeiBridge.Interfaces
+﻿namespace UeiBridge.Library.Interfaces
 {
     /// <summary>
     /// Send items that should be pushed to q (return immediately)

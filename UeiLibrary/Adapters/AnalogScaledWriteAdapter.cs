@@ -1,6 +1,6 @@
 ﻿using System;
 using UeiDaq;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.Interfaces;
 
 namespace UeiBridge.Library
 {

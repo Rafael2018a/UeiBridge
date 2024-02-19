@@ -10,18 +10,19 @@ using System.Net.Sockets;
 using System.IO;
 using log4net;
 using UeiDaq;
-using UeiBridge.Types;
+using UeiBridge.Library.Types;
 using UeiBridge.Library;
-using UeiBridge.CubeSetupTypes;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.CubeSetupTypes;
+using UeiBridge.Library.Interfaces;
 
 namespace UeiBridge
 {
     public class Program
     {
-        ILog _logger = StaticMethods.GetLogger();
+        ILog _logger = StaticLocalMethods.GetLogger();
         ProgramObjectsBuilder _programBuilder;
         Config2 _mainConfig;
+        bool stopByUser = false;
 
         static void Main(string[] args)
         {
@@ -61,7 +62,9 @@ namespace UeiBridge
                 return;
             }
 
-            
+            Console.CancelKeyPress += new ConsoleCancelEventHandler(CancelEventHandler);
+            Console.WriteLine("^C to stop");
+
             try
             {
                 List<CubeSetup> cubeSetupList = Config2.GetSetupForCubes(cubeUrlList); // tbd: very slow!
@@ -92,22 +95,32 @@ namespace UeiBridge
             _programBuilder.CreateDeviceManagers(deviceList);
             _programBuilder.ActivateDownstreamObjects();
             _programBuilder.ActivateUpstreamObjects();
+#if dont
             _programBuilder.Build_BlockSensorManager(deviceList);
+#endif
 
             // publish status to StatusViewer
-            Task.Factory.StartNew(() => PublishStatus_Task(_programBuilder.PerDeviceObjectsList));
+            Task.Factory.StartNew(() => PublishStatus_Task(_programBuilder.PerDeviceObjectsList, _programBuilder.DeviceManagerList));
 
             // self tests
             //StartDownwardsTest();
 
-            _logger.Info("Any key to exit...");
-            Console.ReadKey();
+            do
+            {
+                System.Threading.Thread.Sleep(100);
+            } while (stopByUser == false);
 
             _logger.Info("Disposing....");
             _programBuilder.Dispose();
 
             _logger.Info("Any key to exit...");
             Console.ReadKey();
+        }
+        protected void CancelEventHandler(object sender, ConsoleCancelEventArgs args)
+        {
+            args.Cancel = true;
+            stopByUser = true;
+            Console.WriteLine("stopByUser1 = true");
         }
 
         /// <summary>
@@ -168,7 +181,7 @@ namespace UeiBridge
             }
 
         }
-        void PublishStatus_Task(List<PerDeviceObjects> deviceList)
+        void PublishStatus_Task(List<PerDeviceObjects> deviceList, List<IDeviceManager> deviceList2)
         {
             //const int intervalMs = 100;
             IPEndPoint destEP = _mainConfig.AppSetup.StatusViewerEP.ToIpEp();
@@ -194,6 +207,7 @@ namespace UeiBridge
                         deviceListScan.Add(deviceObjects.OutputDeviceManager);
                     }
                 }
+                deviceListScan.AddRange(deviceList2);
 
                 // get formatted string for each device in list
                 while (true)

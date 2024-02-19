@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using UeiBridge.CubeSetupTypes;
+using UeiBridge.Library.CubeSetupTypes;
 using UeiBridge.Library;
 
 namespace UeiBridge
@@ -12,7 +12,7 @@ namespace UeiBridge
     {
         public override string DeviceName => DeviceMap2.AO322Literal;
         AO308Setup _thisSetup;
-        private log4net.ILog _logger = StaticMethods.GetLogger();
+        private log4net.ILog _logger = StaticLocalMethods.GetLogger();
         //UeiDaq.Session _udeSession;
         public AO332OutputDeviceManager(AO308Setup deviceSetup1, ISession session, bool bsensor) : base(deviceSetup1, session, bsensor)
         {

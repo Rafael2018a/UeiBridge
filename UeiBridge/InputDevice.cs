@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Threading;
-using UeiDaq;
-using UeiBridge.Types;
 using UeiBridge.Library;
-using UeiBridge.CubeSetupTypes;
-using UeiBridge.Interfaces;
+using UeiBridge.Library.CubeSetupTypes;
+using UeiBridge.Library.Interfaces;
+using UeiDaq;
 
 /// <summary>
 /// All files in project might refer to this file.
@@ -21,7 +19,7 @@ namespace UeiBridge
         public UeiDeviceInfo DeviceInfo { get; private set; }
         public string InstanceName { get; private set; }
         //public int SlotNumber { get; private set; }
-        private log4net.ILog _logger = StaticMethods.GetLogger();
+        private log4net.ILog _logger = StaticLocalMethods.GetLogger();
         protected ISession _iSession;// { get; set; }
         protected ISend<SendObject> _targetConsumer;// { get ; set; }
         //protected bool _isDeviceReady = false;
@@ -33,17 +31,17 @@ namespace UeiBridge
             DeviceInfo = setup.GetDeviceInfo();
             //SlotNumber = setup.SlotNumber;
         }
-        public static void CloseSession(Session theSession)
-        {
-            if (null != theSession)
-            {
-                if (theSession.IsRunning())
-                {
-                    theSession.Stop();
-                }
-                theSession.Dispose();
-            }
-        }
+        //public static void CloseSession(Session theSession)
+        //{
+        //    if (null != theSession)
+        //    {
+        //        if (theSession.IsRunning())
+        //        {
+        //            theSession.Stop();
+        //        }
+        //        theSession.Dispose();
+        //    }
+        //}
 
         public abstract void Dispose();
         //{
@@ -56,6 +54,5 @@ namespace UeiBridge
         {
             _logger.Info($"Cube{DeviceInfo.CubeId}/Slot{DeviceInfo.DeviceSlot}: {deviceMessage}");
         }
-
     }
 }
