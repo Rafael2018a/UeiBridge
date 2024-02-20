@@ -37,7 +37,7 @@ namespace UeiBridge
         protected void Task_SendMessageLoop(string callerInstanceName)
         {
 
-            System.Threading.Thread.CurrentThread.Name = "Task#UdpWriterAsync#" + callerInstanceName;
+            System.Threading.Thread.CurrentThread.Name = "Task:UdpWriterAsync:" + callerInstanceName;
            
             _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} start");
             // message loop

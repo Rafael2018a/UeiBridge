@@ -57,7 +57,7 @@ namespace UeiBridge
         void Task_DispatchToConsumer()
         {
             var st = new System.Diagnostics.StackTrace();
-            System.Threading.Thread.CurrentThread.Name = "Task#"+ st.GetFrame(1).GetMethod().DeclaringType.Name;
+            System.Threading.Thread.CurrentThread.Name = "Task:DispatchToConsumer";
             _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} start");
 
             // message loop

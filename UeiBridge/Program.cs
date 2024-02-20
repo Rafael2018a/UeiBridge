@@ -65,6 +65,7 @@ namespace UeiBridge
             Console.CancelKeyPress += new ConsoleCancelEventHandler(CancelEventHandler);
             Console.WriteLine("^C to stop");
 
+            // load config
             try
             {
                 List<CubeSetup> cubeSetupList = Config2.GetSetupForCubes(cubeUrlList); // tbd: very slow!
@@ -183,7 +184,7 @@ namespace UeiBridge
         }
         void Task_PublishStatus(List<PerDeviceObjects> deviceList, List<IDeviceManager> deviceList2)
         {
-            System.Threading.Thread.CurrentThread.Name = "Task#PublishStatus";
+            System.Threading.Thread.CurrentThread.Name = "Task:PublishStatus";
 
 
             //const int intervalMs = 100;

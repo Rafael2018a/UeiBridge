@@ -92,7 +92,9 @@ namespace UeiBridge.Library.CubeSetupTypes
     }
     public class SL508892Setup : DeviceSetup
     {
+        public System.IO.FileAccess DeviceAccess;
         public List<SerialChannelSetup> Channels { get; set; }
+        
         const int _numberOfSerialChannels = 8;
         public SL508892Setup() { }
         public override bool Equals(DeviceSetup other)
@@ -101,7 +103,8 @@ namespace UeiBridge.Library.CubeSetupTypes
 
             bool f1 = base.Equals(other);
             bool f2 = this.Channels.SequenceEqual<SerialChannelSetup>(otherSetup.Channels);
-            return f1 && f2; ;
+            bool f3 = this.DeviceAccess == otherSetup.DeviceAccess;
+            return f1 && f2 && f3;
         }
 
         public SerialChannelSetup GetChannelEntry(int chIndex)
@@ -116,9 +119,10 @@ namespace UeiBridge.Library.CubeSetupTypes
             }
         }
 
-        public SL508892Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base(localEndPoint, destEndPoint, device)
+        public SL508892Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device, System.IO.FileAccess deviceAccess) : base(localEndPoint, destEndPoint, device)
         {
-            Channels = new List<SerialChannelSetup>();
+            this.Channels = new List<SerialChannelSetup>();
+            this.DeviceAccess = deviceAccess;
 
             for (int chIndex = 0; chIndex < _numberOfSerialChannels; chIndex++)
             {
@@ -137,7 +141,7 @@ namespace UeiBridge.Library.CubeSetupTypes
         public UeiDaq.SerialPortParity Parity { get; set; } = UeiDaq.SerialPortParity.None;
         public UeiDaq.SerialPortStopBits Stopbits { get; set; } = UeiDaq.SerialPortStopBits.StopBits1;
         public int LocalUdpPort { get; set; }
-        public int ChannelActivityTimeoutUs { get; set; }
+        //public int ChannelActivityTimeoutUs { get; set; }
         public bool FilterBySyncBytes { get; set; } // 0 - no filter, 1 - one sync bytes, 2 - two sync bytes
         public byte SyncByte0 { get; set; }
         public byte SyncByte1 { get; set; }

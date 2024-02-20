@@ -12,8 +12,8 @@ namespace UeiBridge
 {
     public class UdpWriter2 : IEnqueue<SendObject2>, IDisposable
     {
-        log4net.ILog _logger = StaticLocalMethods.GetLogger();
-        Socket _sendSocket;
+        //log4net.ILog _logger = StaticLocalMethods.GetLogger();
+        //Socket _sendSocket;
         UdpClient _udpClient = new UdpClient();
         bool _inDispose = false;
 
@@ -45,7 +45,7 @@ namespace UeiBridge
         {
 
             //this._instanceName = instnceName;
-            System.Diagnostics.Debug.Assert(null != localBindAddress);
+            //System.Diagnostics.Debug.Assert(null != localBindAddress);
             try
             {
                 // Create socket

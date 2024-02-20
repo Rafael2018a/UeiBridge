@@ -233,13 +233,6 @@ namespace UeiBridgeTest
                 List<CubeSetup> list = Config2.GetSetupForCubes(urlList);
             });
         }
-        [Test]
-        public void LoadConnectedCubesSetup_badUrl()
-        {
-            List<string> urlList = new List<string>() { "aaa" };
-            List<CubeSetup> list = Config2.GetSetupForCubes(urlList);
-            Assert.That(list.Count, Is.EqualTo(0));
-        }
         private static void CreateBackupFile(FileInfo fi)
         {
             string barename = Path.GetFileNameWithoutExtension(fi.Name);

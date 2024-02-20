@@ -239,7 +239,7 @@ namespace UeiBridgeTest
         {
             UeiDeviceInfo di = new UeiDeviceInfo("simu://", 4, DeviceMap2.SL508Literal);
 
-            SL508892Setup thisSetup = new SL508892Setup(null, null, di);
+            SL508892Setup thisSetup = new SL508892Setup(null, null, di, System.IO.FileAccess.ReadWrite);
 
             thisSetup.Channels[1].Baudrate = SerialPortSpeed.BitsPerSecond14400;
             thisSetup.CubeUrl = "simu://";
@@ -325,15 +325,56 @@ namespace UeiBridgeTest
             deviceUri = "simu://dev14";
             dev = DeviceEnumerator.GetDeviceFromResource(deviceUri);
             Assert.That(dev, Is.Null);
-            deviceUri = "pdna://192.168.100.3/dev0";
-            dev = DeviceEnumerator.GetDeviceFromResource(deviceUri);
-            Assert.That(dev, Is.Not.Null); // this works only if cube is connected
-            deviceUri = "192.168.100.3/dev0";
-            dev = DeviceEnumerator.GetDeviceFromResource(deviceUri);
-            Assert.That(dev, Is.Null);
+            //deviceUri = "pdna://192.168.100.3/dev0";
+            //dev = DeviceEnumerator.GetDeviceFromResource(deviceUri);
+            //Assert.That(dev, Is.Not.Null); // this works only if cube is connected
+            //deviceUri = "192.168.100.3/dev0";
+            //dev = DeviceEnumerator.GetDeviceFromResource(deviceUri);
+            //Assert.That(dev, Is.Null);
             //deviceUri = "simu://dev14";
             //dev = DeviceEnumerator.GetDeviceFromResource(deviceUri);
             //Assert.That(dev, Is.Null);
+        }
+        [Test]
+        public void SerialWatchDogCrashTest()
+        {
+            Action<string, string> wdAction;
+            Tuple<string, string> pair = new Tuple<string, string>("", "");
+            wdAction = new Action<string, string>((orig, reason) =>
+            {
+                //Console.WriteLine($"WD Event: Originator{orig}; Reason{reason}");  
+                pair = new Tuple<string, string>(orig, reason);
+                //pair.Item1 = orig;
+                //pair.Item2 = reason;
+            });
+            DeviceWatchdog wd = new DeviceWatchdog(wdAction);
+            string origname = "testorig";
+            string reasonname = "testreason";
+            wd.Register(origname, TimeSpan.FromSeconds(1));
+            wd.NotifyCrash(origname, reasonname);
+            wd.Dispose();
+
+            Assert.That(pair.Item1 == origname && pair.Item2 == reasonname);
+        }
+        [Test]
+        public void SerialWatchDogKeepAliveTest()
+        {
+            Action<string, string> wdAction;
+            Tuple<string, string> pair = new Tuple<string, string>("", "");
+            wdAction = new Action<string, string>((orig, reason) =>
+            {
+                //Console.WriteLine($"WD Event: Originator{orig}; Reason{reason}");  
+                pair = new Tuple<string, string>(orig, reason);
+                //pair.Item1 = orig;
+                //pair.Item2 = reason;
+            });
+            DeviceWatchdog wd = new DeviceWatchdog(wdAction);
+            string origname = "testorig";
+            wd.Register(origname, TimeSpan.FromSeconds(1));
+            System.Threading.Thread.Sleep(1100);
+            wd.Dispose();
+
+            Assert.That(pair.Item1 == origname && pair.Item2 == "Not alive");
         }
     }
     public class AnalogWriterMock : IWriterAdapter<double[]>

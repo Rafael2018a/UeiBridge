@@ -97,7 +97,7 @@ namespace UeiBridge
         }
         void Task_DownstreamMessageLoop(SL508892Setup setup)
         {
-            System.Threading.Thread.CurrentThread.Name = "Task#DownstreamMessageLoop";
+            System.Threading.Thread.CurrentThread.Name = "Task:DownstreamMessageLoop";
             _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} start");
             //_logger.Info($"{setup.DeviceName} Writer started");
             // message loop
@@ -169,12 +169,12 @@ namespace UeiBridge
             _cancelTokenSource.Cancel();
             _downstreamQueue.CompleteAdding();
 
-            if (_downstreamTask.Status == TaskStatus.Running)
+            if ( null !=_downstreamTask && _downstreamTask.Status == TaskStatus.Running)
             {
                 _downstreamTask.Wait();
             }
 #if usetasks
-            var runningTasks = _channelAuxList.Where(entry => entry.ReadTask.Status == TaskStatus.Running).Select(entry => entry.ReadTask);
+            var runningTasks = _channelAuxList.Where(entry => entry.ReadTask!=null && entry.ReadTask.Status == TaskStatus.Running).Select(entry => entry.ReadTask);
             Task.WaitAll(runningTasks.ToArray());
 #else
             var readersWaitHandle = _channelAuxList.Select(i => i.AsyncResult.AsyncWaitHandle).ToArray();
@@ -182,8 +182,8 @@ namespace UeiBridge
 #endif
             foreach (var cx in _channelAuxList)
             {
-                cx.Reader.Dispose();
-                cx.Writer.Dispose();
+                cx.Reader?.Dispose();
+                cx.Writer?.Dispose();
             }
 
             _logger.Info("Readers/writers disposed..");
@@ -201,6 +201,8 @@ namespace UeiBridge
             _lastScanList = new List<ViewItem<byte[]>>(new ViewItem<byte[]>[numberOfChannels]);
             _ViewItemList = new List<ViewItem<byte[]>>(new ViewItem<byte[]>[numberOfChannels]);
 
+            bool readFromDevice = ( _deviceSetup.DeviceAccess == System.IO.FileAccess.Read || _deviceSetup.DeviceAccess == System.IO.FileAccess.ReadWrite);
+            bool writeToDevice = (_deviceSetup.DeviceAccess == System.IO.FileAccess.Write || _deviceSetup.DeviceAccess == System.IO.FileAccess.ReadWrite);
             // build serial readers and writers
             // --------------------------------
             for (int chNum = 0; chNum < _serialSession.GetNumberOfChannels(); chNum++)
@@ -210,8 +212,8 @@ namespace UeiBridge
                 int chIndex = sPort.GetIndex();
 
                 // create reader & writer 
-                var reader = new SerialReader(_serialSession.GetDataStream(), chIndex);
-                var writer = new SerialWriter(_serialSession.GetDataStream(), chIndex);
+                var reader = (readFromDevice) ? new SerialReader(_serialSession.GetDataStream(), chIndex) : null;
+                var writer = (writeToDevice) ? new SerialWriter(_serialSession.GetDataStream(), chIndex) : null;
 
                 // add channel-aux to list
                 ChannelAux2 chAux = new ChannelAux2(chIndex, reader, writer, _serialSession);
@@ -225,14 +227,20 @@ namespace UeiBridge
             foreach (ChannelAux2 cx in _channelAuxList)
             {
 #if usetasks
-                cx.ReadTask = Task.Factory.StartNew(() => Task_UpstreamMessageLoop(cx), _cancelTokenSource.Token);
+                if (readFromDevice)
+                {
+                    cx.ReadTask = Task.Factory.StartNew(() => Task_UpstreamMessageLoop(cx), _cancelTokenSource.Token);
+                }
 #else
                 cx.AsyncResult = cx.Reader.BeginRead(200, new AsyncCallback(ReaderCallback), cx); // start reading from device
 #endif
             }
 
             // start downstream message loop
-            _downstreamTask = Task.Run(() => Task_DownstreamMessageLoop(_deviceSetup), _cancelTokenSource.Token);
+            if (writeToDevice)
+            {
+                _downstreamTask = Task.Run(() => Task_DownstreamMessageLoop(_deviceSetup), _cancelTokenSource.Token);
+            }
 
             return true;
         }
@@ -348,7 +356,10 @@ namespace UeiBridge
         public string[] GetFormattedStatus(TimeSpan interval)
         {
             List<string> resultList = new List<string>();
-
+            if (null==_lastScanList)
+            {
+                return null;
+            }
             // upstream
             for (int ch = 0; ch < _lastScanList.Count; ch++)
             {
@@ -407,7 +418,7 @@ namespace UeiBridge
         protected void Task_UpstreamMessageLoop(ChannelAux2 cx)
         {
             string chName = $"Com{cx.ChannelIndex}";
-            System.Threading.Thread.CurrentThread.Name = "Task#UpstreamMessageLoop#" + chName;
+            System.Threading.Thread.CurrentThread.Name = $"Task:UpstreamMessageLoop: Cube{_deviceSetup.GetCubeId()}/Slot{_deviceSetup.SlotNumber}/{chName}";
             _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} start");
             //var destEp = _deviceSetup.DestEndPoint.ToIpEp();
             EndPoint ep = new EndPoint(_deviceSetup.DestEndPoint.Address, _deviceSetup.Channels[cx.ChannelIndex].LocalUdpPort);
@@ -452,7 +463,7 @@ namespace UeiBridge
             {
                 int p60 = 0;
                 int p132 = 0;
-                var delay = TimeSpan.FromTicks(100);
+                var delay = TimeSpan.FromMilliseconds(1);
                 System.Diagnostics.Stopwatch swatch = new System.Diagnostics.Stopwatch();
                 swatch.Start();
                 //message loop
@@ -486,7 +497,7 @@ namespace UeiBridge
 
                     if (recvBytes.Length < _maxReadMesageLength)
                     {
-                        //int internalCounter = 0;
+                        int internalCounter = 0;
 
                         //if (60 == recvBytes.Length)
                         //{
@@ -507,7 +518,7 @@ namespace UeiBridge
                         //    p132 = internalCounter;
                         //}
 
-                        //_logger.Info($"{swatch.Elapsed.TotalMilliseconds} Message from channel {cx.ChannelIndex}. Length {recvBytes.Length} internalCounter {internalCounter}");
+                        _logger.Info($"{swatch.Elapsed.TotalMilliseconds} Message from channel {cx.ChannelIndex}. Length {recvBytes.Length} internalCounter {internalCounter}");
                         //if (recvBytes[0]!=0x81)
                         //{
                         //    _logger.Warn("Bad buffer");
@@ -536,7 +547,7 @@ namespace UeiBridge
                 _watchdog?.NotifyCrash(chName, e.Message);
             }
             //_logger.Info($"Stopped reading {chName}");
-            _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} start");
+            _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} end");
         }
         public static Session BuildSerialSession2(SL508892Setup deviceSetup)
         {

@@ -29,10 +29,10 @@ namespace UeiBridge.Library.CubeSetupTypes
         }
         public DeviceSetup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device)
         {
-            LocalEndPoint = localEndPoint;
-            DestEndPoint = destEndPoint;
-            DeviceName = device.DeviceName;
-            SlotNumber = device.DeviceSlot;
+            this.LocalEndPoint = localEndPoint;
+            this.DestEndPoint = destEndPoint;
+            this.DeviceName = device.DeviceName;
+            this.SlotNumber = device.DeviceSlot;
         }
         /// <summary>
         /// This c-tor for block sensor which does not have a 'uei device'

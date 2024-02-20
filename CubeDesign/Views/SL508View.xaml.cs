@@ -28,6 +28,7 @@ namespace CubeDesign.Views
             BaudCombo.ItemsSource = Enum.GetValues(typeof(UeiDaq.SerialPortSpeed));
             ParityCombo.ItemsSource = Enum.GetValues(typeof(UeiDaq.SerialPortParity));
             StopbitsCombo.ItemsSource = Enum.GetValues(typeof(UeiDaq.SerialPortStopBits));
+            DeviceAccessCombo.ItemsSource = Enum.GetValues(typeof(System.IO.FileAccess));
 
         }
 
@@ -45,6 +46,8 @@ namespace CubeDesign.Views
             BindingExpression bex4 = StopbitsCombo.GetBindingExpression(ComboBox.SelectedItemProperty);
             bex4.UpdateTarget();
 
+            BindingExpression bex5 = DeviceAccessCombo.GetBindingExpression(ComboBox.SelectedItemProperty);
+            bex5.UpdateTarget();
 
         }
     }

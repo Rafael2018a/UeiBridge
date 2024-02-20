@@ -84,7 +84,7 @@ namespace UeiBridge
         protected void Task_OutputDeviceHandler()
         {
             //var st = new System.Diagnostics.StackTrace();
-            System.Threading.Thread.CurrentThread.Name = "Task#" + InstanceName; //st.GetFrame(1).GetMethod().DeclaringType.Name;
+            System.Threading.Thread.CurrentThread.Name = "Task:OutDeviceHandler:" + InstanceName; //st.GetFrame(1).GetMethod().DeclaringType.Name;
             _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} start");
             // message loop
             // ============
