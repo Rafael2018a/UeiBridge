@@ -126,7 +126,7 @@ namespace UeiBridge.Library.CubeSetupTypes
 
             for (int chIndex = 0; chIndex < _numberOfSerialChannels; chIndex++)
             {
-                Channels.Add(new SerialChannelSetup(chIndex, UeiDaq.SerialPortSpeed.BitsPerSecond19200));
+                Channels.Add(new SerialChannelSetup(chIndex, UeiDaq.SerialPortSpeed.BitsPerSecond115200));
             }
         }
     }

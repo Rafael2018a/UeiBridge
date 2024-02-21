@@ -51,7 +51,7 @@ namespace UeiBridge
                 {
                     System.Threading.Thread.Sleep(50);
                 } while (t.Status != TaskStatus.Running);
-                //System.Threading.Thread.Sleep(5000);
+                System.Threading.Thread.Sleep(5000);
             }
         }
         void Task_WatchdogLoop(SL508892Setup deviceSetup)

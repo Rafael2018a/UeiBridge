@@ -518,7 +518,10 @@ namespace UeiBridge
                         //    p132 = internalCounter;
                         //}
 
-                        _logger.Info($"{swatch.Elapsed.TotalMilliseconds} Message from channel {cx.ChannelIndex}. Length {recvBytes.Length} internalCounter {internalCounter}");
+                        if ((132 != recvBytes.Length)&&((35 != recvBytes.Length)&&((14 != recvBytes.Length))))
+                        {
+                            _logger.Debug($"{swatch.Elapsed.TotalMilliseconds} Message from channel {cx.ChannelIndex}. Length {recvBytes.Length} internalCounter {internalCounter}");
+                        }
                         //if (recvBytes[0]!=0x81)
                         //{
                         //    _logger.Warn("Bad buffer");
@@ -527,7 +530,7 @@ namespace UeiBridge
                     }
                     else
                     {
-                        _logger.Warn($"Suspicious Message from channel {cx.ChannelIndex}. Length {recvBytes.Length}");
+                        //_logger.Warn($"Suspicious Message from channel {cx.ChannelIndex}. Length {recvBytes.Length}");
                     }
                     // send to consumer
                     _readMessageConsumer.Enqueue(new SendObject2(destEp, ethMsgBuilder, recvBytes));
@@ -597,8 +600,10 @@ namespace UeiBridge
                 // - The termination string was detected
                 // - 100 bytes have been received
                 // - 10ms elapsed (rate set to 100Hz);
-                //serialSession.ConfigureTimingForMessagingIO(100, 100.0);
-                serialSession.ConfigureTimingForAsynchronousIO(200, -1, 10000, -1);
+                //serialSession.ConfigureTimingForMessagingIO(1, 0);
+                serialSession.ConfigureTimingForAsynchronousIO( 400, 100, 100, -1);
+                //serialSession.ConfigureTimingForSimpleIO();
+
                 serialSession.GetTiming().SetTimeout(500);
 
                 return serialSession;
