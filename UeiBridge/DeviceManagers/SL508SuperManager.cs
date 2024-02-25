@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using UeiBridge.Library;
 using UeiBridge.Library.CubeSetupTypes;
+using UeiBridge.Library.Interfaces;
 using UeiDaq;
 
 namespace UeiBridge
@@ -62,7 +63,7 @@ namespace UeiBridge
             bool readFromDevice = ( deviceSetup.DeviceAccess == System.IO.FileAccess.Read || deviceSetup.DeviceAccess == System.IO.FileAccess.ReadWrite);
             bool writeToDevice = ( deviceSetup.DeviceAccess == System.IO.FileAccess.Write || deviceSetup.DeviceAccess == System.IO.FileAccess.ReadWrite);
 
-            UdpWriterAsync uWriter = null;
+            UdpWriterAsync asyncWriter = null;
 
             do // watchdog loop
             {
@@ -79,17 +80,21 @@ namespace UeiBridge
                 UeiDevice udevice = new UeiDevice(serSession.GetDevice().GetResourceName());
                 _logger.Info($" == Opening Cube{udevice.GetCubeId()}{udevice.LocalPath} SL508 (Serial) == ");
 
-
+                // set udp writer
                 if (readFromDevice)
                 {
                     string writerName = $"SL508/Cube{udevice.GetCubeId()}/{udevice.LocalPath}";
-                    // defince writer for upstream process
-                    uWriter = new UdpWriterAsync(deviceSetup.DestEndPoint.ToIpEp(), _selectedNIC, writerName);
+                    // define writer for upstream process
+                    ISend<SendObject> uwriter = new UdpWriter(deviceSetup.DestEndPoint.ToIpEp(), _selectedNIC);
+                    UInt16 prmbl = BitConverter.ToUInt16(new byte[] { 0xac, 0x13 }, 0);
+                    asyncWriter = new UdpWriterAsync( uwriter, prmbl);
+                    asyncWriter.SetInstanceName(writerName);
+                    asyncWriter.Start();
                 }
 
                 // create SL508 device manager 
                 // -------------------------------
-                _deviceManager = new SL508DeviceManager(uWriter, deviceSetup, serSession);
+                _deviceManager = new SL508DeviceManager(asyncWriter, deviceSetup, serSession);
 
                 // define watchdog handler
                 DeviceWatchdog wd = new DeviceWatchdog(new Action<string, string>((source, reason) =>
@@ -137,7 +142,7 @@ namespace UeiBridge
 
                 // dispose process
                 // ----------------
-                uWriter?.Dispose();
+                asyncWriter?.Dispose();
                 _deviceManager.Dispose();
                 foreach(var ent in udpReaderList)
                 {

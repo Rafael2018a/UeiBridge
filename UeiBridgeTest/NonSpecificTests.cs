@@ -72,6 +72,12 @@ namespace UeiBridgeTest
     class EnqMock : IEnqueue<byte[]>
     {
         public byte[] TheMessage { get; set; }
+
+        public void Dispose()
+        {
+            
+        }
+
         public void Enqueue(byte[] i)
         {
             TheMessage = i;

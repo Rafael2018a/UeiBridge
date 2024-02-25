@@ -98,5 +98,10 @@ namespace UeiBridge
             ConsumerEntry ce = new ConsumerEntry(cubeId, slotNumber, consumer);
             _consumersList.Add(ce);
         }
+
+        public void Dispose()
+        {
+    
+        }
     }
 }

@@ -204,6 +204,7 @@ namespace UeiBridge
                 case DeviceMap2.SL508Literal:
                     {
                         //Build_SL508_Failsafe(realDevice, setup);
+                        throw new NotImplementedException("Not in use anymore");
                         return Build_SL508(realDevice, setup);
 
                     }

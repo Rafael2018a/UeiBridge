@@ -517,10 +517,10 @@ namespace UeiBridge
                         //    }
                         //    p132 = internalCounter;
                         //}
-
-                        if ((132 != recvBytes.Length)&&((35 != recvBytes.Length)&&((14 != recvBytes.Length))))
+                        
+                        //if ((132 != recvBytes.Length)&&((35 != recvBytes.Length)&&((14 != recvBytes.Length))))
                         {
-                            _logger.Debug($"{swatch.Elapsed.TotalMilliseconds} Message from channel {cx.ChannelIndex}. Length {recvBytes.Length} internalCounter {internalCounter}");
+                            _logger.Debug($"{swatch.Elapsed.TotalMilliseconds} Upstream message from channel {cx.ChannelIndex}. Length {recvBytes.Length} internalCounter {internalCounter}");
                         }
                         //if (recvBytes[0]!=0x81)
                         //{
@@ -601,7 +601,8 @@ namespace UeiBridge
                 // - 100 bytes have been received
                 // - 10ms elapsed (rate set to 100Hz);
                 //serialSession.ConfigureTimingForMessagingIO(1, 0);
-                serialSession.ConfigureTimingForAsynchronousIO( 400, 100, 100, -1);
+                serialSession.ConfigureTimingForAsynchronousIO( 400, 100, 100, -1); // problematic line !!
+                //serialSession.ConfigureTimingForAsynchronousIO(200, -1, 10000, -1);
                 //serialSession.ConfigureTimingForSimpleIO();
 
                 serialSession.GetTiming().SetTimeout(500);

@@ -30,7 +30,7 @@ namespace UeiBridge
         {
             if (_inDispose == false)
             {
-                byte[] buf = sendObj.MessageBuild(sendObj.RawByteMessage);
+                byte[] buf = sendObj.MessageBuilder(sendObj.RawByteMessage);
                 _udpClient.Send(buf, buf.Length);
             }
         }
@@ -119,7 +119,7 @@ namespace UeiBridge
 
         public void Send(SendObject sendObj)
         {
-            int sent = _sendSocket.SendTo(sendObj.ByteMessage, SocketFlags.None, sendObj.TargetEndPoint);
+            int sent = _sendSocket.SendTo(sendObj.ByteMessage, sendObj.TargetEndPoint);
             System.Diagnostics.Debug.Assert(sent == sendObj.ByteMessage.Length);
 
         }
