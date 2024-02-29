@@ -1,4 +1,5 @@
-﻿using System;
+﻿#define joinmessages
+using System;
 using System.Threading.Tasks;
 using System.Net;
 using UeiBridge.Library.Interfaces;
@@ -6,6 +7,7 @@ using UeiBridge.Library;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Timers;
+using System.Text;
 
 namespace UeiBridge
 {
@@ -16,14 +18,14 @@ namespace UeiBridge
     public class UdpWriterAsync : IEnqueue<SendObject2>, IDisposable
     {
         ISend<SendObject> _uWriter; // tbd. use UdpWriter2
-        string _instanceName=null;
+        string _instanceName = null;
         readonly UInt16 _messagePreamble;
         private BlockingCollection<SendObject2> _dataItemsQueue2 = new BlockingCollection<SendObject2>(100); // max 100 items
         private log4net.ILog _logger = StaticLocalMethods.GetLogger();
-        List<long> _knownLengthList=new List<long>();
+        List<long> _knownLengthList = new List<long>();
         public Dictionary<int, int> _lengthCountList = new Dictionary<int, int>(); // (msgLen, CountOfMsgLen)
         System.Timers.Timer _tm = new System.Timers.Timer();
-        public UdpWriterAsync( ISend<SendObject> uwriter, UInt16 messagePreamble)
+        public UdpWriterAsync(ISend<SendObject> uwriter, UInt16 messagePreamble)
         {
             _uWriter = uwriter;
             _messagePreamble = messagePreamble;
@@ -54,14 +56,21 @@ namespace UeiBridge
             {
                 return;
             }
-            _dataItemsQueue2.Add(so2);
+            if (false == _dataItemsQueue2.TryAdd(so2))
+            {
+                _logger.Warn("Failed to add message");
+            }
         }
         protected void Task_SendMessageLoop(string callerInstanceName)
         {
 
             System.Threading.Thread.CurrentThread.Name = "Task:UdpWriterAsync:" + callerInstanceName;
-           
+
             _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} start");
+
+            int internalCounter = 0;
+            int p35 = 0;
+
             // message loop
             // ============
             while (false == _dataItemsQueue2.IsCompleted)
@@ -75,30 +84,73 @@ namespace UeiBridge
                         _dataItemsQueue2.CompleteAdding();
                         break;
                     }
+#if joinmessages
+                    if (so2.RawByteMessage.Length == 132)
+                    {
 
+                    }
                     List<byte[]> msgs;
-                    bool isValidMessage = ScanMessage(so2.RawByteMessage, out msgs);
-
+                    bool isWholeMessage;
+                    ScanMessage(so2.RawByteMessage, out msgs, out isWholeMessage);
+                    //System.Diagnostics.Debug.Assert(isWholeMessage == (msgs.Count == 1));
                     foreach (byte[] m in msgs)
                     {
                         // send to consumer
-                        byte[] buf = so2.MessageBuilder( m);
+                        byte[] buf = so2.MessageBuilder(m);
                         SendObject so = new SendObject(so2.TargetEndPoint, buf);
                         _uWriter.Send(so);
 
-                        // add message length to lengthCountList
-                        if (isValidMessage)
+                        if ((132 != m.Length) && ((60 != m.Length)) && ((35 != m.Length)))
                         {
-                            if (_lengthCountList.ContainsKey( m.Length))
+                            _logger.Warn($"Unknown upstream message. Length {m.Length}");
+                        }
+
+                        //if (35 == m.Length)
+                        //{
+                        //    internalCounter = (int)BitConverter.ToUInt16(m, 31);
+                        //    if (p35 + 1 != internalCounter)
+                        //    {
+                        //        _logger.Warn($"miss 35. counter={internalCounter} ");
+                        //    }
+                        //    p35 = internalCounter;
+                        //}
+
+                    }
+
+                    // add message length to lengthCountList
+                    if (isWholeMessage)
+                    {
+                        int len = so2.RawByteMessage.Length;
+                        lock (_lengthCountList)
+                        {
+                            if (_lengthCountList.ContainsKey(len))
                             {
-                                ++_lengthCountList[ m.Length];
+                                ++_lengthCountList[len];
                             }
                             else
                             {
-                                _lengthCountList.Add( m.Length, 1);
+                                _lengthCountList.Add(len, 1);
                             }
                         }
                     }
+
+
+#else
+                    byte[] buf = so2.MessageBuilder(so2.RawByteMessage);
+                    SendObject so = new SendObject(so2.TargetEndPoint, buf);
+                    _uWriter.Send(so);
+                    //if ((132 != so2.RawByteMessage.Length) && ((60 != so2.RawByteMessage.Length)) && ((35 != so2.RawByteMessage.Length)))
+                    //{
+                        _logger.Debug($"upstream message. Length {so2.RawByteMessage.Length}");
+                    //}
+                    //else
+                    {
+                        //uint timestampMs = BitConverter.ToUInt32(so2.RawByteMessage, 0)/1000;
+                        //_logger.Debug($"timestampMs  upstream message. Length {so2.RawByteMessage.Length}");
+                    }
+
+
+#endif
                 }
                 catch (InvalidOperationException ex) // thrown if _downstreamQueue marked as complete
                 {
@@ -108,78 +160,117 @@ namespace UeiBridge
                 {
                     Console.WriteLine(ex);
                 }
+
             }
             _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} end");
         }
 
-        private bool ScanMessage(byte[] rawByteMessage, out List<byte[]> msgs)
+        private void ScanMessage(byte[] rawByteMessage, out List<byte[]> partialMessageList, out bool isWholeMessage)
         {
-            bool rc = false;
-            if (rawByteMessage.Length<2)
+            isWholeMessage = false;
+            //bool isvalidmessage = false;
+            if (rawByteMessage.Length < 2)
             {
-                msgs = new List<byte[]>(); // return empty list
-                goto exit;
+                partialMessageList = new List<byte[]>(); // return empty list
+                return;
             }
+
             UInt16 first = BitConverter.ToUInt16(rawByteMessage, 0);
             if (first == _messagePreamble)
             {
-                rc = true;
                 // need to scan?
                 if (_knownLengthList.Contains(rawByteMessage.Length)) // known length, no need to scan
                 {
-                    rc = true;
+                    partialMessageList = new List<byte[]> { rawByteMessage };
                 }
-                else // scan, try to find preamles within message
+                else // scan, try to split message
                 {
-                    _logger.Debug($"Scanning message. len: {rawByteMessage.Length}");
-                    for(int j=2; j<rawByteMessage.Length-1; ++j)
+                    if (rawByteMessage.Length == 132)
                     {
-                        UInt16 short1 = BitConverter.ToUInt16(rawByteMessage, j);
-                        if (_messagePreamble==short1)
+                    }
+
+                    partialMessageList = new List<byte[]>();
+                    int p1 = 0;
+                    for (int p2 = 2; p2 < rawByteMessage.Length - 1; ++p2)
+                    {
+                        UInt16 short1 = BitConverter.ToUInt16(rawByteMessage, p2);
+                        if (_messagePreamble == short1)
                         {
-                            byte[] part1 = new byte[j];
-                            byte[] part2 = new byte[rawByteMessage.Length - j];
-                            Array.Copy(rawByteMessage, part1, j);
-                            Array.Copy(rawByteMessage, j, part2, 0, part2.Length);
-                            msgs = new List<byte[]> { part1, part2 };
-                            goto exit;
+                            byte[] part1 = new byte[p2 - p1];
+                            Array.Copy(rawByteMessage, p1, part1, 0, p2 - p1);
+                            p1 = p2;
+                            partialMessageList.Add(part1);
                         }
                     }
-                }
-            }
-            msgs = new List<byte[]> { rawByteMessage };
 
-            exit: return rc;
+                    // if preamble was found once (in middle of message) complete last part
+                    if (0 != p1)
+                    {
+                        int p2 = rawByteMessage.Length;
+                        byte[] part1 = new byte[p2 - p1];
+                        Array.Copy(rawByteMessage, p1, part1, 0, p2 - p1);
+                        p1 = p2;
+                        partialMessageList.Add(part1);
+                    }
+                    else
+                    {
+                        partialMessageList.Add(rawByteMessage);
+                        isWholeMessage = true;
+                    }
+
+                    // for log only
+                    if (partialMessageList.Count > 1)
+                    {
+                        StringBuilder sb = new StringBuilder("Message split ");
+                        //Console.Write("Message split ");
+                        foreach (var ent in partialMessageList)
+                        {
+                            sb.Append($"{ent.Length} - ");
+                        }
+                        _logger.Debug(sb.ToString());
+                    }
+                }
+
+            }
+            else
+            {
+                partialMessageList = new List<byte[]>(); // return empty list
+            }
         }
 
         public void TimerCallback(object sender, ElapsedEventArgs e)
         {
             // decay process
-            for (int i = 0; i < _lengthCountList.Count; ++i)
-            {
-                if (_lengthCountList[i] > 0)
-                {
-                    --_lengthCountList[i];
-                }
-            }
+            //for (int i = 0; i < _lengthCountList.Count; ++i)
+            //{
+            //    if (_lengthCountList[i] > 0)
+            //    {
+            //        --_lengthCountList[i];
+            //    }
+            //}
 
             // update _knownLengthList
-            foreach( var entry in _lengthCountList)
+            lock (_lengthCountList)
             {
-                if (entry.Value > 20)
+                foreach (var entry in _lengthCountList)
                 {
-                    if (!_knownLengthList.Contains(entry.Key))
+                    if (entry.Value > 20)
                     {
-                        _knownLengthList.Add(entry.Key);
+                        if (false == _knownLengthList.Contains(entry.Key))
+                        {
+                            _knownLengthList.Add(entry.Key);
+                            _logger.Debug($"Key {entry.Key} added");
+                        }
                     }
-                }
 
-                if (entry.Value < 10)
-                {
-                    if (!_knownLengthList.Contains(entry.Key))
-                    {
-                        _knownLengthList.Remove(entry.Key);
-                    }
+                    //if (entry.Value < 10)
+                    //{
+                    //    if (_knownLengthList.Contains(entry.Key))
+                    //    {
+                    //        _knownLengthList.Remove(entry.Key);
+                    //        _logger.Debug($"Key {entry.Key} removed");
+                    //    }
+                    //}
                 }
             }
         }
@@ -192,13 +283,13 @@ namespace UeiBridge
         /// <returns></returns>
         private List<byte[]> ScanMessage1(byte[] rawByteMessage, UInt16 preamble)
         {
-            if (BitConverter.ToUInt16(rawByteMessage, 0)!=preamble)
+            if (BitConverter.ToUInt16(rawByteMessage, 0) != preamble)
             {
                 return new List<byte[]>(); // empty list
             }
             return null;
             //Array.Find( rawByteMessage, 3, rawByteMessage.Length-1, (v => )
-                //FindIndex<T>(T[] array, int startIndex, int count, Predicate < T > match);
+            //FindIndex<T>(T[] array, int startIndex, int count, Predicate < T > match);
         }
     }
 

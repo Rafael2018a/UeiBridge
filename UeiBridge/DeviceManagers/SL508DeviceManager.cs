@@ -13,6 +13,7 @@ using UeiBridge.Library;
 //using UeiBridge.Library.Types;
 using UeiDaq;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace UeiBridge
 {
@@ -417,13 +418,15 @@ namespace UeiBridge
         /// <param name="cx"></param>
         protected void Task_UpstreamMessageLoop(ChannelAux2 cx)
         {
+            long prevMs = 0;
             string chName = $"Com{cx.ChannelIndex}";
             System.Threading.Thread.CurrentThread.Name = $"Task:UpstreamMessageLoop: Cube{_deviceSetup.GetCubeId()}/Slot{_deviceSetup.SlotNumber}/{chName}";
             _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} start");
             //var destEp = _deviceSetup.DestEndPoint.ToIpEp();
             EndPoint ep = new EndPoint(_deviceSetup.DestEndPoint.Address, _deviceSetup.Channels[cx.ChannelIndex].LocalUdpPort);
             System.Net.IPEndPoint destEp = ep.ToIpEp();
-
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
 
             // show establishment log message
             {
@@ -463,7 +466,7 @@ namespace UeiBridge
             {
                 int p60 = 0;
                 int p132 = 0;
-                var delay = TimeSpan.FromMilliseconds(1);
+                var delay = TimeSpan.FromTicks(100);
                 System.Diagnostics.Stopwatch swatch = new System.Diagnostics.Stopwatch();
                 swatch.Start();
                 //message loop
@@ -492,7 +495,10 @@ namespace UeiBridge
                     // get message from device and send to consumer
                     // --------------------------------------------
                     byte[] recvBytes = cx.Reader.Read(_maxReadMesageLength);
-
+                    //long ems = sw.ElapsedMilliseconds;
+                    //_logger.Debug($"ElapsedMilliseconds {ems-prevMs}");
+                    //prevMs = ems;
+                    
                     //;/ System.Diagnostics.Stopwatch.Frequency
 
                     if (recvBytes.Length < _maxReadMesageLength)
@@ -518,10 +524,14 @@ namespace UeiBridge
                         //    p132 = internalCounter;
                         //}
                         
-                        //if ((132 != recvBytes.Length)&&((35 != recvBytes.Length)&&((14 != recvBytes.Length))))
-                        {
-                            _logger.Debug($"{swatch.Elapsed.TotalMilliseconds} Upstream message from channel {cx.ChannelIndex}. Length {recvBytes.Length} internalCounter {internalCounter}");
-                        }
+                        //if ((132 != recvBytes.Length)&&((60 != recvBytes.Length)&&((14 != recvBytes.Length))))
+                        //{
+                        //    _logger.Warn($"{swatch.Elapsed.TotalMilliseconds} Upstream message from channel {cx.ChannelIndex}. Length {recvBytes.Length} internalCounter {internalCounter}");
+                        //}
+                        //else
+                        //{
+                        //    _logger.Debug($"{swatch.Elapsed.TotalMilliseconds} Upstream message from channel {cx.ChannelIndex}. Length {recvBytes.Length} internalCounter {internalCounter}");
+                        //}
                         //if (recvBytes[0]!=0x81)
                         //{
                         //    _logger.Warn("Bad buffer");
@@ -534,6 +544,7 @@ namespace UeiBridge
                     }
                     // send to consumer
                     _readMessageConsumer.Enqueue(new SendObject2(destEp, ethMsgBuilder, recvBytes));
+
                     // update status viewer
                     _lastScanList[cx.ChannelIndex] = new ViewItem<byte[]>(recvBytes, TimeSpan.FromSeconds(5));
 
@@ -601,7 +612,7 @@ namespace UeiBridge
                 // - 100 bytes have been received
                 // - 10ms elapsed (rate set to 100Hz);
                 //serialSession.ConfigureTimingForMessagingIO(1, 0);
-                serialSession.ConfigureTimingForAsynchronousIO( 400, 100, 100, -1); // problematic line !!
+                serialSession.ConfigureTimingForAsynchronousIO( 35, -1, 5000, -1); // problematic line !!
                 //serialSession.ConfigureTimingForAsynchronousIO(200, -1, 10000, -1);
                 //serialSession.ConfigureTimingForSimpleIO();
 

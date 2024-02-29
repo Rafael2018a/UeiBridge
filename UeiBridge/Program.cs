@@ -101,7 +101,7 @@ namespace UeiBridge
 #endif
 
             // publish status to StatusViewer
-            Task.Factory.StartNew(() => Task_PublishStatus(_programBuilder.PerDeviceObjectsList, _programBuilder.DeviceManagerList));
+            //Task.Factory.StartNew(() => Task_PublishStatus(_programBuilder.PerDeviceObjectsList, _programBuilder.DeviceManagerList));
 
             // self tests
             //StartDownwardsTest();
