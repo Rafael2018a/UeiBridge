@@ -474,85 +474,93 @@ namespace UeiBridge
                 {
                     // wait for available messages
                     //-----------------------------
-                    int available = 0;
-                    do
-                    {
-                        // "available" is the amount of data remaining from a single event
-                        // more data may be in the queue once "available" bytes have been read
-                        available = cx.OriginatingSession.GetDataStream().GetAvailableInputMessages(cx.ChannelIndex);
-                        _watchdog?.NotifyAlive(chName);
-                        if (available == 0)
-                        {
-                            System.Threading.Thread.Sleep(delay);
-                        }
-                    } while ((available == 0) && (false == _cancelTokenSource.IsCancellationRequested));
+                    //int available = 0;
+                    //do
+                    //{
+                    //    // "available" is the amount of data remaining from a single event
+                    //    // more data may be in the queue once "available" bytes have been read
+                    //    available = cx.OriginatingSession.GetDataStream().GetAvailableInputMessages(cx.ChannelIndex);
+                    //    _watchdog?.NotifyAlive(chName);
+                    //    if (available == 0)
+                    //    {
+                    //        System.Threading.Thread.Sleep(delay);
+                    //    }
+                    //} while ((available == 0) && (false == _cancelTokenSource.IsCancellationRequested));
 
                     if (_cancelTokenSource.IsCancellationRequested)
                     {
                         continue; // this will break message loop
                     }
-
-                    // get message from device and send to consumer
-                    // --------------------------------------------
-                    byte[] recvBytes = cx.Reader.Read(_maxReadMesageLength);
-                    //long ems = sw.ElapsedMilliseconds;
-                    //_logger.Debug($"ElapsedMilliseconds {ems-prevMs}");
-                    //prevMs = ems;
-                    
-                    //;/ System.Diagnostics.Stopwatch.Frequency
-
-                    if (recvBytes.Length < _maxReadMesageLength)
+                    try
                     {
-                        int internalCounter = 0;
+                        // get message from device and send to consumer
+                        // --------------------------------------------
+                        byte[] recvBytes = cx.Reader.Read(_maxReadMesageLength);
+                        //long ems = sw.ElapsedMilliseconds;
+                        //_logger.Debug($"ElapsedMilliseconds {ems-prevMs}");
+                        //prevMs = ems;
 
-                        //if (60 == recvBytes.Length)
-                        //{
-                        //    internalCounter = recvBytes[8];
-                        //    if (p60+1 != internalCounter)
-                        //    {
-                        //        _logger.Warn("miss 60");
-                        //    }
-                        //    p60 = internalCounter;
-                        //}
-                        //if (132 == recvBytes.Length)
-                        //{
-                        //    internalCounter = (int)BitConverter.ToUInt16(recvBytes, 38);
-                        //    if (p132 + 1 != internalCounter)
-                        //    {
-                        //        _logger.Warn("miss 132.");
-                        //    }
-                        //    p132 = internalCounter;
-                        //}
-                        
-                        //if ((132 != recvBytes.Length)&&((60 != recvBytes.Length)&&((14 != recvBytes.Length))))
-                        //{
-                        //    _logger.Warn($"{swatch.Elapsed.TotalMilliseconds} Upstream message from channel {cx.ChannelIndex}. Length {recvBytes.Length} internalCounter {internalCounter}");
-                        //}
-                        //else
-                        //{
-                        //    _logger.Debug($"{swatch.Elapsed.TotalMilliseconds} Upstream message from channel {cx.ChannelIndex}. Length {recvBytes.Length} internalCounter {internalCounter}");
-                        //}
-                        //if (recvBytes[0]!=0x81)
-                        //{
-                        //    _logger.Warn("Bad buffer");
-                        //}
+                        //;/ System.Diagnostics.Stopwatch.Frequency
 
+                        if (recvBytes.Length < _maxReadMesageLength)
+                        {
+                            int internalCounter = 0;
+
+                            //if (60 == recvBytes.Length)
+                            //{
+                            //    internalCounter = recvBytes[8];
+                            //    if (p60+1 != internalCounter)
+                            //    {
+                            //        _logger.Warn("miss 60");
+                            //    }
+                            //    p60 = internalCounter;
+                            //}
+                            //if (132 == recvBytes.Length)
+                            //{
+                            //    internalCounter = (int)BitConverter.ToUInt16(recvBytes, 38);
+                            //    if (p132 + 1 != internalCounter)
+                            //    {
+                            //        _logger.Warn("miss 132.");
+                            //    }
+                            //    p132 = internalCounter;
+                            //}
+
+                            //if ((132 != recvBytes.Length)&&((60 != recvBytes.Length)&&((14 != recvBytes.Length))))
+                            //{
+                            //    _logger.Warn($"{swatch.Elapsed.TotalMilliseconds} Upstream message from channel {cx.ChannelIndex}. Length {recvBytes.Length} internalCounter {internalCounter}");
+                            //}
+                            //else
+                            //{
+                            //    _logger.Debug($"{swatch.Elapsed.TotalMilliseconds} Upstream message from channel {cx.ChannelIndex}. Length {recvBytes.Length} internalCounter {internalCounter}");
+                            //}
+                            //if (recvBytes[0]!=0x81)
+                            //{
+                            //    _logger.Warn("Bad buffer");
+                            //}
+
+                        }
+                        else
+                        {
+                            //_logger.Warn($"Suspicious Message from channel {cx.ChannelIndex}. Length {recvBytes.Length}");
+                        }
+                        // send to consumer
+                        _readMessageConsumer.Enqueue(new SendObject2(destEp, ethMsgBuilder, recvBytes));
+
+                        // update status viewer
+                        _lastScanList[cx.ChannelIndex] = new ViewItem<byte[]>(recvBytes, TimeSpan.FromSeconds(5));
+
+                        // update stat
+                        //ChannelStat chStat = ChannelStatList.Where(i => i.ChannelIndex == cx.ChannelIndex).FirstOrDefault();
+                        //chStat.ReadByteCount += recvBytes.Length;
+                        //chStat.ReadMessageCount++;
                     }
-                    else
+                    catch(UeiDaqException ex)
                     {
-                        //_logger.Warn($"Suspicious Message from channel {cx.ChannelIndex}. Length {recvBytes.Length}");
+                        if (ex.Error != Error.Timeout)
+                        {
+                            _logger.Warn($"{chName} read exception. {ex.Message}");
+                        }
                     }
-                    // send to consumer
-                    _readMessageConsumer.Enqueue(new SendObject2(destEp, ethMsgBuilder, recvBytes));
-
-                    // update status viewer
-                    _lastScanList[cx.ChannelIndex] = new ViewItem<byte[]>(recvBytes, TimeSpan.FromSeconds(5));
-
-                    // update stat
-                    //ChannelStat chStat = ChannelStatList.Where(i => i.ChannelIndex == cx.ChannelIndex).FirstOrDefault();
-                    //chStat.ReadByteCount += recvBytes.Length;
-                    //chStat.ReadMessageCount++;
-
                 } while (false == _cancelTokenSource.IsCancellationRequested);
             }
             catch (UeiDaqException e)
@@ -612,11 +620,9 @@ namespace UeiBridge
                 // - 100 bytes have been received
                 // - 10ms elapsed (rate set to 100Hz);
                 //serialSession.ConfigureTimingForMessagingIO(1, 0);
-                serialSession.ConfigureTimingForAsynchronousIO( 35, -1, 5000, -1); // problematic line !!
-                //serialSession.ConfigureTimingForAsynchronousIO(200, -1, 10000, -1);
-                //serialSession.ConfigureTimingForSimpleIO();
+                serialSession.ConfigureTimingForAsynchronousIO( 400, -1, 100, -1); 
 
-                serialSession.GetTiming().SetTimeout(500);
+                serialSession.GetTiming().SetTimeout(5000);
 
                 return serialSession;
             }

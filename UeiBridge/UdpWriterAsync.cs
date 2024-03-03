@@ -1,4 +1,4 @@
-﻿#define joinmessages
+﻿//#define joinmessages
 using System;
 using System.Threading.Tasks;
 using System.Net;
@@ -139,10 +139,10 @@ namespace UeiBridge
                     byte[] buf = so2.MessageBuilder(so2.RawByteMessage);
                     SendObject so = new SendObject(so2.TargetEndPoint, buf);
                     _uWriter.Send(so);
-                    //if ((132 != so2.RawByteMessage.Length) && ((60 != so2.RawByteMessage.Length)) && ((35 != so2.RawByteMessage.Length)))
-                    //{
-                        _logger.Debug($"upstream message. Length {so2.RawByteMessage.Length}");
-                    //}
+                    if ((132 != so2.RawByteMessage.Length) && ((60 != so2.RawByteMessage.Length)) && ((35 != so2.RawByteMessage.Length)))
+                    {
+                        _logger.Warn($"unknown upstream message. Length {so2.RawByteMessage.Length}");
+                    }
                     //else
                     {
                         //uint timestampMs = BitConverter.ToUInt32(so2.RawByteMessage, 0)/1000;
@@ -151,6 +151,7 @@ namespace UeiBridge
 
 
 #endif
+
                 }
                 catch (InvalidOperationException ex) // thrown if _downstreamQueue marked as complete
                 {
