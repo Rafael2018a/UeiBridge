@@ -1,4 +1,4 @@
-﻿//#define joinmessages
+﻿#define joinmessages
 using System;
 using System.Threading.Tasks;
 using System.Net;
@@ -65,11 +65,13 @@ namespace UeiBridge
         {
 
             System.Threading.Thread.CurrentThread.Name = "Task:UdpWriterAsync:" + callerInstanceName;
-
             _logger.Debug($"{System.Threading.Thread.CurrentThread.Name} start");
 
             int internalCounter = 0;
             int p35 = 0;
+            
+            
+            byte[] pattern = BitConverter.GetBytes(_messagePreamble);
 
             // message loop
             // ============
@@ -84,55 +86,51 @@ namespace UeiBridge
                         _dataItemsQueue2.CompleteAdding();
                         break;
                     }
-#if joinmessages
-                    if (so2.RawByteMessage.Length == 132)
-                    {
 
-                    }
-                    List<byte[]> msgs;
-                    bool isWholeMessage;
-                    ScanMessage(so2.RawByteMessage, out msgs, out isWholeMessage);
-                    //System.Diagnostics.Debug.Assert(isWholeMessage == (msgs.Count == 1));
-                    foreach (byte[] m in msgs)
+                    
+
+                    if ((132 == so2.RawByteMessage.Length) || ((35 == so2.RawByteMessage.Length)))
                     {
-                        // send to consumer
-                        byte[] buf = so2.MessageBuilder(m);
-                        SendObject so = new SendObject(so2.TargetEndPoint, buf);
+                        byte[] fullmessage = so2.MessageBuilder(so2.RawByteMessage);
+                        SendObject so = new SendObject(so2.TargetEndPoint, fullmessage);
                         _uWriter.Send(so);
-
-                        if ((132 != m.Length) && ((60 != m.Length)) && ((35 != m.Length)))
-                        {
-                            _logger.Warn($"Unknown upstream message. Length {m.Length}");
-                        }
-
-                        //if (35 == m.Length)
-                        //{
-                        //    internalCounter = (int)BitConverter.ToUInt16(m, 31);
-                        //    if (p35 + 1 != internalCounter)
-                        //    {
-                        //        _logger.Warn($"miss 35. counter={internalCounter} ");
-                        //    }
-                        //    p35 = internalCounter;
-                        //}
-
+                        continue;
                     }
+
+#if joinmessages
+                    _logger.Debug($"scanning upstream message. Length {so2.RawByteMessage.Length}");
+                    int startIndex = 0;
+                    int indexof;
+                    while ((indexof = StaticMethods.IndexOf(so2.RawByteMessage, pattern, startIndex + pattern.Length)) != -1)
+                    {
+                        byte[] dest = new byte[indexof - startIndex];
+                        Array.Copy(so2.RawByteMessage, startIndex, dest, 0, dest.Length);
+                        byte[] fullmessage = so2.MessageBuilder(dest);
+                        SendObject so = new SendObject(so2.TargetEndPoint, fullmessage);
+                        _uWriter.Send(so);
+                        _logger.Debug($"sent after scan: {dest.Length}");
+
+                        startIndex = indexof;
+                    }
+
+
 
                     // add message length to lengthCountList
-                    if (isWholeMessage)
-                    {
-                        int len = so2.RawByteMessage.Length;
-                        lock (_lengthCountList)
-                        {
-                            if (_lengthCountList.ContainsKey(len))
-                            {
-                                ++_lengthCountList[len];
-                            }
-                            else
-                            {
-                                _lengthCountList.Add(len, 1);
-                            }
-                        }
-                    }
+                    //if (isWholeMessage)
+                    //{
+                    //    int len = so2.RawByteMessage.Length;
+                    //    lock (_lengthCountList)
+                    //    {
+                    //        if (_lengthCountList.ContainsKey(len))
+                    //        {
+                    //            ++_lengthCountList[len];
+                    //        }
+                    //        else
+                    //        {
+                    //            _lengthCountList.Add(len, 1);
+                    //        }
+                    //    }
+                    //}
 
 
 #else

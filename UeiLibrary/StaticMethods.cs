@@ -286,5 +286,55 @@ namespace UeiBridge.Library
             return msg;
         }
 
+        public static int Index2Of(byte[] data, byte[] pattern, int startIndex)
+        {
+            //if (data == null) throw new ArgumentNullException(nameof(data));
+            //if (pattern == null) throw new ArgumentNullException(nameof(pattern));
+            System.Diagnostics.Debug.Assert(pattern.Length == 2);
+
+            var cycles = data.Length - pattern.Length + 1;
+            long patternIndex;
+            for (var dataIndex = startIndex + pattern.Length; dataIndex < cycles; dataIndex++)
+            {
+                if (data[dataIndex] != pattern[0])
+                    continue;
+                for (patternIndex = pattern.Length - 1; patternIndex >= 1; patternIndex--)
+                {
+                    if (data[dataIndex + patternIndex] != pattern[patternIndex])
+                        break;
+                }
+                if (patternIndex == 0)
+                    return dataIndex;
+            }
+            return -1; // pattern not found
+        }
+        /// <summary>
+        /// Find pattern in 'data'
+        /// If pattern not found, return full message length
+        /// If startIndex is greater then message length, return -1;
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="pattern"></param>
+        /// <param name="startIndex"></param>
+        /// <returns>Location of pattern</returns>
+        public static int IndexOf(byte[] data, byte[] pattern, int startIndex)
+        {
+            if (startIndex >= data.Length)
+                return -1;
+            //if (data == null) throw new ArgumentNullException(nameof(data));
+            //if (pattern == null) throw new ArgumentNullException(nameof(pattern));
+            System.Diagnostics.Debug.Assert(pattern.Length == 2);
+
+            var cycles = data.Length - pattern.Length + 1;
+            for (var dataIndex = startIndex; dataIndex < cycles; dataIndex++)
+            {
+                if (data[dataIndex] != pattern[0])
+                    continue;
+                if (data[dataIndex + 1] != pattern[1])
+                    continue;
+                return dataIndex;
+            }
+            return data.Length;
+        }
     }
 }
