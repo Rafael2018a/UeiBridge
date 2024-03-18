@@ -109,7 +109,7 @@ namespace UeiBridge.CubeSetupTypes
 
             for (int chIndex = 0; chIndex < _numberOfSerialChannels; chIndex++)
             {
-                Channels.Add(new SerialChannelSetup(chIndex, UeiDaq.SerialPortSpeed.BitsPerSecond19200));
+                Channels.Add(new SerialChannelSetup(chIndex, UeiDaq.SerialPortSpeed.BitsPerSecond115200));
             }
         }
     }
@@ -119,7 +119,7 @@ namespace UeiBridge.CubeSetupTypes
         public int ChannelIndex { get; set; }  = -1;
         [XmlAttribute("IsEnabled")]
         public bool IsEnabled { get; set; } = true;
-        public UeiDaq.SerialPortMode Mode { get; set; }  = UeiDaq.SerialPortMode.RS232;
+        public UeiDaq.SerialPortMode Mode { get; set; } = UeiDaq.SerialPortMode.RS485FullDuplex;
         public UeiDaq.SerialPortSpeed Baudrate { get; set; }
         public UeiDaq.SerialPortParity Parity { get; set; } = UeiDaq.SerialPortParity.None;
         public UeiDaq.SerialPortStopBits Stopbits { get; set; } = UeiDaq.SerialPortStopBits.StopBits1;
