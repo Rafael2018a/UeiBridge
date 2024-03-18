@@ -309,7 +309,7 @@ namespace StatusViewer
                 //IPEndPoint localEp = new IPEndPoint( IPAddress.Any, mcPort); // this is just for the port number
                 m_udpListener.Client.Bind(localEp);
 
-                m_udpListener.JoinMulticastGroup(mcAddress);//, SelectedLocalIp);//IPAddress.Parse("192.168.1.128")); // ip of UAV-LAN
+                m_udpListener.JoinMulticastGroup(mcAddress, SelectedLocalIp);//IPAddress.Parse("192.168.1.128")); // ip of UAV-LAN
                 m_multicastIp = mcAddress;
                 Tuple<UdpClient, IPEndPoint> udpState = new Tuple<UdpClient, IPEndPoint>(m_udpListener, localEp);
                 m_udpListener.BeginReceive(new AsyncCallback(UdpReceiveCallback), udpState);

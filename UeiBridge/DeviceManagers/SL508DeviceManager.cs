@@ -170,12 +170,12 @@ namespace UeiBridge
             _cancelTokenSource.Cancel();
             _downstreamQueue.CompleteAdding();
 
-            if ( null !=_downstreamTask && _downstreamTask.Status == TaskStatus.Running)
+            if (null != _downstreamTask && _downstreamTask.Status == TaskStatus.Running)
             {
                 _downstreamTask.Wait();
             }
 #if usetasks
-            var runningTasks = _channelAuxList.Where(entry => entry.ReadTask!=null && entry.ReadTask.Status == TaskStatus.Running).Select(entry => entry.ReadTask);
+            var runningTasks = _channelAuxList.Where(entry => entry.ReadTask != null && entry.ReadTask.Status == TaskStatus.Running).Select(entry => entry.ReadTask);
             Task.WaitAll(runningTasks.ToArray());
 #else
             var readersWaitHandle = _channelAuxList.Select(i => i.AsyncResult.AsyncWaitHandle).ToArray();
@@ -202,7 +202,7 @@ namespace UeiBridge
             _lastScanList = new List<ViewItem<byte[]>>(new ViewItem<byte[]>[numberOfChannels]);
             _ViewItemList = new List<ViewItem<byte[]>>(new ViewItem<byte[]>[numberOfChannels]);
 
-            bool readFromDevice = ( _deviceSetup.DeviceAccess == System.IO.FileAccess.Read || _deviceSetup.DeviceAccess == System.IO.FileAccess.ReadWrite);
+            bool readFromDevice = (_deviceSetup.DeviceAccess == System.IO.FileAccess.Read || _deviceSetup.DeviceAccess == System.IO.FileAccess.ReadWrite);
             bool writeToDevice = (_deviceSetup.DeviceAccess == System.IO.FileAccess.Write || _deviceSetup.DeviceAccess == System.IO.FileAccess.ReadWrite);
             // build serial readers and writers
             // --------------------------------
@@ -357,7 +357,7 @@ namespace UeiBridge
         public string[] GetFormattedStatus(TimeSpan interval)
         {
             List<string> resultList = new List<string>();
-            if (null==_lastScanList)
+            if (null == _lastScanList)
             {
                 return null;
             }
@@ -441,9 +441,11 @@ namespace UeiBridge
 
             // define message-builder delegate
             Func<byte[], byte[]> ethMsgBuilder = new Func<byte[], byte[]>((buf) =>
-           {
-               EthernetMessage em1 = StaticMethods.BuildEthernetMessageFromDevice(buf, this._deviceSetup, cx.ChannelIndex);
-               SerialChannelSetup chSetup = _deviceSetup.Channels[cx.ChannelIndex];
+            {
+                EthernetMessage ethMessage = StaticMethods.BuildEthernetMessageFromDevice(buf, this._deviceSetup, cx.ChannelIndex);
+#if filterby
+
+                SerialChannelSetup chSetup = _deviceSetup.Channels[cx.ChannelIndex];
                if (true == chSetup.FilterByLength)
                {
                    if (buf.Length != chSetup.MessageLength)
@@ -458,15 +460,16 @@ namespace UeiBridge
                        return null;
                    }
                }
-               return em1.GetByteArray(MessageWay.upstream);
-           }
+#endif
+                return ethMessage.GetByteArray(MessageWay.upstream);
+            }
             );
 
             try
             {
-                int p60 = 0;
-                int p132 = 0;
-                var delay = TimeSpan.FromTicks(100);
+                //int p60 = 0;
+                //int p132 = 0;
+                //var delay = TimeSpan.FromTicks(100);
                 System.Diagnostics.Stopwatch swatch = new System.Diagnostics.Stopwatch();
                 swatch.Start();
                 //message loop
@@ -496,9 +499,9 @@ namespace UeiBridge
                         // get message from device and send to consumer
                         // --------------------------------------------
                         byte[] recvBytes = cx.Reader.Read(_maxReadMesageLength);
-                        //long ems = sw.ElapsedMilliseconds;
-                        //_logger.Debug($"ElapsedMilliseconds {ems-prevMs}");
-                        //prevMs = ems;
+                        //long ms = sw.ElapsedMilliseconds;
+                        //_logger.Debug($"ElapsedMilliseconds {ms-prevMs}");
+                        //prevMs = ms;
 
                         //;/ System.Diagnostics.Stopwatch.Frequency
 
@@ -554,7 +557,7 @@ namespace UeiBridge
                         //chStat.ReadByteCount += recvBytes.Length;
                         //chStat.ReadMessageCount++;
                     }
-                    catch(UeiDaqException ex)
+                    catch (UeiDaqException ex)
                     {
                         if (ex.Error != Error.Timeout)
                         {
@@ -620,7 +623,7 @@ namespace UeiBridge
                 // - 100 bytes have been received
                 // - 10ms elapsed (rate set to 100Hz);
                 //serialSession.ConfigureTimingForMessagingIO(1, 0);
-                serialSession.ConfigureTimingForAsynchronousIO( 400, -1, 100, -1); 
+                serialSession.ConfigureTimingForAsynchronousIO(400, -1, 1000, -1);
 
                 serialSession.GetTiming().SetTimeout(5000);
 
