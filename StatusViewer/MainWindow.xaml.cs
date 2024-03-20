@@ -32,12 +32,7 @@ namespace StatusViewer
     {
         System.Net.Sockets.UdpClient m_udpListener;
 
-        ObservableCollection<StatusEntryViewModel> m_entriesList = new ObservableCollection<StatusEntryViewModel>();
-        public ObservableCollection<StatusEntryViewModel> EntriesList
-        {
-            get { return m_entriesList; }
-            set { m_entriesList = value; }
-        }
+        public ObservableCollection<StatusEntryViewModel> EntriesList { get; set; } = new ObservableCollection<StatusEntryViewModel>();
 
         MachineStateEnum _machineState = MachineStateEnum.Initial;
         long _receivedBytes = 0;
@@ -54,7 +49,6 @@ namespace StatusViewer
             set
             {
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("MulticastIp"));
-
                 m_multicastIp = value;
             }
         }
@@ -191,8 +185,6 @@ namespace StatusViewer
             freezeCommand.Executed += new ExecutedRoutedEventHandler(FreezeCommandExecuted);
             freezeCommand.CanExecute += FreezeCommand_CanExecute;
 
-
-
             CommandBinding clearAllCommand = new CommandBinding(MediaCommands.ChannelDown);  // Hmmm ChannelDown is the best choise
             this.CommandBindings.Add(clearAllCommand);
             clearAllCommand.Executed += ClearAllCommand_Executed;
@@ -225,27 +217,23 @@ namespace StatusViewer
 
             StatusEntryModel messageModel = new StatusEntryModel(js);
 
-            switch (messageModel.MessageType)
+            // create or update counter entry
+            // ==============================
+            StatusEntryViewModel baseViewModel = TryGetValue(EntriesList, messageModel.Desc);
+            if (baseViewModel != null) // if object already exist
             {
-
-                case ProjMessageType.Text:
-                    {
-                        // create or update counter entry
-                        // ==============================
-                        StatusEntryViewModel baseViewModel = TryGetValue(m_entriesList, messageModel.Desc);
-                        if (baseViewModel != null) // if object already exist
-                        {
-                            StatusEntryViewModel vm = baseViewModel as StatusEntryViewModel;
-                            vm.Update(messageModel);
-                        }
-                        else // object not exists. create new one
-                        {
-                            StatusEntryViewModel vm = new StatusEntryViewModel(messageModel);
-                            Application.Current.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.DataBind, new Action(() => EntriesList.Add(vm)));
-                        }
-                    }
-                    break;
+                if (MachineState != MachineStateEnum.Freeze)
+                {
+                    StatusEntryViewModel vm = baseViewModel as StatusEntryViewModel;
+                    vm.Update(messageModel);
+                }
             }
+            else // object not exists. create new one
+            {
+                StatusEntryViewModel vm = new StatusEntryViewModel(messageModel);
+                Application.Current.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.DataBind, new Action(() => EntriesList.Add(vm)));
+            }
+
             udpListener.BeginReceive(new AsyncCallback(UdpReceiveCallback), udpState);
         }
 
@@ -274,7 +262,7 @@ namespace StatusViewer
         private void ClearAllCommand_Executed(object sender, ExecutedRoutedEventArgs e)
         {
             EntriesList.Clear();
-            ReceivedDatagrams = 0;
+            //ReceivedDatagrams = 0;
         }
 
 
@@ -332,12 +320,10 @@ namespace StatusViewer
             if (tb.IsChecked.Value)
             {
                 MachineState = MachineStateEnum.Freeze;
-                //StatusCounterViewModel.EnableBindingUpdate = false;
             }
             else
             {
                 MachineState = MachineStateEnum.Running;
-                //StatusCounterViewModel.EnableBindingUpdate = true;
             }
         }
 
@@ -353,7 +339,6 @@ namespace StatusViewer
             {
                 return _machineState;
             }
-
             set
             {
                 _machineState = value;
@@ -367,7 +352,7 @@ namespace StatusViewer
 
         public string AppVersion
         {
-            get 
+            get
             {
                 var asmb = StaticMethods.GetLibVersion();
                 string result = $"StatusViewer. Version {asmb.GetName().Version.ToString(3)}";
