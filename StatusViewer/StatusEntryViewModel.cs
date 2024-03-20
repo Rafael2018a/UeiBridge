@@ -1,13 +1,15 @@
-﻿using System.Windows.Media;
+﻿using System.Windows;
+using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace StatusViewer
 {
-    public class StatusEntryViewModel : ViewModelBase 
+    public class StatusEntryViewModel : ViewModelBase
     {
-        string [] _statusText;
+        string[] _statusText;
         long _updateCounter = 0;
-        StatusEntryModel _messageModel;
         string _desc;
+        SolidColorBrush _entryBorderBrush;
         public string Desc
         {
             get => _desc;
@@ -17,7 +19,7 @@ namespace StatusViewer
                 RaisePropertyChanged();
             }
         }
-        public string [] StatusText
+        public string[] StatusText
         {
             get => _statusText;
             set
@@ -26,16 +28,15 @@ namespace StatusViewer
                 RaisePropertyChanged();
             }
         }
-        public long UpdateCounter 
-        { 
-            get => _updateCounter; 
-            set  
-                { 
+        public long UpdateCounter
+        {
+            get => _updateCounter;
+            set
+            {
                 _updateCounter = value;
                 RaisePropertyChanged();
             }
         }
-
         //Color _borderBrushColor;
         //public Color BorderBrushColor
         //{
@@ -46,19 +47,27 @@ namespace StatusViewer
         //        RaisePropertyChangedEvent("BorderBrushColor");
         //    }
         //}
+        
         public SolidColorBrush EntryBorderBrush
         {
             get
             {
-                return (_messageModel.Trait == UeiBridge.Library.StatusTrait.IsRegular) ? new SolidColorBrush(System.Windows.Media.Colors.RoyalBlue) : new SolidColorBrush(System.Windows.Media.Colors.Red);
+                return _entryBorderBrush;
+            }
+            set
+            {
+                _entryBorderBrush = value;
+                RaisePropertyChanged();
             }
         }
-
         public StatusEntryViewModel(StatusEntryModel messageModel)
         {
             StatusText = messageModel.StringValue;
             Desc = messageModel.Desc;
-            _messageModel = messageModel;
+            Application.Current.Dispatcher.Invoke(() =>
+            {
+                EntryBorderBrush = (messageModel.Trait == UeiBridge.Library.StatusTrait.IsRegular) ? new SolidColorBrush(System.Windows.Media.Colors.RoyalBlue) : new SolidColorBrush(System.Windows.Media.Colors.Red);
+            });
         }
         public void Update(StatusEntryModel messageModel)
         {

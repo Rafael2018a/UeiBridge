@@ -26,7 +26,6 @@
         <Border Grid.Row="0" BorderThickness="2" BorderBrush="Blue" Margin="5" CornerRadius="3">
             <Border.Background>
                 <SolidColorBrush Color="LightGray"/>
-                <!--{DynamicResource {x:Static SystemColors.ControlColorKey}}"/>-->
             </Border.Background>
             <Border.Resources>
             </Border.Resources>
@@ -39,7 +38,6 @@
                 <TextBlock      Text="Local NIC" VerticalAlignment="Center" Margin="15,0,4,0"/>
                 <ComboBox       Height="23" Width="120" ItemsSource="{Binding LocalIpList}"  SelectedValue="{Binding SelectedLocalIp}" IsEnabled="{Binding AtInitialState}"/>
                 <ContentControl Width="20"/>
-                <!--<TextBlock Text="test" />-->
             </StackPanel>
         </Border>
         <Border Grid.Row="1" BorderBrush="Blue " BorderThickness="2" Margin="5" CornerRadius="3">
@@ -47,9 +45,6 @@
                 <ListBox.Resources>
                     <DataTemplate DataType="{x:Type local:StatusEntryViewModel}">
                         <GroupBox BorderThickness="2" Margin="4" BorderBrush="{Binding EntryBorderBrush}">
-                            <!--<GroupBox.BorderBrush>
-                                <SolidColorBrush Color=""/>
-                            </GroupBox.BorderBrush>-->
                             <GroupBox.Header>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{Binding Path=Desc}" Margin="3" TextDecorations="{x:Null}" FontWeight="Bold" Background="Transparent" />
@@ -58,7 +53,6 @@
                                 </StackPanel>
                             </GroupBox.Header>
                             <StackPanel Orientation="Horizontal"  Margin="3">
-                                <!--<TextBlock Text="{Binding StatusText}"></TextBlock>-->
                                 <ListBox ItemsSource="{Binding Path=StatusText}" BorderBrush="Transparent"/>
                                 <ContentControl Width="10"/>
                             </StackPanel>

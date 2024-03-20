@@ -32,26 +32,26 @@ namespace StatusViewerTester
 
             TimeSpan interval = TimeSpan.FromMilliseconds(1000);
 
-
+            int count = 0;
             // get formatted string for each device in list
             while (true)
             {
+                ++count;
 
-
-                byte[] send_buffer = BuildMessage(StatusTrait.IsRegular, "msg1");
+                byte[] send_buffer = BuildMessage(StatusTrait.IsRegular, "msg1", count);
                 udpClient.Send(send_buffer, send_buffer.Length);
-                send_buffer = BuildMessage(StatusTrait.IsWarning, "msg2");
+                send_buffer = BuildMessage(StatusTrait.IsWarning, "msg2", count);
                 udpClient.Send(send_buffer, send_buffer.Length);
 
                 System.Threading.Thread.Sleep(interval);
             }
         }
 
-        private static byte[] BuildMessage(StatusTrait st, string desc1)
+        private static byte[] BuildMessage(StatusTrait st, string desc1, int count)
         {
             string desc = desc1;
             StatusTrait tr = st;
-            string[] stat = { "one", "two" };
+            string[] stat = { $"AAA {count}", $"BBB {count}" };
             StatusEntryJson js = new StatusEntryJson(desc, stat, tr);
             string s = Newtonsoft.Json.JsonConvert.SerializeObject(js);
             byte[] send_buffer = Encoding.ASCII.GetBytes(s);

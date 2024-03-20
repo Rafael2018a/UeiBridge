@@ -86,8 +86,8 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="AppServices.cs" />
-    <Compile Include="ProjMessageModel.cs" />
     <Compile Include="SecondsToTimeConverter.cs" />
+    <Compile Include="StatusEntryModel.cs" />
     <Compile Include="StatusEntryViewModel.cs" />
     <Compile Include="ViewModelBase.cs" />
     <Page Include="MainWindow.xaml">
