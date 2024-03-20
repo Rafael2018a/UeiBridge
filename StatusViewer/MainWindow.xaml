@@ -46,10 +46,10 @@
             <ListBox  x:Name="listBox2" ItemsSource="{Binding Path=EntriesList}" HorizontalContentAlignment="Stretch" BorderBrush="Transparent" >
                 <ListBox.Resources>
                     <DataTemplate DataType="{x:Type local:StatusEntryViewModel}">
-                        <GroupBox BorderThickness="2" Margin="4">
-                            <GroupBox.BorderBrush>
-                                <SolidColorBrush Color="{Binding BorderBrushColor}"/>
-                            </GroupBox.BorderBrush>
+                        <GroupBox BorderThickness="2" Margin="4" BorderBrush="{Binding EntryBorderBrush}">
+                            <!--<GroupBox.BorderBrush>
+                                <SolidColorBrush Color=""/>
+                            </GroupBox.BorderBrush>-->
                             <GroupBox.Header>
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="{Binding Path=Desc}" Margin="3" TextDecorations="{x:Null}" FontWeight="Bold" Background="Transparent" />

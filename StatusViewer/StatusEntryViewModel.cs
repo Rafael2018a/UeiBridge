@@ -2,17 +2,28 @@
 
 namespace StatusViewer
 {
-    public class StatusEntryViewModel : StatusBaseViewModel
+    public class StatusEntryViewModel : ViewModelBase 
     {
         string [] _statusText;
         long _updateCounter = 0;
+        StatusEntryModel _messageModel;
+        string _desc;
+        public string Desc
+        {
+            get => _desc;
+            set
+            {
+                _desc = value;
+                RaisePropertyChanged();
+            }
+        }
         public string [] StatusText
         {
             get => _statusText;
             set
             {
                 _statusText = value;
-                RaisePropertyChangedEvent("StatusText");
+                RaisePropertyChanged();
             }
         }
         public long UpdateCounter 
@@ -21,25 +32,33 @@ namespace StatusViewer
             set  
                 { 
                 _updateCounter = value;
-                RaisePropertyChangedEvent("UpdateCounter");
+                RaisePropertyChanged();
             }
         }
 
-        Color _borderBrushColor;
-        public Color BorderBrushColor
+        //Color _borderBrushColor;
+        //public Color BorderBrushColor
+        //{
+        //    get => _borderBrushColor;
+        //    set
+        //    {
+        //        _borderBrushColor = value;
+        //        RaisePropertyChangedEvent("BorderBrushColor");
+        //    }
+        //}
+        public SolidColorBrush EntryBorderBrush
         {
-            get => _borderBrushColor;
-            set
+            get
             {
-                _borderBrushColor = value;
-                RaisePropertyChangedEvent("BorderBrushColor");
+                return (_messageModel.Trait == UeiBridge.Library.StatusTrait.IsRegular) ? new SolidColorBrush(System.Windows.Media.Colors.RoyalBlue) : new SolidColorBrush(System.Windows.Media.Colors.Red);
             }
         }
 
-        public StatusEntryViewModel(StatusEntryModel messageModel) : base(messageModel)
+        public StatusEntryViewModel(StatusEntryModel messageModel)
         {
             StatusText = messageModel.StringValue;
-            BorderBrushColor = (messageModel.Trait == UeiBridge.Library.StatusTrait.IsRegular)? System.Windows.Media.Colors.RoyalBlue : System.Windows.Media.Colors.Red;
+            Desc = messageModel.Desc;
+            _messageModel = messageModel;
         }
         public void Update(StatusEntryModel messageModel)
         {

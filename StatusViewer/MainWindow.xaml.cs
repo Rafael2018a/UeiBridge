@@ -32,8 +32,8 @@ namespace StatusViewer
     {
         System.Net.Sockets.UdpClient m_udpListener;
 
-        ObservableCollection<StatusBaseViewModel> m_entriesList = new ObservableCollection<StatusBaseViewModel>();
-        public ObservableCollection<StatusBaseViewModel> EntriesList
+        ObservableCollection<StatusEntryViewModel> m_entriesList = new ObservableCollection<StatusEntryViewModel>();
+        public ObservableCollection<StatusEntryViewModel> EntriesList
         {
             get { return m_entriesList; }
             set { m_entriesList = value; }
@@ -68,10 +68,10 @@ namespace StatusViewer
         public List<IPAddress> LocalIpList { get; set; }
         //{get { return m_localIpList; }}
         public IPAddress SelectedLocalIp { get; set; }
-        StatusBaseViewModel TryGetValue(ObservableCollection<StatusBaseViewModel> oc, string desc)
+        StatusEntryViewModel TryGetValue(ObservableCollection<StatusEntryViewModel> oc, string desc)
         {
             //StatCounter existingStatCounter = null;
-            foreach (StatusBaseViewModel sc in EntriesList)
+            foreach (StatusEntryViewModel sc in EntriesList)
             {
                 if (sc.Desc == desc)
                 {
@@ -232,7 +232,7 @@ namespace StatusViewer
                     {
                         // create or update counter entry
                         // ==============================
-                        StatusBaseViewModel baseViewModel = TryGetValue(m_entriesList, messageModel.Desc);
+                        StatusEntryViewModel baseViewModel = TryGetValue(m_entriesList, messageModel.Desc);
                         if (baseViewModel != null) // if object already exist
                         {
                             StatusEntryViewModel vm = baseViewModel as StatusEntryViewModel;
@@ -309,7 +309,7 @@ namespace StatusViewer
                 //IPEndPoint localEp = new IPEndPoint( IPAddress.Any, mcPort); // this is just for the port number
                 m_udpListener.Client.Bind(localEp);
 
-                m_udpListener.JoinMulticastGroup(mcAddress);//, SelectedLocalIp);//IPAddress.Parse("192.168.1.128")); // ip of UAV-LAN
+                m_udpListener.JoinMulticastGroup(mcAddress, SelectedLocalIp);//IPAddress.Parse("192.168.1.128")); // ip of UAV-LAN
                 m_multicastIp = mcAddress;
                 Tuple<UdpClient, IPEndPoint> udpState = new Tuple<UdpClient, IPEndPoint>(m_udpListener, localEp);
                 m_udpListener.BeginReceive(new AsyncCallback(UdpReceiveCallback), udpState);
