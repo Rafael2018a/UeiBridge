@@ -1,9 +1,10 @@
-﻿using System;
-using System.Diagnostics;
-using UeiBridge.Library;
+﻿using UeiBridge.Library;
 
 namespace StatusViewer
 {
+    /// <summary>
+    /// Adapter of StatusEntryJson
+    /// </summary>
     public class StatusEntryModel
     {
         string [] _stringValue;
