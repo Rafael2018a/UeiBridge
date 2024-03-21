@@ -61,7 +61,7 @@ namespace UeiBridge
             EmitInitMessage( $"Init success: {DeviceName}. Bits {firstBit}..{firstBit + noOfbits - 1} as output. Listening on {_deviceSetup.LocalEndPoint?.ToIpEp().ToString()}"); 
             //_logger.Info($"Init success: {InstanceName}. Bits {firstBit}..{firstBit + noOfbits - 1} as output"); // { noOfCh} output channels
 
-            Task.Factory.StartNew(() => OutputDeviceHandler_Task());
+            Task.Factory.StartNew(() => Task_OutputDeviceHandler());
             _isDeviceReady = true;
             return false;
         }

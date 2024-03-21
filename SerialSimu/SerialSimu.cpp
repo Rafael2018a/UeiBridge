@@ -32,7 +32,7 @@ int main(int argc, char * argv[])
 	CUeiSession mySession;
 	vector<CUeiSerialWriter*> writers;
 	vector<CUeiSerialReader*> readers;
-	string deviceUri = "pdna://192.168.100.2/Dev3/";
+	string deviceUri = "pdna://192.168.100.3/Dev3/";
 
 	//for (int chIndex = 0; chIndex < 8; chIndex++)
 	int chIndex = 2;

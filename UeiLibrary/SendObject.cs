@@ -20,12 +20,12 @@ namespace UeiBridge.Library
     {
         public IPEndPoint TargetEndPoint { get; }
         public byte[] RawByteMessage { get; }
-        public Func<byte[], byte[]> MessageBuild { get; }
+        public Func<byte[], byte[]> MessageBuilder { get; }
         public SendObject2(IPEndPoint targetEndPoint, Func<byte[], byte[]> builder, byte[] rawByteMessage)
         {
             this.TargetEndPoint = targetEndPoint;
             this.RawByteMessage = rawByteMessage;
-            this.MessageBuild = builder;
+            this.MessageBuilder = builder;
         }
     }
 }

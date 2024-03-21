@@ -12,6 +12,7 @@ namespace UeiBridge.Library
     /// 1. No keep alive in one of the channel
     /// 2. NotifyCrash called from one of the channels.
     /// After one of the timers elapsed and an action was called, all other timers are disabled.
+    /// Action( originator-name, reason-for-action)
     /// </summary>
     public class DeviceWatchdog : IWatchdog
     {

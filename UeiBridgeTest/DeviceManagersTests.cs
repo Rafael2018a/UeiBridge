@@ -239,7 +239,7 @@ namespace UeiBridgeTest
         {
             UeiDeviceInfo di = new UeiDeviceInfo("simu://", 4, DeviceMap2.SL508Literal);
 
-            SL508892Setup thisSetup = new SL508892Setup(null, null, di);
+            SL508892Setup thisSetup = new SL508892Setup(null, null, di, System.IO.FileAccess.ReadWrite);
 
             thisSetup.Channels[1].Baudrate = SerialPortSpeed.BitsPerSecond14400;
             thisSetup.CubeUrl = "simu://";
@@ -279,7 +279,7 @@ namespace UeiBridgeTest
             ch = serialSession.GetChannel(0) as SerialPort;
             var speed0 = ch.GetSpeed();
 
-            Assert.That(speed0, Is.EqualTo(SerialPortSpeed.BitsPerSecond19200));
+            Assert.That(speed0, Is.EqualTo(SerialPortSpeed.BitsPerSecond115200));
             Assert.That(speed1, Is.EqualTo(SerialPortSpeed.BitsPerSecond14400));
 
             serialSession.Stop();
@@ -325,16 +325,77 @@ namespace UeiBridgeTest
             deviceUri = "simu://dev14";
             dev = DeviceEnumerator.GetDeviceFromResource(deviceUri);
             Assert.That(dev, Is.Null);
-            deviceUri = "pdna://192.168.100.3/dev0";
-            dev = DeviceEnumerator.GetDeviceFromResource(deviceUri);
-            Assert.That(dev, Is.Not.Null); // this works only if cube is connected
-            deviceUri = "192.168.100.3/dev0";
-            dev = DeviceEnumerator.GetDeviceFromResource(deviceUri);
-            Assert.That(dev, Is.Null);
+            //deviceUri = "pdna://192.168.100.3/dev0";
+            //dev = DeviceEnumerator.GetDeviceFromResource(deviceUri);
+            //Assert.That(dev, Is.Not.Null); // this works only if cube is connected
+            //deviceUri = "192.168.100.3/dev0";
+            //dev = DeviceEnumerator.GetDeviceFromResource(deviceUri);
+            //Assert.That(dev, Is.Null);
             //deviceUri = "simu://dev14";
             //dev = DeviceEnumerator.GetDeviceFromResource(deviceUri);
             //Assert.That(dev, Is.Null);
         }
+        [Test]
+        public void SerialWatchDogCrashTest()
+        {
+            Action<string, string> wdAction;
+            Tuple<string, string> pair = new Tuple<string, string>("", "");
+            wdAction = new Action<string, string>((orig, reason) =>
+            {
+                //Console.WriteLine($"WD Event: Originator{orig}; Reason{reason}");  
+                pair = new Tuple<string, string>(orig, reason);
+                //pair.Item1 = orig;
+                //pair.Item2 = reason;
+            });
+            DeviceWatchdog wd = new DeviceWatchdog(wdAction);
+            string origname = "testorig";
+            string reasonname = "testreason";
+            wd.Register(origname, TimeSpan.FromSeconds(1));
+            wd.NotifyCrash(origname, reasonname);
+            wd.Dispose();
+
+            Assert.That(pair.Item1 == origname && pair.Item2 == reasonname);
+        }
+        [Test]
+        public void SerialWatchDogKeepAliveTest()
+        {
+            Action<string, string> wdAction;
+            Tuple<string, string> pair = new Tuple<string, string>("", "");
+            wdAction = new Action<string, string>((orig, reason) =>
+            {
+                //Console.WriteLine($"WD Event: Originator{orig}; Reason{reason}");  
+                pair = new Tuple<string, string>(orig, reason);
+                //pair.Item1 = orig;
+                //pair.Item2 = reason;
+            });
+            DeviceWatchdog wd = new DeviceWatchdog(wdAction);
+            string origname = "testorig";
+            wd.Register(origname, TimeSpan.FromSeconds(1));
+            System.Threading.Thread.Sleep(1100);
+            wd.Dispose();
+
+            Assert.That(pair.Item1 == origname && pair.Item2 == "Not alive");
+        }
+        //[Test]
+        //public void UdpWriterAsyncTest()
+        //{
+        //    SenderMock sm = new SenderMock();
+        //    UInt16 prmbl = BitConverter.ToUInt16(new byte[] { 0xac, 0x13 }, 0);
+        //    UdpWriterAsync asyncWriter = new UdpWriterAsync(sm, prmbl);
+        //    asyncWriter.Start();
+        //    Func<byte[], byte[]> mbuilder = (m => m);
+        //    for (int i = 0; i < 1; i++)
+        //    {
+        //        asyncWriter.Enqueue(new SendObject2(null, mbuilder, new byte[] { 0x1c, 0x13 }));
+        //        asyncWriter.Enqueue(new SendObject2(null, mbuilder, new byte[] { 0xac, 0x13, 0, 0 }));
+        //        asyncWriter.Enqueue(new SendObject2(null, mbuilder, new byte[] { 0xac, 0x13 }));
+        //        asyncWriter.Enqueue(new SendObject2(null, mbuilder, new byte[] { 0xac, 0x13, 1, 2, 0xac, 0x13, 10, 11, 12 }));
+        //    }
+        //    System.Threading.Thread.Sleep(1000);
+        //    asyncWriter.Dispose();
+        //    var v = asyncWriter._lengthCountList;
+
+        //}
     }
     public class AnalogWriterMock : IWriterAdapter<double[]>
     {

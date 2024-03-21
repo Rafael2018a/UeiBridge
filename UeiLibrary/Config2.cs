@@ -83,7 +83,7 @@ namespace UeiBridge.Library
                     result = new AI201100Setup(new EndPoint(RemoteIp, _portNumber++), ueiDevice);
                     break;
                 case DeviceMap2.SL508Literal:
-                    var sl508 = new SL508892Setup(new EndPoint(LocalIP, _portNumber++), new EndPoint(RemoteIp, _portNumber++), ueiDevice);
+                    var sl508 = new SL508892Setup(new EndPoint(LocalIP, _portNumber++), new EndPoint(RemoteIp, _portNumber++), ueiDevice, FileAccess.ReadWrite);
                     do
                     {
                         ++_portNumber;

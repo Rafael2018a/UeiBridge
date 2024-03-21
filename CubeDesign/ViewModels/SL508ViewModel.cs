@@ -74,15 +74,24 @@ namespace CubeDesign.ViewModels
                 RaisePropertyChanged();
             }
         }
-        public int MessageTimeoutUS
+        public System.IO.FileAccess DeviceAccess
         {
-            get => _thisDeviceSetup.Channels[_selectedPortIndex].ChannelActivityTimeoutUs;
+            get => _thisDeviceSetup.DeviceAccess;
             set
             {
-                _thisDeviceSetup.Channels[_selectedPortIndex].ChannelActivityTimeoutUs = value;
+                _thisDeviceSetup.DeviceAccess = value;
                 RaisePropertyChanged();
             }
         }
+        //public int MessageTimeoutUS
+        //{
+        //    get => _thisDeviceSetup.Channels[_selectedPortIndex].ChannelActivityTimeoutUs;
+        //    set
+        //    {
+        //        _thisDeviceSetup.Channels[_selectedPortIndex].ChannelActivityTimeoutUs = value;
+        //        RaisePropertyChanged();
+        //    }
+        //}
         public bool FilterBySyncBytes
         {
             get => _thisDeviceSetup.Channels[_selectedPortIndex].FilterBySyncBytes;

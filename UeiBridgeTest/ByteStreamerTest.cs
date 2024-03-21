@@ -29,6 +29,12 @@ namespace UeiBridgeTest
         public class Consumer : IEnqueue<SendObject>
         {
             public byte[] receivedMessage { get; set; }
+
+            public void Dispose()
+            {
+                
+            }
+
             public void Enqueue(SendObject so)
             {
                 receivedMessage = so.ByteMessage;

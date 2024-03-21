@@ -58,7 +58,7 @@ namespace UeiBridge
                 _serialWriterList.Add(sw);
             }
 
-            Task.Factory.StartNew(() => OutputDeviceHandler_Task());
+            Task.Factory.StartNew(() => Task_OutputDeviceHandler());
 
             bool firstIteration = true;
             foreach (UeiDaq.Channel port in _serialSession.GetChannels())

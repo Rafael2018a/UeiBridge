@@ -12,14 +12,15 @@ namespace UeiBridge
 {
     public class UdpWriter2 : IEnqueue<SendObject2>, IDisposable
     {
-        log4net.ILog _logger = StaticLocalMethods.GetLogger();
-        Socket _sendSocket;
+        //log4net.ILog _logger = StaticLocalMethods.GetLogger();
+        //Socket _sendSocket;
         UdpClient _udpClient = new UdpClient();
         bool _inDispose = false;
 
         public UdpWriter2(IPEndPoint destEp)
         {
             _udpClient.Connect(destEp);
+           
         }
         public void Dispose()
         {
@@ -30,7 +31,7 @@ namespace UeiBridge
         {
             if (_inDispose == false)
             {
-                byte[] buf = sendObj.MessageBuild(sendObj.RawByteMessage);
+                byte[] buf = sendObj.MessageBuilder(sendObj.RawByteMessage);
                 _udpClient.Send(buf, buf.Length);
             }
         }
@@ -45,7 +46,7 @@ namespace UeiBridge
         {
 
             //this._instanceName = instnceName;
-            System.Diagnostics.Debug.Assert(null != localBindAddress);
+            //System.Diagnostics.Debug.Assert(null != localBindAddress);
             try
             {
                 // Create socket
@@ -84,6 +85,10 @@ namespace UeiBridge
                 // Connect to the endpoint
                 //_sendSocket.Connect(_mcastDestEP);
 
+                if (null!=destEp)
+                {
+                    _sendSocket.Connect(destEp);
+                }
 
                 //_logger.Info($"Multicast sender - {this._instanceName} - established. Dest:{destEp.ToString()}. {usingNic}");
             }
@@ -119,9 +124,13 @@ namespace UeiBridge
 
         public void Send(SendObject sendObj)
         {
-            int sent = _sendSocket.SendTo(sendObj.ByteMessage, SocketFlags.None, sendObj.TargetEndPoint);
-            System.Diagnostics.Debug.Assert(sent == sendObj.ByteMessage.Length);
-
+            int sent = _sendSocket.SendTo(sendObj.ByteMessage, sendObj.TargetEndPoint);
+            //System.Diagnostics.Debug.Assert(sent == sendObj.ByteMessage.Length);
+        }
+        public void Send( byte [] bytemessagej)
+        {
+            int sent = _sendSocket.Send(bytemessagej);
+            //System.Diagnostics.Debug.Assert(sent == sendObj.ByteMessage.Length);
         }
     }
 

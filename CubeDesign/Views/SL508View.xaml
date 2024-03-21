@@ -74,13 +74,19 @@
                     <ContentControl Width="20"/>
                     <ComboBox x:Name="StopbitsCombo" SelectedItem="{Binding Stopbits}"/>
                 </StackPanel>
+                <ContentControl Height="20"/>
+                <StackPanel Orientation="Horizontal" >
+                    <TextBlock Text="Device access" />
+                    <ContentControl Width="20"/>
+                    <ComboBox x:Name="DeviceAccessCombo" SelectedItem="{Binding DeviceAccess}"/>
+                </StackPanel>
             </StackPanel>
 
             <StackPanel Grid.RowSpan="4" Grid.Column="1" Panel.ZIndex="1" >
-                <StackPanel Orientation="Horizontal">
+                <!--<StackPanel Orientation="Horizontal">
                     <TextBlock Text="Minimal time between messages (us) "/>
                     <TextBox Width="60" HorizontalAlignment="Left"/>
-                </StackPanel>
+                </StackPanel>-->
                 <ContentControl Height="20"/>
                 <StackPanel Orientation="Horizontal"  >
                     <CheckBox Content="Filter by sync bytes (Hex) " FontSize="14" IsChecked="{Binding FilterBySyncBytes}"/>

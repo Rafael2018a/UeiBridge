@@ -68,10 +68,42 @@ namespace UeiBridgeTest
             string[] cmdline = { "192.168.100.3", "--cube-ping" };
             p.Run(cmdline);
         }
+
+        [Test]
+        public void FindIndexOfPatternTest()
+        {
+            byte [] pattern = { 0xac, 0x13 };
+            //byte[] msg = { 0xac, 0x13, 0x11, 0x12, 0xac, 0x13, 0x21, 0x22, 0x23, 0x24, 0xac, 0x13, 0x11, 0x12, 0x13 };
+            byte[] msg = { 0x11, 0x12, 0xac, 0x21, 0x22, 0x23, 0x24, 0xac, 0x11, 0x12, 0x13 };
+            int indexof;
+            int startIndex = 0;// pattern.Length;
+            //while ((indexof = StaticMethods.IndexOf(msg, pattern, startIndex)) != -1)
+            //{
+            //    byte[] dest = new byte[indexof - startIndex + pattern.Length];
+            //    Array.Copy(msg, startIndex - pattern.Length, dest, 0, dest.Length);
+            //    startIndex = indexof + pattern.Length;
+            //}
+            while ((indexof = StaticMethods.IndexOf(msg, pattern, startIndex+pattern.Length)) != -1)
+            {
+                byte[] dest = new byte[indexof - startIndex];
+                Array.Copy(msg, startIndex , dest, 0, dest.Length);
+                startIndex = indexof;
+            }
+            //byte[] dest1 = new byte[indexof - startIndex];
+            //Array.Copy(msg, startIndex, dest1, 0, dest1.Length);
+
+        }
     }
+
     class EnqMock : IEnqueue<byte[]>
     {
         public byte[] TheMessage { get; set; }
+
+        public void Dispose()
+        {
+            
+        }
+
         public void Enqueue(byte[] i)
         {
             TheMessage = i;

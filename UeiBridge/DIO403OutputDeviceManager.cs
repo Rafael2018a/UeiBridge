@@ -68,7 +68,7 @@ namespace UeiBridge
             //string localpath = (new Uri(res)).LocalPath;
             EmitInitMessage($"Init success: {DeviceName}. Listening on {_thisSetup.LocalEndPoint.ToIpEp()}"); 
 
-            Task.Factory.StartNew(() => OutputDeviceHandler_Task());
+            Task.Factory.StartNew(() => Task_OutputDeviceHandler());
             _isDeviceReady = true;
             return _isDeviceReady;
         }
