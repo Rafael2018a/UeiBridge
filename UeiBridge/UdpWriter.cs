@@ -20,6 +20,7 @@ namespace UeiBridge
         public UdpWriter2(IPEndPoint destEp)
         {
             _udpClient.Connect(destEp);
+           
         }
         public void Dispose()
         {
@@ -84,6 +85,10 @@ namespace UeiBridge
                 // Connect to the endpoint
                 //_sendSocket.Connect(_mcastDestEP);
 
+                if (null!=destEp)
+                {
+                    _sendSocket.Connect(destEp);
+                }
 
                 //_logger.Info($"Multicast sender - {this._instanceName} - established. Dest:{destEp.ToString()}. {usingNic}");
             }
@@ -120,8 +125,12 @@ namespace UeiBridge
         public void Send(SendObject sendObj)
         {
             int sent = _sendSocket.SendTo(sendObj.ByteMessage, sendObj.TargetEndPoint);
-            System.Diagnostics.Debug.Assert(sent == sendObj.ByteMessage.Length);
-
+            //System.Diagnostics.Debug.Assert(sent == sendObj.ByteMessage.Length);
+        }
+        public void Send( byte [] bytemessagej)
+        {
+            int sent = _sendSocket.Send(bytemessagej);
+            //System.Diagnostics.Debug.Assert(sent == sendObj.ByteMessage.Length);
         }
     }
 

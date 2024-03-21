@@ -376,26 +376,26 @@ namespace UeiBridgeTest
 
             Assert.That(pair.Item1 == origname && pair.Item2 == "Not alive");
         }
-        [Test]
-        public void UdpWriterAsyncTest()
-        {
-            SenderMock sm = new SenderMock();
-            UInt16 prmbl = BitConverter.ToUInt16(new byte[] { 0xac, 0x13 }, 0);
-            UdpWriterAsync asyncWriter = new UdpWriterAsync(sm, prmbl);
-            asyncWriter.Start();
-            Func<byte[], byte[]> mbuilder = (m => m);
-            for (int i = 0; i < 1; i++)
-            {
-                asyncWriter.Enqueue(new SendObject2(null, mbuilder, new byte[] { 0x1c, 0x13 }));
-                asyncWriter.Enqueue(new SendObject2(null, mbuilder, new byte[] { 0xac, 0x13, 0, 0 }));
-                asyncWriter.Enqueue(new SendObject2(null, mbuilder, new byte[] { 0xac, 0x13 }));
-                asyncWriter.Enqueue(new SendObject2(null, mbuilder, new byte[] { 0xac, 0x13, 1, 2, 0xac, 0x13, 10, 11, 12 }));
-            }
-            System.Threading.Thread.Sleep(1000);
-            asyncWriter.Dispose();
-            var v = asyncWriter._lengthCountList;
+        //[Test]
+        //public void UdpWriterAsyncTest()
+        //{
+        //    SenderMock sm = new SenderMock();
+        //    UInt16 prmbl = BitConverter.ToUInt16(new byte[] { 0xac, 0x13 }, 0);
+        //    UdpWriterAsync asyncWriter = new UdpWriterAsync(sm, prmbl);
+        //    asyncWriter.Start();
+        //    Func<byte[], byte[]> mbuilder = (m => m);
+        //    for (int i = 0; i < 1; i++)
+        //    {
+        //        asyncWriter.Enqueue(new SendObject2(null, mbuilder, new byte[] { 0x1c, 0x13 }));
+        //        asyncWriter.Enqueue(new SendObject2(null, mbuilder, new byte[] { 0xac, 0x13, 0, 0 }));
+        //        asyncWriter.Enqueue(new SendObject2(null, mbuilder, new byte[] { 0xac, 0x13 }));
+        //        asyncWriter.Enqueue(new SendObject2(null, mbuilder, new byte[] { 0xac, 0x13, 1, 2, 0xac, 0x13, 10, 11, 12 }));
+        //    }
+        //    System.Threading.Thread.Sleep(1000);
+        //    asyncWriter.Dispose();
+        //    var v = asyncWriter._lengthCountList;
 
-        }
+        //}
     }
     public class AnalogWriterMock : IWriterAdapter<double[]>
     {

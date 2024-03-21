@@ -85,7 +85,7 @@ namespace UeiBridge
                 {
                     string writerName = $"SL508/Cube{udevice.GetCubeId()}/{udevice.LocalPath}";
                     // define writer for upstream process
-                    ISend<SendObject> uwriter = new UdpWriter(deviceSetup.DestEndPoint.ToIpEp(), _selectedNIC);
+                    var uwriter = new UdpWriter(deviceSetup.DestEndPoint.ToIpEp(), _selectedNIC);
                     UInt16 prmbl = BitConverter.ToUInt16(new byte[] { 0x81, 0xa1 }, 0);
                     asyncWriter = new UdpWriterAsync( uwriter, prmbl);
                     asyncWriter.SetInstanceName(writerName);

@@ -260,7 +260,7 @@ namespace UeiBridge.Library
         /// Create EthernetMessage from device result.
         /// Might return null.
         /// </summary>
-        public static EthernetMessage BuildEthernetMessageFromDevice(byte[] payload, DeviceSetup setup, int serialChannel = 0)
+        public static EthernetMessage BuildEthernetMessageFromDevice(byte[] payload, DeviceSetup setup, int serialChannel = 2)
         {
             //ILog _logger = log4net.LogManager.GetLogger("Root");
 
@@ -270,7 +270,7 @@ namespace UeiBridge.Library
             System.Diagnostics.Debug.Assert(key >= 0);
 
             EthernetMessage msg = new EthernetMessage();
-            if (setup.GetType() == typeof(SL508892Setup))
+            //if (setup.GetType() == typeof(SL508892Setup))
             {
                 msg.SerialChannelNumber = serialChannel;
             }

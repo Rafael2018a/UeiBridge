@@ -467,11 +467,9 @@ namespace UeiBridge
 
             try
             {
-                //int p60 = 0;
-                //int p132 = 0;
-                //var delay = TimeSpan.FromTicks(100);
-                System.Diagnostics.Stopwatch swatch = new System.Diagnostics.Stopwatch();
-                swatch.Start();
+                //System.Diagnostics.Stopwatch swatch = new System.Diagnostics.Stopwatch();
+                //swatch.Start();
+
                 //message loop
                 do
                 {
@@ -496,61 +494,14 @@ namespace UeiBridge
                     }
                     try
                     {
-                        // get message from device and send to consumer
-                        // --------------------------------------------
+                        // get message from device 
                         byte[] recvBytes = cx.Reader.Read(_maxReadMesageLength);
-                        //long ms = sw.ElapsedMilliseconds;
-                        //_logger.Debug($"ElapsedMilliseconds {ms-prevMs}");
-                        //prevMs = ms;
 
-                        //;/ System.Diagnostics.Stopwatch.Frequency
-
-                        if (recvBytes.Length < _maxReadMesageLength)
-                        {
-                            int internalCounter = 0;
-
-                            //if (60 == recvBytes.Length)
-                            //{
-                            //    internalCounter = recvBytes[8];
-                            //    if (p60+1 != internalCounter)
-                            //    {
-                            //        _logger.Warn("miss 60");
-                            //    }
-                            //    p60 = internalCounter;
-                            //}
-                            //if (132 == recvBytes.Length)
-                            //{
-                            //    internalCounter = (int)BitConverter.ToUInt16(recvBytes, 38);
-                            //    if (p132 + 1 != internalCounter)
-                            //    {
-                            //        _logger.Warn("miss 132.");
-                            //    }
-                            //    p132 = internalCounter;
-                            //}
-
-                            //if ((132 != recvBytes.Length)&&((60 != recvBytes.Length)&&((14 != recvBytes.Length))))
-                            //{
-                            //    _logger.Warn($"{swatch.Elapsed.TotalMilliseconds} Upstream message from channel {cx.ChannelIndex}. Length {recvBytes.Length} internalCounter {internalCounter}");
-                            //}
-                            //else
-                            //{
-                            //    _logger.Debug($"{swatch.Elapsed.TotalMilliseconds} Upstream message from channel {cx.ChannelIndex}. Length {recvBytes.Length} internalCounter {internalCounter}");
-                            //}
-                            //if (recvBytes[0]!=0x81)
-                            //{
-                            //    _logger.Warn("Bad buffer");
-                            //}
-
-                        }
-                        else
-                        {
-                            //_logger.Warn($"Suspicious Message from channel {cx.ChannelIndex}. Length {recvBytes.Length}");
-                        }
                         // send to consumer
                         _readMessageConsumer.Enqueue(new SendObject2(destEp, ethMsgBuilder, recvBytes));
 
                         // update status viewer
-                        _lastScanList[cx.ChannelIndex] = new ViewItem<byte[]>(recvBytes, TimeSpan.FromSeconds(5));
+                        //_lastScanList[cx.ChannelIndex] = new ViewItem<byte[]>(recvBytes, TimeSpan.FromSeconds(5));
 
                         // update stat
                         //ChannelStat chStat = ChannelStatList.Where(i => i.ChannelIndex == cx.ChannelIndex).FirstOrDefault();

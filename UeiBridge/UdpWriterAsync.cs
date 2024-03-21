@@ -8,6 +8,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Timers;
 using System.Text;
+using System.Net.Sockets;
 
 namespace UeiBridge
 {
@@ -17,7 +18,7 @@ namespace UeiBridge
     /// </summary>
     public class UdpWriterAsync : IEnqueue<SendObject2>, IDisposable
     {
-        ISend<SendObject> _uWriter; // tbd. use UdpWriter2
+        UdpWriter _uWriter; // tbd. use UdpWriter2
         string _instanceName = null;
         readonly UInt16 _messagePreamble;
         private BlockingCollection<SendObject2> _dataItemsQueue2 = new BlockingCollection<SendObject2>(100); // max 100 items
@@ -25,7 +26,7 @@ namespace UeiBridge
         List<long> _knownLengthList = new List<long>();
         public Dictionary<int, int> _lengthCountList = new Dictionary<int, int>(); // (msgLen, CountOfMsgLen)
         System.Timers.Timer _tm = new System.Timers.Timer();
-        public UdpWriterAsync(ISend<SendObject> uwriter, UInt16 messagePreamble)
+        public UdpWriterAsync(UdpWriter uwriter, UInt16 messagePreamble)
         {
             _uWriter = uwriter;
             _messagePreamble = messagePreamble;
@@ -92,8 +93,8 @@ namespace UeiBridge
                     if ((132 == so2.RawByteMessage.Length) || ((35 == so2.RawByteMessage.Length)))
                     {
                         byte[] fullmessage = so2.MessageBuilder(so2.RawByteMessage);
-                        SendObject so = new SendObject(so2.TargetEndPoint, fullmessage);
-                        _uWriter.Send(so);
+                        //SendObject so = new SendObject(so2.TargetEndPoint, fullmessage);
+                        _uWriter.Send(fullmessage);
                         continue;
                     }
 
@@ -106,8 +107,8 @@ namespace UeiBridge
                         byte[] dest = new byte[indexof - startIndex];
                         Array.Copy(so2.RawByteMessage, startIndex, dest, 0, dest.Length);
                         byte[] fullmessage = so2.MessageBuilder(dest);
-                        SendObject so = new SendObject(so2.TargetEndPoint, fullmessage);
-                        _uWriter.Send(so);
+                        //SendObject so = new SendObject(so2.TargetEndPoint, fullmessage);
+                        _uWriter.Send(fullmessage);
                         _logger.Debug($"sent after scan: {dest.Length}");
 
                         startIndex = indexof;
