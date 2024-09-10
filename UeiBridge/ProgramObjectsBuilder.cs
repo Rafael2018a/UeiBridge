@@ -209,7 +209,7 @@ namespace UeiBridge
 
             // create uei entities
             Session theSession = new Session();
-            string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/Ao0:7";
+            string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/Ao0:31";
             var c = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
             System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
             theSession.ConfigureTimingForSimpleIO();
