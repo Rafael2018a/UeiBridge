@@ -17,7 +17,7 @@ namespace UeiBridge.CubeSetupTypes
         public EndPoint LocalEndPoint;
         public EndPoint DestEndPoint;
         [XmlIgnore]
-        public int SamplingInterval => 100; // ms
+        public int SamplingInterval => 5; // ms
         [XmlIgnore]
         public string CubeUrl { get; set; }
         //[XmlIgnore]
