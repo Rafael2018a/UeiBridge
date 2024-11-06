@@ -48,8 +48,11 @@ namespace UeiBridgeTest
             System.Threading.Thread.Sleep(500);
             blocksensor.Dispose();
         }
+        /// <summary>
+        /// Test ananlog-output 'simu' device
+        /// </summary>
         [Test]
-        public void AO308DeviceManagerTest()
+        public void AO16DeviceManagerTest() 
         {
             string simuUrl = "simu://";
             // build session
@@ -71,6 +74,7 @@ namespace UeiBridgeTest
             var m = EthernetMessage.CreateMessage(0, 1, 0, bytes);
             ao308.Enqueue(m.GetByteArray(MessageWay.downstream));
 
+            
             // wait
             System.Threading.Thread.Sleep(100);
 

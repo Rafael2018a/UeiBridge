@@ -9,13 +9,23 @@ using UeiDaq;
 
 namespace UeiBridge.CubeSetupTypes
 {
-    public class AO308Setup : DeviceSetup
+    public class AnalogOutDeviceSetup: DeviceSetup
     {
         [XmlIgnore]
         public static double PeekVoltage_downstream => 10.0;
+        public AnalogOutDeviceSetup() { }
 
-        public AO308Setup() {}
-        public AO308Setup(EndPoint localEndPoint, UeiDeviceInfo device) : base(localEndPoint, null, device) {}
+        public AnalogOutDeviceSetup(EndPoint localEndPoint, UeiDeviceInfo deviceInfo) : base(localEndPoint, null, deviceInfo) { }
+    }
+    public class AO308Setup : AnalogOutDeviceSetup
+    {
+        public AO308Setup()
+        {
+        }
+
+        public AO308Setup(EndPoint localEndPoint, UeiDeviceInfo deviceInfo) : base(localEndPoint, deviceInfo)
+        {
+        }
     }
     public class BlockSensorSetup : AO308Setup
     {
@@ -32,7 +42,7 @@ namespace UeiBridge.CubeSetupTypes
         {
         }
     }
-    public class SimuAO16Setup : AO308Setup
+    public class SimuAO16Setup : AnalogOutDeviceSetup
     {
         public SimuAO16Setup() { }
         public SimuAO16Setup(EndPoint localEndPoint, UeiDeviceInfo device) : base(localEndPoint, device) { }

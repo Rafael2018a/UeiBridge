@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net;
-using UeiDaq;
+//using UeiDaq;
 using log4net;
 using UeiBridge.Library;
 using UeiBridge.Types;
@@ -208,13 +208,15 @@ namespace UeiBridge
             }
 
             // create uei entities
-            Session theSession = new Session();
+            UeiDaq.Session theSession = new UeiDaq.Session();
+
             string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/Ao0:7";
             var c = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
             System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
             theSession.ConfigureTimingForSimpleIO();
             theSession.Start();
             //var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()));
+            //theSession1.Start();
             SessionAdapter tsa = new SessionAdapter(theSession);
 
             OutputDevice analogOut=null;
@@ -228,7 +230,7 @@ namespace UeiBridge
             }
             if (realDevice.DeviceName == DeviceMap2.SimuAO16Literal)
             {
-                analogOut = new SimuAO16OutputDeviceManager(setup as AO308Setup, tsa);
+                analogOut = new SimuAO16OutputDeviceManager(setup as  AnalogOutDeviceSetup, tsa, false);
             }
 
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
@@ -301,10 +303,10 @@ namespace UeiBridge
 
             SL508892Setup thisSetup = setup as SL508892Setup;
 
-            Session serialSession = null;
+            UeiDaq.Session serialSession = null;
             try
             {
-                serialSession = new Session();
+                serialSession = new UeiDaq.Session();
 
                 {
                     foreach (var channel in thisSetup.Channels)
@@ -314,10 +316,10 @@ namespace UeiBridge
                             continue;
                         }
                         string finalUrl = $"{thisSetup.CubeUrl}Dev{thisSetup.SlotNumber}/Com{channel.ChannelIndex}";
-                        SerialPort sport = serialSession.CreateSerialPort(finalUrl,
+                        UeiDaq.SerialPort sport = serialSession.CreateSerialPort(finalUrl,
                                             channel.Mode,
                                             channel.Baudrate,
-                                            SerialPortDataBits.DataBits8,
+                                            UeiDaq.SerialPortDataBits.DataBits8,
                                             channel.Parity,
                                             channel.Stopbits,
                                             "");
@@ -337,7 +339,7 @@ namespace UeiBridge
                 }
 
             }
-            catch (UeiDaqException ex)
+            catch (UeiDaq.UeiDaqException ex)
             {
                 _logger.Warn($"Failed to init serial card mananger.Slot {setup.SlotNumber}. {ex.Message}. Might be invalid baud rate");
                 return null;
@@ -347,7 +349,7 @@ namespace UeiBridge
             _logger.Debug($" == Serial channels for cube {setup.CubeUrl}, slot {setup.SlotNumber}");
             foreach (UeiDaq.Channel ueiChannel in serialSession.GetChannels())
             {
-                SerialPort ueiPort = ueiChannel as SerialPort;
+                UeiDaq.SerialPort ueiPort = ueiChannel as UeiDaq.SerialPort;
                 string s1 = ueiPort.GetSpeed().ToString();
                 string s2 = s1.Replace("BitsPerSecond", "");
                 //SL508892Setup s508 = setup as SL508892Setup;
@@ -398,16 +400,16 @@ namespace UeiBridge
 
             CAN503Setup thisSetup = setup as CAN503Setup;
 
-            Session canSession = null;
+            UeiDaq.Session canSession = null;
             try
             {
-                canSession = new Session();
+                canSession = new UeiDaq.Session();
 
                 {
                     foreach (CANChannelSetup channelSetup in thisSetup.Channels)
                     {
                         string finalUrl = $"{thisSetup.CubeUrl}Dev{thisSetup.SlotNumber}/CAN{channelSetup.ChannelIndex}";
-                        CANPort cport = canSession.CreateCANPort(finalUrl,
+                        UeiDaq.CANPort cport = canSession.CreateCANPort(finalUrl,
                                             channelSetup.Speed,
                                             channelSetup.FrameFormat,
                                             channelSetup.PortMode,
@@ -425,7 +427,7 @@ namespace UeiBridge
                 }
 
             }
-            catch (UeiDaqException ex)
+            catch (UeiDaq.UeiDaqException ex)
             {
                 _logger.Warn($"Failed to init serial card mananger.Slot {setup.SlotNumber}. {ex.Message}. Might be invalid baud rate");
                 return null;
@@ -441,7 +443,7 @@ namespace UeiBridge
                 //SL508892Setup s508 = setup as SL508892Setup;
                 //int chIndex = ueiPort.GetIndex();
                 //int portnum = s508.Channels.Where(i => i.ChannelIndex == chIndex).Select(i => i.LocalUdpPort).FirstOrDefault();
-                CANPort cport = ueiChannel as CANPort;
+                UeiDaq.CANPort cport = ueiChannel as UeiDaq.CANPort;
                 
                 _logger.Debug($"CAN CH:{cport.GetIndex()} - {cport.GetMode()} - {cport.GetSpeed()} - {cport.GetType()}");
                 
@@ -484,10 +486,10 @@ namespace UeiBridge
             UdpWriter uWriter = new UdpWriter( setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMulticast);
 
 
-            Session sess1 = new Session();
+            UeiDaq.Session sess1 = new UeiDaq.Session();
             string url1 = $"{setup.CubeUrl}Dev{setup.SlotNumber}/Ai0: 23";
             double peek = AI201100Setup.PeekVoltage_upstream;
-            sess1.CreateAIChannel( url1, -peek, peek, AIChannelInputMode.SingleEnded); // -15,15 means 'no gain'
+            sess1.CreateAIChannel( url1, -peek, peek, UeiDaq.AIChannelInputMode.SingleEnded); // -15,15 means 'no gain'
             //var numberOfChannels = _ueiSession.GetNumberOfChannels();
             sess1.ConfigureTimingForSimpleIO();
             sess1.Start();
@@ -526,7 +528,7 @@ namespace UeiBridge
             // build session
             string outDevString = ComposeDio403DeviceString( realDevice, MessageWay.downstream);
             string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/{outDevString}";
-            Session outSession = new Session();
+            UeiDaq.Session outSession = new UeiDaq.Session();
             outSession.CreateDOChannel(cubeUrl);
             outSession.ConfigureTimingForSimpleIO();
             outSession.Start();
@@ -552,7 +554,7 @@ namespace UeiBridge
             // build session
             string inDevString = ComposeDio403DeviceString(realDevice, MessageWay.upstream);
             string inSessionUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/{inDevString}";
-            Session inSession = new Session();
+            UeiDaq.Session inSession = new UeiDaq.Session();
             inSession.CreateDIChannel(inSessionUrl);
             inSession.ConfigureTimingForSimpleIO();
             inSession.Start();
@@ -603,7 +605,7 @@ namespace UeiBridge
                     continue;
                 }
 
-                Session theSession = new Session();
+                UeiDaq.Session theSession = new UeiDaq.Session();
                 string cubeUrl = $"{csetup.CubeUrl}Dev{bssetup.SlotNumber}/Ao0:7";
                 var ch = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
                 System.Diagnostics.Debug.Assert(ch.GetMaximum() == AO308Setup.PeekVoltage_downstream);
