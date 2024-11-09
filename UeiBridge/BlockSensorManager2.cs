@@ -8,7 +8,7 @@ using UeiBridge.Interfaces;
 
 namespace UeiBridge
 {
-    public class BlockSensorManager2: AO308OutputDeviceManager, ISend<SendObject>
+    public class BlockSensorManager2: DevManagers.AnalogOutDeviceManager, ISend<SendObject>
     {
         #region === publics ====
         public override string DeviceName => DeviceMap2.BlocksensorLiteral;
@@ -66,7 +66,7 @@ namespace UeiBridge
             }
 
             // downstream message aimed to block sensor
-            if (byteMessage[EthernetMessage._cardTypeOffset] == DeviceMap2.GetDeviceName(DeviceMap2.BlocksensorLiteral))
+            if (byteMessage[EthernetMessage._cardTypeOffset] == DeviceMap2.GetDeviceId(DeviceMap2.BlocksensorLiteral))
             {
                 if (byteMessage.Length == 22) // is from digital card
                 {
@@ -121,12 +121,12 @@ namespace UeiBridge
         public override void Enqueue(byte[] byteMessage)
         {
             // upstream message from digital/input card
-            if (byteMessage[EthernetMessage._cardTypeOffset] == DeviceMap2.GetDeviceName(DeviceMap2.DIO403Literal)) //"DIO-403"))
+            if (byteMessage[EthernetMessage._cardTypeOffset] == DeviceMap2.GetDeviceId(DeviceMap2.DIO403Literal)) //"DIO-403"))
             {
                 // just fix message. to make it looks like downward message;
                 byteMessage[0] = 0xaa;
                 byteMessage[1] = 0x55;
-                byteMessage[EthernetMessage._cardTypeOffset] = Convert.ToByte(DeviceMap2.GetDeviceName(DeviceMap2.BlocksensorLiteral));
+                byteMessage[EthernetMessage._cardTypeOffset] = Convert.ToByte(DeviceMap2.GetDeviceId(DeviceMap2.BlocksensorLiteral));
                 byteMessage[EthernetMessage._slotNumberOffset] = Convert.ToByte( _thisDeviceSetup.SlotNumber);
             }
             base.Enqueue(byteMessage);

@@ -13,13 +13,14 @@ namespace UeiBridge.CubeSetupTypes
 
 
     [XmlInclude(typeof(AO308Setup))]
+    [XmlInclude(typeof(AO332Setup))]
     [XmlInclude(typeof(DIO403Setup))]
     [XmlInclude(typeof(DIO470Setup))]
     [XmlInclude(typeof(AI201100Setup))]
     [XmlInclude(typeof(SL508892Setup))]
     //[XmlInclude(typeof(AO332Setup))]
     [XmlInclude(typeof(BlockSensorSetup))]
-    [XmlInclude(typeof(SimuAO16Setup))]
+    [XmlInclude(typeof(AO16Setup))]
     [XmlInclude(typeof(CAN503Setup))]
     public class CubeSetup : IEquatable<CubeSetup>
     {

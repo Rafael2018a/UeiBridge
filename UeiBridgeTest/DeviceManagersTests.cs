@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using NUnit.Framework;
 using UeiBridge;
 using UeiBridge.CubeSetupTypes;
+using UeiBridge.DevManagers;
 using UeiBridge.Interfaces;
 using UeiBridge.Library;
 using UeiBridge.Types;
@@ -52,7 +53,7 @@ namespace UeiBridgeTest
         /// Test ananlog-output 'simu' device
         /// </summary>
         [Test]
-        public void AO16DeviceManagerTest() 
+        public void AO308DeviceManagerTest() 
         {
             string simuUrl = "simu://";
             // build session

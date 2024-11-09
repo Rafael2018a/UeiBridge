@@ -27,6 +27,16 @@ namespace UeiBridge.CubeSetupTypes
         {
         }
     }
+    public class AO332Setup : AnalogOutDeviceSetup
+    {
+        public AO332Setup()
+        {
+        }
+
+        public AO332Setup(EndPoint localEndPoint, UeiDeviceInfo deviceInfo) : base(localEndPoint, deviceInfo)
+        {
+        }
+    }
     public class BlockSensorSetup : AO308Setup
     {
         //public const int BlockSensorSlotNumber = 32;
@@ -42,10 +52,10 @@ namespace UeiBridge.CubeSetupTypes
         {
         }
     }
-    public class SimuAO16Setup : AnalogOutDeviceSetup
+    public class AO16Setup : AnalogOutDeviceSetup
     {
-        public SimuAO16Setup() { }
-        public SimuAO16Setup(EndPoint localEndPoint, UeiDeviceInfo device) : base(localEndPoint, device) { }
+        public AO16Setup() { }
+        public AO16Setup(EndPoint localEndPoint, UeiDeviceInfo device) : base(localEndPoint, device) { }
     }
     public class AI201100Setup : DeviceSetup
     {

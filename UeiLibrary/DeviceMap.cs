@@ -46,6 +46,9 @@ namespace UeiBridge.Library
             this.DeviceDesc = deviceDesc;
         }
     }
+    /// <summary>
+    /// Map of all known devices: name, desc, uniq-id
+    /// </summary>
     public static class DeviceMap2
     {
 
@@ -62,13 +65,6 @@ namespace UeiBridge.Library
         static List<DeviceItem> _deviceItemList = new List<DeviceItem>();
         static DeviceMap2()
         {
-            //AO308 = new DeviceItem(0, "AO-308", "Analog output");
-            //DIO403 = new DeviceItem(4, "DIO-403", "Digital Input/Output");
-            //DIO470 = new DeviceItem(6, "DIO-470", "Electro-Mechanical relay");
-            //AI201 = new DeviceItem(1, "AI-201-100", "Analog input");
-            //SL508 = new DeviceItem(5, "SL-508-892", "RS-422/485 Serial Port");
-            //Blocksensor = new DeviceItem(32, "BlockSensor", "Block sensor (virtual)");
-
             _deviceItemList.Add(new DeviceItem(0, AO308Literal, "Analog output 8ch"));
             _deviceItemList.Add(new DeviceItem(4, DIO403Literal, "Digital Input/Output"));
             _deviceItemList.Add(new DeviceItem(6, DIO470Literal, "Electro-Mechanical relay"));
@@ -78,14 +74,6 @@ namespace UeiBridge.Library
             _deviceItemList.Add(new DeviceItem(64, SimuAO16Literal, "Simu-AO16 (Simulative)"));
             _deviceItemList.Add(new DeviceItem(10, AO322Literal, "Analog output 32ch"));
             _deviceItemList.Add(new DeviceItem(11, CAN503Literal, "CAN-Bus 4ch"));
-
-
-            //_deviceItemList.Add(AO308);
-            //_deviceItemList.Add(DIO403);
-            //_deviceItemList.Add(DIO470);
-            //_deviceItemList.Add(AI201);
-            //_deviceItemList.Add(SL508);
-            //_deviceItemList.Add(Blocksensor);
         }
 
         public static string GetDeviceName(int deviceId)
@@ -105,7 +93,10 @@ namespace UeiBridge.Library
             return s;
         }
 
-        public static int GetDeviceName(string deviceName)
+        /// <summary>
+        /// Get id as listed in ICD
+        /// </summary>
+        public static int GetDeviceId(string deviceName)
         {
             try
             {

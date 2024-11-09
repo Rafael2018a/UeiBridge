@@ -107,7 +107,7 @@ namespace UeiBridge
                         continue;
                     }
                     // verify valid card type
-                    int cardId = DeviceMap2.GetDeviceName(this.DeviceName);
+                    int cardId = DeviceMap2.GetDeviceId(this.DeviceName);
                     if (cardId != incomingMessage.CardType)
                     {
                         _logger.Warn($"{InstanceName} wrong card id {incomingMessage.CardType} while expecting {cardId}. message dropped.");

@@ -6,21 +6,34 @@ using System.Threading.Tasks;
 using UeiBridge.CubeSetupTypes;
 using UeiBridge.Library;
 
-namespace UeiBridge
+namespace UeiBridge.DevManagers
 {
-    class AO332OutputDeviceManager : AO308OutputDeviceManager
+    public class AO332OutputDeviceManager: AnalogOutDeviceManager
+    {
+        public AO332OutputDeviceManager()
+        {
+        }
+
+        public AO332OutputDeviceManager(AO332Setup deviceSetup1, ISession session, bool isBlockSensorActive) : base(deviceSetup1, session, isBlockSensorActive)
+        {
+        }
+
+        public override string DeviceName => DeviceMap2.AO322Literal;
+
+    }
+    class AO332OutputDeviceManager_old : AO308OutputDeviceManager
     {
         public override string DeviceName => DeviceMap2.AO322Literal;
         AO308Setup _thisSetup;
         private log4net.ILog _logger = StaticMethods.GetLogger();
         //UeiDaq.Session _udeSession;
-        public AO332OutputDeviceManager(AO308Setup deviceSetup1, ISession session, bool bsensor) : base(deviceSetup1, session, bsensor)
+        public AO332OutputDeviceManager_old(AO308Setup deviceSetup1, ISession session, bool bsensor) : base(deviceSetup1, session, bsensor)
         {
             _thisSetup = deviceSetup1;// as AO332Setup;
             _ueiSession = session;
         }
 
-        public AO332OutputDeviceManager() { }
+        public AO332OutputDeviceManager_old() { }
 
         //public override bool OpenDevice()
         //{

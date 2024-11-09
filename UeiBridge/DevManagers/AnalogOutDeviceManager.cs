@@ -60,7 +60,7 @@ namespace UeiBridge.DevManagers
                 }
                 else
                 {
-                    int deviceId = DeviceMap2.GetDeviceName(DeviceName);
+                    int deviceId = DeviceMap2.GetDeviceId(DeviceName);
                     EmitInitMessage($"Init success: {DeviceName} (ID={deviceId}). {numOfCh} channels. Range {range[0].minimum},{range[0].maximum}V. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}");
                 }
 

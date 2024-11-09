@@ -47,8 +47,10 @@ namespace UeiBridge.Library
 
             switch (ueiDevice.DeviceName)
             {
-                case DeviceMap2.AO308Literal:
                 case DeviceMap2.AO322Literal:
+                    result = new AO332Setup(new EndPoint(LocalIP, _portNumber++), ueiDevice);
+                    break;
+                case DeviceMap2.AO308Literal:
                     result = new AO308Setup(new EndPoint(LocalIP, _portNumber++), ueiDevice);
                     break;
                 case DeviceMap2.DIO403Literal:
@@ -69,7 +71,7 @@ namespace UeiBridge.Library
                     result = sl508;
                     break;
                 case DeviceMap2.SimuAO16Literal:
-                    result = new SimuAO16Setup(new EndPoint(LocalIP, _portNumber++), ueiDevice);
+                    result = new AO16Setup(new EndPoint(LocalIP, _portNumber++), ueiDevice);
                     break;
                 case DeviceMap2.CAN503Literal:
                     result = new CAN503Setup(new EndPoint(LocalIP, _portNumber++), new EndPoint(RemoteIp, _portNumber++), ueiDevice);

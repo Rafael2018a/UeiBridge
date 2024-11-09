@@ -154,15 +154,11 @@ namespace UeiBridge
         {
             switch (realDevice.DeviceName)
             {
-                //case DeviceMap2.SimuAO16Literal:
-                //    {
-                //        return Build_SimuAO16_2(realDevice, setup);
-                //    }
                 case DeviceMap2.AO308Literal:
                 case DeviceMap2.AO322Literal:
                 case DeviceMap2.SimuAO16Literal:
                     {
-                        return Build_AO308(realDevice, setup);
+                        return Build_AnalogOutDeviceManager(realDevice, setup);
                     }
                 case DeviceMap2.DIO403Literal:
                     {
@@ -184,10 +180,6 @@ namespace UeiBridge
                     {
                         return Build_CAN503(realDevice, setup);
                     }
-                //case DeviceMap2.AO322Literal:
-                //    {
-                //        return Build_AO332(realDevice, setup);
-                //    }
                 default:
                     {
                         _logger.Warn($"Failed to build {realDevice.DeviceName}");
@@ -196,7 +188,7 @@ namespace UeiBridge
             }
         }
 
-        private List<PerDeviceObjects> Build_AO308(UeiDeviceInfo realDevice, DeviceSetup setup)
+        private List<PerDeviceObjects> Build_AnalogOutDeviceManager(UeiDeviceInfo realDevice, DeviceSetup setup)
         {
             // if block-sensor is active, Do not build AO308,
             // since Block sensor takes control on the analog output. 
@@ -210,7 +202,11 @@ namespace UeiBridge
             // create uei entities
             UeiDaq.Session theSession = new UeiDaq.Session();
 
-            string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/Ao0:7";
+            // get number of available channels
+            UeiDaq.Device dev = Library.StaticMethods.GetDeviceBySlot(realDevice.CubeUrl, realDevice.DeviceSlot);
+            int numberofchannels = dev.GetNumberOfAOChannels();
+
+            string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/Ao0:{numberofchannels - 1}";
             var c = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
             System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
             theSession.ConfigureTimingForSimpleIO();
@@ -219,18 +215,18 @@ namespace UeiBridge
             //theSession1.Start();
             SessionAdapter tsa = new SessionAdapter(theSession);
 
-            OutputDevice analogOut=null;
+            OutputDevice analogOut = null;
             if (realDevice.DeviceName == DeviceMap2.AO308Literal)
             {
-                analogOut = new AO308OutputDeviceManager(setup as AO308Setup, tsa, bsActive);
+                analogOut = new DevManagers.AO308OutputDeviceManager(setup as AO308Setup, tsa, bsActive);
             }
             if (realDevice.DeviceName == DeviceMap2.AO322Literal)
             {
-                analogOut = new AO332OutputDeviceManager(setup as AO308Setup, tsa, bsActive);
+                analogOut = new DevManagers.AO332OutputDeviceManager(setup as AO332Setup, tsa, bsActive);
             }
             if (realDevice.DeviceName == DeviceMap2.SimuAO16Literal)
             {
-                analogOut = new SimuAO16OutputDeviceManager(setup as  AnalogOutDeviceSetup, tsa, false);
+                analogOut = new DevManagers.AO16OutputDeviceManager(setup as AO16Setup, tsa, false);
             }
 
             PerDeviceObjects pd = new PerDeviceObjects(realDevice);
@@ -244,59 +240,6 @@ namespace UeiBridge
 
             return new List<PerDeviceObjects>() { pd };
         }
-
-        //private List<PerDeviceObjects> Build_AO332(UeiDeviceInfo realDevice, DeviceSetup setup)
-        //{
-        //    // create uei entities
-        //    Session theSession = new Session();
-        //    string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/Ao0:31";
-        //    var c = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
-        //    System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
-        //    theSession.ConfigureTimingForSimpleIO();
-        //    theSession.Start();
-        //    //var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()));
-        //    SessionAdapter tsa = new SessionAdapter(theSession);
-
-
-        //    AO332OutputDeviceManager ao322 = new AO332OutputDeviceManager(setup as AO308Setup, tsa);
-        //    PerDeviceObjects pd = new PerDeviceObjects(realDevice);
-
-        //    var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
-        //    UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, ao322.InstanceName);
-        //    _udpMessenger.SubscribeConsumer(ao322, setup.CubeId, setup.SlotNumber);
-        //    _udpReaderList.Add(ureader);
-
-        //    pd.OutputDeviceManager = ao322;
-
-        //    return new List<PerDeviceObjects>() { pd };
-        //}
-
-
-        //List<PerDeviceObjects> Build_SimuAO16_2(UeiDeviceInfo realDevice, DeviceSetup setup)
-        //{
-        //    Session theSession = new Session();
-        //    string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/Ao0:7";
-        //    var c = theSession.CreateAOChannel(cubeUrl, -AO308Setup.PeekVoltage_downstream, AO308Setup.PeekVoltage_downstream);
-        //    System.Diagnostics.Debug.Assert(c.GetMaximum() == AO308Setup.PeekVoltage_downstream);
-        //    theSession.ConfigureTimingForSimpleIO();
-        //    theSession.Start();
-        //    //var aWriter = new AnalogWriteAdapter(new AnalogScaledWriter(theSession.GetDataStream()));
-        //    //System.Diagnostics.Debug.Assert(null != (setup as SimuAO16Setup));
-        //    SessionAdapter tsa = new SessionAdapter(theSession);
-        //    SimuAO16OutputDeviceManager ao16 = new SimuAO16OutputDeviceManager(setup as AO308Setup, tsa);
-        //    PerDeviceObjects pd = new PerDeviceObjects(realDevice);
-
-        //    // set ao308 as consumer of udp-reader
-        //    //if (_mainConfig.Blocksensor.IsActive == false)
-        //    //{
-        //    //    var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMCast);
-        //    //    UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, ao16, ao16.InstanceName);
-        //    //    pd.UdpReader = ureader;
-        //    //}
-        //    pd.OutputDeviceManager = ao16;
-
-        //    return new List<PerDeviceObjects>() { pd };
-        //}
 
         private List<PerDeviceObjects> Build_SL508(UeiDeviceInfo realDevice, DeviceSetup setup)
         {

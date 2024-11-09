@@ -2,6 +2,9 @@
 
 namespace UeiBridge.Library
 {
+    /// <summary>
+    /// External info about device (slot, url etc..)
+    /// </summary>
     public class UeiDeviceInfo
     {
         public string DeviceName { get; private set; }

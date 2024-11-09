@@ -1,12 +1,10 @@
 ﻿// Ignore Spelling: Uei
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
-using System.Threading.Tasks;
 using UeiDaq;
 
 namespace UeiBridge.Library
@@ -62,7 +60,7 @@ namespace UeiBridge.Library
         }
         public static byte[] Make_Dio403_upstream_message(byte[] payload)
         {
-            int id = DeviceMap2.GetDeviceName(DeviceMap2.DIO403Literal);
+            int id = DeviceMap2.GetDeviceId(DeviceMap2.DIO403Literal);
             var b = EthernetMessage.CreateMessage(id, 0, 0, payload); //new byte[] { 0x5, 0, 0 });
             return b.GetByteArray(MessageWay.upstream);
         }
@@ -174,11 +172,27 @@ namespace UeiBridge.Library
             else
             {
                 return cubeIp.GetAddressBytes()[3];
-            }    
+            }
         }
+        public static UeiDaq.Device GetDeviceBySlot(string uri, int slot)
+        {
+            UeiDaq.Device result = null;
+            DeviceCollection devColl = new DeviceCollection(uri);
+
+            foreach (UeiDaq.Device dev1 in devColl)
+            {
+                if (dev1.GetIndex() == slot)
+                {
+                    result = dev1;
+                    break;
+                }
+            }
+            return result;
+        }
+
         public static string GetCubeUrl(IPAddress ip)
         {
-            if (null==ip)
+            if (null == ip)
             {
                 return null;
             }

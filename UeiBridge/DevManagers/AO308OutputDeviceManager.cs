@@ -9,14 +9,26 @@ using UeiDaq;
 using UeiBridge.CubeSetupTypes;
 using UeiBridge.Interfaces;
 
-namespace UeiBridge
+namespace UeiBridge.DevManagers
 {
+
+    public class AO308OutputDeviceManager : AnalogOutDeviceManager
+    {
+        public AO308OutputDeviceManager()
+        {
+        }
+        public AO308OutputDeviceManager(AO308Setup deviceSetup1, ISession session, bool isBlockSensorActive) : base(deviceSetup1, session, isBlockSensorActive)
+        {
+            
+        }
+        public override string DeviceName => DeviceMap2.AO308Literal;
+    }
 
     /// <summary>
     /// from the manual:
     /// ** 8-Channel, 16-bit, ±10V Analog Output Board **
     /// </summary>
-    public class AO308OutputDeviceManager : OutputDevice
+    public class AO308OutputDeviceManager_old : OutputDevice
     {
         #region === publics ====
         public override string DeviceName => DeviceMap2.AO308Literal;
@@ -36,14 +48,14 @@ namespace UeiBridge
         
         private AO308Setup _deviceSetup;
 
-        public AO308OutputDeviceManager(AO308Setup deviceSetup1, ISession session, bool isBlockSensorActive) : base(deviceSetup1)
+        public AO308OutputDeviceManager_old(AO308Setup deviceSetup1, ISession session, bool isBlockSensorActive) : base(deviceSetup1)
         {
             //this._analogWriter = analogWriter;
             this._ueiSession = session;
             this.IsBlockSensorActive = isBlockSensorActive;
             this._deviceSetup = deviceSetup1;
         }
-        public AO308OutputDeviceManager() { } // must have empty c-tor
+        public AO308OutputDeviceManager_old() { } // must have empty c-tor
 
         public override bool OpenDevice()
         {
@@ -66,7 +78,7 @@ namespace UeiBridge
                 }
                 else
                 {
-                    int deviceId = DeviceMap2.GetDeviceName(DeviceName);
+                    int deviceId = DeviceMap2.GetDeviceId(DeviceName);
                     EmitInitMessage($"Init success: {DeviceName} (ID={deviceId}). {numOfCh} channels. Range {range[0].minimum},{range[0].maximum}V. Listening on {_deviceSetup.LocalEndPoint.ToIpEp()}");
                 }
 

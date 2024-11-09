@@ -81,6 +81,7 @@
   <ItemGroup>
     <Compile Include="AI201InputDeviceManager.cs" />
     <Compile Include="DevManagers\AnalogOutDeviceManager.cs" />
+    <Compile Include="DevManagers\AO16OutputDeviceManager.cs" />
     <Compile Include="DevManagers\AO308OutputDeviceManager.cs" />
     <Compile Include="DevManagers\AO332OutputDeviceManager.cs" />
     <Compile Include="BlockSensorManager2.cs" />
