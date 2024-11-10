@@ -125,6 +125,8 @@ namespace UeiBridge.CubeSetupTypes
         }
         public SL508892Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base(localEndPoint, destEndPoint, device)
         {
+            IsEnabled = false; // Disable Serial card by default (Should be handled by Alex). Nov 24.
+
             Channels = new List<SerialChannelSetup>();
 
             for (int chIndex = 0; chIndex < _numberOfSerialChannels; chIndex++)
