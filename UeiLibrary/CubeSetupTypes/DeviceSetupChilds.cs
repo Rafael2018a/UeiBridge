@@ -93,17 +93,16 @@ namespace UeiBridge.CubeSetupTypes
             }
         }
     }
-    public class SimuDIO64Setup : DIO403Setup
+    public class DIO64Setup : DeviceSetup
     {
-        public SimuDIO64Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base(localEndPoint, destEndPoint, device, 4)
+        public DIO64Setup()
         {
-            IOChannelList = new List<DIOChannel>();
-            for (byte ch = 0; ch < 4; ch++)
-            {
-                MessageWay w = (ch % 2 == 0) ? MessageWay.upstream : MessageWay.downstream;
-                IOChannelList.Add(new DIOChannel(ch, w));
-            }
         }
+
+        public DIO64Setup(EndPoint localEndPoint, EndPoint destEndPoint, UeiDeviceInfo device) : base(localEndPoint, destEndPoint, device)
+        {
+        }
+
     }
     public class DIO470Setup : DeviceSetup
     {

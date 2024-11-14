@@ -23,39 +23,12 @@ namespace UeiBridge
         public List<PerDeviceObjects> PerDeviceObjectsList => _PerDeviceObjectsList;
         public List<UdpReader> UdpReadersList => _udpReaderList;
 
-
         UdpToSlotMessenger _udpMessenger = new UdpToSlotMessenger();
         Config2 _mainConfig;
 
         public ProgramObjectsBuilder(Config2 mainConfig)
         {
             _mainConfig = mainConfig;
-        }
-        public DeviceType GetOutputDeviceManager<DeviceType>(string cubeUrl, int deviceSlot, string deviceName = null) where DeviceType : OutputDevice
-        {
-            var deviceInSlot = _PerDeviceObjectsList.Where(d => (d.OutputDeviceManager != null) && (d.SlotNumber == deviceSlot) && (d.CubeUrl == cubeUrl));
-            OutputDevice od = (OutputDevice)deviceInSlot.Select(d => d.OutputDeviceManager).FirstOrDefault();
-
-            // check device name 
-            if ((null != od) && (deviceName != null) && (od.DeviceName != deviceName))
-            {
-                return null;
-            }
-
-            return od as DeviceType;
-        }
-        public DeviceType GetInputDeviceManager<DeviceType>(string cubeUrl, int deviceSlot, string deviceName = null) where DeviceType : InputDevice
-        {
-            var deviceInSlot = _PerDeviceObjectsList.Where(d => (d.InputDeviceManager != null) && (d.SlotNumber == deviceSlot) && (d.CubeUrl == cubeUrl));
-            InputDevice id = (InputDevice)deviceInSlot.Select(d => d.InputDeviceManager).FirstOrDefault();
-
-            // check device name 
-            if ((null != id) & (deviceName != null) && (id.DeviceName != deviceName))
-            {
-                return null;
-            }
-
-            return id as DeviceType;
         }
 
         protected void EmitInitMessage(UeiDeviceInfo deviceInfo,  string deviceMessage)
@@ -180,6 +153,11 @@ namespace UeiBridge
                     {
                         return Build_CAN503(realDevice, setup);
                     }
+                case DeviceMap2.SimuDIO64Literal:
+                    {
+                        return Build_DIO64(realDevice, setup);  
+                    }
+
                 default:
                     {
                         _logger.Warn($"Failed to build {realDevice.DeviceName}");
@@ -469,7 +447,7 @@ namespace UeiBridge
             // =======================
 
             // build session
-            string outDevString = ComposeDio403DeviceString( realDevice, MessageWay.downstream);
+            string outDevString = ComposeDio403DeviceString(realDevice, MessageWay.downstream);
             string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/{outDevString}";
             UeiDaq.Session outSession = new UeiDaq.Session();
             outSession.CreateDOChannel(cubeUrl);
@@ -487,12 +465,12 @@ namespace UeiBridge
 
             // Subscribe device manager as consumer to incoming messages
             _udpMessenger.SubscribeConsumer(outDev, realDevice.CubeId, realDevice.DeviceSlot);
-            
+
             // prepare input manager
             // =======================
 
             // build udp writer
-            UdpWriter udpWriter = new UdpWriter( setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMulticast);
+            UdpWriter udpWriter = new UdpWriter(setup.DestEndPoint.ToIpEp(), _mainConfig.AppSetup.SelectedNicForMulticast);
 
             // build session
             string inDevString = ComposeDio403DeviceString(realDevice, MessageWay.upstream);
@@ -502,7 +480,7 @@ namespace UeiBridge
             inSession.ConfigureTimingForSimpleIO();
             inSession.Start();
             SessionAdapter sa2 = new SessionAdapter(inSession);
-            
+
             // build device manager
             DIO403InputDeviceManager inDev = new DIO403InputDeviceManager(setup, sa2, udpWriter);
 
@@ -514,17 +492,17 @@ namespace UeiBridge
             return new List<PerDeviceObjects>() { pd };
         }
 
-        private string ComposeDio403DeviceString( UeiDeviceInfo devInfo, MessageWay way)
+        private string ComposeDio403DeviceString(UeiDeviceInfo devInfo, MessageWay way)
         {
-            StringBuilder resultString = new StringBuilder( (way == MessageWay.downstream) ? "Do" : "Di");
+            StringBuilder resultString = new StringBuilder((way == MessageWay.downstream) ? "Do" : "Di");
             //Do0,2,4
             DIO403Setup setup = _mainConfig.GetDeviceSetupEntry<DIO403Setup>(devInfo);
             if (null != setup)
             {
                 IEnumerable<DIOChannel> l = setup.IOChannelList.Where(i => i.Way == way);
-                foreach( var c in l)
+                foreach (var c in l)
                 {
-                    resultString.Append( c.OctetIndex);
+                    resultString.Append(c.OctetIndex);
                     resultString.Append(",");
                 }
                 resultString.Remove(resultString.Length - 1, 1);
@@ -533,6 +511,15 @@ namespace UeiBridge
                 throw new ArgumentNullException();
 
             return resultString.ToString();
+        }
+        private string ComposeDigitalOutDeviceString(UeiDeviceInfo devInfo)
+        {
+            // get number of available channels
+            UeiDaq.Device dev = Library.StaticMethods.GetDeviceBySlot(devInfo.CubeUrl, devInfo.DeviceSlot);
+            int numberofchannels = dev.GetNumberOfDOChannels();
+
+            string resultString = $"Do0:{numberofchannels - 1}";
+            return resultString;
         }
 
         public void Build_BlockSensorManager(List<UeiDeviceInfo> realDeviceList)
@@ -593,6 +580,42 @@ namespace UeiBridge
             }
 
 
+        }
+
+        /// <summary>
+        /// DIO64 is a simulation device
+        /// Use it as OUTPUT device
+        /// </summary>
+        /// <returns></returns>
+        private List<PerDeviceObjects> Build_DIO64(UeiDeviceInfo realDevice, DeviceSetup devSetup)
+        {
+            DIO64Setup setup = devSetup as DIO64Setup;
+
+            // build session
+            string outDevString = ComposeDigitalOutDeviceString(realDevice);
+            string cubeUrl = $"{setup.CubeUrl}Dev{setup.SlotNumber}/{outDevString}";
+            UeiDaq.Session outSession = new UeiDaq.Session();
+            outSession.CreateDOChannel(cubeUrl);
+            outSession.ConfigureTimingForSimpleIO();
+            outSession.Start();
+            SessionAdapter sa1 = new SessionAdapter(outSession);
+
+            // build device manager
+            DevManagers.DIO64OutputDeviceManager outDev = new DevManagers.DIO64OutputDeviceManager(setup, sa1);
+
+            // build udp reader
+            var nic = IPAddress.Parse(_mainConfig.AppSetup.SelectedNicForMulticast);
+            UdpReader ureader = new UdpReader(setup.LocalEndPoint.ToIpEp(), nic, _udpMessenger, outDev.InstanceName);
+            _udpReaderList.Add(ureader);
+
+            // Subscribe device manager as consumer to incoming messages
+            _udpMessenger.SubscribeConsumer(outDev, realDevice.CubeId, realDevice.DeviceSlot);
+
+            // register manager
+            PerDeviceObjects pd = new PerDeviceObjects(realDevice);
+            pd.OutputDeviceManager = outDev;
+
+            return new List<PerDeviceObjects>() { pd };
         }
 
         public void Dispose()

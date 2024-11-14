@@ -200,6 +200,40 @@ namespace UeiBridgeTest
             //    Assert.That(sm._sentObject.ByteMessage.Length, Is.EqualTo(22));
             //});
         }
+        [Test]
+        public void DIO64OutputDeviceManagerTest()
+        {
+            Session sess1 = new Session();
+            sess1.CreateDOChannel("simu://Dev2/Do0:3"); // 4 channels, no more (empiric).
+            sess1.ConfigureTimingForSimpleIO();
+            SessionAdapter sa = new SessionAdapter(sess1);
+
+            DIO64Setup setup = new DIO64Setup(new EndPoint("8.8.8.8", 5000), null, new UeiDeviceInfo("simu://", 2, "Simu-DIO64"));
+
+            // build device manager
+            UeiBridge.DevManagers.DIO64OutputDeviceManager dio64 = new UeiBridge.DevManagers.DIO64OutputDeviceManager(setup, sa);
+            dio64.OpenDevice();
+
+            // enq
+            var v = new byte[] { 0xac, 0x13, 0x21, 0x22 };
+            var m = EthernetMessage.CreateMessage(65, 2, 0, v);
+            dio64.Enqueue(m.GetByteArray(MessageWay.downstream));
+
+            System.Threading.Thread.Sleep(1000);
+
+            //dio64.Dispose();
+
+            var ls = sa.GetDigitalWriter().LastScan;
+            Assert.That(ls, Is.Not.Null);
+
+            Assert.Multiple(() =>
+            {
+                for (int i = 0; i < ls.Length; i++)
+                {
+                    Assert.That(ls[i], Is.EqualTo(v[i]));
+                }
+            });
+        }
 
         [Test]
         public void AnalogInTest()

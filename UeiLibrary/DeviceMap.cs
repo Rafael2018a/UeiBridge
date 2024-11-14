@@ -61,6 +61,7 @@ namespace UeiBridge.Library
         public const string SimuAO16Literal = "Simu-AO16";
         public const string AO322Literal = "AO-332";
         public const string CAN503Literal = "CAN-503";
+        public const string SimuDIO64Literal = "Simu-DIO64";
 
         static List<DeviceItem> _deviceItemList = new List<DeviceItem>();
         static DeviceMap2()
@@ -72,6 +73,7 @@ namespace UeiBridge.Library
             _deviceItemList.Add(new DeviceItem(5, SL508Literal, "RS-232/422/485 Serial Port"));
             _deviceItemList.Add(new DeviceItem(32, BlocksensorLiteral, "Block sensor (virtual)"));
             _deviceItemList.Add(new DeviceItem(64, SimuAO16Literal, "Simu-AO16 (Simulative)"));
+            _deviceItemList.Add(new DeviceItem(65, SimuDIO64Literal, "Simu-DIO64 (Simulative)"));
             _deviceItemList.Add(new DeviceItem(10, AO322Literal, "Analog output 32ch"));
             _deviceItemList.Add(new DeviceItem(11, CAN503Literal, "CAN-Bus 4ch"));
         }

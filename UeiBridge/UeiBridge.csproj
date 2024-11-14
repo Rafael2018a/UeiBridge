@@ -88,6 +88,7 @@
     <Compile Include="CAN503InputDeviceManager.cs" />
     <Compile Include="CAN503OutputDeviceManager.cs" />
     <Compile Include="Converters.cs" />
+    <Compile Include="DevManagers\DIO64OutputDeviceManager.cs" />
     <Compile Include="DigitalWriterAdapter.cs" />
     <Compile Include="DIO403InputDeviceManager.cs" />
     <Compile Include="DIO403OutputDeviceManager.cs" />

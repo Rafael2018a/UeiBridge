@@ -76,6 +76,9 @@ namespace UeiBridge.Library
                 case DeviceMap2.CAN503Literal:
                     result = new CAN503Setup(new EndPoint(LocalIP, _portNumber++), new EndPoint(RemoteIp, _portNumber++), ueiDevice);
                     break;
+                    case DeviceMap2.SimuDIO64Literal:
+                    result = new DIO64Setup(new EndPoint(LocalIP, _portNumber++), null, ueiDevice);
+                    break;
                 default:
                     Console.WriteLine($"Config: Device {ueiDevice.DeviceName} not supported.");
                     result = new DeviceSetup(null, null, ueiDevice);
@@ -125,13 +128,13 @@ namespace UeiBridge.Library
             {
                 return null;
             }
-            var cube = this.CubeSetupList.Where(e => e.CubeUrl == cubeUrl);
-            var selectedCube = cube.FirstOrDefault();
+            IEnumerable<CubeSetup> cube = this.CubeSetupList.Where(e => e.CubeUrl == cubeUrl);
+            CubeSetup selectedCube = cube.FirstOrDefault();
             if (null == selectedCube)
             {
                 return null;
             }
-            var theSetups = selectedCube.DeviceSetupList.Where(d => d.SlotNumber == slotNumber);
+            IEnumerable<DeviceSetup> theSetups = selectedCube.DeviceSetupList.Where(d => d.SlotNumber == slotNumber);
             DeviceSetup result = theSetups.FirstOrDefault();
             if (null != result)
             {

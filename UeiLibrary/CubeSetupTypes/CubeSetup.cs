@@ -18,10 +18,10 @@ namespace UeiBridge.CubeSetupTypes
     [XmlInclude(typeof(DIO470Setup))]
     [XmlInclude(typeof(AI201100Setup))]
     [XmlInclude(typeof(SL508892Setup))]
-    //[XmlInclude(typeof(AO332Setup))]
     [XmlInclude(typeof(BlockSensorSetup))]
     [XmlInclude(typeof(AO16Setup))]
     [XmlInclude(typeof(CAN503Setup))]
+    [XmlInclude(typeof(DIO64Setup))]
     public class CubeSetup : IEquatable<CubeSetup>
     {
         public string CubeUrl { get; set; } // must be public for the  serializer
@@ -59,7 +59,7 @@ namespace UeiBridge.CubeSetupTypes
 
             CubeUrl = deviceList[0].CubeUrl;
             int cubeId = deviceList[0].CubeId;
-            CubeTypeNickname = $"Nick{cubeId}";
+            CubeTypeNickname = $"CubeNickName{cubeId}";
             CubeTypeDesc = CubeTypeNickname + " desc";
             CubeTypeId = cubeId * 10;
             ConfigFactory cf = new ConfigFactory(ConfigFactory.PortNumberStart + cubeId * 100);
